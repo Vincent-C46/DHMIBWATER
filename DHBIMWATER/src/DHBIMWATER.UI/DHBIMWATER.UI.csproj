@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<ItemGroup>
+		<ProjectReference Include="..\DHBIMWATER.Application\DHBIMWATER.Application.csproj" />
+		<ProjectReference Include="..\DHBIMWATER.Infrastructure\DHBIMWATER.Infrastructure.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Fluent.Ribbon" Version="11.0.1" />
+		<PackageReference Include="MahApps.Metro.IconPacks" Version="6.2.1" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="Styles\" />
+		<Folder Include="ViewModels\Drafting\" />
+		<Folder Include="ViewModels\Utilities\" />
+		<Folder Include="ViewModels\Quantification\" />
+		<Folder Include="Views\Drafting\" />
+		<Folder Include="Views\Utilities\" />
+		<Folder Include="Views\Quantification\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Resource Include="Resources\ICons\modeling.png">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Resource>
+	</ItemGroup>
+
+	<PropertyGroup>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UseWPF>true</UseWPF>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+	</PropertyGroup>
+
+</Project>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+	<AddIn Type="Application">
+		<Name>DHBIMWATER</Name>
+		<Assembly>DHBIMWATER\DHBIMWATER.Revit.dll</Assembly>
+		<AddInId>8d83c886-b739-4acd-a9db-1bc78f315b2f</AddInId>
+		<FullClassName>DHBIMWATER.Revit.App</FullClassName>
+		<VendorId>MYCO</VendorId>
+		<VendorDescription>DOHWA</VendorDescription>
+	</AddIn>
+</RevitAddIns>
