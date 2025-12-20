@@ -17,14 +17,16 @@ namespace DHBIMWATER.Revit
 
         private static Assembly OnAssemblyResolve(object sender, ResolveEventArgs args)
         {
-            string assemblyFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            string assemblyName = new AssemblyName(args.Name).Name;
-            string assemblyPath = Path.Combine(assemblyFolder, assemblyName + ".dll");
+            string? assemblyFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            string? assemblyName = new AssemblyName(args.Name).Name;
+            string assemblyPath = string.Empty;
+
+            if (assemblyFolder != null)
+                assemblyPath = Path.Combine(assemblyFolder, assemblyName + ".dll");
 
             if (File.Exists(assemblyPath))
-            {
                 return Assembly.LoadFrom(assemblyPath);
-            }
+
             return null;
         }
 
