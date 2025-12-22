@@ -1,0 +1,17 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ResourceDictionary.MergedDictionaries>
+        <!-- Control Styles (Colors.xaml is included in each style file) -->
+        <ResourceDictionary Source="/DHBIMWATER.UI;component/Styles/Buttons.xaml"/>
+        <ResourceDictionary Source="/DHBIMWATER.UI;component/Styles/TextBoxes.xaml"/>
+        <ResourceDictionary Source="/DHBIMWATER.UI;component/Styles/CheckBoxes.xaml"/>
+        <ResourceDictionary Source="/DHBIMWATER.UI;component/Styles/GroupBox.xaml"/>
+        <ResourceDictionary Source="/DHBIMWATER.UI;component/Styles/ComboBoxes.xaml"/>
+        <ResourceDictionary Source="/DHBIMWATER.UI;component/Styles/ListBoxes.xaml"/>
+        <ResourceDictionary Source="/DHBIMWATER.UI;component/Styles/DataGrids.xaml"/>
+        <ResourceDictionary Source="/DHBIMWATER.UI;component/Styles/TabControls.xaml"/>
+        <ResourceDictionary Source="/DHBIMWATER.UI;component/Styles/ProgressBars.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+    
+</ResourceDictionary>

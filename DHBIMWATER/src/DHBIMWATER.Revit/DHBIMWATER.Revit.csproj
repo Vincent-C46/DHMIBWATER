@@ -1,6 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <PackageReference Include="Costura.Fody" Version="6.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\DHBIMWATER.Application\DHBIMWATER.Application.csproj" />
     <ProjectReference Include="..\DHBIMWATER.Infrastructure\DHBIMWATER.Infrastructure.csproj" />
     <ProjectReference Include="..\DHBIMWATER.UI\DHBIMWATER.UI.csproj" />
@@ -9,9 +16,11 @@
   <ItemGroup>
     <Reference Include="RevitAPI">
       <HintPath>..\..\..\..\..\..\..\Program Files\Autodesk\Revit 2025\RevitAPI.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="RevitAPIUI">
       <HintPath>..\..\..\..\..\..\..\Program Files\Autodesk\Revit 2025\RevitAPIUI.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
 
@@ -24,7 +33,7 @@
   </PropertyGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy /Y &quot;$(ProjectDir)DHBIMWATER.addin&quot; &quot;C:\ProgramData\Autodesk\Revit\Addins\2025\&quot; /I&#xD;&#xA;if not exist &quot;C:\ProgramData\Autodesk\Revit\Addins\2025\DHBIMWATER\&quot; mkdir &quot;C:\ProgramData\Autodesk\Revit\Addins\2025\DHBIMWATER\&quot;&#xD;&#xA;xcopy /Y &quot;$(TargetDir)*.dll&quot; &quot;C:\ProgramData\Autodesk\Revit\Addins\2025\DHBIMWATER\&quot; /I&#xD;&#xA;if not exist &quot;C:\ProgramData\Autodesk\Revit\Addins\2025\DHBIMWATER\Resources\Icons\&quot; mkdir &quot;C:\ProgramData\Autodesk\Revit\Addins\2025\DHBIMWATER\Resources\Icons\&quot;&#xD;&#xA;xcopy /Y &quot;$(ProjectDir)..\DHBIMWATER.UI\Resources\Icons\*.png&quot; &quot;C:\ProgramData\Autodesk\Revit\Addins\2025\DHBIMWATER\Resources\Icons\&quot; /I" />
+    <Exec Command="xcopy /Y &quot;$(ProjectDir)DHBIMWATER.addin&quot; &quot;C:\ProgramData\Autodesk\Revit\Addins\2025\&quot; /I&#xD;&#xA;if not exist &quot;C:\ProgramData\Autodesk\Revit\Addins\2025\DHBIMWATER\&quot; mkdir &quot;C:\ProgramData\Autodesk\Revit\Addins\2025\DHBIMWATER\&quot;&#xD;&#xA;xcopy /Y &quot;$(TargetDir)*.dll&quot; &quot;C:\ProgramData\Autodesk\Revit\Addins\2025\DHBIMWATER\&quot; /I" />
   </Target>
 
 </Project>

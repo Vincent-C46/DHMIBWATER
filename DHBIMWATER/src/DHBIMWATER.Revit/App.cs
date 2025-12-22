@@ -1,4 +1,5 @@
 ﻿using Autodesk.Revit.UI;
+using DHBIMWATER.Infrastructure.Logging;
 using DHBIMWATER.Revit.DependencyInjection;
 using DHBIMWATER.Revit.UI;
 using DHBIMWATER.UI.DependencyInjection;
