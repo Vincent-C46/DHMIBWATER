@@ -21,6 +21,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sandbox", "sandbox", "{3D40
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DHBIMWATER.UI.Sandbox", "sandbox\DHBIMWATER.UI.Sandbox\DHBIMWATER.UI.Sandbox.csproj", "{7FFEAAA9-B2D2-4099-9216-FB10973FD7F4}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "installer", "installer", "{B4A5E1F2-3C8D-4E9A-9F7B-2D6E8A1C9B3D}"
+	ProjectSection(SolutionItems) = preProject
+		installer\DHBIMWATER-Setup.nsi = installer\DHBIMWATER-Setup.nsi
+		installer\License.txt = installer\License.txt
+		installer\README.md = installer\README.md
+		installer\.gitignore = installer\.gitignore
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

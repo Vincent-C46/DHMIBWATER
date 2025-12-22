@@ -1,0 +1,5 @@
+# Ignore generated installer executable
+*.exe
+
+# Ignore build artifacts
+output/
