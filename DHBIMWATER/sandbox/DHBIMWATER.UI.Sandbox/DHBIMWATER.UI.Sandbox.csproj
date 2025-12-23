@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <Folder Include="Services\Drafting\" />
+    <Folder Include="Services\Modeling\" />
     <Folder Include="Services\Quantification\" />
     <Folder Include="Services\Utilities\" />
   </ItemGroup>

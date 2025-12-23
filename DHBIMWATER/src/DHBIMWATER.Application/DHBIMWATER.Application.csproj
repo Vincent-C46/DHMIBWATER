@@ -4,6 +4,10 @@
     <ProjectReference Include="..\DHBIMWATER.Core\DHBIMWATER.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="DTOs\DistributionReservoir\" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net8.0-windows</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

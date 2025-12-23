@@ -1,6 +1,4 @@
-using DHBIMWATER.Core.Interfaces.Services.Modeling;
 using DHBIMWATER.UI.DependencyInjection;
-using DHBIMWATER.UI.Sandbox.Services.Modeling;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DHBIMWATER.UI.Sandbox.DependencyInjection;
@@ -22,7 +20,6 @@ public static class SandboxServiceRegistration
         services.AddTransient<MainWindow>();
 
         // Mock 서비스 등록
-        services.AddSingleton<IReservoirModelingService, MockReservoirModelingService>();
 
         return services;
     }
