@@ -23,10 +23,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DHBIMWATER.UI.Sandbox", "sa
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "installer", "installer", "{B4A5E1F2-3C8D-4E9A-9F7B-2D6E8A1C9B3D}"
 	ProjectSection(SolutionItems) = preProject
-		installer\DHBIMWATER-Setup.nsi = installer\DHBIMWATER-Setup.nsi
+		installer\.gitignore = installer\.gitignore
+		installer\DHBIMWATER_2025.nsi = installer\DHBIMWATER_2025.nsi
 		installer\License.txt = installer\License.txt
 		installer\README.md = installer\README.md
-		installer\.gitignore = installer\.gitignore
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ReadMe", "ReadMe", "{C8D5274F-AC00-46C7-1F8D-E88E81087A52}"
+	ProjectSection(SolutionItems) = preProject
+		CodingProcess.md = CodingProcess.md
+		..\..\Desktop\DeploymentChecklist.md = ..\..\Desktop\DeploymentChecklist.md
 	EndProjectSection
 EndProject
 Global
@@ -135,5 +141,8 @@ Global
 		{0A2C2E6C-2718-4824-9DCB-314A1F99C006} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{F3C81B2F-7536-4D4C-9EF3-3671D38970F2} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{7FFEAAA9-B2D2-4099-9216-FB10973FD7F4} = {3D40F055-384E-DE04-BB81-B7972E166B19}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F4B8CB35-EE17-4F6D-9533-AC8097EA639E}
 	EndGlobalSection
 EndGlobal

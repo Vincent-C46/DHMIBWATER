@@ -1,19 +1,19 @@
 ﻿using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using DHBIMWATER.Revit.DependencyInjection;
 using DHBIMWATER.UI.Views.Modeling;
 
 namespace DHBIMWATER.Revit.Commands
 {
     [Transaction(TransactionMode.Manual)]
-    public class ModelingCommand1 : IExternalCommand
+    public class ModelingCommand1 : CommandBase
     {
-        public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
+        protected override Result ExecuteInternal(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
-            // ServiceLocator를 통해 View 가져오기 및 DataContext 설정
-            var modeling1view = ServiceLocator.GetService<Modeling1View>();
-            modeling1view.ShowDialog();
-
+            // ServiceContainer에서 View 인스턴스 가져오기
+            var view = ServiceContainer.GetService<Modeling1View>();
+            view.ShowDialog();
             return Result.Succeeded;
         }
     }

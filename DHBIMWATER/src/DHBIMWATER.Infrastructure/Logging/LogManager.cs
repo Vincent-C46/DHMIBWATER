@@ -1,4 +1,6 @@
-﻿namespace DHBIMWATER.Infrastructure.Logging
+﻿using System.IO;
+
+namespace DHBIMWATER.Infrastructure.Logging
 {
     public static class LogManager
     {

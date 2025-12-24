@@ -1,10 +1,5 @@
 ﻿using Autodesk.Revit.UI;
-using DHBIMWATER.Infrastructure.Logging;
-using DHBIMWATER.Revit.DependencyInjection;
 using DHBIMWATER.Revit.UI;
-using DHBIMWATER.UI.DependencyInjection;
-using DHBIMWATER.UI.Views.Modeling;
-using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
 namespace DHBIMWATER.Revit
@@ -35,11 +30,7 @@ namespace DHBIMWATER.Revit
         public Result OnStartup(UIControlledApplication application)
         {
             // DI 컨테이너 초기화 및 서비스 등록
-            var services = new ServiceCollection();
-            services.AddRevitServices();  // Revit 관련 서비스
-            services.AddUIServices();      // UI View/ViewModel
-
-            ServiceLocator.ServiceProvider = services.BuildServiceProvider();
+            //ServiceContainer.Build();
 
             // Revit UI 등록
             RibbonBuilder.CreateRibbonPanel(application);

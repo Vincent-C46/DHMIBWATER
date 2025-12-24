@@ -4,7 +4,8 @@
       "Bash(del App.xaml App.xaml.cs MainWindow.xaml MainWindow.xaml.cs)",
       "Bash(dotnet build:*)",
       "Bash(echo.:*)",
-      "Bash(touch:*)"
+      "Bash(touch:*)",
+      "Bash(move:*)"
     ]
   }
 }

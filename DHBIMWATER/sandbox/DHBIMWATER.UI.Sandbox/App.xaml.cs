@@ -1,4 +1,7 @@
-﻿using DHBIMWATER.UI.Sandbox.DependencyInjection;
+﻿using DHBIMWATER.Application.DependencyInjection;
+using DHBIMWATER.Infrastructure.DependencyInjection;
+using DHBIMWATER.UI.DependencyInjection;
+using DHBIMWATER.UI.Sandbox.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
 
@@ -15,6 +18,9 @@ public partial class App : System.Windows.Application
         // DI 컨테이너 설정
         var services = new ServiceCollection();
         services.AddSandboxServices();
+        services.AddUIServices();      // UI View/ViewModel
+        services.AddApplicationServices(); // Application 서비스
+        services.AddMockInfrastructureServices(); // Mock Infrastructure 서비스 (Revit 없이 동작)
         _serviceProvider = services.BuildServiceProvider();
 
         // MainWindow를 DI로 생성하여 표시

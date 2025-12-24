@@ -8,11 +8,11 @@
 ;--------------------------------
 ; General
 Name "DHBIMWATER for Revit 2025"
-OutFile "C:\BuildOutput\DHBIMWATER\DHBIMWATER-Setup.exe"
+OutFile "C:\BuildOutput\DHBIMWATER\DHBIMWATER_2025.exe"
 Unicode True
 
 ; Default installation folder
-InstallDir "$APPDATA\Autodesk\Revit\Addins\2025\DHBIMWATER"
+InstallDir "C:\ProgramData\Autodesk\Revit\Addins\2025\DHBIMWATER"
 
 ; Define common variables
 !define REVIT_ADDINS_PATH "C:\ProgramData\Autodesk\Revit\Addins\2025"
@@ -30,7 +30,6 @@ RequestExecutionLevel user
 ; Pages
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_LICENSE "License.txt"
-!insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro MUI_PAGE_FINISH
 
@@ -39,7 +38,7 @@ RequestExecutionLevel user
 
 ;--------------------------------
 ; Languages
-!insertmacro MUI_LANGUAGE "English"
+!insertmacro MUI_LANGUAGE "Korean"
 
 ;--------------------------------
 ; Version Information
@@ -54,9 +53,8 @@ VIAddVersionKey "LegalCopyright" "Copyright (C) 2025 DH Corporation"
 ; Installer Sections
 
 Section "Install" SecInstall
+    ; Copy main DLL to ProgramData
     SetOutPath "$INSTDIR"
-
-    ; Copy main DLL (Costura.Fody merges all dependencies into this one DLL)
     File "C:\BuildOutput\DHBIMWATER\DHBIMWATER.Revit.dll"
 
     ; Copy .addin file to ProgramData
@@ -75,8 +73,6 @@ Section "Install" SecInstall
     WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\DHBIMWATER" "DisplayVersion" "1.0.0"
     WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\DHBIMWATER" "NoModify" 1
     WriteRegDWORD HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\DHBIMWATER" "NoRepair" 1
-
-    MessageBox MB_OK "DHBIMWATER has been installed successfully!$\n$\nPlease restart Revit to load the addin."
 SectionEnd
 
 ;--------------------------------
@@ -95,6 +91,4 @@ Section "Uninstall"
 
     ; Remove registry keys
     DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\DHBIMWATER"
-
-    MessageBox MB_OK "DHBIMWATER has been uninstalled successfully!"
 SectionEnd
