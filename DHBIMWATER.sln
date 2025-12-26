@@ -29,9 +29,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "installer", "installer", "{
 		installer\README.md = installer\README.md
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ReadMe", "ReadMe", "{C8D5274F-AC00-46C7-1F8D-E88E81087A52}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{C8D5274F-AC00-46C7-1F8D-E88E81087A52}"
 	ProjectSection(SolutionItems) = preProject
-		CodingProcess.md = CodingProcess.md
+		docs\GuideLine - 복사본 (2).md = docs\GuideLine - 복사본 (2).md
+		docs\02_컨트럴등록.md = docs\02_컨트럴등록.md
+		docs\01_기본셋팅.md = docs\01_기본셋팅.md
 	EndProjectSection
 EndProject
 Global

@@ -1,6 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<ItemGroup>
+	  <None Remove="Resources\Icons\revit.png" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\DHBIMWATER.Application\DHBIMWATER.Application.csproj" />
 		<ProjectReference Include="..\DHBIMWATER.Infrastructure\DHBIMWATER.Infrastructure.csproj" />
 	</ItemGroup>
@@ -24,6 +28,7 @@
 		<Resource Include="Resources\Icons\modeling.png">
 			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
 		</Resource>
+		<Resource Include="Resources\Icons\revit.png" />
 	</ItemGroup>
 
 	<PropertyGroup>

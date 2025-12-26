@@ -1,4 +1,6 @@
+using DHBIMWATER.UI.ViewModels.GuideLine;
 using DHBIMWATER.UI.ViewModels.Modeling;
+using DHBIMWATER.UI.Views.GuideLine;
 using DHBIMWATER.UI.Views.Modeling;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -8,11 +10,13 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddUIServices(this IServiceCollection services)
     {
-        // View Îì±Î°ù
+        // View µÓ∑œ
         services.AddTransient<Modeling1View>();
+        services.AddTransient<GuideLineView>();
 
-        // ViewModel Îì±Î°ù
+        // ViewModel µÓ∑œ
         services.AddTransient<Modeling1ViewModel>();
+        services.AddTransient<GuideLineViewModel>();
 
         return services;
     }

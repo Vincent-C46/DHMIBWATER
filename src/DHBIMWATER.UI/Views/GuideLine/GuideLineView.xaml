@@ -1,0 +1,254 @@
+﻿<Window x:Class="DHBIMWATER.UI.Views.GuideLine.GuideLineView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:DHBIMWATER.UI.Controls"
+        xmlns:vm="clr-namespace:DHBIMWATER.UI.ViewModels.GuideLine"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance vm:GuideLineViewModel, IsDesignTimeCreatable=False}"
+        
+        Title="GuideLineWindow" 
+        Height="700" Width="1100"
+        WindowStartupLocation="CenterScreen"
+        Background="#F4F7F9" 
+        AllowsTransparency="False" 
+        WindowStyle="None"
+        FontFamily="Segoe UI, Malgun Gothic">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="0" CornerRadius="15" GlassFrameThickness="1" UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/DHBIMWATER.UI;component/Styles/Generic.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+
+        <controls:TitleBar Grid.Row="0"/>
+
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="30">
+            <StackPanel>
+                <!-- Section: TextBlock Styles -->
+                <TextBlock Text="TextBlock Styles" Style="{StaticResource HeadingTextBlockStyle}" Margin="0,0,0,20"/>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                    <TextBlock Text="Heading :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                    <TextBlock Text="This is Heading Style" Style="{StaticResource HeadingTextBlockStyle}" Margin="10,0"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                    <TextBlock Text="SubHeading :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                    <TextBlock Text="This is SubHeading Style" Style="{StaticResource SubHeadingTextBlockStyle}" Margin="10,0"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                    <TextBlock Text="Body :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                    <TextBlock Text="This is Body Style" Style="{StaticResource BodyTextBlockStyle}" Margin="10,0"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                    <TextBlock Text="Caption :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                    <TextBlock Text="This is Caption Style" Style="{StaticResource CaptionTextBlockStyle}" Margin="10,0"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                    <TextBlock Text="Label :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                    <TextBlock Text="This is Label Style" Style="{StaticResource LabelTextBlockStyle}" Margin="10,0"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                    <TextBlock Text="Primary :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                    <TextBlock Text="This is Primary Style" Style="{StaticResource PrimaryTextBlockStyle}" Margin="10,0"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                    <TextBlock Text="Success :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                    <TextBlock Text="Success Message" Style="{StaticResource SuccessTextBlockStyle}" Margin="10,0"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                    <TextBlock Text="Warning :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                    <TextBlock Text="Warning Message" Style="{StaticResource WarningTextBlockStyle}" Margin="10,0"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                    <TextBlock Text="Error :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                    <TextBlock Text="Error Message" Style="{StaticResource ErrorTextBlockStyle}" Margin="10,0"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                    <TextBlock Text="Info :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                    <TextBlock Text="Info Message" Style="{StaticResource InfoTextBlockStyle}" Margin="10,0"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                    <TextBlock Text="Bold :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                    <TextBlock Text="This is Bold Style" Style="{StaticResource BoldTextBlockStyle}" Margin="10,0"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                    <TextBlock Text="Light :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                    <TextBlock Text="This is Light Style" Style="{StaticResource LightTextBlockStyle}" Margin="10,0"/>
+                </StackPanel>
+
+                <!-- Separator -->
+                <Border Height="1" Background="{StaticResource Brush.Gray.300}" Margin="0,30,0,30"/>
+
+                <!-- Section: Input Controls -->
+                <TextBlock Text="Input Controls" Style="{StaticResource HeadingTextBlockStyle}" Margin="0,0,0,20"/>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                    <TextBlock Text="Button :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                    <Button Style="{StaticResource PrimaryButtonStyle}"
+                            Content="Primary Button"
+                            Width="150"
+                            Margin="10,0"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                    <TextBlock Text="TextBox :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                    <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
+                             Text="Sample TextBox"
+                             Width="250"
+                             Margin="10,0"
+                             Padding="8"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                    <TextBlock Text="CheckBox :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                    <CheckBox Style="{StaticResource PrimaryCheckBoxStyle}"
+                              Content="Sample CheckBox"
+                              Margin="10,0"/>
+                </StackPanel>
+
+                <!-- Separator -->
+                <Border Height="1" Background="{StaticResource Brush.Gray.300}" Margin="0,30,0,30"/>
+
+                <!-- Section: Selection Controls -->
+                <TextBlock Text="Selection Controls" Style="{StaticResource HeadingTextBlockStyle}" Margin="0,0,0,20"/>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                    <TextBlock Text="ComboBox :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                    <ComboBox Style="{StaticResource PrimaryComboBoxStyle}"
+                              Width="250"
+                              Margin="10,0"
+                              SelectedIndex="0">
+                        <ComboBoxItem Content="Option 1"/>
+                        <ComboBoxItem Content="Option 2"/>
+                        <ComboBoxItem Content="Option 3"/>
+                    </ComboBox>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                    <TextBlock Text="ListBox :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Top"/>
+                    <ListBox Style="{StaticResource PrimaryListBoxStyle}"
+                             Width="250"
+                             Height="120"
+                             Margin="10,0">
+                        <ListBoxItem Content="List Item 1"/>
+                        <ListBoxItem Content="List Item 2"/>
+                        <ListBoxItem Content="List Item 3"/>
+                        <ListBoxItem Content="List Item 4"/>
+                    </ListBox>
+                </StackPanel>
+
+                <!-- Separator -->
+                <Border Height="1" Background="{StaticResource Brush.Gray.300}" Margin="0,30,0,30"/>
+
+                <!-- Section: Progress Controls -->
+                <TextBlock Text="Progress Controls" Style="{StaticResource HeadingTextBlockStyle}" Margin="0,0,0,20"/>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                    <TextBlock Text="ProgressBar :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                    <ProgressBar Style="{StaticResource PrimaryProgressBarStyle}"
+                                 Width="250"
+                                 Value="65"
+                                 Maximum="100"
+                                 Margin="10,0"/>
+                </StackPanel>
+
+                <!-- Separator -->
+                <Border Height="1" Background="{StaticResource Brush.Gray.300}" Margin="0,30,0,30"/>
+
+                <!-- Section: Container Controls -->
+                <TextBlock Text="Container Controls" Style="{StaticResource HeadingTextBlockStyle}" Margin="0,0,0,20"/>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,15" HorizontalAlignment="Left">
+                    <TextBlock Text="GroupBox :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Top"/>
+                    <GroupBox Style="{StaticResource PrimaryGroupBox}"
+                              Header="Group Title"
+                              Width="400"
+                              Margin="10,0">
+                        <StackPanel>
+                            <TextBlock Text="This is content inside a GroupBox" Style="{StaticResource BodyTextBlockStyle}" Margin="0,5"/>
+                            <TextBlock Text="Multiple elements can be grouped together" Style="{StaticResource BodyTextBlockStyle}" Margin="0,5"/>
+                        </StackPanel>
+                    </GroupBox>
+                </StackPanel>
+
+                <StackPanel Margin="0,15,0,15" HorizontalAlignment="Left">
+                    <TextBlock Text="TabControl :" Style="{StaticResource LabelTextBlockStyle}" Margin="0,0,0,10"/>
+                    <TabControl Style="{StaticResource PrimaryTabControlStyle}"
+                                Width="600"
+                                Height="200"
+                                Margin="0,0">
+                        <TabItem Header="Tab 1">
+                            <StackPanel Margin="20">
+                                <TextBlock Text="Content for Tab 1" Style="{StaticResource SubHeadingTextBlockStyle}"/>
+                                <TextBlock Text="This is the first tab content" Style="{StaticResource BodyTextBlockStyle}" Margin="0,10"/>
+                            </StackPanel>
+                        </TabItem>
+                        <TabItem Header="Tab 2">
+                            <StackPanel Margin="20">
+                                <TextBlock Text="Content for Tab 2" Style="{StaticResource SubHeadingTextBlockStyle}"/>
+                                <TextBlock Text="This is the second tab content" Style="{StaticResource BodyTextBlockStyle}" Margin="0,10"/>
+                            </StackPanel>
+                        </TabItem>
+                        <TabItem Header="Tab 3">
+                            <StackPanel Margin="20">
+                                <TextBlock Text="Content for Tab 3" Style="{StaticResource SubHeadingTextBlockStyle}"/>
+                                <TextBlock Text="This is the third tab content" Style="{StaticResource BodyTextBlockStyle}" Margin="0,10"/>
+                            </StackPanel>
+                        </TabItem>
+                    </TabControl>
+                </StackPanel>
+
+                <!-- Separator -->
+                <Border Height="1" Background="{StaticResource Brush.Gray.300}" Margin="0,30,0,30"/>
+
+                <!-- Section: Data Controls -->
+                <TextBlock Text="Data Controls" Style="{StaticResource HeadingTextBlockStyle}" Margin="0,0,0,20"/>
+
+                <StackPanel Margin="0,0,0,15" HorizontalAlignment="Left">
+                    <TextBlock Text="DataGrid :" Style="{StaticResource LabelTextBlockStyle}" Margin="0,0,0,10"/>
+                    <DataGrid Style="{StaticResource PrimaryDataGridStyle}"
+                              Width="700"
+                              Height="200"
+                              ItemsSource="{Binding SampleData}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*"/>
+                            <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="2*"/>
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+
+                <!-- Bottom spacing -->
+                <Border Height="30"/>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+
+</Window>

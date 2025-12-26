@@ -5,6 +5,7 @@
                      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                      xmlns:fluent="urn:fluent-ribbon"
                      xmlns:local="clr-namespace:DHBIMWATER.UI.Sandbox"
+                     d:DataContext="{d:DesignInstance Type=local:MainViewModel, IsDesignTimeCreatable=False}"
                      mc:Ignorable="d"
                      Title="DHBIMWATER"
                      Height="800" Width="1400"
@@ -29,7 +30,9 @@
                                    Command="{Binding OpenModeling1ViewCommand}"
                                    LargeIcon="pack://application:,,,/DHBIMWATER.UI;component/Resources/Icons/modeling.png"/>
                     <fluent:Button Header="모델링2"
-                                   FontWeight="Normal"/>
+                                   FontWeight="Normal"
+                                   LargeIcon="pack://application:,,,/DHBIMWATER.UI;component/Resources/Icons/revit.png"
+                                   Command="{Binding OpenGuideLineViewCommand}"/>
                     <fluent:Button Header="모델링3"        
                                    FontWeight="Normal"/>
                 </fluent:RibbonGroupBox>

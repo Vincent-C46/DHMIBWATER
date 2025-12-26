@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="test\" />
     <Folder Include="Services\Drafting\" />
     <Folder Include="Services\Modeling\" />
     <Folder Include="Services\Quantification\" />
