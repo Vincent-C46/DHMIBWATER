@@ -7,10 +7,6 @@
       "RelativeMoniker": "D:0:0:{0A2C2E6C-2718-4824-9DCB-314A1F99C006}|src\\DHBIMWATER.UI\\DHBIMWATER.UI.csproj|solutionrelative:src\\dhbimwater.ui\\views\\guideline\\guidelineview.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{C8D5274F-AC00-46C7-1F8D-E88E81087A52}|docs{C8D5274F-AC00-46C7-1F8D-E88E81087A52}|D:\\Projects\\DHBIMWATER\\docs\\02_\uCEE8\uD2B8\uB7F4\uB4F1\uB85D.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
-      "RelativeMoniker": "D:0:0:{C8D5274F-AC00-46C7-1F8D-E88E81087A52}|docs{C8D5274F-AC00-46C7-1F8D-E88E81087A52}|solutionrelative:docs\\02_\uCEE8\uD2B8\uB7F4\uB4F1\uB85D.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{0A2C2E6C-2718-4824-9DCB-314A1F99C006}|src\\DHBIMWATER.UI\\DHBIMWATER.UI.csproj|d:\\projects\\dhbimwater\\src\\dhbimwater.ui\\styles\\textboxes.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
       "RelativeMoniker": "D:0:0:{0A2C2E6C-2718-4824-9DCB-314A1F99C006}|src\\DHBIMWATER.UI\\DHBIMWATER.UI.csproj|solutionrelative:src\\dhbimwater.ui\\styles\\textboxes.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
     },
@@ -21,10 +17,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{0A2C2E6C-2718-4824-9DCB-314A1F99C006}|src\\DHBIMWATER.UI\\DHBIMWATER.UI.csproj|d:\\projects\\dhbimwater\\src\\dhbimwater.ui\\viewmodels\\guideline\\guidelineviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{0A2C2E6C-2718-4824-9DCB-314A1F99C006}|src\\DHBIMWATER.UI\\DHBIMWATER.UI.csproj|solutionrelative:src\\dhbimwater.ui\\viewmodels\\guideline\\guidelineviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{C8D5274F-AC00-46C7-1F8D-E88E81087A52}|docs{C8D5274F-AC00-46C7-1F8D-E88E81087A52}|D:\\Projects\\DHBIMWATER\\docs\\01_\uAE30\uBCF8\uC14B\uD305.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
-      "RelativeMoniker": "D:0:0:{C8D5274F-AC00-46C7-1F8D-E88E81087A52}|docs{C8D5274F-AC00-46C7-1F8D-E88E81087A52}|solutionrelative:docs\\01_\uAE30\uBCF8\uC14B\uD305.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
     }
   ],
   "DocumentGroupContainers": [
@@ -46,7 +38,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 2,
               "Title": "TextBlocks.xaml",
               "DocumentMoniker": "D:\\Projects\\DHBIMWATER\\src\\DHBIMWATER.UI\\Styles\\TextBlocks.xaml",
               "RelativeDocumentMoniker": "src\\DHBIMWATER.UI\\Styles\\TextBlocks.xaml",
@@ -58,7 +50,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 1,
               "Title": "TextBoxes.xaml",
               "DocumentMoniker": "D:\\Projects\\DHBIMWATER\\src\\DHBIMWATER.UI\\Styles\\TextBoxes.xaml",
               "RelativeDocumentMoniker": "src\\DHBIMWATER.UI\\Styles\\TextBoxes.xaml",
@@ -82,7 +74,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 3,
               "Title": "GuideLineViewModel.cs",
               "DocumentMoniker": "D:\\Projects\\DHBIMWATER\\src\\DHBIMWATER.UI\\ViewModels\\GuideLine\\GuideLineViewModel.cs",
               "RelativeDocumentMoniker": "src\\DHBIMWATER.UI\\ViewModels\\GuideLine\\GuideLineViewModel.cs",
@@ -91,38 +83,6 @@
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-12-26T03:54:03.523Z",
-              "EditorCaption": ""
-            }
-          ]
-        },
-        {
-          "DockedHeight": 218,
-          "SelectedChildIndex": 1,
-          "Children": [
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "01_\uAE30\uBCF8\uC14B\uD305.md",
-              "DocumentMoniker": "D:\\Projects\\DHBIMWATER\\docs\\01_\uAE30\uBCF8\uC14B\uD305.md",
-              "RelativeDocumentMoniker": "docs\\01_\uAE30\uBCF8\uC14B\uD305.md",
-              "ToolTip": "D:\\Projects\\DHBIMWATER\\docs\\01_\uAE30\uBCF8\uC14B\uD305.md",
-              "RelativeToolTip": "docs\\01_\uAE30\uBCF8\uC14B\uD305.md",
-              "ViewState": "AgIAADkAAAAAAAAAAAAIwEEAAAAZAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
-              "WhenOpened": "2025-12-26T03:40:58.622Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "02_\uCEE8\uD2B8\uB7F4\uB4F1\uB85D.md",
-              "DocumentMoniker": "D:\\Projects\\DHBIMWATER\\docs\\02_\uCEE8\uD2B8\uB7F4\uB4F1\uB85D.md",
-              "RelativeDocumentMoniker": "docs\\02_\uCEE8\uD2B8\uB7F4\uB4F1\uB85D.md",
-              "ToolTip": "D:\\Projects\\DHBIMWATER\\docs\\02_\uCEE8\uD2B8\uB7F4\uB4F1\uB85D.md*",
-              "RelativeToolTip": "docs\\02_\uCEE8\uD2B8\uB7F4\uB4F1\uB85D.md*",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAADAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
-              "WhenOpened": "2025-12-26T06:02:54.784Z",
               "EditorCaption": ""
             }
           ]
