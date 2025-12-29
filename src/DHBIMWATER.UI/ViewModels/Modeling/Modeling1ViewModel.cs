@@ -1,4 +1,4 @@
-﻿using DHBIMWATER.Application.Interface;
+﻿using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Application.UseCases;
 using DHBIMWATER.UI.Base;
 using DHBIMWATER.UI.Commands;

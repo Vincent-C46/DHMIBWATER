@@ -1,4 +1,4 @@
-﻿using DHBIMWATER.Application.Interface;
+﻿using DHBIMWATER.Application.Interfaces;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Mock
 {

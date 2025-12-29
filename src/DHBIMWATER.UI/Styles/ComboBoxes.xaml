@@ -10,9 +10,13 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ToggleButton">
                     <Border x:Name="templateRoot" Background="{StaticResource WhiteBrush}" 
-                        BorderBrush="{StaticResource CommonBorderBrush}" BorderThickness="1" CornerRadius="6">
+                            BorderBrush="{StaticResource CommonBorderBrush}" 
+                            BorderThickness="1" 
+                            CornerRadius="6">
                         <Grid HorizontalAlignment="Right" Width="30">
-                            <Path Data="M 0 0 L 4 4 L 8 0" Stroke="{StaticResource MainTextBrush}" StrokeThickness="2" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                            <Path Data="M 0 0 L 4 4 L 8 0" Stroke="{StaticResource MainTextBrush}" 
+                                  StrokeThickness="2" VerticalAlignment="Center" 
+                                  HorizontalAlignment="Center"/>
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
@@ -34,13 +38,24 @@
                 <ControlTemplate TargetType="ComboBox">
                     <Grid>
                         <ToggleButton Style="{StaticResource ComboBoxToggleButton}" IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
-                        <ContentPresenter IsHitTestVisible="False" Content="{TemplateBinding SelectionBoxItem}" 
-                                      ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" 
-                                      ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}" 
-                                      Margin="{TemplateBinding Padding}" VerticalAlignment="Center"/>
-                        <Popup x:Name="PART_Popup" AllowsTransparency="true" IsOpen="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}}" Placement="Bottom">
-                            <Border x:Name="dropDownBorder" Background="White" BorderBrush="{StaticResource BorderBrush}" 
-                                BorderThickness="1" CornerRadius="0,0,8,8" MinWidth="{TemplateBinding ActualWidth}" MaxHeight="200">
+                        <ContentPresenter IsHitTestVisible="False" 
+                                          Content="{TemplateBinding SelectionBoxItem}" 
+                                          ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" 
+                                          ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                          ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}" 
+                                          Margin="{TemplateBinding Padding}" 
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+                        <Popup x:Name="PART_Popup" 
+                               AllowsTransparency="true" 
+                               IsOpen="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}}" 
+                               Placement="Bottom">
+                            <Border x:Name="dropDownBorder" 
+                                    Background="White" BorderBrush="{StaticResource BorderBrush}" 
+                                    BorderThickness="1" 
+                                    CornerRadius="0,0,8,8" 
+                                    MinWidth="{TemplateBinding ActualWidth}" 
+                                    MaxHeight="200">
                                 <ScrollViewer Margin="4" SnapsToDevicePixels="True">
                                     <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
                                 </ScrollViewer>

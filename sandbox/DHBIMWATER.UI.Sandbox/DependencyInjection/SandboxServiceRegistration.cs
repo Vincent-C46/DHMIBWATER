@@ -7,9 +7,6 @@ public static class SandboxServiceRegistration
 {
     public static IServiceCollection AddSandboxServices(this IServiceCollection services)
     {
-        // UI Services 등록
-        //services.AddUIServices();
-
         // ViewModels 등록
         services.AddTransient<MainViewModel>();
 

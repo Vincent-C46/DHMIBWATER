@@ -1,4 +1,4 @@
-﻿namespace DHBIMWATER.Application.Interface
+﻿namespace DHBIMWATER.Application.Interfaces
 {
     public interface IGenericModelRepository
     {

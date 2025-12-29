@@ -1,6 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <Compile Remove="test\**" />
+    <EmbeddedResource Remove="test\**" />
+    <None Remove="test\**" />
+    <Page Remove="test\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\DHBIMWATER.UI\DHBIMWATER.UI.csproj" />
     <ProjectReference Include="..\..\src\DHBIMWATER.Infrastructure\DHBIMWATER.Infrastructure.csproj" />
   </ItemGroup>
@@ -11,7 +18,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="test\" />
     <Folder Include="Services\Drafting\" />
     <Folder Include="Services\Modeling\" />
     <Folder Include="Services\Quantification\" />

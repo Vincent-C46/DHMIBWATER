@@ -6,13 +6,18 @@
     </ResourceDictionary.MergedDictionaries>
 
     <Style x:Key="PrimaryListBoxItemStyle" TargetType="ListBoxItem">
-        <Setter Property="Padding" Value="12,10"/>
-        <Setter Property="Margin" Value="2"/>
+        <Setter Property="Padding" Value="5"/>
+        <Setter Property="Margin" Value="0"/>
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ListBoxItem">
-                    <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="6" SnapsToDevicePixels="True">
+                    <Border x:Name="bd" 
+                            Background="{TemplateBinding Background}" 
+                            Margin="{TemplateBinding Margin}"
+                            Padding="{TemplateBinding Padding}"
+                            CornerRadius="5" 
+                            SnapsToDevicePixels="True">
                         <ContentPresenter VerticalAlignment="Center"/>
                     </Border>
                     <ControlTemplate.Triggers>
@@ -37,8 +42,10 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ListBox">
-                    <Border BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" 
-                        CornerRadius="10" Background="{TemplateBinding Background}">
+                    <Border BorderBrush="{TemplateBinding BorderBrush}" 
+                            BorderThickness="{TemplateBinding BorderThickness}" 
+                            CornerRadius="10" 
+                            Background="{TemplateBinding Background}">
                         <ScrollViewer Padding="5">
                             <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
                         </ScrollViewer>

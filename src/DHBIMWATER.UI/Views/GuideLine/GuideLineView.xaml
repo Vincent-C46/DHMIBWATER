@@ -53,55 +53,6 @@
                     <TextBlock Text="This is SubHeading Style" Style="{StaticResource SubHeadingTextBlockStyle}" Margin="10,0"/>
                 </StackPanel>
 
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                    <TextBlock Text="Body :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
-                    <TextBlock Text="This is Body Style" Style="{StaticResource BodyTextBlockStyle}" Margin="10,0"/>
-                </StackPanel>
-
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                    <TextBlock Text="Caption :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
-                    <TextBlock Text="This is Caption Style" Style="{StaticResource CaptionTextBlockStyle}" Margin="10,0"/>
-                </StackPanel>
-
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                    <TextBlock Text="Label :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
-                    <TextBlock Text="This is Label Style" Style="{StaticResource LabelTextBlockStyle}" Margin="10,0"/>
-                </StackPanel>
-
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                    <TextBlock Text="Primary :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
-                    <TextBlock Text="This is Primary Style" Style="{StaticResource PrimaryTextBlockStyle}" Margin="10,0"/>
-                </StackPanel>
-
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                    <TextBlock Text="Success :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
-                    <TextBlock Text="Success Message" Style="{StaticResource SuccessTextBlockStyle}" Margin="10,0"/>
-                </StackPanel>
-
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                    <TextBlock Text="Warning :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
-                    <TextBlock Text="Warning Message" Style="{StaticResource WarningTextBlockStyle}" Margin="10,0"/>
-                </StackPanel>
-
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                    <TextBlock Text="Error :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
-                    <TextBlock Text="Error Message" Style="{StaticResource ErrorTextBlockStyle}" Margin="10,0"/>
-                </StackPanel>
-
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                    <TextBlock Text="Info :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
-                    <TextBlock Text="Info Message" Style="{StaticResource InfoTextBlockStyle}" Margin="10,0"/>
-                </StackPanel>
-
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                    <TextBlock Text="Bold :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
-                    <TextBlock Text="This is Bold Style" Style="{StaticResource BoldTextBlockStyle}" Margin="10,0"/>
-                </StackPanel>
-
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                    <TextBlock Text="Light :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
-                    <TextBlock Text="This is Light Style" Style="{StaticResource LightTextBlockStyle}" Margin="10,0"/>
-                </StackPanel>
 
                 <!-- Separator -->
                 <Border Height="1" Background="{StaticResource Brush.Gray.300}" Margin="0,30,0,30"/>
@@ -112,6 +63,7 @@
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                     <TextBlock Text="Button :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                     <Button Style="{StaticResource PrimaryButtonStyle}"
+                            Command="{Binding ButtonCommand}"
                             Content="Primary Button"
                             Width="150"
                             Margin="10,0"/>
@@ -120,15 +72,16 @@
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                     <TextBlock Text="TextBox :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                     <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                             Text="Sample TextBox"
+                             Text="{Binding TextBoxContent}"
                              Width="250"
                              Margin="10,0"
                              Padding="8"/>
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                    <TextBlock Text="CheckBox :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                    <TextBlock Text="CheckBoxs :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                     <CheckBox Style="{StaticResource PrimaryCheckBoxStyle}"
+                              IsChecked="{Binding IsCheckBoxChecked}"
                               Content="Sample CheckBox"
                               Margin="10,0"/>
                 </StackPanel>
@@ -142,26 +95,22 @@
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                     <TextBlock Text="ComboBox :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                     <ComboBox Style="{StaticResource PrimaryComboBoxStyle}"
-                              Width="250"
+                              ItemsSource="{Binding Families}"
+                              DisplayMemberPath="FamilyName"
+                              SelectedItem="{Binding SelectedFamily}"
+                              Width="400"
                               Margin="10,0"
-                              SelectedIndex="0">
-                        <ComboBoxItem Content="Option 1"/>
-                        <ComboBoxItem Content="Option 2"/>
-                        <ComboBoxItem Content="Option 3"/>
-                    </ComboBox>
+                              SelectedIndex="0"/>
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                     <TextBlock Text="ListBox :" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Top"/>
                     <ListBox Style="{StaticResource PrimaryListBoxStyle}"
-                             Width="250"
-                             Height="120"
-                             Margin="10,0">
-                        <ListBoxItem Content="List Item 1"/>
-                        <ListBoxItem Content="List Item 2"/>
-                        <ListBoxItem Content="List Item 3"/>
-                        <ListBoxItem Content="List Item 4"/>
-                    </ListBox>
+                             ItemsSource="{Binding Columns}"
+                             DisplayMemberPath="ColumnName"
+                             Width="400"
+                             Height="300"
+                             Margin="10,0"/>
                 </StackPanel>
 
                 <!-- Separator -->

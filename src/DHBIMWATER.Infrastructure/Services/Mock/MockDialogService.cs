@@ -1,7 +1,7 @@
-﻿using DHBIMWATER.Application.Interface;
+﻿using DHBIMWATER.Application.Interfaces;
 using System.Windows;
 
-namespace DHBIMWATER.Infrastructure.Repositories.Mock
+namespace DHBIMWATER.Infrastructure.Services.Mock
 {
     /// <summary>
     /// Mock 다이얼로그 서비스 (Sandbox/테스트 환경용)
