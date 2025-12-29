@@ -31,9 +31,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "installer", "installer", "{
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{C8D5274F-AC00-46C7-1F8D-E88E81087A52}"
 	ProjectSection(SolutionItems) = preProject
-		docs\02_컨트럴등록.md = docs\02_컨트럴등록.md
 		docs\01_기본셋팅.md = docs\01_기본셋팅.md
+		docs\02_컨트럴등록.md = docs\02_컨트럴등록.md
 		docs\03_뷰모델구현.md = docs\03_뷰모델구현.md
+		04_Github.md = 04_Github.md
 	EndProjectSection
 EndProject
 Global
