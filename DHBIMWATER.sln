@@ -26,7 +26,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "installer", "installer", "{
 		installer\.gitignore = installer\.gitignore
 		installer\DHBIMWATER_2025.nsi = installer\DHBIMWATER_2025.nsi
 		installer\License.txt = installer\License.txt
-		installer\README.md = installer\README.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{C8D5274F-AC00-46C7-1F8D-E88E81087A52}"
