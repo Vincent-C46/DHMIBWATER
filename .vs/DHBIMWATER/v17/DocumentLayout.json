@@ -3,12 +3,22 @@
   "WorkspaceRootPath": "D:\\Projects\\DHBIMWATER\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{C8D5274F-AC00-46C7-1F8D-E88E81087A52}|docs{C8D5274F-AC00-46C7-1F8D-E88E81087A52}|D:\\Projects\\DHBIMWATER\\04_Github.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
-      "RelativeMoniker": "D:0:0:{C8D5274F-AC00-46C7-1F8D-E88E81087A52}|docs{C8D5274F-AC00-46C7-1F8D-E88E81087A52}|solutionrelative:04_Github.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
+<<<<<<< Updated upstream
+      "AbsoluteMoniker": "D:0:0:{C8D5274F-AC00-46C7-1F8D-E88E81087A52}|docs{C8D5274F-AC00-46C7-1F8D-E88E81087A52}|D:\\Projects\\DHBIMWATER\\docs\\04_Github.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
+      "RelativeMoniker": "D:0:0:{C8D5274F-AC00-46C7-1F8D-E88E81087A52}|docs{C8D5274F-AC00-46C7-1F8D-E88E81087A52}|solutionrelative:docs\\04_Github.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
+=======
+      "AbsoluteMoniker": "D:0:0:{0A2C2E6C-2718-4824-9DCB-314A1F99C006}|src\\DHBIMWATER.UI\\DHBIMWATER.UI.csproj|d:\\projects\\dhbimwater\\src\\dhbimwater.ui\\viewmodels\\guideline\\guidelineviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0A2C2E6C-2718-4824-9DCB-314A1F99C006}|src\\DHBIMWATER.UI\\DHBIMWATER.UI.csproj|solutionrelative:src\\dhbimwater.ui\\viewmodels\\guideline\\guidelineviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0A2C2E6C-2718-4824-9DCB-314A1F99C006}|src\\DHBIMWATER.UI\\DHBIMWATER.UI.csproj|d:\\projects\\dhbimwater\\src\\dhbimwater.ui\\styles\\comboboxes.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{0A2C2E6C-2718-4824-9DCB-314A1F99C006}|src\\DHBIMWATER.UI\\DHBIMWATER.UI.csproj|solutionrelative:src\\dhbimwater.ui\\styles\\comboboxes.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+>>>>>>> Stashed changes
     },
     {
       "AbsoluteMoniker": "D:0:0:{0A2C2E6C-2718-4824-9DCB-314A1F99C006}|src\\DHBIMWATER.UI\\DHBIMWATER.UI.csproj|d:\\projects\\dhbimwater\\src\\dhbimwater.ui\\views\\guideline\\guidelineview.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
       "RelativeMoniker": "D:0:0:{0A2C2E6C-2718-4824-9DCB-314A1F99C006}|src\\DHBIMWATER.UI\\DHBIMWATER.UI.csproj|solutionrelative:src\\dhbimwater.ui\\views\\guideline\\guidelineview.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+<<<<<<< Updated upstream
     },
     {
       "AbsoluteMoniker": "D:0:0:{0A2C2E6C-2718-4824-9DCB-314A1F99C006}|src\\DHBIMWATER.UI\\DHBIMWATER.UI.csproj|d:\\projects\\dhbimwater\\src\\dhbimwater.ui\\styles\\comboboxes.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
@@ -17,6 +27,8 @@
     {
       "AbsoluteMoniker": "D:0:0:{0A2C2E6C-2718-4824-9DCB-314A1F99C006}|src\\DHBIMWATER.UI\\DHBIMWATER.UI.csproj|d:\\projects\\dhbimwater\\src\\dhbimwater.ui\\viewmodels\\guideline\\guidelineviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{0A2C2E6C-2718-4824-9DCB-314A1F99C006}|src\\DHBIMWATER.UI\\DHBIMWATER.UI.csproj|solutionrelative:src\\dhbimwater.ui\\viewmodels\\guideline\\guidelineviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+=======
+>>>>>>> Stashed changes
     }
   ],
   "DocumentGroupContainers": [
@@ -26,7 +38,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 236,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 4,
           "Children": [
             {
               "$type": "Bookmark",
@@ -38,20 +50,24 @@
             },
             {
               "$type": "Document",
+<<<<<<< Updated upstream
               "DocumentIndex": 0,
               "Title": "04_Github.md",
-              "DocumentMoniker": "D:\\Projects\\DHBIMWATER\\04_Github.md",
-              "RelativeDocumentMoniker": "04_Github.md",
-              "ToolTip": "D:\\Projects\\DHBIMWATER\\04_Github.md",
-              "RelativeToolTip": "04_Github.md",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAA/AAAAAAAAAA==",
+              "DocumentMoniker": "D:\\Projects\\DHBIMWATER\\docs\\04_Github.md",
+              "RelativeDocumentMoniker": "docs\\04_Github.md",
+              "ToolTip": "D:\\Projects\\DHBIMWATER\\docs\\04_Github.md",
+              "RelativeToolTip": "docs\\04_Github.md",
+              "ViewState": "AgIAAAoAAAAAAAAAAAAQwBQAAAASAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
-              "WhenOpened": "2025-12-29T22:55:54.044Z",
+              "WhenOpened": "2025-12-29T23:05:45.607Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 1,
+=======
+              "DocumentIndex": 2,
+>>>>>>> Stashed changes
               "Title": "GuideLineView.xaml",
               "DocumentMoniker": "D:\\Projects\\DHBIMWATER\\src\\DHBIMWATER.UI\\Views\\GuideLine\\GuideLineView.xaml",
               "RelativeDocumentMoniker": "src\\DHBIMWATER.UI\\Views\\GuideLine\\GuideLineView.xaml",
@@ -75,13 +91,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 0,
               "Title": "GuideLineViewModel.cs",
               "DocumentMoniker": "D:\\Projects\\DHBIMWATER\\src\\DHBIMWATER.UI\\ViewModels\\GuideLine\\GuideLineViewModel.cs",
               "RelativeDocumentMoniker": "src\\DHBIMWATER.UI\\ViewModels\\GuideLine\\GuideLineViewModel.cs",
               "ToolTip": "D:\\Projects\\DHBIMWATER\\src\\DHBIMWATER.UI\\ViewModels\\GuideLine\\GuideLineViewModel.cs",
               "RelativeToolTip": "src\\DHBIMWATER.UI\\ViewModels\\GuideLine\\GuideLineViewModel.cs",
-              "ViewState": "AgIAAEsAAAAAAAAAAAAYwFoAAAAUAAAAAAAAAA==",
+              "ViewState": "AgIAAEsAAAAAAAAAAAAYwE8AAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-12-26T03:54:03.523Z"
             }
