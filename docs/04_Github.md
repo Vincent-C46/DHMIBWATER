@@ -21,9 +21,17 @@
 	1) GitHub 저장소로 이동
 	2) dev 브랜치를 현재 브랜치로 설정
 	3) Compare & pull request 클릭
-	4) PR 제목 및 설명 작성하고 Create pull request 클릭
+	4) 반드시 base 브랜치는 dev 로 설정
+	5) PR 제목 및 설명 작성하고 Create pull request 클릭
 
 4. 관리자 승인 및 병합
 	1) 관리자가 PR 검토 및 승인
 	2) Merge pull request 클릭하여 dev 브랜치에 병합
 	3) Confirm merge 클릭하여 병합 완료
+
+	5. feature 작업 중 dev 브랜치 변경 사항 반영
+	1) git checkout dev - dev 브랜치로 이동
+	2) git pull origin dev - 원격 저장소의 최신 dev 브랜치 가져오기
+	3) git checkout feature/test - 작업 중인 feature 브랜치로 이동
+	4) git merge dev - dev 브랜치의 변경 사항을 현재 브랜치에 병합
+	5) 충돌 해결 후 git add . 및 git commit -m "Merge dev into feature/test" - 병합 커밋
