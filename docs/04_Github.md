@@ -35,3 +35,9 @@
 	3) git checkout feature/test - 작업 중인 feature 브랜치로 이동
 	4) git merge dev - dev 브랜치의 변경 사항을 현재 브랜치에 병합
 	5) 충돌 해결 후 git add . 및 git commit -m "Merge dev into feature/test" - 병합 커밋
+
+5. 브랜치 삭제 (병합 후)
+	1) git checkout dev - dev 브랜치로 이동
+	2) git pull origin dev - 원격 저장소의 최신 dev 브랜치 가져오기
+	3) git branch -d feature/test - 로컬에서 feature/test 브랜치 삭제
+	4) git push origin --delete feature/test - 원격 저장소에서 feature/test 브랜치 삭제

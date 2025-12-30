@@ -3,8 +3,8 @@
   "WorkspaceRootPath": "D:\\Projects\\DHBIMWATER\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{C8D5274F-AC00-46C7-1F8D-E88E81087A52}|docs{C8D5274F-AC00-46C7-1F8D-E88E81087A52}|D:\\Projects\\DHBIMWATER\\04_Github.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
-      "RelativeMoniker": "D:0:0:{C8D5274F-AC00-46C7-1F8D-E88E81087A52}|docs{C8D5274F-AC00-46C7-1F8D-E88E81087A52}|solutionrelative:04_Github.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
+      "AbsoluteMoniker": "D:0:0:{C8D5274F-AC00-46C7-1F8D-E88E81087A52}|docs{C8D5274F-AC00-46C7-1F8D-E88E81087A52}|D:\\Projects\\DHBIMWATER\\docs\\04_Github.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}",
+      "RelativeMoniker": "D:0:0:{C8D5274F-AC00-46C7-1F8D-E88E81087A52}|docs{C8D5274F-AC00-46C7-1F8D-E88E81087A52}|solutionrelative:docs\\04_Github.md||{EFC0BB08-EA7D-40C6-A696-C870411A895B}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{0A2C2E6C-2718-4824-9DCB-314A1F99C006}|src\\DHBIMWATER.UI\\DHBIMWATER.UI.csproj|d:\\projects\\dhbimwater\\src\\dhbimwater.ui\\views\\guideline\\guidelineview.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
@@ -40,13 +40,13 @@
               "$type": "Document",
               "DocumentIndex": 0,
               "Title": "04_Github.md",
-              "DocumentMoniker": "D:\\Projects\\DHBIMWATER\\04_Github.md",
-              "RelativeDocumentMoniker": "04_Github.md",
-              "ToolTip": "D:\\Projects\\DHBIMWATER\\04_Github.md",
-              "RelativeToolTip": "04_Github.md",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAA/AAAAAAAAAA==",
+              "DocumentMoniker": "D:\\Projects\\DHBIMWATER\\docs\\04_Github.md",
+              "RelativeDocumentMoniker": "docs\\04_Github.md",
+              "ToolTip": "D:\\Projects\\DHBIMWATER\\docs\\04_Github.md",
+              "RelativeToolTip": "docs\\04_Github.md",
+              "ViewState": "AgIAAAoAAAAAAAAAAAAQwBQAAAASAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
-              "WhenOpened": "2025-12-29T22:55:54.044Z",
+              "WhenOpened": "2025-12-29T23:05:45.607Z",
               "EditorCaption": ""
             },
             {
