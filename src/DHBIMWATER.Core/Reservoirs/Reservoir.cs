@@ -3,6 +3,7 @@
     // Core 계층
     public class Reservoir
     {
+        // 버그 🐞
         public string Name { get; }
         public double CapacityM3 { get; }        // 총 용량 (m3)
         public double MinWaterLevel { get; }      // EL.m
