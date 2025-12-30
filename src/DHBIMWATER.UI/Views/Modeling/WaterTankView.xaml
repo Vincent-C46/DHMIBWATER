@@ -1,0 +1,219 @@
+﻿<Window x:Class="DHBIMWATER.UI.Views.Modeling.WaterTankView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:DHBIMWATER.UI.Controls"
+        xmlns:vm="clr-namespace:DHBIMWATER.UI.ViewModels.Modeling"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance vm:WaterTankViewModel, IsDesignTimeCreatable=False}"
+        
+        Title="DHBIM WATER - WTank Builder" 
+        Height="700" Width="1100"
+        WindowStartupLocation="CenterScreen"
+        Background="#F4F7F9" 
+        AllowsTransparency="False" 
+        WindowStyle="None"
+        FontFamily="Segoe UI, Malgun Gothic">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/DHBIMWATER.UI;component/Styles/Generic.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="0" CornerRadius="15" GlassFrameThickness="1" UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
+
+    <Grid>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="100"/>
+        </Grid.RowDefinitions>
+
+        <controls:TitleBar Grid.Row="0" Grid.ColumnSpan="2"/>
+
+        <Grid Grid.Row="1" Margin="30,10,30,10" Width="Auto">
+            <Border Grid.Column="1" Background="White" CornerRadius="15" Margin="10,0,0,0">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="15" ShadowDepth="2" Color="#DDE4EB" Opacity="0.3"/>
+                </Border.Effect>
+                <StackPanel Orientation="Vertical">
+                    <TabControl Style="{StaticResource PrimaryTabControlStyle}" Margin="20" Height="Auto">
+                        <TabItem Header="설계조건" Style="{StaticResource PrimaryTabItemStyle}">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel Margin="10">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                                <TextBlock Text="Q:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                <TextBlock Text="계획1일 최대급수량" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
+                                                         Text="{Binding TextBoxContent}"
+                                                         Width="250" Margin="10,0" Padding="8"/>
+                                                <TextBlock Text="㎥ / 일" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                                <TextBlock Text="RT:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                <TextBlock Text="최소 체류시간" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
+                                                         Text="{Binding TextBoxContent}"
+                                                         Width="250" Margin="10,0" Padding="8"/>
+                                                <TextBlock Text="hr" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                                <TextBlock Text="N:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                <TextBlock Text="지 개수" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
+                                                         Text="{Binding TextBoxContent}"
+                                                         Width="250" Margin="10,0" Padding="8"/>
+                                                <TextBlock Text="개" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                                <TextBlock Text="LWL:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                <TextBlock Text="저수위 (EL)" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
+                                                         Text="{Binding TextBoxContent}"
+                                                         Width="250" Margin="10,0" Padding="8"/>
+                                                <TextBlock Text="m" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center"/>
+                                            </StackPanel>
+
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                                            <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/Images/0-1.설계조건.png"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </TabItem>
+                        <TabItem Header="수조부" Style="{StaticResource PrimaryTabItemStyle}">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel Margin="10">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                                            
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                                <TextBlock Text="He:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                <TextBlock Text="유효수심" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
+                                                      Text="{Binding TextBoxContent}"
+                                                      Width="250" Margin="10,0" Padding="8"/>
+                                                <TextBlock Text="m (Min 3m ~ Max 6m)" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="150"/>
+                                            </StackPanel>
+
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                                <TextBlock Text="Hf:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                <TextBlock Text="여유고" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
+                                                      Text="{Binding TextBoxContent}"
+                                                      Width="250" Margin="10,0" Padding="8"/>
+                                                <TextBlock Text="m (Min 0.3m)" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="150"/>
+                                            </StackPanel>
+
+
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                                            <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/Images/1-1.수조부.png" Height="200"/>
+                                            <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/Images/1-2.수조부.png" Height="200"/>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/Images/1-3.수조부.png" Width="100"/>
+                                                <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/Images/1-4.수조부.png" Width="100"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </ScrollViewer>                        </TabItem>
+                        <TabItem Header="밸브실" Style="{StaticResource PrimaryTabItemStyle}">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel Margin="10">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                                <TextBlock Text="He:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                <TextBlock Text="유효수심" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
+                                                      Text="{Binding TextBoxContent}"
+                                                      Width="250" Margin="10,0" Padding="8"/>
+                                                <TextBlock Text="m (Min 3m ~ Max 6m)" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="150"/>
+                                            </StackPanel>
+                                            
+
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                                            <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/Images/2-1.밸브실.png"/>
+                                            <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/Images/2-2.밸브실.png"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </TabItem>
+                        
+                        <TabItem Header="Con'c 단면선택" Style="{StaticResource PrimaryTabItemStyle}">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel Margin="10">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                                <TextBlock Text="He:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                <TextBlock Text="유효수심" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
+                                                      Text="{Binding TextBoxContent}"
+                                                      Width="250" Margin="10,0" Padding="8"/>
+                                                <TextBlock Text="m (Min 3m ~ Max 6m)" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="150"/>
+                                            </StackPanel>
+                                                                                       
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                                            <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/Images/3-1.부재선택.png"/>
+                                            <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/Images/3-2.부재선택.png"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </TabItem>
+                    </TabControl>
+
+                </StackPanel>
+
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="2">
+            <Button Content="배수지 작성" 
+                    Style="{StaticResource PrimaryButtonStyle}" 
+                    Width="150" Height="40" 
+                    HorizontalAlignment="Right" 
+                    Margin="0,0,20,20"
+                    Command="{Binding CreateWTankCommand}"/>
+        </Grid>
+    </Grid>
+</Window>

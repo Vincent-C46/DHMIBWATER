@@ -13,10 +13,12 @@ public static class ServiceCollectionExtensions
         // View 등록
         services.AddTransient<Modeling1View>();
         services.AddTransient<GuideLineView>();
+        services.AddTransient<WaterTankView>();
 
         // ViewModel 등록
         services.AddTransient<Modeling1ViewModel>();
         services.AddTransient<GuideLineViewModel>();
+        services.AddTransient<WaterTankViewModel>();
 
         return services;
     }
