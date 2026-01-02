@@ -1,27 +1,23 @@
-name: KakaoWork Notification
+name: Slack Notification
 
 on:
   push:
-    branches: [ "dev" ]      # dev 브랜치에 코드가 직접 올라왔을 때
+    branches: [ "dev" ]
   pull_request:
-    branches: [ "dev" ]      # dev 브랜치로 PR이 생성되었을 때
+    branches: [ "dev" ]
 
 jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Send Notification
+      - name: Send Slack Message
         run: |
-          # 상황에 따른 메시지 설정
           if [ "${{ github.event_name }}" == "push" ]; then
-            MSG="🚀 [dev] 브랜치에 새 코드가 반영되었습니다!\n- 작업자: ${{ github.actor }}\n- 메시지: ${{ github.event.head_commit.message }}"
+            TEXT="🚀 *dev* 브랜치에 새 코드가 푸시되었습니다!\n> *작업자:* ${{ github.actor }}\n> *메시지:* ${{ github.event.head_commit.message }}"
           else
-            MSG="🔍 [dev] 브랜치로 새로운 PR이 도착했습니다!\n- 보낸 사람: ${{ github.actor }}\n- PR 제목: ${{ github.event.pull_request.title }}\n- 확인하기: ${{ github.event.pull_request.html_url }}"
+            TEXT="🔍 *dev* 브랜치로 새로운 PR이 도착했습니다!\n> *보낸 사람:* ${{ github.actor }}\n> *제목:* ${{ github.event.pull_request.title }}\n> <${{ github.event.pull_request.html_url }}|PR 확인하기>"
           fi
 
-          # 카카오워크 웹훅 전송
-          curl -X POST "${{ secrets.KAKAOWORK_WEBHOOK_URL }}" \
-          -H "Content-Type: application/json" \
-          -d "{
-            \"text\": \"$MSG\"
-          }"
+          curl -X POST -H 'Content-type: application/json' \
+          --data "{\"text\":\"$TEXT\"}" \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
