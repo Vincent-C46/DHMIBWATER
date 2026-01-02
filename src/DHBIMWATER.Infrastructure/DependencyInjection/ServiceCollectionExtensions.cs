@@ -20,6 +20,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IDialogService, RevitDialogService>();
         services.AddTransient<IGuideLineService, RevitGuideLineService>();
 
+        services.AddSingleton<IWallCommandRepo, RevitWallCommandRepo>();
+
         return services;
     }
 
@@ -32,6 +34,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IGenericModelRepository, MockGenericModelRepository>();
         services.AddTransient<IDialogService, MockDialogService>();
         services.AddTransient<IGuideLineService, MockGuideLineService>();
+
+        services.AddSingleton<IWallCommandRepo, MockWallCommandRepo>();
 
         return services;
     }

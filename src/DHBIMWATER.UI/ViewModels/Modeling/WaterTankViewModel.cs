@@ -1,4 +1,6 @@
-﻿using DHBIMWATER.Application.Interfaces;
+﻿using DHBIMWATER.Application.DTOs.Revit.Reservoir;
+using DHBIMWATER.Application.Interfaces;
+using DHBIMWATER.Application.UseCases;
 using DHBIMWATER.UI.Base;
 using DHBIMWATER.UI.Commands;
 using System.Windows.Input;
@@ -9,6 +11,8 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
     {
         #region Fields
         private IDialogService _dialogService;
+        private readonly CreateWallUseCase _createWallUseCase;
+
         private double _wallLength = 2.5; // 테스트용
         #endregion
 
@@ -26,8 +30,9 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         #endregion
 
         #region Constructor
-        public WaterTankViewModel(IDialogService dialogService)
+        public WaterTankViewModel(CreateWallUseCase useCase, IDialogService dialogService)
         {
+            _createWallUseCase = useCase;
             _dialogService = dialogService;
 
             CreateWTankCommand = new RelayCommand(CreateWaterTank);
@@ -37,7 +42,24 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         #region Methods
         private void CreateWaterTank(object? obj)
         {
-            _dialogService.Info("Water Tank", "Create Water Tank command executed.");
+            _createWallUseCase.Execute();
+
+            //_dialogService.Info("Water Tank", "Create Water Tank command executed.");
+
+            //try
+            //{
+            //    new CreateReservoirWallDto
+            //    {
+            //        StartPt = new Application.DTOs.Common.Point3DDto() { X = 0, Y = 0, Z = 0 },
+            //        EndPt = new Application.DTOs.Common.Point3DDto() { X = WallLength, Y = 0, Z = 0 },
+            //        Length = WallLength
+            //    };
+            //}
+            //catch (Exception ex)
+            //{
+            //    _dialogService.Warn("Error", ex.Message);
+            //}
+
         }
         #endregion
     }
