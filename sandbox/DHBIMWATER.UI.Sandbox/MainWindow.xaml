@@ -33,8 +33,10 @@
                                    FontWeight="Normal"
                                    LargeIcon="pack://application:,,,/DHBIMWATER.UI;component/Resources/Icons/revit.png"
                                    Command="{Binding OpenGuideLineViewCommand}"/>
-                    <fluent:Button Header="모델링3"        
-                                   FontWeight="Normal"/>
+                    <fluent:Button Header="배수지&#x0a;모델링"
+                                   FontWeight="Normal"
+                                   Command="{Binding OpenWaterTankViewCommand}"
+                                   LargeIcon="pack://application:,,,/DHBIMWATER.UI;component/Resources/Icons/water-tap.png"/>
                 </fluent:RibbonGroupBox>
                 
                 <fluent:RibbonGroupBox Header="수량산출">

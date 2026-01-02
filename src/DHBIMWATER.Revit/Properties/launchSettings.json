@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "DHBIMWATER.Revit": {
+      "commandName": "Project"
+    },
+    "프로필 1": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe"
+    }
+  }
+}

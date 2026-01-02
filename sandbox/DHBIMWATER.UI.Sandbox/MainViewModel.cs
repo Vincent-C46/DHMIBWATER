@@ -13,12 +13,21 @@ namespace DHBIMWATER.UI.Sandbox
 
         public ICommand OpenModeling1ViewCommand { get; }
         public ICommand OpenGuideLineViewCommand { get; }
+        public ICommand OpenWaterTankViewCommand { get; }
 
         public MainViewModel(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
             OpenModeling1ViewCommand = new RelayCommand(OpenModeling1View);
             OpenGuideLineViewCommand = new RelayCommand(OpenGuideLineView);
+            OpenWaterTankViewCommand = new RelayCommand(OpenWaterTankView);
+        }
+
+        private void OpenModeling1View(object? obj)
+        {
+            var view = _serviceProvider.GetRequiredService<Modeling1View>();
+            view.ShowDialog();
+
         }
 
         private void OpenGuideLineView(object? obj)
@@ -27,11 +36,10 @@ namespace DHBIMWATER.UI.Sandbox
             view.ShowDialog();
         }
 
-        private void OpenModeling1View(object? obj)
+        private void OpenWaterTankView(object? obj)
         {
-            var view = _serviceProvider.GetRequiredService<Modeling1View>();
+            var view = _serviceProvider.GetRequiredService<WaterTankView>();
             view.ShowDialog();
-
         }
     }
 }
