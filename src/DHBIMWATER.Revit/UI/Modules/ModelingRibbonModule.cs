@@ -13,17 +13,17 @@ namespace DHBIMWATER.Revit.UI.Modules
             // 버튼이름, 리본에 표시될 텍스트, 어셈블리 경로, 실행될 커맨드 클래스 풀네임
             PushButtonData btn1 = new PushButtonData("ModelingCommand1", "Modeling1", Assembly.GetExecutingAssembly().Location, RevitCommandType<ModelingCommand1>.FullName);
             PushButtonData btnGuideLine = new PushButtonData("GuideLineCommand", "GuideLine", Assembly.GetExecutingAssembly().Location, RevitCommandType<GuideLineCommand>.FullName);
-            PushButtonData btn3 = new PushButtonData("ModelingCommand3", "배수지\n모델링", Assembly.GetExecutingAssembly().Location, RevitCommandType<WaterTankCommand>.FullName);
+            PushButtonData reservoirBtn = new PushButtonData("ReservoirCommand", "배수지\n모델링", Assembly.GetExecutingAssembly().Location, RevitCommandType<WaterTankCommand>.FullName);
             PushButtonData btn4 = new PushButtonData("ModelingCommand4", "Modeling4", Assembly.GetExecutingAssembly().Location, RevitCommandType<ModelingCommand1>.FullName);
 
             btn1.LargeImage = RibbonButtonImages.GetIcon("modeling.png");
             btnGuideLine.LargeImage = RibbonButtonImages.GetIcon("revit.png");
-            btn3.LargeImage = RibbonButtonImages.GetIcon("water-tap.png");
+            reservoirBtn.LargeImage = RibbonButtonImages.GetIcon("water-tap.png");
             btn4.LargeImage = RibbonButtonImages.GetIcon("modeling.png");
 
             panel.AddItem(btn1);
             panel.AddItem(btnGuideLine);
-            panel.AddItem(btn3);
+            panel.AddItem(reservoirBtn);
             panel.AddItem(btn4);
         }
     }

@@ -45,6 +45,7 @@
                 </Border.Effect>
                 <StackPanel Orientation="Vertical">
                     <TabControl Style="{StaticResource PrimaryTabControlStyle}" Margin="20" Height="Auto">
+                        <!--설계조건 탭-->
                         <TabItem Header="설계조건" Style="{StaticResource PrimaryTabItemStyle}">
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
                                 <StackPanel Margin="10">
@@ -61,7 +62,8 @@
                                                 <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
                                                          Text="{Binding TextBoxContent}"
                                                          Width="250" Margin="10,0" Padding="8"/>
-                                                <TextBlock Text="㎥ / 일" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center"/>
+                                                <TextBlock Text="㎥ / 일" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center"
+                                                           Width="50"/>
                                             </StackPanel>
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                                 <TextBlock Text="RT:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
@@ -87,7 +89,13 @@
                                                          Width="250" Margin="10,0" Padding="8"/>
                                                 <TextBlock Text="m" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center"/>
                                             </StackPanel>
-
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                                <TextBlock Text="벽체길이:" Style="{StaticResource LabelTextBlockStyle}" Width="180" VerticalAlignment="Center"/>
+                                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
+                                                 Text="{Binding WallLength}"
+                                                 Width="250" Margin="10,0" Padding="8"/>
+                                                <TextBlock Text="m" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center"/>
+                                            </StackPanel>
                                         </StackPanel>
 
                                         <StackPanel Grid.Column="1" Margin="10,0,0,0">
@@ -97,6 +105,8 @@
                                 </StackPanel>
                             </ScrollViewer>
                         </TabItem>
+
+                        <!--수조부 탭-->
                         <TabItem Header="수조부" Style="{StaticResource PrimaryTabItemStyle}">
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
                                 <StackPanel Margin="10">
@@ -107,7 +117,7 @@
                                         </Grid.ColumnDefinitions>
 
                                         <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                                            
+
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                                 <TextBlock Text="He:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                 <TextBlock Text="유효수심" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
@@ -139,7 +149,10 @@
                                         </StackPanel>
                                     </Grid>
                                 </StackPanel>
-                            </ScrollViewer>                        </TabItem>
+                            </ScrollViewer>
+                        </TabItem>
+
+                        <!--밸브실 탭-->
                         <TabItem Header="밸브실" Style="{StaticResource PrimaryTabItemStyle}">
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
                                 <StackPanel Margin="10">
@@ -158,7 +171,7 @@
                                                       Width="250" Margin="10,0" Padding="8"/>
                                                 <TextBlock Text="m (Min 3m ~ Max 6m)" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="150"/>
                                             </StackPanel>
-                                            
+
 
                                         </StackPanel>
 
@@ -170,7 +183,8 @@
                                 </StackPanel>
                             </ScrollViewer>
                         </TabItem>
-                        
+
+                        <!--Con'c 단면 탭-->
                         <TabItem Header="Con'c 단면선택" Style="{StaticResource PrimaryTabItemStyle}">
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
                                 <StackPanel Margin="10">
@@ -189,7 +203,7 @@
                                                       Width="250" Margin="10,0" Padding="8"/>
                                                 <TextBlock Text="m (Min 3m ~ Max 6m)" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="150"/>
                                             </StackPanel>
-                                                                                       
+
                                         </StackPanel>
 
                                         <StackPanel Grid.Column="1" Margin="10,0,0,0">
@@ -201,9 +215,7 @@
                             </ScrollViewer>
                         </TabItem>
                     </TabControl>
-
                 </StackPanel>
-
             </Border>
         </Grid>
 
