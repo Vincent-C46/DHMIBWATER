@@ -10,7 +10,7 @@ using System.Windows;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Mock
 {
-    internal class MockWallCommandRepo : IWallCommandRepo
+    internal class MockWallCommandRepository : IWallCommandRepo
     {
         #region Fields
         #endregion

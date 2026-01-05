@@ -17,10 +17,10 @@ public static class ServiceCollectionExtensions
     {
         // Revit 실제 구현 등록
         services.AddSingleton<IGenericModelRepository, RevitGenericModelRepository>();
+        services.AddTransient<IWallCommandRepo, RevitWallCommandRepository>();
+
         services.AddTransient<IDialogService, RevitDialogService>();
         services.AddTransient<IGuideLineService, RevitGuideLineService>();
-
-        services.AddSingleton<IWallCommandRepo, RevitWallCommandRepo>();
 
         return services;
     }
@@ -32,10 +32,10 @@ public static class ServiceCollectionExtensions
     {
         // Mock 구현 등록 (Revit 없이 동작)
         services.AddSingleton<IGenericModelRepository, MockGenericModelRepository>();
+        services.AddTransient<IWallCommandRepo, MockWallCommandRepository>();
+
         services.AddTransient<IDialogService, MockDialogService>();
         services.AddTransient<IGuideLineService, MockGuideLineService>();
-
-        services.AddSingleton<IWallCommandRepo, MockWallCommandRepo>();
 
         return services;
     }

@@ -9,12 +9,13 @@ namespace DHBIMWATER.Application.UseCases
 {
     public class CreateWallUseCase
     {
-        private readonly IWallCommandRepo _repository;
+        private readonly IWallCommandRepo _wallCmdRepo;
+        private readonly ITransactionContext _transactionContext;
 
         #region Constructor
-        public CreateWallUseCase(IWallCommandRepo repository)
+        public CreateWallUseCase(IWallCommandRepo wallCmdRepo)
         {
-            _repository = repository;
+            _wallCmdRepo = wallCmdRepo;
         }
         #endregion
 
@@ -22,7 +23,7 @@ namespace DHBIMWATER.Application.UseCases
         public void Execute()
         {
             // 벽 생성 로직 구현
-            _repository.CreateWall();
+            _wallCmdRepo.CreateWall();
         }
         #endregion
     }
