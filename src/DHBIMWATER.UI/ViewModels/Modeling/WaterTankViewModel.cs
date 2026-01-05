@@ -42,24 +42,14 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         #region Methods
         private void CreateWaterTank(object? obj)
         {
-            _createWallUseCase.Execute();
+            var wallDto = new CreateReservoirWallDto
+            {
+                StartPt = new Application.DTOs.Common.Point3DDto() { X = 0, Y = 0, Z = 0 },
+                EndPt = new Application.DTOs.Common.Point3DDto() { X = WallLength, Y = 0, Z = 0 },
+                Length = WallLength
+            };
 
-            //_dialogService.Info("Water Tank", "Create Water Tank command executed.");
-
-            //try
-            //{
-            //    new CreateReservoirWallDto
-            //    {
-            //        StartPt = new Application.DTOs.Common.Point3DDto() { X = 0, Y = 0, Z = 0 },
-            //        EndPt = new Application.DTOs.Common.Point3DDto() { X = WallLength, Y = 0, Z = 0 },
-            //        Length = WallLength
-            //    };
-            //}
-            //catch (Exception ex)
-            //{
-            //    _dialogService.Warn("Error", ex.Message);
-            //}
-
+            _createWallUseCase.Execute(wallDto);
         }
         #endregion
     }

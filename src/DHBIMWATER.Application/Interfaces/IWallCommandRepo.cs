@@ -9,6 +9,6 @@ namespace DHBIMWATER.Application.Interfaces
 {
     public interface IWallCommandRepo
     {
-        void CreateWall();
+        void CreateWall(double length);
     }
 }

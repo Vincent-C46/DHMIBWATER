@@ -28,7 +28,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
         #endregion
 
         #region Methods
-        public void CreateWall()
+        public void CreateWall(double len)
         {
             Document? doc = _doc();
             
@@ -38,11 +38,11 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                 return;
             }
 
-            Curve curve = Line.CreateBound(new XYZ(0, 0, 0), new XYZ(10, 0, 0));
+            Curve curve = Line.CreateBound(new XYZ(0, 0, 0), new XYZ(len, 0, 0));
             Level? lv = new FilteredElementCollector(doc)
                             .OfClass(typeof(Level))
                             .Cast<Level>()
-                            .FirstOrDefault(l => l.Name == "레벨 1");
+                            .FirstOrDefault(l => l.Name == "레벨 1");          
 
             Wall.Create(doc, curve, lv.Id, true);
 

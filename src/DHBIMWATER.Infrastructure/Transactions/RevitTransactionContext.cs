@@ -5,7 +5,7 @@ using System;
 namespace DHBIMWATER.Infrastructure.Transactions
 
 {
-    internal class RevitTransactionRepository : ITransactionContext
+    internal class RevitTransactionContext : ITransactionContext
     {
         #region Fields
         private readonly Func<Document?> _doc;
@@ -16,7 +16,7 @@ namespace DHBIMWATER.Infrastructure.Transactions
         #endregion
 
         #region Constructor
-        public RevitTransactionRepository(Func<Document?> doc)
+        public RevitTransactionContext(Func<Document?> doc)
         {
             _doc = doc;
         }

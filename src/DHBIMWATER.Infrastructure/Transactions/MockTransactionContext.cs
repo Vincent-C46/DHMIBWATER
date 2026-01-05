@@ -10,7 +10,7 @@ using System.Windows;
 
 namespace DHBIMWATER.Infrastructure.Transactions
 {
-    internal class MockTransactionRepository : ITransactionContext
+    internal class MockTransactionContext : ITransactionContext
     {
         #region Fields
         #endregion
@@ -24,12 +24,12 @@ namespace DHBIMWATER.Infrastructure.Transactions
         #region Methods
         public void Begin(string name)
         {
-            MessageBox.Show($"Begin Transaction: {name}", "MockTransactionRepository");
+            MessageBox.Show($"트랜잭션 시작: {name}", "MockTransactionContext");
         }
 
         public void Commit()
         {
-            MessageBox.Show("Commit Transaction", "MockTransactionRepository");
+            MessageBox.Show("트랜잭션 커밋", "MockTransactionContext");
         }
 
         public void Dispose()
@@ -38,7 +38,7 @@ namespace DHBIMWATER.Infrastructure.Transactions
 
         public void Rollback()
         {
-            MessageBox.Show("Rollback Transaction", "MockTransactionRepository");
+            MessageBox.Show("트랜잭션 롤백", "MockTransactionContext");
         }
         #endregion
     }

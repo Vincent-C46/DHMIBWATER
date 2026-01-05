@@ -22,9 +22,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Mock
         #endregion
 
         #region Methods
-        public void CreateWall()
+        public void CreateWall(double length)
         {
-            MessageBox.Show("MockWallCommandRepo - CreateWall");
+            MessageBox.Show($"MockWallCommandRepo - CreateWall\nWall Length: {length}ft");
         }
         #endregion
 

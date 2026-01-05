@@ -4,6 +4,7 @@ using DHBIMWATER.Infrastructure.Repositories.Mock;
 using DHBIMWATER.Infrastructure.Repositories.Revit;
 using DHBIMWATER.Infrastructure.Services.Mock;
 using DHBIMWATER.Infrastructure.Services.Revit;
+using DHBIMWATER.Infrastructure.Transactions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DHBIMWATER.Infrastructure.DependencyInjection;
@@ -22,6 +23,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IDialogService, RevitDialogService>();
         services.AddTransient<IGuideLineService, RevitGuideLineService>();
 
+        services.AddTransient<ITransactionContext, RevitTransactionContext>();
         return services;
     }
 
@@ -36,6 +38,8 @@ public static class ServiceCollectionExtensions
 
         services.AddTransient<IDialogService, MockDialogService>();
         services.AddTransient<IGuideLineService, MockGuideLineService>();
+
+        services.AddTransient<ITransactionContext, MockTransactionContext>();
 
         return services;
     }
