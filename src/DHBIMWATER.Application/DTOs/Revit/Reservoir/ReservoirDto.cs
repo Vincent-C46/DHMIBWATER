@@ -20,7 +20,7 @@ namespace DHBIMWATER.Application.DTOs.Revit.Reservoir
 
         // 수조부
         public double He { get; set; }
-        public double Hf { get; set; }
+        public double Hf { get; set; } 
         public double Hm { get; set; }
         public double W { get; set; }
         public double L { get; set; }
