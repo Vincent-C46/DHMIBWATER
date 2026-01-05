@@ -13,11 +13,25 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private IDialogService _dialogService;
         private readonly CreateWallUseCase _createWallUseCase;
 
+
+        private double _q = 5000;
+        private double _rt = 
         private double _wallLength = 2.5; // 테스트용
+
         #endregion
 
         #region Properties
         public ICommand CreateWTankCommand { get; }
+        public double WallLength
+        {
+            get => _wallLength;
+            set
+            {
+                _wallLength = value;
+                OnPropertyChanged();
+            }
+        }
+
         public double WallLength
         {
             get => _wallLength;
@@ -42,14 +56,14 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         #region Methods
         private void CreateWaterTank(object? obj)
         {
-            var wallDto = new CreateReservoirWallDto
+            var reservoirDto = new ReservoirDto
             {
                 StartPt = new Application.DTOs.Common.Point3DDto() { X = 0, Y = 0, Z = 0 },
                 EndPt = new Application.DTOs.Common.Point3DDto() { X = WallLength, Y = 0, Z = 0 },
                 Length = WallLength
             };
 
-            _createWallUseCase.Execute(wallDto);
+            _createWallUseCase.Execute(reservoirDto);
         }
         #endregion
     }

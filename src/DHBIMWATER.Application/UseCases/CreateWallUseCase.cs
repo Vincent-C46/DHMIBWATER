@@ -24,7 +24,7 @@ namespace DHBIMWATER.Application.UseCases
         #endregion
 
         #region Methods 
-        public void Execute(CreateReservoirWallDto dto)
+        public void Execute(ReservoirDto dto)
         {
             using (_tx)
             {
