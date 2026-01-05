@@ -14,13 +14,13 @@ namespace DHBIMWATER.Application.DTOs.Revit.Reservoir
 
         // 설계조건
         public double Q { get; set; }
-        public double RT{ get; set; }
-        public int N{ get; set; }
+        public double RT { get; set; }
+        public int N { get; set; }
         public double LWL { get; set; }
 
         // 수조부
         public double He { get; set; }
-        public double Hf { get; set; } 
+        public double Hf { get; set; }
         public double Hm { get; set; }
         public double W { get; set; }
         public double L { get; set; }
@@ -40,15 +40,15 @@ namespace DHBIMWATER.Application.DTOs.Revit.Reservoir
         public double Wv { get; set; }
 
         // Con'c 단면선택
-        public string TankUpperSlabName{get; set;}
-        public string TankFndSlabName{get; set;}
-        public string TankOuterWallName{get; set;}
-        public string TankInnerWallName{get; set;}
-        public string TankColumnName{get; set;}
-        public string TankBeamName{get; set;}
-        public string ValveUpperSlabName{get; set;}
-        public string ValveMidSlabName{get; set;}
-        public string ValveFndSlabName{get; set;}
+        public string TankUpperSlabName { get; set; }
+        public string TankFndSlabName { get; set; }
+        public string TankOuterWallName { get; set; }
+        public string TankInnerWallName { get; set; }
+        public string TankColumnName { get; set; }
+        public string TankBeamName { get; set; }
+        public string ValveUpperSlabName { get; set; }
+        public string ValveMidSlabName { get; set; }
+        public string ValveFndSlabName { get; set; }
         public string ValveOuterWallName { get; set; }
         public string SubFndSlabName { get; set; }
 
