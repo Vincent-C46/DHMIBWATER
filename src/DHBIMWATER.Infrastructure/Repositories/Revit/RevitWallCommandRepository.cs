@@ -28,7 +28,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
         #endregion
 
         #region Methods
-        public void CreateWall(double len)
+        public void CreateWall(double len, double n)
         {
             Document? doc = _doc();
             
@@ -39,12 +39,15 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             }
 
             Curve curve = Line.CreateBound(new XYZ(0, 0, 0), new XYZ(len, 0, 0));
+            Curve curve2 = Line.CreateBound(new XYZ(len, 0, 0), new XYZ(len * n, 0, 0));
+
             Level? lv = new FilteredElementCollector(doc)
                             .OfClass(typeof(Level))
                             .Cast<Level>()
                             .FirstOrDefault(l => l.Name == "레벨 1");          
 
             Wall.Create(doc, curve, lv.Id, true);
+            Wall.Create(doc, curve2, lv.Id, true);
 
             TaskDialog.Show("RevitWallCommandRepo", $"CreateWall - Revit Implementation\n커브 길이: {curve.Length}");
         }

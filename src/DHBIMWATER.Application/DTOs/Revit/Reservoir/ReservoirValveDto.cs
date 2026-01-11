@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace DHBIMWATER.Application.DTOs.Revit.Reservoir
 {
-    public record ReservoirDesignConditionDto
-    (
-        double Q,
-        double RT,
-        int N,
-        double LWL
+    public record ReservoirValveDto
+     (
+        double H1,
+        double H2,
+        double Lv,
+        double Wv
     );
 }

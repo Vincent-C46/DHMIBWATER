@@ -11,5 +11,5 @@ namespace DHBIMWATER.Application.DTOs.Common
         public double X { get; set; }
         public double Y { get; set; }
         public double Z { get; set; }
-    }
+    };
 }

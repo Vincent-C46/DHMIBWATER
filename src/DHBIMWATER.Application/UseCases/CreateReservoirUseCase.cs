@@ -8,15 +8,20 @@ using System.Threading.Tasks;
 
 namespace DHBIMWATER.Application.UseCases
 {
-    public class CreateWallUseCase
+    public class CreateReservoirUseCase
     {
         #region Fields
         private readonly IWallCommandRepo _wallCmdRepo;
         private readonly ITransactionContext _tx;
+
+        #endregion
+
+        #region Properties
+
         #endregion
 
         #region Constructor
-        public CreateWallUseCase(IWallCommandRepo wallCmdRepo, ITransactionContext tx)
+        public CreateReservoirUseCase(IWallCommandRepo wallCmdRepo, ITransactionContext tx)
         {
             _wallCmdRepo = wallCmdRepo;
             _tx = tx;
@@ -24,14 +29,15 @@ namespace DHBIMWATER.Application.UseCases
         #endregion
 
         #region Methods 
-        public void Execute(ReservoirDto dto)
+        public void Execute(ReservoirCreationRequestDto dto)
         {
             using (_tx)
             {
                 try
                 {
                     _tx.Begin("Create Wall");
-                    _wallCmdRepo.CreateWall(dto.Length);
+
+                    _wallCmdRepo.CreateWall(dto.DesignConditionDto.LWL, dto.DesignConditionDto.N);
 
                     _tx.Commit();
                 }

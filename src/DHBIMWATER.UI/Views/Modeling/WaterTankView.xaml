@@ -60,7 +60,7 @@
                                                 <TextBlock Text="Q:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                 <TextBlock Text="계획1일 최대급수량" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                                                 <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                                                         Text="{Binding TextBoxContent}"
+                                                         Text="{Binding Q}"
                                                          Width="250" Margin="10,0" Padding="8"/>
                                                 <TextBlock Text="㎥ / 일" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center"
                                                            Width="50"/>
@@ -69,7 +69,7 @@
                                                 <TextBlock Text="RT:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                 <TextBlock Text="최소 체류시간" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                                                 <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                                                         Text="{Binding TextBoxContent}"
+                                                         Text="{Binding RT}"
                                                          Width="250" Margin="10,0" Padding="8"/>
                                                 <TextBlock Text="hr" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center"/>
                                             </StackPanel>
@@ -77,7 +77,7 @@
                                                 <TextBlock Text="N:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                 <TextBlock Text="지 개수" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                                                 <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                                                         Text="{Binding TextBoxContent}"
+                                                         Text="{Binding N}"
                                                          Width="250" Margin="10,0" Padding="8"/>
                                                 <TextBlock Text="개" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center"/>
                                             </StackPanel>
@@ -85,15 +85,8 @@
                                                 <TextBlock Text="LWL:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                 <TextBlock Text="저수위 (EL)" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                                                 <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                                                         Text="{Binding TextBoxContent}"
+                                                         Text="{Binding LWL}"
                                                          Width="250" Margin="10,0" Padding="8"/>
-                                                <TextBlock Text="m" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                                                <TextBlock Text="벽체길이:" Style="{StaticResource LabelTextBlockStyle}" Width="180" VerticalAlignment="Center"/>
-                                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                                                 Text="{Binding WallLength}"
-                                                 Width="250" Margin="10,0" Padding="8"/>
                                                 <TextBlock Text="m" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </StackPanel>

@@ -9,7 +9,7 @@ public static class ServiceCollectionExtensions
     {
         // Application 관련 서비스 등록
         services.AddTransient<CountGenericModelUseCase>();
-        services.AddTransient<CreateWallUseCase>();
+        services.AddTransient<CreateReservoirUseCase>();
 
         return services;
     }
