@@ -45,6 +45,38 @@
                 </Border.Effect>
                 <StackPanel Orientation="Vertical">
                     <TabControl Style="{StaticResource PrimaryTabControlStyle}" Margin="20" Height="Auto">
+
+                        <!--Con'c 단면 탭-->
+                        <TabItem Header="Con'c 단면선택" Style="{StaticResource PrimaryTabItemStyle}">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel Margin="10">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="600"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                                <TextBlock Text="1-1." Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                <TextBlock Text="상부 슬래브" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
+                                                      Text="{Binding TextBoxContent}"
+                                                      Width="250" Margin="10,0" Padding="8"/>
+                                                <TextBlock Text="m (Min 3m ~ Max 6m)" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="150"/>
+                                            </StackPanel>
+
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                                            <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/Images/3-1.부재선택.png"/>
+                                            <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/Images/3-2.부재선택.png"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </TabItem>
+                        
                         <!--설계조건 탭-->
                         <TabItem Header="설계조건" Style="{StaticResource PrimaryTabItemStyle}">
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -177,36 +209,6 @@
                             </ScrollViewer>
                         </TabItem>
 
-                        <!--Con'c 단면 탭-->
-                        <TabItem Header="Con'c 단면선택" Style="{StaticResource PrimaryTabItemStyle}">
-                            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                <StackPanel Margin="10">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-
-                                        <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                                                <TextBlock Text="He:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
-                                                <TextBlock Text="유효수심" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
-                                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                                                      Text="{Binding TextBoxContent}"
-                                                      Width="250" Margin="10,0" Padding="8"/>
-                                                <TextBlock Text="m (Min 3m ~ Max 6m)" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="150"/>
-                                            </StackPanel>
-
-                                        </StackPanel>
-
-                                        <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                                            <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/Images/3-1.부재선택.png"/>
-                                            <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/Images/3-2.부재선택.png"/>
-                                        </StackPanel>
-                                    </Grid>
-                                </StackPanel>
-                            </ScrollViewer>
-                        </TabItem>
                     </TabControl>
                 </StackPanel>
             </Border>

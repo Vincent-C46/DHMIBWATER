@@ -18,12 +18,18 @@ public static class ServiceCollectionExtensions
     {
         // Revit 실제 구현 등록
         services.AddSingleton<IGenericModelRepository, RevitGenericModelRepository>();
+
+        services.AddTransient<ITransactionContext, RevitTransactionContext>();
+
+        #region Crerate Reservoir
+        services.AddTransient<ILevelQueryRepo, RevitLevelQueryRepo>();
+        services.AddTransient<ILevelCommandRepo, RevitLevelCommandRepo>();
         services.AddTransient<IWallCommandRepo, RevitWallCommandRepository>();
+        #endregion
 
         services.AddTransient<IDialogService, RevitDialogService>();
         services.AddTransient<IGuideLineService, RevitGuideLineService>();
 
-        services.AddTransient<ITransactionContext, RevitTransactionContext>();
         return services;
     }
 
@@ -34,12 +40,18 @@ public static class ServiceCollectionExtensions
     {
         // Mock 구현 등록 (Revit 없이 동작)
         services.AddSingleton<IGenericModelRepository, MockGenericModelRepository>();
+        
+        services.AddTransient<ITransactionContext, MockTransactionContext>();
+
+        #region Crerate Reservoir
+        services.AddTransient<ILevelQueryRepo, MockLevelQueryRepo>();
+        services.AddTransient<ILevelCommandRepo, MockLevelCommandRepo>();
         services.AddTransient<IWallCommandRepo, MockWallCommandRepository>();
+        #endregion
 
         services.AddTransient<IDialogService, MockDialogService>();
         services.AddTransient<IGuideLineService, MockGuideLineService>();
 
-        services.AddTransient<ITransactionContext, MockTransactionContext>();
 
         return services;
     }
