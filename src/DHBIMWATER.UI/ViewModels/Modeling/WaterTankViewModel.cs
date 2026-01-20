@@ -3,6 +3,7 @@ using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Application.UseCases;
 using DHBIMWATER.UI.Base;
 using DHBIMWATER.UI.Commands;
+using System.Collections.ObjectModel;
 using System.Windows.Input;
 
 namespace DHBIMWATER.UI.ViewModels.Modeling
@@ -18,6 +19,17 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private int _n = 2; 
         private double _lwl = 0;
 
+        private string _selectedTankUpperSlabType;
+        private string _selectedTankFoundSlabType;
+        private string _selectedTankOuterWallType;
+        private string _selectedTankInnerWallType;
+        private string _selectedTankColumnType;
+        private string _selectedTankBeamType;
+        private string _selectedValveUpperSlabType;
+        private string _selectedValveMidSlabType;
+        private string _selectedValveFoundSlabType;
+        private string _selectedValveOuterWallType;
+        private string _selectedSubSlabType;
         #endregion
 
         #region Properties
@@ -67,6 +79,26 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 {
                     _lwl= value;
                     OnPropertyChanged(nameof(LWL));
+                }
+            }
+        }
+
+        public ObservableCollection<string> SlabTypes { get; set; } = new ObservableCollection<string>();
+        public ObservableCollection<string> FoundSlabTypes { get; set; } = new ObservableCollection<string>();
+        public ObservableCollection<string> WallTypes { get; set; } = new ObservableCollection<string>();
+        public ObservableCollection<string> ColumnTypes { get; set; } = new ObservableCollection<string>();
+        public ObservableCollection<string> BeamTypes { get; set; } = new ObservableCollection<string>();
+
+        public string SelectedTankUpperSlabType
+        {
+            get => _selectedTankUpperSlabType;
+            set
+            {
+                if (_selectedTankUpperSlabType != value)
+                {
+                    _selectedTankUpperSlabType = value;
+                    //TankUpperSlabThk = GetSlabThk(value);
+                    OnPropertyChanged(nameof(SelectedTankUpperSlabType));
                 }
             }
         }

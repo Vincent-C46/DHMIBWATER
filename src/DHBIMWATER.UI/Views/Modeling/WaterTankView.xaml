@@ -52,18 +52,87 @@
                                 <StackPanel Margin="10">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="600"/>
+                                            <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
 
                                         <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                            <!--수조부-->
+                                            <TextBlock Style ="{StaticResource BaseTextBlockStyle}" Text="수조부" FontSize="15" Margin="10"/>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
                                                 <TextBlock Text="1-1." Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                 <TextBlock Text="상부 슬래브" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
-                                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                                                      Text="{Binding TextBoxContent}"
-                                                      Width="250" Margin="10,0" Padding="8"/>
-                                                <TextBlock Text="m (Min 3m ~ Max 6m)" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="150"/>
+                                                <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" Width="250"
+                                                          ItemsSource="{Binding SlabTypes}"
+                                                          SelectedItem="{Binding SelectedTankUpperSlabType}"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                                <TextBlock Text="1-2." Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                <TextBlock Text="하부(기초) 슬래브" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" Width="250" ItemsSource="{Binding SlabTypes}"
+                                                          SelectedItem="{Binding SelectedTankUpperSlabType}"/>
+                                            </StackPanel>
+
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                                <TextBlock Text="1-3." Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                <TextBlock Text="외부 벽체" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" Width="250" ItemsSource="{Binding SlabTypes}"
+                                                          SelectedItem="{Binding SelectedTankUpperSlabType}"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                                <TextBlock Text="1-4." Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                <TextBlock Text="내부 벽체" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" Width="250" ItemsSource="{Binding SlabTypes}"
+                                                          SelectedItem="{Binding SelectedTankUpperSlabType}"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                                <TextBlock Text="1-5." Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                <TextBlock Text="기둥" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" Width="250" ItemsSource="{Binding SlabTypes}"
+                                                          SelectedItem="{Binding SelectedTankUpperSlabType}"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                                <TextBlock Text="1-6." Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                <TextBlock Text="보" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" Width="250" ItemsSource="{Binding SlabTypes}"
+                                                          SelectedItem="{Binding SelectedTankUpperSlabType}"/>
+                                            </StackPanel>
+                                            <!--배관실-->
+                                            <TextBlock Style ="{StaticResource BaseTextBlockStyle}" Text="배관실" FontSize="15" Margin="10"/>
+
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                                <TextBlock Text="2-1." Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                <TextBlock Text="상부 슬래브" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" Width="250" ItemsSource="{Binding SlabTypes}"
+                                                        SelectedItem="{Binding SelectedTankUpperSlabType}"/>
+                                            </StackPanel>
+
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                                <TextBlock Text="2-2." Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                <TextBlock Text="중간 슬래브" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" Width="250" ItemsSource="{Binding SlabTypes}"
+                                                        SelectedItem="{Binding SelectedTankUpperSlabType}"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                                <TextBlock Text="2-3." Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                <TextBlock Text="하부(기초) 슬래브" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" Width="250" ItemsSource="{Binding SlabTypes}"
+                                                        SelectedItem="{Binding SelectedTankUpperSlabType}"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                                <TextBlock Text="2-3." Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                <TextBlock Text="상부 슬래브" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" Width="250" ItemsSource="{Binding SlabTypes}"
+                                                        SelectedItem="{Binding SelectedTankUpperSlabType}"/>
+                                            </StackPanel>
+                                            <!--공통-->
+                                            <TextBlock Style ="{StaticResource BaseTextBlockStyle}" Text="공통" FontSize="15" Margin="10"/>
+
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                                <TextBlock Text="3-1." Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                <TextBlock Text="버림 Con'c" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" Width="250" ItemsSource="{Binding SlabTypes}"
+                                                        SelectedItem="{Binding SelectedTankUpperSlabType}"/>
                                             </StackPanel>
 
                                         </StackPanel>
