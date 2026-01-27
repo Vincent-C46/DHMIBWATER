@@ -138,14 +138,17 @@
                                         </StackPanel>
 
                                         <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                                            <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/Images/3-1.부재선택.png"/>
-                                            <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/Images/3-2.부재선택.png"/>
+                                            <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/Images/3-1.부재선택.png" 
+                                                   Width="450"/>
+                                            <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/Images/3-2.부재선택.png" 
+                                                   Width="450"/>
+
                                         </StackPanel>
                                     </Grid>
                                 </StackPanel>
                             </ScrollViewer>
                         </TabItem>
-                        
+
                         <!--설계조건 탭-->
                         <TabItem Header="설계조건" Style="{StaticResource PrimaryTabItemStyle}">
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -193,7 +196,8 @@
                                         </StackPanel>
 
                                         <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                                            <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/Images/0-1.설계조건.png"/>
+                                            <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/Images/0-1.설계조건.png"
+                                                   Width="450"/>
                                         </StackPanel>
                                     </Grid>
                                 </StackPanel>
@@ -256,13 +260,13 @@
                                             </StackPanel>
 
                                             <Separator/>
-                                                                                      
+
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                                 <TextBlock Style ="{StaticResource LabelTextBlockStyle}" Text="M:" Width="30" VerticalAlignment="Center"/>
                                                 <TextBlock Style ="{StaticResource LabelTextBlockStyle}" Text="기둥 Margin" Width="150" VerticalAlignment="Center"/>
                                                 <TextBlock Style ="{StaticResource LabelTextBlockStyle}" Text="상(M1): " Width="50" VerticalAlignment="Center" Margin="10, 0"/>
                                                 <TextBox Style="{StaticResource ReservoirTextBoxStyle}" Text="{Binding M1, UpdateSourceTrigger=LostFocus, Mode=TwoWay}"
-                                                         Width="30" Height="25" VerticalAlignment="Center"/>   
+                                                         Width="30" Height="25" VerticalAlignment="Center"/>
                                                 <TextBlock Style ="{StaticResource LabelTextBlockStyle}" Text="m /" Width="30" Margin="10, 0" VerticalAlignment="Center"/>
                                                 <TextBlock Style ="{StaticResource LabelTextBlockStyle}" Text="하(M2): " Width="50" VerticalAlignment="Center" Margin="10, 0"/>
                                                 <TextBox Style="{StaticResource ReservoirTextBoxStyle}" Text="{Binding M1, UpdateSourceTrigger=LostFocus, Mode=TwoWay}"
@@ -285,7 +289,7 @@
 
                                                 <TextBlock Style ="{StaticResource LabelTextBlockStyle}" Text="(기둥간 중심간격 5m 이내 등간격 자동배치)" Width="300" Margin="12 5 0 12"/>
                                             </StackPanel>
-                                            
+
                                             <Separator/>
 
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
@@ -313,7 +317,7 @@
                                                 <TextBlock Text="m" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="150"/>
                                             </StackPanel>
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                                                <TextBlock Text="Hh:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                <TextBlock Text="Lt:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                 <TextBlock Text="기초 Toe 길이" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                                                 <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
                                                       Text="{Binding TextBoxContent}"
@@ -332,8 +336,8 @@
                                                 <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/Images/1-4.수조부.png" Width="100"/>
                                             </StackPanel>
                                         </StackPanel>
-                                        
-                                        
+
+
                                     </Grid>
                                 </StackPanel>
                             </ScrollViewer>
