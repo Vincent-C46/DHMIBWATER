@@ -12,7 +12,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
     {
         public IEnumerable<string> GetBeamTypeNames()
         {
-            new FilteredElementCollector();
+            throw new NotImplementedException();
+            //new FilteredElementCollector();
         }
 
         public IEnumerable<string> GetColumnTypeNames()
