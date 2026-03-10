@@ -3,6 +3,7 @@ using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Application.UseCases;
 using DHBIMWATER.UI.Base;
 using DHBIMWATER.UI.Commands;
+using Microsoft.VisualBasic;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 
@@ -13,6 +14,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         #region Fields
         private IDialogService _dialogService;
         private readonly CreateReservoirUseCase _createReservoirUseCase;
+        private readonly IElementTypeQueryRepo _elementTypeQueryRepo;
 
         private double _q = 5000;
         private double _rt = 12;
@@ -84,7 +86,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         }
 
         public ObservableCollection<string> SlabTypes { get; set; } = new ObservableCollection<string>();
-        public ObservableCollection<string> FoundSlabTypes { get; set; } = new ObservableCollection<string>();
         public ObservableCollection<string> WallTypes { get; set; } = new ObservableCollection<string>();
         public ObservableCollection<string> ColumnTypes { get; set; } = new ObservableCollection<string>();
         public ObservableCollection<string> BeamTypes { get; set; } = new ObservableCollection<string>();
@@ -97,8 +98,127 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_selectedTankUpperSlabType != value)
                 {
                     _selectedTankUpperSlabType = value;
-                    //TankUpperSlabThk = GetSlabThk(value);
                     OnPropertyChanged(nameof(SelectedTankUpperSlabType));
+                }
+            }
+        }
+        public string SelectedTankFoundSlabType
+        {
+            get => _selectedTankFoundSlabType;
+            set
+            {
+                if (_selectedTankFoundSlabType != value)
+                {
+                    _selectedTankFoundSlabType = value;
+                    OnPropertyChanged(nameof(_selectedTankFoundSlabType));
+                }
+            }
+        }
+        public string SelectedTankOuterWallType
+        {
+            get => _selectedTankOuterWallType;
+            set
+            {
+                if (_selectedTankOuterWallType != value)
+                {
+                    _selectedTankOuterWallType = value;
+                    OnPropertyChanged(nameof(SelectedTankOuterWallType));
+                }
+            }
+        }
+        public string SelectedTankInnerWallType
+        {
+            get => _selectedTankInnerWallType;
+            set
+            {
+                if (_selectedTankInnerWallType != value)
+                {
+                    _selectedTankInnerWallType = value;
+                    OnPropertyChanged(nameof(SelectedTankInnerWallType));
+                }
+            }
+        }
+        public string SelectedTankColumnType
+        {
+            get => _selectedTankColumnType;
+            set
+            {
+                if (_selectedTankColumnType != value)
+                {
+                    _selectedTankColumnType = value;
+                    OnPropertyChanged(nameof(SelectedTankColumnType));
+                }
+            }
+        }
+        public string SelectedTankBeamType
+        {
+            get => _selectedTankBeamType;
+            set
+            {
+                if (_selectedTankBeamType != value)
+                {
+                    _selectedTankBeamType = value;
+                    OnPropertyChanged(nameof(SelectedTankBeamType));
+                }
+            }
+        }
+        public string SelectedValveUpperSlabType
+        {
+            get => _selectedValveUpperSlabType;
+            set
+            {
+                if (_selectedValveUpperSlabType != value)
+                {
+                    _selectedValveUpperSlabType = value;
+                    OnPropertyChanged(nameof(SelectedValveUpperSlabType));
+                }
+            }
+        }
+        public string SelectedValveMidSlabType
+        {
+            get => _selectedValveMidSlabType;
+            set
+            {
+                if (_selectedValveMidSlabType != value)
+                {
+                    _selectedValveMidSlabType = value;
+                    OnPropertyChanged(nameof(SelectedValveMidSlabType));
+                }
+            }
+        }
+        public string SelectedValveFoundSlabType
+        {
+            get => _selectedValveFoundSlabType;
+            set
+            {
+                if (_selectedValveFoundSlabType != value)
+                {
+                    _selectedValveFoundSlabType = value;
+                    OnPropertyChanged(nameof(SelectedValveFoundSlabType));
+                }
+            }
+        }
+        public string SelectedValveOuterWallType
+        {
+            get => _selectedValveOuterWallType;
+            set
+            {
+                if (_selectedValveOuterWallType != value)
+                {
+                    _selectedValveOuterWallType = value;
+                    OnPropertyChanged(nameof(SelectedValveOuterWallType));
+                }
+            }
+        }
+        public string SelectedSubSlabType
+        {
+            get => _selectedSubSlabType;
+            set
+            {
+                if (_selectedSubSlabType != value)
+                {
+                    _selectedSubSlabType = value;
+                    OnPropertyChanged(nameof(SelectedSubSlabType));
                 }
             }
         }
@@ -112,12 +232,36 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         #endregion
 
         #region Constructor
-        public WaterTankViewModel(CreateReservoirUseCase useCase, IDialogService dialogService)
+        public WaterTankViewModel(CreateReservoirUseCase useCase, IDialogService dialogService, IElementTypeQueryRepo elementTypeQueryRepo)
         {
             _createReservoirUseCase = useCase;
             _dialogService = dialogService;
+            _elementTypeQueryRepo = elementTypeQueryRepo;
+
+            LoadElementTypes();
 
             CreateWTankCommand = new RelayCommand(CreateWaterTank);
+        }
+
+        private void LoadElementTypes()
+        {
+            // 목록 초기화 
+            SlabTypes.Clear();
+            WallTypes.Clear();
+            ColumnTypes.Clear();
+            BeamTypes.Clear();
+
+            foreach (var slabTypeName in _elementTypeQueryRepo.GetSlabTypeNames())
+                SlabTypes.Add(slabTypeName);
+            
+            foreach (var wallTypeName in _elementTypeQueryRepo.GetWallTypeNames())
+                WallTypes.Add(wallTypeName);
+            
+            foreach (var columnTypeName in _elementTypeQueryRepo.GetColumnTypeNames())
+                ColumnTypes.Add(columnTypeName);
+            
+            foreach (var beamTypeName in _elementTypeQueryRepo.GetBeamTypeNames())
+                BeamTypes.Add(beamTypeName);
         }
         #endregion
 

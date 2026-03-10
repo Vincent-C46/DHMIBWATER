@@ -1,4 +1,5 @@
-﻿using DHBIMWATER.Application.Interfaces;
+﻿using Autodesk.Revit.DB;
+using DHBIMWATER.Application.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
     {
         public IEnumerable<string> GetBeamTypeNames()
         {
-            throw new NotImplementedException();
+            new FilteredElementCollector();
         }
 
         public IEnumerable<string> GetColumnTypeNames()

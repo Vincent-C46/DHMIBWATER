@@ -24,6 +24,7 @@ public static class ServiceCollectionExtensions
         #region Crerate Reservoir
         services.AddTransient<ILevelQueryRepo, RevitLevelQueryRepo>();
         services.AddTransient<ILevelCommandRepo, RevitLevelCommandRepo>();
+        services.AddTransient<IElementTypeQueryRepo, RevitElementTypeQueryRepo>();
         services.AddTransient<IWallCommandRepo, RevitWallCommandRepository>();
         #endregion
 
@@ -45,6 +46,7 @@ public static class ServiceCollectionExtensions
         #region Crerate Reservoir
         services.AddTransient<ILevelQueryRepo, MockLevelQueryRepo>();
         services.AddTransient<ILevelCommandRepo, MockLevelCommandRepo>();
+        services.AddTransient<IElementTypeQueryRepo, MockElementTypeQueryRepo>();
         services.AddTransient<IWallCommandRepo, MockWallCommandRepository>();
         #endregion
 
