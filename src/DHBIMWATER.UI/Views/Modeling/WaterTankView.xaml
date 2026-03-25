@@ -9,7 +9,7 @@
         d:DataContext="{d:DesignInstance vm:WaterTankViewModel, IsDesignTimeCreatable=False}"
         
         Title="DHBIM WATER - WTank Builder" 
-        Height="700" Width="1100"
+        Height="Auto" Width="1100"
         WindowStartupLocation="CenterScreen"
         Background="#F4F7F9" 
         AllowsTransparency="False" 
@@ -29,10 +29,9 @@
     </WindowChrome.WindowChrome>
 
     <Grid>
-
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="100"/>
         </Grid.RowDefinitions>
 
@@ -45,7 +44,6 @@
                 </Border.Effect>
                 <StackPanel Orientation="Vertical">
                     <TabControl Style="{StaticResource PrimaryTabControlStyle}" Margin="20" Height="Auto">
-
                         <!--Con'c 단면 탭-->
                         <TabItem Header="Con'c 단면선택" Style="{StaticResource PrimaryTabItemStyle}">
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -87,12 +85,18 @@
                                             </StackPanel>
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
                                                 <TextBlock Text="1-5." Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                <TextBlock Text="Hopper 벽체" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" Width="250" ItemsSource="{Binding WallTypes}"
+                                                          SelectedItem="{Binding SelectedTankInnerWallType}"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                                <TextBlock Text="1-6." Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                 <TextBlock Text="기둥" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                                                 <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" Width="250" ItemsSource="{Binding ColumnTypes}"
                                                           SelectedItem="{Binding SelectedTankColumnType}"/>
                                             </StackPanel>
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                                                <TextBlock Text="1-6." Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                <TextBlock Text="1-7." Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                 <TextBlock Text="보" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                                                 <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" Width="250" ItemsSource="{Binding BeamTypes}"
                                                           SelectedItem="{Binding SelectedTankBeamType}"/>
@@ -125,6 +129,12 @@
                                                 <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" Width="250" ItemsSource="{Binding WallTypes}"
                                                         SelectedItem="{Binding SelectedValveOuterWallType}"/>
                                             </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                                <TextBlock Text="2-5." Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                <TextBlock Text="전기실 벽체" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" Width="250" ItemsSource="{Binding WallTypes}"
+                                                        SelectedItem="{Binding SelectedValveOuterWallType}"/>
+                                            </StackPanel>
                                             <!--공통-->
                                             <TextBlock Style ="{StaticResource BaseTextBlockStyle}" Text="공통" FontSize="15" Margin="10"/>
 
@@ -134,7 +144,12 @@
                                                 <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" Width="250" ItemsSource="{Binding SlabTypes}"
                                                         SelectedItem="{Binding SelectedSubSlabType}"/>
                                             </StackPanel>
-
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                                <TextBlock Text="3-2." Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                <TextBlock Text="헌치" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" Width="250" ItemsSource="{Binding SlabTypes}"
+                                                        SelectedItem="{Binding SelectedSubSlabType}"/>
+                                            </StackPanel>
                                         </StackPanel>
 
                                         <StackPanel Grid.Column="1" Margin="10,0,0,0">
@@ -182,7 +197,8 @@
                                                 <TextBlock Text="지 개수" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                                                 <TextBox Style="{StaticResource ReservoirTextBoxStyle}"
                                                          Text="{Binding N}"
-                                                         Width="150" Margin="10,0" Padding="8" Height="25"/>
+                                                         Width="150" Margin="10,0" Padding="8" Height="25"
+                                                         IsReadOnly="True" Background="LightGray"/>
                                                 <TextBlock Text="개" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center"/>
                                             </StackPanel>
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
@@ -397,12 +413,10 @@
                                 </StackPanel>
                             </ScrollViewer>
                         </TabItem>
-
                     </TabControl>
                 </StackPanel>
             </Border>
         </Grid>
-
         <Grid Grid.Row="2">
             <Button Content="배수지 작성" 
                     Style="{StaticResource PrimaryButtonStyle}" 
