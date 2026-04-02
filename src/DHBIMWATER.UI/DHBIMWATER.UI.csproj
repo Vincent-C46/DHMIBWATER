@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<ItemGroup>
+	  <None Remove="Resources\Icons\pump.png" />
 	  <None Remove="Resources\Icons\revit.png" />
 	  <None Remove="Resources\Icons\water-tap.png" />
 	  <None Remove="Resources\Images\0-1.설계조건.png" />
@@ -36,10 +37,17 @@
 
 	<ItemGroup>
 		<Resource Include="Resources\Icons\modeling.png">
-			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Resource>
-		<Resource Include="Resources\Icons\revit.png" />
-		<Resource Include="Resources\Icons\water-tap.png" />
+		<Resource Include="Resources\Icons\pump.png">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Resources\Icons\revit.png">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Resources\Icons\water-tap.png">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Resource>
 		<Resource Include="Resources\Images\0-1.설계조건.png" />
 		<Resource Include="Resources\Images\1-1.수조부.png" />
 		<Resource Include="Resources\Images\1-2.수조부.png" />
@@ -49,6 +57,12 @@
 		<Resource Include="Resources\Images\2-2.밸브실.png" />
 		<Resource Include="Resources\Images\3-1.부재선택.png" />
 		<Resource Include="Resources\Images\3-2.부재선택.png" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Views\Modeling\PumpingStationView.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
 	</ItemGroup>
 
 	<PropertyGroup>

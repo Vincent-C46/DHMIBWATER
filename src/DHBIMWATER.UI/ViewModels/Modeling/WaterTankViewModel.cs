@@ -3,7 +3,6 @@ using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Application.UseCases;
 using DHBIMWATER.UI.Base;
 using DHBIMWATER.UI.Commands;
-using Microsoft.VisualBasic;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
 

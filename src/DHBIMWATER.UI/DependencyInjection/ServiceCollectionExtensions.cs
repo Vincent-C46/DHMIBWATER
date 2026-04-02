@@ -14,11 +14,13 @@ public static class ServiceCollectionExtensions
         services.AddTransient<Modeling1View>();
         services.AddTransient<GuideLineView>();
         services.AddTransient<WaterTankView>();
+        services.AddTransient<PumpingStationView>();
 
         // ViewModel µî·Ï
         services.AddTransient<Modeling1ViewModel>();
         services.AddTransient<GuideLineViewModel>();
         services.AddTransient<WaterTankViewModel>();
+        services.AddTransient<PumpingStationViewModel>();
 
         return services;
     }
