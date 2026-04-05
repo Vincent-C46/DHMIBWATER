@@ -24,13 +24,18 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private string _selectedTankFoundSlabType;
         private string _selectedTankOuterWallType;
         private string _selectedTankInnerWallType;
+        private string _selectedHopperWallType;
         private string _selectedTankColumnType;
         private string _selectedTankBeamType;
+
         private string _selectedValveUpperSlabType;
         private string _selectedValveMidSlabType;
         private string _selectedValveFoundSlabType;
         private string _selectedValveOuterWallType;
+        private string _selectedValveInnerWallType;
+
         private string _selectedSubSlabType;
+        private string _selectedHaunchType;
         #endregion
 
         #region Properties
@@ -137,6 +142,18 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 }
             }
         }
+        public string SelectedHopperWallType
+        {
+            get => _selectedHopperWallType;
+            set
+            {
+                if (_selectedHopperWallType != value)
+                {
+                    _selectedHopperWallType = value;
+                    OnPropertyChanged(nameof(SelectedHopperWallType));
+                }
+            }
+        }
         public string SelectedTankColumnType
         {
             get => _selectedTankColumnType;
@@ -161,6 +178,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 }
             }
         }
+
         public string SelectedValveUpperSlabType
         {
             get => _selectedValveUpperSlabType;
@@ -209,6 +227,19 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 }
             }
         }
+        public string SelectedValveInnerWallType
+        {
+            get => _selectedValveInnerWallType;
+            set
+            {
+                if (_selectedValveInnerWallType != value)
+                {
+                    _selectedValveInnerWallType = value;
+                    OnPropertyChanged(nameof(SelectedValveInnerWallType));
+                }
+            }
+        }
+
         public string SelectedSubSlabType
         {
             get => _selectedSubSlabType;
@@ -221,6 +252,19 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 }
             }
         }
+        public string SelectedHaunchType
+        {
+            get => _selectedHaunchType;
+            set
+            {
+                if (_selectedHaunchType != value)
+                {
+                    _selectedHaunchType = value;
+                    OnPropertyChanged(nameof(SelectedHaunchType));
+                }
+            }
+        }
+
 
         // DTO
         public ReservoirDesignConditionDto designConditionDto { get; set; }
@@ -242,6 +286,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             CreateWTankCommand = new RelayCommand(CreateWaterTank);
         }
 
+        // 목록 초기화
         private void LoadElementTypes()
         {
             // 목록 초기화 
@@ -261,6 +306,28 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             
             foreach (var beamTypeName in _elementTypeQueryRepo.GetBeamTypeNames())
                 BeamTypes.Add(beamTypeName);
+
+            SelectedTankUpperSlabType = SlabTypes.FirstOrDefault(st => st.Contains("300mm")) ?? SlabTypes.FirstOrDefault();
+            SelectedTankFoundSlabType = SlabTypes.FirstOrDefault(st => st.Contains("500mm")) ??
+                                        SlabTypes.FirstOrDefault(st => st.Contains("300mm")) ??
+                                        SlabTypes.FirstOrDefault();
+            SelectedTankOuterWallType = WallTypes.FirstOrDefault(wt => wt.Contains("300mm")) ?? WallTypes.FirstOrDefault();
+            SelectedTankInnerWallType = WallTypes.FirstOrDefault(wt => wt.Contains("300mm")) ?? WallTypes.FirstOrDefault();
+            SelectedHopperWallType = WallTypes.FirstOrDefault(wt => wt.Contains("300mm")) ?? WallTypes.FirstOrDefault();
+            SelectedTankColumnType = ColumnTypes.FirstOrDefault(ct => ct.Contains("450 x 600")) ?? ColumnTypes.FirstOrDefault();
+            SelectedTankBeamType = BeamTypes.FirstOrDefault(bt => bt.Contains("600mm")) ?? BeamTypes.FirstOrDefault();
+
+            SelectedValveUpperSlabType = SlabTypes.FirstOrDefault(st => st.Contains("300mm")) ?? SlabTypes.FirstOrDefault();
+            SelectedValveMidSlabType = SlabTypes.FirstOrDefault(st => st.Contains("300mm")) ?? SlabTypes.FirstOrDefault();
+            SelectedValveFoundSlabType = SlabTypes.FirstOrDefault(st => st.Contains("500mm")) ?? SlabTypes.FirstOrDefault();
+            SelectedValveOuterWallType = WallTypes.FirstOrDefault(wt => wt.Contains("300mm")) ?? WallTypes.FirstOrDefault();
+            SelectedValveInnerWallType = WallTypes.FirstOrDefault(wt => wt.Contains("300mm")) ?? WallTypes.FirstOrDefault();
+
+            SelectedSubSlabType = SlabTypes.FirstOrDefault(st => st.Contains("100mm")) ?? SlabTypes.FirstOrDefault();
+            SelectedHaunchType = BeamTypes.FirstOrDefault(bt => bt.Contains("헌치")) ??
+                                 BeamTypes.FirstOrDefault(bt => bt.Contains("Haunch")) ??
+                                 BeamTypes.FirstOrDefault();
+
         }
         #endregion
 

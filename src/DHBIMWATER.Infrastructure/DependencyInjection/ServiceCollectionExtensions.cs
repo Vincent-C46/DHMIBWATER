@@ -53,7 +53,6 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IDialogService, MockDialogService>();
         services.AddTransient<IGuideLineService, MockGuideLineService>();
 
-
         return services;
     }
 }
