@@ -1,7 +1,7 @@
-﻿using DHBIMWATER.Application.DTOs.Revit.Reservoir;
-using Autodesk.Revit.DB;
+﻿using Autodesk.Revit.DB;
+using DHBIMWATER.Application.DTOs.Revit.Reservoir;
 using DHBIMWATER.Application.Interfaces;
-using Autodesk.Revit.UI;
+using DHBIMWATER.Infrastructure.Services.Revit;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,15 +15,17 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
     {
         #region Fields
         private readonly Func<Document?> _doc;  // Revit Document에 접근하기 위한 람다식
+        private readonly IDialogService _dialog;
         #endregion
 
         #region Properties
         #endregion
 
         #region Constructor
-        public RevitWallCommandRepository(Func<Document?> doc)
+        public RevitWallCommandRepository(Func<Document?> doc, IDialogService dialog)
         {
             _doc = doc;
+            _dialog = dialog;
         }
         #endregion
 
@@ -34,7 +36,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             
             if (doc == null)
             {
-                TaskDialog.Show("Error", "Active document is not available.");
+                _dialog.Warn("Error", "Active document is not available.");
                 return;
             }
 
@@ -49,7 +51,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             Wall.Create(doc, curve, lv.Id, true);
             Wall.Create(doc, curve2, lv.Id, true);
 
-            TaskDialog.Show("RevitWallCommandRepo", $"CreateWall - Revit Implementation\n커브 길이: {curve.Length}");
+            _dialog.Info("RevitWallCommandRepo", $"CreateWall - Revit Implementation\n커브 길이: {curve.Length}");
         }
         #endregion
 

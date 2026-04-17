@@ -22,10 +22,10 @@ namespace DHBIMWATER.Revit.DependencyInjection
             services.AddSingleton<Func<Document?>>(() => uiApp.ActiveUIDocument?.Document);
 
             // Revit 관련 서비스 등록
-            services.AddUIServices();      // UI View/ViewModel
-            services.AddRevitServices();  // Revit 관련 서비스
-            services.AddApplicationServices(); // Application 서비스
-            services.AddInfrastructureServices(); // Infrastructure 서비스
+            services.AddUIServices();               // UI View/ViewModel
+            services.AddRevitServices();            // Revit 관련 서비스
+            services.AddApplicationServices();      // Application 서비스
+            services.AddInfrastructureServices();   // Infrastructure 서비스
 
             _serviceProvider = services.BuildServiceProvider();
         }

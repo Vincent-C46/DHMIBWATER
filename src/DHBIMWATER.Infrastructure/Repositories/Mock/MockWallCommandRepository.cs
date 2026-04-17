@@ -1,12 +1,12 @@
-﻿using DHBIMWATER.Application.DTOs.Revit.Reservoir;
-using DHBIMWATER.Application.Interfaces;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using DHBIMWATER.Infrastructure.Services.Mock;
+using DHBIMWATER.Application.Interfaces;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Mock
 {
@@ -24,7 +24,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Mock
         #region Methods
         public void CreateWall(double length, double n)
         {
-            MessageBox.Show($"MockWallCommandRepo - CreateWall\nWall Length: {length}ft \nWall Count: {n}EA");
+            var mockDialogService = new MockDialogService();
+            mockDialogService.Info("MockWallCommandRepo - CreateWall", $"Wall Length: {length}ft \nWall Count: {n}EA");
         }
         #endregion
 

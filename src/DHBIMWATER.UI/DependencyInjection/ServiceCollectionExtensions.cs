@@ -11,16 +11,16 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddUIServices(this IServiceCollection services)
     {
         // View 등록
-        services.AddTransient<Modeling1View>();
-        services.AddTransient<GuideLineView>();
         services.AddTransient<WaterTankView>();
         services.AddTransient<PumpingStationView>();
+        services.AddTransient<Modeling1View>();
+        services.AddTransient<GuideLineView>();
 
         // ViewModel 등록
-        services.AddTransient<Modeling1ViewModel>();
-        services.AddTransient<GuideLineViewModel>();
         services.AddTransient<WaterTankViewModel>();
         services.AddTransient<PumpingStationViewModel>();
+        services.AddTransient<Modeling1ViewModel>();
+        services.AddTransient<GuideLineViewModel>();
 
         return services;
     }

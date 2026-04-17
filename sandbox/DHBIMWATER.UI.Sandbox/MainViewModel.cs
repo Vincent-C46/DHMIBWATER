@@ -47,7 +47,7 @@ namespace DHBIMWATER.UI.Sandbox
 
         private void OpenPumpingStationView(object? obj)
         {
-            var view = _serviceProvider.GetRequiredService<WaterTankView>();
+            var view = _serviceProvider.GetRequiredService<PumpingStationView>();
             view.ShowDialog();
         }
     }

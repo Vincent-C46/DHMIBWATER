@@ -18,7 +18,6 @@ public static class ServiceCollectionExtensions
     {
         // Revit 실제 구현 등록
         services.AddSingleton<IGenericModelRepository, RevitGenericModelRepository>();
-
         services.AddTransient<ITransactionContext, RevitTransactionContext>();
 
         #region Crerate Reservoir
