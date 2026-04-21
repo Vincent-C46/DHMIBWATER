@@ -1,4 +1,5 @@
-﻿using DHBIMWATER.Application.DTOs.Revit.Reservoir;
+﻿using DHBIMWATER.Application.DTOs.Revit.PumpingStation;
+using DHBIMWATER.Application.DTOs.Revit.Reservoir;
 using DHBIMWATER.Application.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -8,13 +9,13 @@ using System.Threading.Tasks;
 
 namespace DHBIMWATER.Application.UseCases
 {
-    public class CreateReservoirUseCase
+    public class CreatePumpingStationUseCase
     {
         #region Fields
+        private readonly ITransactionContext _tx;
         private readonly ILevelQueryRepo _levelQueryRepo;
         private readonly ILevelCommandRepo _levelCmdRepo;
         private readonly IWallCommandRepo _wallCmdRepo;
-        private readonly ITransactionContext _tx;
         #endregion
 
         #region Properties
@@ -22,10 +23,10 @@ namespace DHBIMWATER.Application.UseCases
         #endregion
 
         #region Constructor
-        public CreateReservoirUseCase(ILevelQueryRepo levelQueryRepo,
-                                      ILevelCommandRepo levelCmdRepo,
-                                      IWallCommandRepo wallCmdRepo,
-                                      ITransactionContext tx)
+        public CreatePumpingStationUseCase(ITransactionContext tx,
+                                           ILevelQueryRepo levelQueryRepo,
+                                           ILevelCommandRepo levelCmdRepo,
+                                           IWallCommandRepo wallCmdRepo)
         {
             _levelQueryRepo = levelQueryRepo;
             _levelCmdRepo = levelCmdRepo;
@@ -34,8 +35,8 @@ namespace DHBIMWATER.Application.UseCases
         }
         #endregion
 
-        #region Methods 
-        public void Execute(ReservoirCreationRequestDto dto)
+        #region Methods
+        public void Execute(PumpCreationRequestDto dto)
         {
             using (_tx)
             {
@@ -48,12 +49,12 @@ namespace DHBIMWATER.Application.UseCases
                     var existingLevels = _levelQueryRepo.GetExistingLevelNames();
 
                     // Level 생성
-                    string tankFoundLevelName = "수조부 바닥슬래브";
-                    string tankUpperLevelName = "수조부 상부슬래브";
-                    string valveRoomFoundLevelName = "밸브실 바닥슬래브";
-                    string valveRoomMidLevelName = "밸브실 중간슬래브";
+                    string pumpFndLevelName = "기초(펌프)";
+                    string screenFndLevelName = "기초(유입부)";
+                    string valveRoomLevelName = "밸브실";
+                    string upperSlabLevelName = "상부슬래브";
 
-                    var levelNamesToCreate = new List<string>() { tankFoundLevelName, tankUpperLevelName, valveRoomFoundLevelName, valveRoomMidLevelName };
+                    var levelNamesToCreate = new List<string>() { pumpFndLevelName, screenFndLevelName, valveRoomLevelName,upperSlabLevelName, };
 
                     foreach (var lvl in levelNamesToCreate)
                     {
@@ -71,7 +72,7 @@ namespace DHBIMWATER.Application.UseCases
 
                     // 벽 생성
                     _wallCmdRepo.CreateWall(dto.DesignConditionDto.LWL, dto.DesignConditionDto.N);
-                        
+
                     // 기둥 생성 (독립기초)
                     // 보 생성
                     // 결합
