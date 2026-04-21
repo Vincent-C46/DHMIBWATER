@@ -13,6 +13,10 @@ namespace DHBIMWATER.Core.Structures
         public double Thickness { get; set; }
         public double ElevationZ { get; set; }
 
+        public string ElementCode { get; set; } = string.Empty;
+        public string Zone { get; set; } = string.Empty;
+        public string Part { get; set; } = string.Empty;
+
         public double Area => PolygonCalculator.ComputeArea(Points);
         public double Perimeter => PolygonCalculator.ComputePerimeter(Points);
         public double Volume => Area * Thickness;

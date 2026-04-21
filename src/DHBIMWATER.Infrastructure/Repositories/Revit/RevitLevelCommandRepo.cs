@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Revit
 {
@@ -18,19 +19,20 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             _doc = doc;
         }
 
-        public void CreateLevel(string levelName, double elevation)
+        public int CreateLevel(string levelName, double elevation)
         {
             var doc = _doc();
-            if (doc == null) return;
+            if (doc == null) return 0;
 
-            Level level = Level.Create(doc, elevation);
+            Level level = Level.Create(doc, UC.MmToFt(elevation));
             level.Name = levelName;
+            return (int)level.Id.Value;
         }
 
-        public void UpdateLevel(string levelName, double elevation) 
+        public int UpdateLevel(string levelName, double elevation)
         {
             var doc = _doc();
-            if (doc == null) return;
+            if (doc == null) return 0;
 
             var level = new FilteredElementCollector(doc)
                           .OfCategory(BuiltInCategory.OST_Levels)
@@ -39,8 +41,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                           .FirstOrDefault(lvl => lvl.Name.Equals(levelName, StringComparison.OrdinalIgnoreCase));
             if (level != null)
             {
-                level.Elevation = elevation;
+                level.Elevation = UC.MmToFt(elevation);
             }
+            return (int)level.Id.Value;
         }
     }
 }

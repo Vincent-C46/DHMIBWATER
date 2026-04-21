@@ -15,9 +15,13 @@
 	  <None Remove="Resources\Images\2-2.밸브실.png" />
 	  <None Remove="Resources\Images\3-1.부재선택.png" />
 	  <None Remove="Resources\Images\3-2.부재선택.png" />
+	  <None Remove="Resources\PumpStationImages\1-1.펌프장_평면제원.png" />
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Resource Include="Resources\PumpStationImages\1-1.펌프장_평면제원.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Resource>
 	  <Resource Include="Resources\PumpStationImages\1-2.펌프장_종단제원.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Resource>

@@ -8,8 +8,8 @@
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance vm:PumpingStationViewModel, IsDesignTimeCreatable=False}"
         
-        Title="DHBIM WATER - WTank Builder" 
-        Height="Auto" Width="Auto" MinWidth="800"
+        Title="DHBIM WATER - PumpingStation Builder" 
+        Height= "Auto" Width="1100" MinWidth="800"
         WindowStartupLocation="CenterScreen"
         Background="#F4F7F9" 
         AllowsTransparency="False" 
@@ -30,7 +30,7 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>  
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="100"/>
         </Grid.RowDefinitions>
@@ -61,7 +61,7 @@
                                                 <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" 
                                              Width="150" Margin="10,0"
                                              ItemsSource="{Binding PumpingStaitonTypes}"
-                                             SelectedItem="{Binding SelectedTankUpperSlabType}"/>
+                                             SelectedItem="{Binding SelectedPumpingStationType}"/>
                                             </StackPanel>
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
                                                 <TextBlock Text="진입부 위치" Style="{StaticResource LabelTextBlockStyle}" Width="185" VerticalAlignment="Center"/>
@@ -113,9 +113,7 @@
                                                          Width="150" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                                 <TextBlock Text="m" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center"/>
                                             </StackPanel>
-
                                         </StackPanel>
-
                                         <StackPanel Grid.Column="1" Margin="10,0,0,0">
                                             <!--
                                             <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/Images/0-1.설계조건.png"
@@ -197,7 +195,7 @@
                                                 <TextBlock Text="H6:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                 <TextBlock Text="밸브받침 높이" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                                                 <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                                                        Text="{Binding H1}"
+                                                        Text="{Binding H6}"
                                                         Width="150" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                                 <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="30"/>
                                             </StackPanel>
@@ -207,8 +205,8 @@
                                                 <TextBlock Text="기초 경사부 기울기" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                                                 <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" 
                                                           Width="150" Margin="10,0"
-                                                          ItemsSource="{Binding SlabTypes}"
-                                                          SelectedItem="{Binding SelectedTankUpperSlabType}"/>
+                                                          ItemsSource="{Binding Thetas}"
+                                                          SelectedItem="{Binding SelectedTheta}"/>
                                             </StackPanel>
                                         </StackPanel>
 
@@ -240,40 +238,40 @@
                                                         <TextBlock Text="L2:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                         <TextBlock Text="슬래브 단부 길이2" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                                                         <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                                                  Text="{Binding L2}"
-                                                  Width="150" Margin="10,0" VerticalAlignment="Center" Height="25"/>
+                                                                 Text="{Binding L2}"
+                                                                 Width="150" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                                         <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="30"/>
                                                     </StackPanel>
                                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                                         <TextBlock Text="L3:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                         <TextBlock Text="기초 경사부 길이" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                                                         <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                                                  Text="{Binding L3}"
-                                                  Width="150" Margin="10,0" VerticalAlignment="Center" Height="25"/>
+                                                                 Text="{Binding L3}"
+                                                                 Width="150" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                                         <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="30"/>
                                                     </StackPanel>
                                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                                         <TextBlock Text="L4:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                         <TextBlock Text="계단 끝~펌프 중심" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                                                         <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                                                  Text="{Binding L4}"
-                                                  Width="150" Margin="10,0" VerticalAlignment="Center" Height="25"/>
+                                                                 Text="{Binding L4}"
+                                                                 Width="150" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                                         <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="30"/>
                                                     </StackPanel>
                                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                                         <TextBlock Text="H3:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                         <TextBlock Text="여유고" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                                                         <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                                                  Text="{Binding H3}"
-                                                  Width="150" Margin="10,0" VerticalAlignment="Center" Height="25"/>
+                                                                 Text="{Binding H3}"
+                                                                 Width="150" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                                         <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="30"/>
                                                     </StackPanel>
                                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                                         <TextBlock Text="H4:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                         <TextBlock Text="펌프 흡입관 잠김 깊이" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                                                         <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                                                  Text="{Binding H4}"
-                                                  Width="150" Margin="10,0" VerticalAlignment="Center" Height="25"/>
+                                                                 Text="{Binding H4}"
+                                                                 Width="150" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                                         <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="30"/>
                                                     </StackPanel>
 
@@ -281,40 +279,40 @@
                                                         <TextBlock Text="H7:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                         <TextBlock Text="최소 토피" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                                                         <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                                                  Text="{Binding H7}"
-                                                  Width="150" Margin="10,0" VerticalAlignment="Center" Height="25"/>
+                                                                 Text="{Binding H7}"
+                                                                 Width="150" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                                         <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="30"/>
                                                     </StackPanel>
                                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                                         <TextBlock Text="OB1:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                         <TextBlock Text="벽체 오프닝 폭" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                                                         <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                                                  Text="{Binding OB1}"
-                                                  Width="150" Margin="10,0" VerticalAlignment="Center" Height="25"/>
+                                                                 Text="{Binding OB1}"
+                                                                 Width="150" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                                         <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="30"/>
                                                     </StackPanel>
                                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                                         <TextBlock Text="OH1:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                         <TextBlock Text="벽체 오프닝 높이" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                                                         <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                                                  Text="{Binding OH1}"
-                                                  Width="150" Margin="10,0" VerticalAlignment="Center" Height="25"/>
+                                                                 Text="{Binding OH1}"
+                                                                 Width="150" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                                         <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="30"/>
                                                     </StackPanel>
                                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                                         <TextBlock Text="NS:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                         <TextBlock Text="기초 경사부 계단 단수" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                                                         <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                                                  Text="{Binding NS}"
-                                                  Width="150" Margin="10,0" VerticalAlignment="Center" Height="25"/>
+                                                                 Text="{Binding NS}"
+                                                                 Width="150" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                                         <TextBlock Text="단" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="30"/>
                                                     </StackPanel>
                                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                                         <TextBlock Text="HS:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                         <TextBlock Text="계단 높이" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                                                         <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                                                  Text="{Binding HS}"
-                                                  Width="150" Margin="10,0" VerticalAlignment="Center" Height="25"/>
+                                                                 Text="{Binding HS}"
+                                                                 Width="150" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                                         <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="30"/>
                                                     </StackPanel>
                                                 </StackPanel>
@@ -356,7 +354,7 @@
                                                 <TextBlock Text="" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                 <TextBlock Text="펌프 오프닝 타입" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                                                 <RadioButton Content="사각형" GroupName="PumpOpeningType" 
-                                                             Margin="10,0" VerticalAlignment="Center"/>
+                                                             Margin="10,0" VerticalAlignment="Center" IsChecked="True"/>
                                                 <RadioButton Content="원형" GroupName="PumpOpeningType"
                                                              IsChecked="{Binding IsCircularOpening}"
                                                              Margin="10,0" VerticalAlignment="Center"/>
@@ -393,9 +391,6 @@
                                                          Width="150" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                                 <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="150"/>
                                             </StackPanel>
-
-
-
                                         </StackPanel>
 
                                         <StackPanel Grid.Column="1" Margin="10,0,0,0">
@@ -478,10 +473,8 @@
 
                                         <StackPanel Grid.Column="1" Margin="10,0,0,0">
                                             <!--
-                                            <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/Images/3-1.부재선택.png" 
-                                                   Width="350"/>
-                                            <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/Images/3-2.부재선택.png" 
-                                                   Width="350"/>
+                                            <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/Images/3-1.부재선택.png" Width="350"/>
+                                            <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/Images/3-2.부재선택.png" Width="350"/>
                                             -->
                                         </StackPanel>
                                     </Grid>
@@ -492,13 +485,13 @@
                 </StackPanel>
             </Border>
         </Grid>
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="2" Height="Auto">
             <Button Content="Create" 
                     Style="{StaticResource PrimaryButtonStyle}" 
                     Width="150" Height="40" 
                     HorizontalAlignment="Right" 
                     Margin="0,0,20,20"
-                    Command="{Binding CreateWTankCommand}"/>
+                    Command="{Binding CreatePumpingStationCommand}"/>
         </Grid>
     </Grid>
 </Window>

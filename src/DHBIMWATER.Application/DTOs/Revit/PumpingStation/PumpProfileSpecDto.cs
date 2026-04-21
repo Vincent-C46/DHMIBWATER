@@ -15,7 +15,7 @@ namespace DHBIMWATER.Application.DTOs.Revit.PumpingStation
         double B7,
         double H1,
         double H6,
-        string Theta,
+        string SelectedTheta,
         double L1,
         double L2,
         double L3,
@@ -23,9 +23,9 @@ namespace DHBIMWATER.Application.DTOs.Revit.PumpingStation
         double H3,
         double H4,
         double H7,
-        double Ob1,
-        double Oh1,
-        int Ns,
-        double Hs
+        double OB1,
+        double OH1,
+        int NS,
+        double HS
     );
 }

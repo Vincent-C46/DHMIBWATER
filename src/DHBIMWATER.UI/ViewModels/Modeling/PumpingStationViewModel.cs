@@ -1,4 +1,5 @@
-﻿using DHBIMWATER.Application.DTOs.Revit.Reservoir;
+﻿using DHBIMWATER.Application.DTOs.Revit.PumpingStation;
+using DHBIMWATER.Application.DTOs.Revit.Reservoir;
 using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Application.UseCases;
 using DHBIMWATER.UI.Base;
@@ -16,9 +17,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
     {
         #region Fields
         private IDialogService _dialogService;
-        private readonly CreateReservoirUseCase _createReservoirUseCase;
-
-
+        private readonly CreatePumpingStationUseCase _createPumpingStationUseCase;
 
         // 설계조건
         private string _selectedPumpingStationType = "Type1";
@@ -27,7 +26,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private double _hd = 5.0;
         private int _n = 3;
         private double _lwl = 0.0;
-        private double _hwl = 800.0;
+        private double _hwl = 2.5;
 
         // 종단제원
         private double _b1 = 1200.0;
@@ -396,7 +395,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 }
             }
         }
-        
+
         // 읽기 전용
         public double H2 => (HWL - LWL) * 1000;
         public double H5 => H2 + H3 + H4 + T1;
@@ -575,17 +574,26 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 }
             }
         }
-        #endregion
 
+        // DTO
+        public PumpDesignConditionDto designConditionDto { get; set; }
+        public PumpPlanSpecDto planSpecDto { get; set; }
+        public PumpProfileSpecDto profileSpecDto { get; set; }
+        public PumpTypeSelectionDto typeSelectionDto { get; set; }
+        public PumpCreationRequestDto creationRequestDto { get; set; }
+
+        #endregion
 
         #region Commands
         public ICommand CreatePumpingStationCommand { get; }
         #endregion
 
-
         #region Constructor
-        public PumpingStationViewModel(CreateReservoirUseCase useCase, IDialogService dialogService, IElementTypeQueryRepo elementTypeQueryRepo)
+        public PumpingStationViewModel(CreatePumpingStationUseCase useCase, IDialogService dialogService, IElementTypeQueryRepo elementTypeQueryRepo)
         {
+            _createPumpingStationUseCase = useCase;
+            _dialogService = dialogService;
+
             CreatePumpingStationCommand = new RelayCommand(CreatePumpingStation);
         }
         #endregion
@@ -593,13 +601,15 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         #region Methods
         private void CreatePumpingStation(object? obj)
         {
+            designConditionDto = new PumpDesignConditionDto(SelectedPumpingStationType, SelectedEntranceType, D, HD, N, LWL, HWL);
+            profileSpecDto = new PumpProfileSpecDto(B1, B3, B4, B6, B7, H1, H6, SelectedTheta, L1, L2, L3, L4, H3, H4, H7, OB1, OH1, NS, HS);
+            planSpecDto = new PumpPlanSpecDto(B2, B8, SelectedOpeningType, B5, B9, L5, B10 );
+            typeSelectionDto = new PumpTypeSelectionDto( T1, T2, T3, T4, T5, GB1, GH1);
+            creationRequestDto = new PumpCreationRequestDto(designConditionDto, planSpecDto, profileSpecDto, typeSelectionDto);
 
+            _createPumpingStationUseCase.Execute(creationRequestDto);
         }
 
-        private void Set()
-        {
-
-        }
         // 프로퍼티 업데이트
         private void UpdateT2()
         {
@@ -608,7 +618,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         }
         private void UpdateT4()
         {
-            T4 = Math.Ceiling((H5 + T1) * 0.01)*100;
+            T4 = Math.Ceiling((H5 + T1) * 0.01) * 100;
             OnPropertyChanged(nameof(T4));
         }
         #endregion

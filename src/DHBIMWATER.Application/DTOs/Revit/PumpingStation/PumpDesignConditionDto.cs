@@ -8,8 +8,8 @@ namespace DHBIMWATER.Application.DTOs.Revit.PumpingStation
 {
     public record PumpDesignConditionDto
     (
-        string PumpingStationType,
-        string EntranceType,
+        string SelectedPumpingStationType,
+        string SelectedEntranceType,
         double D,
         double HD,
         int N,

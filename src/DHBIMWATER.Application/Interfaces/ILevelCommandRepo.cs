@@ -8,7 +8,7 @@ namespace DHBIMWATER.Application.Interfaces
 {
     public interface ILevelCommandRepo
     {
-        void CreateLevel(string levelName, double elevation);
-        void UpdateLevel(string levelName, double elevation);
+        int CreateLevel(string levelName, double elevation);
+        int UpdateLevel(string levelName, double elevation);
     }
 }
