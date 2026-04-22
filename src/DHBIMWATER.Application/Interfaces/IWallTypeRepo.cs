@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace DHBIMWATER.Application.Interfaces
 {
-    public interface ISlabCommandRepo
+    public class IWallTypeRepo
     {
-        void CreateSlab(double length, string slabTypeId);
+        
     }
 }

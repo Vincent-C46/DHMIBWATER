@@ -13,6 +13,7 @@ namespace DHBIMWATER.Application.DTOs.Revit.PumpingStation
         double T3,
         double T4,
         double T5,
+        double T6,
         double GB1,
         double GH1
     );
