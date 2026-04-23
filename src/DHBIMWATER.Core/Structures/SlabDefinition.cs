@@ -13,6 +13,7 @@ namespace DHBIMWATER.Core.Structures
         public double Thickness { get; set; }
         public double ElevationZ { get; set; }
 
+        public string LevelName { get; init; } = string.Empty;
         public string ElementCode { get; set; } = string.Empty;
         public string Zone { get; set; } = string.Empty;
         public string Part { get; set; } = string.Empty;

@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DHBIMWATER.Application.Interfaces
+namespace DHBIMWATER.Core.Structures
 {
-    internal interface IFoundCommandRepo
+    public class DirectShapeDefinition
     {
+
     }
 }

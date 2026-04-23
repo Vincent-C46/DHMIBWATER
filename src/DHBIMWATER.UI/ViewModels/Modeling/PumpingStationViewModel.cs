@@ -49,7 +49,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private double _ob1 = 2000.0;
         private double _oh1 = 3000.0;
         private int _ns;
-        private double _hs;
+        private double _hs = 200;
 
         // 평면제원
         private double _b2;
@@ -61,7 +61,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private double _b10 = 0.0;
 
         // 부재 유형
-        private double _t1 = 400.0; 
+        private double _t1 = 400.0;
         private double _t2;
         private double _t3 = 400.0;
         private double _t4;
@@ -108,6 +108,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_d != value)
                 {
                     _d = value;
+                    RecalculateDerivedValues();
                     OnPropertyChanged(nameof(D));
                 }
             }
@@ -144,6 +145,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_lwl != value)
                 {
                     _lwl = value;
+                    RecalculateDerivedValues();
                     OnPropertyChanged(nameof(LWL));
                 }
             }
@@ -156,6 +158,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_hwl != value)
                 {
                     _hwl = value;
+                    RecalculateDerivedValues();
                     OnPropertyChanged(nameof(HWL));
                 }
             }
@@ -211,6 +214,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_b6 != value)
                 {
                     _b6 = value;
+                    RecalculateDerivedValues();
                     OnPropertyChanged(nameof(B6));
                 }
             }
@@ -223,6 +227,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_b7 != value)
                 {
                     _b7 = value;
+                    RecalculateDerivedValues();
                     OnPropertyChanged(nameof(B7));
                 }
             }
@@ -235,6 +240,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_h1 != value)
                 {
                     _h1 = value;
+                    RecalculateDerivedValues();
                     OnPropertyChanged(nameof(H1));
                 }
             }
@@ -247,6 +253,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_h6 != value)
                 {
                     _h6 = value;
+                    RecalculateDerivedValues();
                     OnPropertyChanged(nameof(H6));
                 }
             }
@@ -260,6 +267,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_selectedTheta != value)
                 {
                     _selectedTheta = value;
+                    RecalculateDerivedValues();
                     OnPropertyChanged(nameof(SelectedTheta));
                 }
             }
@@ -308,6 +316,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_l4 != value)
                 {
                     _l4 = value;
+                    RecalculateDerivedValues();
                     OnPropertyChanged(nameof(L4));
                 }
             }
@@ -320,6 +329,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_h3 != value)
                 {
                     _h3 = value;
+                    RecalculateDerivedValues();
                     OnPropertyChanged(nameof(H3));
                 }
             }
@@ -332,6 +342,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_h4 != value)
                 {
                     _h4 = value;
+                    RecalculateDerivedValues();
                     OnPropertyChanged(nameof(H4));
                 }
             }
@@ -392,6 +403,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_hs != value)
                 {
                     _hs = value;
+                    RecalculateDerivedValues();
                     OnPropertyChanged(nameof(HS));
                 }
             }
@@ -422,6 +434,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_b8 != value)
                 {
                     _b8 = value;
+                    RecalculateDerivedValues();
                     OnPropertyChanged(nameof(B8));
                 }
             }
@@ -446,6 +459,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_b5 != value)
                 {
                     _b5 = value;
+                    RecalculateDerivedValues();
                     OnPropertyChanged(nameof(B5));
                 }
             }
@@ -482,6 +496,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_b10 != value)
                 {
                     _b10 = value;
+                    RecalculateDerivedValues();
                     OnPropertyChanged(nameof(B10));
                 }
             }
@@ -497,7 +512,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_t1 != value)
                 {
                     _t1 = value;
-                    UpdateT4();
+                    RecalculateDerivedValues();
                     OnPropertyChanged(nameof(T1));
                 }
             }
@@ -522,6 +537,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_t3 != value)
                 {
                     _t3 = value;
+                    RecalculateDerivedValues();
                     OnPropertyChanged(nameof(T3));
                 }
             }
@@ -534,7 +550,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_t4 != value)
                 {
                     _t4 = value;
-                    UpdateT2();
                     OnPropertyChanged(nameof(T4));
                 }
             }
@@ -609,6 +624,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             _dialogService = dialogService;
 
             CreatePumpingStationCommand = new RelayCommand(CreatePumpingStation);
+            RecalculateDerivedValues();
         }
         #endregion
 
@@ -625,15 +641,64 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         }
 
         // 프로퍼티 업데이트
-        private void UpdateT2()
+        private void RecalculateDerivedValues()
         {
-            T2 = T4 + 100; // T1과 T2를 동일하게 유지
+            // 종단제원
+            _l2 = _h1;
+            _h4 = 2.9 * _d;
+
+            if (SelectedTheta == "30˚")
+            {
+                _l3 = Math.Ceiling((_h4 - _h1) / Math.Tan(30 * Math.PI / 180) / 100) * 100;
+                _l4 = Math.Ceiling(3 * _d / 100) * 100;
+            }
+            else if (SelectedTheta == "45˚")
+            {
+                _l3 = Math.Ceiling((_h4 - _h1) / Math.Tan(45 * Math.PI / 180) / 100) * 100;
+                _l4 = Math.Ceiling(4.5 * _d / 100) * 100;
+            }
+            _h3 = 1000 - _t1 + 100 - (H2 + _h4) % 100;
+            _h7 = 1000 + 100 - _h6 % 100;
+            _ns = (int)Math.Floor((_h4 - _h1) / _hs);
+
+            // 평면제원
+            if (_h1 + H2 + _h3 + _t1 <= 5000)
+                _b2 = 3000.0;
+            else if ((5000 < _h1 + H2 + _h3 + _t1) && (_h1 + H2 + _h3 + _t1 <= 7000))
+                _b2 = 3500.0;
+            else
+                _b2 = 4000.0;
+            _b8 = Math.Ceiling(3 * _d / 100) * 100;
+            _l5 = _b7 + _t3 + _b6 + _b5 / 2 + _l4 - _b10;
+
+            // 부재유형
+            _t4 = Math.Ceiling((H5 + _t1) * 0.1 / 100) * 100;
+            _t2 = _t4 + 100;
+
+            if (_b8 < 3000)
+                _t5 = 400.0;
+            else if (3000 <= _b8 && _b8 <= 4000)
+                _t5 = 500.0;
+            else
+                _t5 = 600.0;
+
+            _gb1 = 500;
+            _gh1 = _t1 + 300;
+
+            OnPropertyChanged(nameof(B2));
+            OnPropertyChanged(nameof(L2));
+            OnPropertyChanged(nameof(L3));
+            OnPropertyChanged(nameof(L4));
+            OnPropertyChanged(nameof(H3));
+            OnPropertyChanged(nameof(H4));
+            OnPropertyChanged(nameof(H7));
             OnPropertyChanged(nameof(T2));
-        }
-        private void UpdateT4()
-        {
-            T4 = Math.Ceiling((H5 + T1) * 0.01) * 100;
             OnPropertyChanged(nameof(T4));
+            OnPropertyChanged(nameof(NS));
+            OnPropertyChanged(nameof(B8));
+            OnPropertyChanged(nameof(T5));
+            OnPropertyChanged(nameof(L5));
+            OnPropertyChanged(nameof(GH1));
         }
         #endregion
     }

@@ -19,6 +19,8 @@ namespace DHBIMWATER.Application.UseCases
         private readonly ILevelQueryRepo _levelQueryRepo;
         private readonly ILevelCommandRepo _levelCmdRepo;
         private readonly IWallCommandRepo _wallCmdRepo;
+        private readonly ISlabCommandRepo _slabCmdRepo;
+        private readonly IBeamCommandRepo _beamCmdRepo;
         #endregion
 
         #region Properties
@@ -29,11 +31,15 @@ namespace DHBIMWATER.Application.UseCases
         public CreatePumpingStationUseCase(ITransactionContext tx,
                                            ILevelQueryRepo levelQueryRepo,
                                            ILevelCommandRepo levelCmdRepo,
-                                           IWallCommandRepo wallCmdRepo)
+                                           ISlabCommandRepo slabCmdRepo,
+                                           IWallCommandRepo wallCmdRepo,
+                                           IBeamCommandRepo beamCmdRepo)
         {
             _levelQueryRepo = levelQueryRepo;
             _levelCmdRepo = levelCmdRepo;
             _wallCmdRepo = wallCmdRepo;
+            _slabCmdRepo = slabCmdRepo;
+            _beamCmdRepo = beamCmdRepo;
             _tx = tx;
         }
         #endregion
@@ -65,8 +71,8 @@ namespace DHBIMWATER.Application.UseCases
                     #endregion
 
                     #region 2. 슬래브 생성
-                    foreach (var slab in PumpingStationGeometryCalculator.CalculateSlabs(dto))
-                        _slabCmdRepo.Create(slab);
+                    foreach (var slabDef in PumpingStationGeometryCalculator.CalculateSlabs(dto))
+                        _slabCmdRepo.CreateSlab(slabDef);
                     #endregion
 
                     #region 3. 벽체 생성

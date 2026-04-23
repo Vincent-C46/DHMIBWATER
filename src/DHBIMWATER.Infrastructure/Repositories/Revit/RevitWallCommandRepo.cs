@@ -16,7 +16,7 @@ using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Revit
 {
-    internal class RevitWallCommandRepository : IWallCommandRepo
+    internal class RevitWallCommandRepo : IWallCommandRepo
     {
         #region Fields
         private readonly Func<Document?> _doc;  // Revit Document에 접근하기 위한 람다식
@@ -27,7 +27,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
         #endregion
 
         #region Constructor
-        public RevitWallCommandRepository(Func<Document?> doc, IDialogService dialog)
+        public RevitWallCommandRepo(Func<Document?> doc, IDialogService dialog)
         {
             _doc = doc;
             _dialog = dialog;

@@ -24,7 +24,9 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ILevelQueryRepo, RevitLevelQueryRepo>();
         services.AddTransient<ILevelCommandRepo, RevitLevelCommandRepo>();
         services.AddTransient<IElementTypeQueryRepo, RevitElementTypeQueryRepo>();
-        services.AddTransient<IWallCommandRepo, RevitWallCommandRepository>();
+        services.AddTransient<IWallCommandRepo, RevitWallCommandRepo>();
+        services.AddTransient<IBeamCommandRepo, RevitBeamCommandRepo>();
+        services.AddTransient<ISlabCommandRepo, RevitSlabCommandRepo>();
         #endregion
 
         services.AddTransient<IDialogService, RevitDialogService>();
@@ -46,7 +48,9 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ILevelQueryRepo, MockLevelQueryRepo>();
         services.AddTransient<ILevelCommandRepo, MockLevelCommandRepo>();
         services.AddTransient<IElementTypeQueryRepo, MockElementTypeQueryRepo>();
-        services.AddTransient<IWallCommandRepo, MockWallCommandRepository>();
+        services.AddTransient<IWallCommandRepo, MockWallCommandRepo>();
+        services.AddTransient<IBeamCommandRepo, MockBeamCommandRepo>();
+        services.AddTransient<ISlabCommandRepo, MockSlabCommandRepo>();
         #endregion
 
         services.AddTransient<IDialogService, MockDialogService>();

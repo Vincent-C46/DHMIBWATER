@@ -1,4 +1,5 @@
 ﻿using DHBIMWATER.Core.Geometry;
+using DHBIMWATER.Core.Structures;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,8 +8,8 @@ using System.Threading.Tasks;
 
 namespace DHBIMWATER.Application.Interfaces
 {
-    public interface IFloorCommandRepo
+    public interface ISlabCommandRepo
     {
-        int CreateFloor (IList<Point3D> profilePoints, string slabTypeId);
+        int CreateSlab (SlabDefinition slabDef);
     }
 }

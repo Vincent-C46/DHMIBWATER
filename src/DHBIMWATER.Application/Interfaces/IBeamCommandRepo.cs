@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DHBIMWATER.Application.Interfaces
 {
-    internal interface IBeamCommandRepo
+    public interface IBeamCommandRepo
     {
     }
 }

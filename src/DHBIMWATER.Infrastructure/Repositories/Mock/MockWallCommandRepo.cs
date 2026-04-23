@@ -11,7 +11,7 @@ using DHBIMWATER.Core.Geometry;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Mock
 {
-    internal class MockWallCommandRepository : IWallCommandRepo
+    internal class MockWallCommandRepo : IWallCommandRepo
     {
 
         #region Fields
