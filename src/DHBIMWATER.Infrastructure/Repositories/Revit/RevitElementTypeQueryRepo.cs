@@ -43,7 +43,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                             return true;
 
                         var mat = doc.GetElement(matParam.AsElementId()) as Material;
-
+                        // 스틸 필터링
                         if (mat != null && (mat.Name.Contains("강철") || mat.Name.Contains("스틸") || mat.Name.Contains("steel")))
                             return false;
 

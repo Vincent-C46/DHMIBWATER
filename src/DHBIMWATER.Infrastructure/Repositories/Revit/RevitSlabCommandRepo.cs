@@ -1,23 +1,20 @@
-﻿using DHBIMWATER.Application.Interfaces;
-using Autodesk.Revit.DB;
+﻿using Autodesk.Revit.DB;
+using DHBIMWATER.Application.Interfaces;
+using DHBIMWATER.Core.Geometry;
 using DHBIMWATER.Core.Structures;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DHBIMWATER.Core.Geometry;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Revit
 {
     public class RevitSlabCommandRepo : ISlabCommandRepo
     {
         private readonly Func<Document?> _doc;
+        private readonly IElementTypeCommandRepo _elementTypeCmdRepo;
 
-        public RevitSlabCommandRepo(Func<Document?> doc)
+        public RevitSlabCommandRepo(Func<Document?> doc, IElementTypeCommandRepo elementTypeRepo)
         {
             _doc = doc;
+            _elementTypeCmdRepo = elementTypeRepo;
         }
 
         public int CreateSlab(SlabDefinition slabDef)
@@ -43,9 +40,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             }
             IList<CurveLoop> curveLoopList = new List<CurveLoop> { curveLoop };
 
-            var floorTypeId = new FilteredElementCollector(doc)
-                .OfClass(typeof(FloorType))
-                .FirstOrDefault(e => e.Name.Equals("일반 300mm"))?.Id ?? ElementId.InvalidElementId;
+            var floorSpec = new FloorTypeSpec(slabDef.Thickness, $"일반 - {slabDef.Thickness}mm");
+            var floorTypeId = new ElementId(_elementTypeCmdRepo.FindOrCreateSlabType(floorSpec)); 
+
             var levelId = new FilteredElementCollector(doc)
                 .OfClass(typeof(Level))
                 .FirstOrDefault(e => e.Name.Equals(slabDef.LevelName))?.Id ?? ElementId.InvalidElementId;

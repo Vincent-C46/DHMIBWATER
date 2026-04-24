@@ -20,10 +20,11 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IGenericModelRepository, RevitGenericModelRepository>();
         services.AddTransient<ITransactionContext, RevitTransactionContext>();
 
-        #region Crerate Reservoir
+        #region Element 관련
         services.AddTransient<ILevelQueryRepo, RevitLevelQueryRepo>();
         services.AddTransient<ILevelCommandRepo, RevitLevelCommandRepo>();
         services.AddTransient<IElementTypeQueryRepo, RevitElementTypeQueryRepo>();
+        services.AddTransient<IElementTypeCommandRepo, RevitElementTypeCommandRepo>();
         services.AddTransient<IWallCommandRepo, RevitWallCommandRepo>();
         services.AddTransient<IBeamCommandRepo, RevitBeamCommandRepo>();
         services.AddTransient<ISlabCommandRepo, RevitSlabCommandRepo>();
@@ -44,10 +45,11 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IGenericModelRepository, MockGenericModelRepository>();
         services.AddTransient<ITransactionContext, MockTransactionContext>();
 
-        #region Crerate Reservoir
+        #region Element 관련
         services.AddTransient<ILevelQueryRepo, MockLevelQueryRepo>();
         services.AddTransient<ILevelCommandRepo, MockLevelCommandRepo>();
         services.AddTransient<IElementTypeQueryRepo, MockElementTypeQueryRepo>();
+        services.AddTransient<IElementTypeCommandRepo, MockElementTypeCommandRepo>();
         services.AddTransient<IWallCommandRepo, MockWallCommandRepo>();
         services.AddTransient<IBeamCommandRepo, MockBeamCommandRepo>();
         services.AddTransient<ISlabCommandRepo, MockSlabCommandRepo>();
