@@ -8,33 +8,22 @@ using System.Windows;
 using DHBIMWATER.Infrastructure.Services.Mock;
 using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Core.Geometry;
+using DHBIMWATER.Core.Structures;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Mock
 {
     internal class MockWallCommandRepo : IWallCommandRepo
     {
-
-        #region Fields
-        #endregion
-
-        #region Properties
-        #endregion
-
-        #region Constructor
-        #endregion
-
-        #region Methods
-        public int CreateWall(double length, double n)
+        public int CreateLinearWall(LinearWallDefinition linearWallDefinition)
         {
             var mockDialogService = new MockDialogService();
-            mockDialogService.Info("MockWallCommandRepo - CreateWall", $"Wall Length: {length}ft \nWall Count: {n}EA");
+            mockDialogService.Info("MockWallCommandRepo - CreateWall", $"Wall Length: {linearWallDefinition.WallCurve.Length}ft \nWall Count: EA");
             return 123456;
         }
 
-        public int CreateProfileWall(IList<Point3D> profilePoints_mm, string wallTypeName, string levelName)
+        public int CreateProfileWall(ProfileWallDefinition profileWallDefinition)
         {
-            return 123456;
+            throw new NotImplementedException();
         }
-        #endregion
     }
 }

@@ -70,7 +70,7 @@ namespace DHBIMWATER.Application.UseCases
                     // 바닥 생성
 
                     // 벽 생성
-                    _wallCmdRepo.CreateWall(dto.DesignConditionDto.LWL, dto.DesignConditionDto.N);
+                    //_wallCmdRepo.CreateLinearWall(dto.DesignConditionDto.LWL, dto.DesignConditionDto.N);
                         
                     // 기둥 생성 (독립기초)
                     // 보 생성

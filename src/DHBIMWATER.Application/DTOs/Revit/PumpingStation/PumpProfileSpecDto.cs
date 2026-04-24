@@ -14,6 +14,7 @@ namespace DHBIMWATER.Application.DTOs.Revit.PumpingStation
         double B6,
         double B7,
         double H1,
+        double H5,
         double H6,
         string SelectedTheta,
         double L1,

@@ -76,11 +76,11 @@ namespace DHBIMWATER.Application.UseCases
                     #endregion
 
                     #region 3. 벽체 생성
+                    foreach (var linearWallDef in PumpingStationGeometryCalculator.CalculateLinearWalls(dto))
+                        _wallCmdRepo.CreateLinearWall(linearWallDef);
 
-                    _wallCmdRepo.CreateWall(dto.DesignConditionDto.HD, dto.DesignConditionDto.N);
-
-                    List<Point3D> ptList = new List<Point3D>() { new Point3D(0, 0, 0), new Point3D(1000, 0, 0), new Point3D(1000, 0, 1000), new Point3D(0, 0, 1000), new Point3D(-500, 0, 500), };
-                    _wallCmdRepo.CreateProfileWall(ptList, "일반 - 200mm", "레벨 1");
+                    foreach( var profileWallDef in PumpingStationGeometryCalculator.CalculateProfileWalls(dto))
+                        _wallCmdRepo.CreateProfileWall(profileWallDef);
                     #endregion
 
                     #region 4. 보 생성

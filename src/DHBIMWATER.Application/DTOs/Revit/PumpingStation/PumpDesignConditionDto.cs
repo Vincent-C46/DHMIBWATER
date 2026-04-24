@@ -12,6 +12,7 @@ namespace DHBIMWATER.Application.DTOs.Revit.PumpingStation
         string SelectedEntranceType,
         double D,
         double HD,
+        double H2,
         int N,
         double LWL,
         double HWL

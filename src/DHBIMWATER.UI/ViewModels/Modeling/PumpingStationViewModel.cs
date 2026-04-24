@@ -411,7 +411,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
 
         // 읽기 전용
         public double H2 => (HWL - LWL) * 1000;
-        public double H5 => H2 + H3 + H4 + T1;
+        public double H5 => H2 + H3 + H4;
 
         //평면제원
         public double B2
@@ -631,8 +631,8 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         #region Methods
         private void CreatePumpingStation(object? obj)
         {
-            designConditionDto = new PumpDesignConditionDto(SelectedPumpingStationType, SelectedEntranceType, D, HD, N, LWL, HWL);
-            profileSpecDto = new PumpProfileSpecDto(B1, B3, B4, B6, B7, H1, H6, SelectedTheta, L1, L2, L3, L4, H3, H4, H7, OB1, OH1, NS, HS);
+            designConditionDto = new PumpDesignConditionDto(SelectedPumpingStationType, SelectedEntranceType, D, HD, H2, N, LWL, HWL);
+            profileSpecDto = new PumpProfileSpecDto(B1, B3, B4, B6, B7, H1, H5, H6, SelectedTheta, L1, L2, L3, L4, H3, H4, H7, OB1, OH1, NS, HS);
             planSpecDto = new PumpPlanSpecDto(B2, B8, SelectedOpeningType, B5, B9, L5, B10);
             typeSelectionDto = new PumpTypeSelectionDto(T1, T2, T3, T4, T5, T6, GB1, GH1);
             creationRequestDto = new PumpCreationRequestDto(designConditionDto, planSpecDto, profileSpecDto, typeSelectionDto);

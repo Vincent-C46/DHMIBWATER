@@ -59,7 +59,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             return (int)newType.Id.Value;
         }
 
-
         public int FindOrCreateWallType(WallTypeSpec spec)
         {
             var doc = _doc();
@@ -91,7 +90,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
 
             var cs = newType.GetCompoundStructure();
 
-            var structureLayer = new CompoundStructureLayer(spec.Thickness, MaterialFunctionAssignment.Structure, ElementId.InvalidElementId);
+            var structureLayer = new CompoundStructureLayer(UC.MmToFt(spec.Thickness), MaterialFunctionAssignment.Structure, ElementId.InvalidElementId);
             cs.SetLayers(new List<CompoundStructureLayer> { structureLayer });
             // 코어 경계
             cs.SetNumberOfShellLayers(ShellLayerType.Exterior, 0);
