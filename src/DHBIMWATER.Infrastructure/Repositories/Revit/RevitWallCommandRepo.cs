@@ -109,7 +109,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                 _dialog.Warn("Error", "레벨 지정 실패. (프로파일 벽체)");
                 return 0;
             }
-            _dialog.Info("ok", "여기까진 실행");
 
             var profiles = new List<Curve>();
             int numPoints = profileWallDefinition.Points.Count;
@@ -129,10 +128,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             return (int)(profileWall.Id.Value);
         }
 
-        public void CreateWallType()
-        {
-
-        }
         #endregion
 
     }

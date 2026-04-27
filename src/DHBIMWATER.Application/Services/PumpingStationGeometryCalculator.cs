@@ -134,7 +134,7 @@ namespace DHBIMWATER.Application.Services
 
             var linearWalls = new List<LinearWallDefinition>();
 
-            // 벽 계산 로직 추가 예정
+            // Linear 벽 계산 로직 추가 예정
             switch (d.SelectedEntranceType)
             {
                 case "좌안부":
@@ -206,7 +206,7 @@ namespace DHBIMWATER.Application.Services
                             Zone = "펌프장",
                             Part = "펌프장 외벽",
                         };
-                        outerWallDef1.StartPoint = new Point3D(totalLength - ts.T4 - pl.L5 - ts.T4 / 2, 0, 0);
+                        outerWallDef1.StartPoint = new Point3D(totalLength - ts.T4 - pl.L5 - ts.T4 / 2, -ts.T4, 0);
                         outerWallDef1.EndPoint = new Point3D(totalLength - ts.T4 - pl.L5 - ts.T4 / 2, -ts.T5 - pl.B9 - ts.T4, 0);
                         outerWallDef1.IsFlipped = true;
                         linearWalls.Add(outerWallDef1);
@@ -324,10 +324,13 @@ namespace DHBIMWATER.Application.Services
 
             var profileWalls = new List<ProfileWallDefinition>();
 
-            // 벽 계산 로직 추가 예정
+            // Profile 벽 계산 로직 추가 예정
             switch (d.SelectedEntranceType)
             {
                 case "좌안부":
+                    // 경사부 직전까지 거리
+                    double x2 = totalLength - ts.T4 - pr.B7 - ts.T3 - pr.B6 - pl.B5 / 2 - pr.L4 - pr.L3;
+
                     if (d.SelectedPumpingStationType == "Type1")
                     {
                         // 좌안부 외벽 - 진입부측 프로파일 (짧은 벽체)
@@ -336,17 +339,51 @@ namespace DHBIMWATER.Application.Services
                             Thickness = ts.T4,
                             LevelName = FoundationPumpLevelName,
                         };
-                        double x2 = totalLength - ts.T4 - pr.B7 - ts.T3 - pr.B6 - pl.B5 / 2 - pr.L4 - pr.L3;
                         outerProfileWallDef1.Points = new List<Point3D>() {
                             new Point3D(0, -ts.T4/2, d.LWL * 1000 - pr.H1),
                             new Point3D(x2, -ts.T4/2, d.LWL * 1000 - pr.H1),
                             new Point3D(x2 + pr.L3, -ts.T4/2,  d.LWL * 1000 - pr.H4),
-                            new Point3D(x2 +pr.L3 + pr.L4 , -ts.T4/2, d.LWL * 1000 - pr.H4),
-                            new Point3D(totalLength - ts.T4 - pl.L5 - ts.T4, -ts.T4/2, d.HWL * 1000 + pr.H3),
+                            new Point3D(totalLength - ts.T4 - pl.L5, -ts.T4/2, d.LWL * 1000 - pr.H4),
+                            new Point3D(totalLength - ts.T4 - pl.L5, -ts.T4/2, d.HWL * 1000 + pr.H3),
                             new Point3D(0, -ts.T4/2, d.HWL * 1000 + pr.H3),
-                            // p3, p4 꼬임
                         };
                         profileWalls.Add(outerProfileWallDef1);
+
+                        // 좌안부 외벽 - 진입부 반대측 프로파일 (긴 벽체, 공통)
+                        var outerProfileWallDef2 = new ProfileWallDefinition
+                        {
+                            Thickness = ts.T4,
+                            LevelName = FoundationPumpLevelName,
+                        };
+                        outerProfileWallDef2.Points = new List<Point3D>() {
+                            new Point3D(0, pl.B8 * d.N + ts.T5 * (d.N-1) + ts.T4/2, d.LWL * 1000 - pr.H1),
+                            new Point3D(x2, pl.B8 * d.N + ts.T5 * (d.N-1) + ts.T4/2, d.LWL * 1000 - pr.H1),
+                            new Point3D(x2 + pr.L3, pl.B8 * d.N + ts.T5 * (d.N-1) + ts.T4/2,  d.LWL * 1000 - pr.H4),
+                            new Point3D(totalLength - ts.T4, pl.B8 * d.N + ts.T5 * (d.N-1) + ts.T4/2, d.LWL * 1000 - pr.H4),
+                            new Point3D(totalLength - ts.T4, pl.B8 * d.N + ts.T5 * (d.N-1) + ts.T4/2, d.HWL * 1000 + pr.H3),
+                            new Point3D(0, pl.B8 * d.N + ts.T5 * (d.N-1) + ts.T4/2, d.HWL * 1000 + pr.H3),
+                        };
+                        profileWalls.Add(outerProfileWallDef2);
+
+                        // 지 사이 내벽 (공통)
+                        for(int i = 0; i< d.N - 1; i++)
+                        {
+                            var innerProfileWallDef = new ProfileWallDefinition
+                            {
+                                Thickness = ts.T5,
+                                LevelName = FoundationPumpLevelName,
+                            };
+                            innerProfileWallDef.Points = new List<Point3D>() {
+                            new Point3D(0, -ts.T5/2 + (pl.B8 + ts.T5)*(i+1), d.LWL * 1000 - pr.H1),
+                            new Point3D(x2, -ts.T5/2 + (pl.B8 + ts.T5)*(i+1), d.LWL * 1000 - pr.H1),
+                            new Point3D(x2 + pr.L3, -ts.T5/2 + (pl.B8 + ts.T5)*(i+1),  d.LWL * 1000 - pr.H4),
+                            new Point3D(totalLength - ts.T4 - pr.B7 - ts.T3, -ts.T5/2 + (pl.B8 + ts.T5)*(i+1), d.LWL * 1000 - pr.H4),
+                            new Point3D(totalLength - ts.T4 - pr.B7 - ts.T3, -ts.T5/2 + (pl.B8 + ts.T5)*(i+1), d.HWL * 1000 + pr.H3),
+                            new Point3D(0, -ts.T5/2 + (pl.B8 + ts.T5)*(i+1), d.HWL * 1000 + pr.H3),
+                        };
+                            profileWalls.Add(innerProfileWallDef);
+
+                        }
                     }
                     else if (d.SelectedPumpingStationType == "Type2")
                     {

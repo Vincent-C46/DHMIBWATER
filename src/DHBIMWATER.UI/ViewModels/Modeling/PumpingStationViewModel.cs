@@ -669,10 +669,11 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             else
                 _b2 = 4000.0;
             _b8 = Math.Ceiling(3 * _d / 100) * 100;
-            _l5 = _b7 + _t3 + _b6 + _b5 / 2 + _l4 - _b10;
 
             // 부재유형
             _t4 = Math.Ceiling((H5 + _t1) * 0.1 / 100) * 100;
+            _l5 = _b7 + _t3 + _b6 + _b5 / 2 + _l4 - _b10 - _t4; // 평면제원
+
             _t2 = _t4 + 100;
 
             if (_b8 < 3000)
