@@ -1,4 +1,5 @@
 using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Structure;
 using Autodesk.Revit.UI;
 using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Core.Structures;
@@ -16,7 +17,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
         {
             _doc = doc;
         }
-        
+
         public int FindOrCreateSlabType(FloorTypeSpec spec)
         {
             var doc = _doc();
@@ -48,7 +49,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
 
             var cs = newType.GetCompoundStructure();
 
-            var structureLayer = new CompoundStructureLayer( UC.MmToFt(spec.Thickness), MaterialFunctionAssignment.Structure, ElementId.InvalidElementId);
+            var structureLayer = new CompoundStructureLayer(UC.MmToFt(spec.Thickness), MaterialFunctionAssignment.Structure, ElementId.InvalidElementId);
             cs.SetLayers(new List<CompoundStructureLayer> { structureLayer });
             // 코어 경계
             cs.SetNumberOfShellLayers(ShellLayerType.Exterior, 0);
@@ -103,7 +104,33 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
 
         public int FindOrCreateBeamType(BeamTypeSpec spec)
         {
-            throw new NotImplementedException();
+            var doc = _doc();
+            if (doc == null) return 0;
+
+            var allBeamTypes = new FilteredElementCollector(doc)
+                .OfCategory(BuiltInCategory.OST_StructuralFraming)
+                .OfClass(typeof(FamilySymbol))
+                .WhereElementIsElementType()
+                .Cast<FamilySymbol>()
+                .Where(fs => fs.Family.StructuralMaterialType == StructuralMaterialType.Concrete)
+                .ToList();
+
+            // Find
+            var existing = allBeamTypes.FirstOrDefault(b => b.Name.Contains(spec.Name));
+            if (existing != null) return (int)existing.Id.Value;
+            //Create
+            var baseType = allBeamTypes.FirstOrDefault(fs => fs.LookupParameter("b") != null && fs.LookupParameter("h") != null);
+
+            if (baseType == null) { 
+                TaskDialog.Show("Error", "적절한 복제 대상 Beam type이 없습니다.");
+                return 0;
+            }
+
+            var newType = baseType.Duplicate(spec.Name) as FamilySymbol;
+            newType.LookupParameter("b")?.Set(UC.MmToFt(spec.Width));
+            newType.LookupParameter("h")?.Set(UC.MmToFt(spec.Height));
+
+            return (int)newType.Id.Value;
         }
 
     }

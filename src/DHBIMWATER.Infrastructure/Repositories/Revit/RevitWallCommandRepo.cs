@@ -77,12 +77,12 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
 
             if (linearWallDefinition.IsFlipped)
                 wall.Flip();
-
+            WallUtils.DisallowWallJoinAtEnd(wall, 0);
+            WallUtils.DisallowWallJoinAtEnd(wall, 1);
             //_dialog.Info("RevitWallCommandRepo", $"CreateWall - Revit Implementation\n 벽체 높이: {linearWallDefinition.Height}mm");
 
             return (int)wall.Id.Value;
         }
-
         public int CreateProfileWall(ProfileWallDefinition profileWallDefinition)
         {
             Document? doc = _doc();
@@ -125,9 +125,14 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                 profiles.Add(line);
             }
             var profileWall = Wall.Create(doc, profiles, wallTypeId, wallLevel.Id, true);
+            profileWall.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(profileWallDefinition.ElementCode);
+            if (profileWallDefinition.IsFlipped) profileWall.Flip();
+
+            WallUtils.DisallowWallJoinAtEnd(profileWall, 0);
+            WallUtils.DisallowWallJoinAtEnd(profileWall, 1);
+
             return (int)(profileWall.Id.Value);
         }
-
         #endregion
 
     }

@@ -47,7 +47,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                 .OfClass(typeof(Level))
                 .FirstOrDefault(e => e.Name.Equals(slabDef.LevelName))?.Id ?? ElementId.InvalidElementId;
 
-            Floor.Create(doc, curveLoopList, floorTypeId, levelId);
+            var floor = Floor.Create(doc, curveLoopList, floorTypeId, levelId);
+            floor.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(slabDef.ElementCode);
 
             return elementId;
         }

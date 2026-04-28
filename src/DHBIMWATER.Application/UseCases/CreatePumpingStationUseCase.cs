@@ -21,6 +21,9 @@ namespace DHBIMWATER.Application.UseCases
         private readonly IWallCommandRepo _wallCmdRepo;
         private readonly ISlabCommandRepo _slabCmdRepo;
         private readonly IBeamCommandRepo _beamCmdRepo;
+        private readonly IDirectShapeCommandRepo _dsCmdRepo;
+        private readonly IOpeningCommandRepo _openingCmdRepo;
+        private readonly IDialogService _dialogService;
         #endregion
 
         #region Properties
@@ -33,13 +36,19 @@ namespace DHBIMWATER.Application.UseCases
                                            ILevelCommandRepo levelCmdRepo,
                                            ISlabCommandRepo slabCmdRepo,
                                            IWallCommandRepo wallCmdRepo,
-                                           IBeamCommandRepo beamCmdRepo)
+                                           IBeamCommandRepo beamCmdRepo,
+                                           IDirectShapeCommandRepo dsCmdRepo,
+                                           IOpeningCommandRepo openingCmdRepo,
+                                           IDialogService dialogService)
         {
             _levelQueryRepo = levelQueryRepo;
             _levelCmdRepo = levelCmdRepo;
             _wallCmdRepo = wallCmdRepo;
             _slabCmdRepo = slabCmdRepo;
             _beamCmdRepo = beamCmdRepo;
+            _dsCmdRepo = dsCmdRepo;
+            _dialogService = dialogService;
+            _openingCmdRepo = openingCmdRepo;
             _tx = tx;
         }
         #endregion
@@ -73,27 +82,48 @@ namespace DHBIMWATER.Application.UseCases
                     #region 2. 슬래브 생성
                     foreach (var slabDef in PumpingStationGeometryCalculator.CalculateSlabs(dto))
                         _slabCmdRepo.CreateSlab(slabDef);
+
+                    // 기초 다이렉트쉐이프
+                    var dsDefs = PumpingStationGeometryCalculator.CalculateSolids(dto);
+                    var ids = _dsCmdRepo.CreateDirectShapes(dsDefs);
+
                     #endregion
 
                     #region 3. 벽체 생성
                     foreach (var linearWallDef in PumpingStationGeometryCalculator.CalculateLinearWalls(dto))
                         _wallCmdRepo.CreateLinearWall(linearWallDef);
-
-                    foreach( var profileWallDef in PumpingStationGeometryCalculator.CalculateProfileWalls(dto))
+                    foreach (var profileWallDef in PumpingStationGeometryCalculator.CalculateProfileWalls(dto))
                         _wallCmdRepo.CreateProfileWall(profileWallDef);
                     #endregion
 
                     #region 4. 보 생성
+                    foreach (var beamDef in PumpingStationGeometryCalculator.CalculateBeams(dto))
+                        _beamCmdRepo.CreateBeam(beamDef);
+                    #endregion
+
+                    #region 5. 오프닝 배치
+                    // 슬래브 오프닝 (사각형)
+                    foreach (var openingDef in PumpingStationGeometryCalculator.CalculateRectangularSlabOpenings(dto))
+                        _openingCmdRepo.CreateSlabOpening(openingDef);
+                    // 슬래브 오프닝 (원형)
+                    //foreach (var openingDef in PumpingStationGeometryCalculator.CalculateCircularSlabOpenings(dto))
+                    //    _openingCmdRepo.CreateSlabOpening(openingDef);
+                    // 벽체 오프닝 (사각형)
+                    foreach (var openingDef in PumpingStationGeometryCalculator.CalculateRectangularWallOpenings(dto))
+                        _openingCmdRepo.CreateWallOpening(openingDef);
+                    // 벽체 오프닝 (원형)
+                    //foreach (var openingDef in PumpingStationGeometryCalculator.CalculateCircularWallOpenings(dto))
+                    //    _openingCmdRepo.CreateWallOpening(openingDef);
+                    #endregion
+
+                    #region 6. 결합
 
                     #endregion
 
-                    #region 5. 결합
-
-                    #endregion 
-
-
                     // 트랜잭션 커밋
                     _tx.Commit();
+
+                    _dialogService.Info("Success", "펌프장 작성 완료");
                 }
                 catch (Exception)
                 {

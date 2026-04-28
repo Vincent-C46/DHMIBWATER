@@ -28,6 +28,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IWallCommandRepo, RevitWallCommandRepo>();
         services.AddTransient<IBeamCommandRepo, RevitBeamCommandRepo>();
         services.AddTransient<ISlabCommandRepo, RevitSlabCommandRepo>();
+        services.AddTransient<IOpeningCommandRepo, RevitOpeningCommandRepo>();
+        services.AddTransient<IDirectShapeCommandRepo, RevitDirectShapeCommandRepo>();
         #endregion
 
         services.AddTransient<IDialogService, RevitDialogService>();
@@ -53,6 +55,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IWallCommandRepo, MockWallCommandRepo>();
         services.AddTransient<IBeamCommandRepo, MockBeamCommandRepo>();
         services.AddTransient<ISlabCommandRepo, MockSlabCommandRepo>();
+        services.AddTransient<IOpeningCommandRepo, MockOpeningCommandRepo>();
+        services.AddTransient<IDirectShapeCommandRepo, MockDirectShapeCommandRepo>();
         #endregion
 
         services.AddTransient<IDialogService, MockDialogService>();

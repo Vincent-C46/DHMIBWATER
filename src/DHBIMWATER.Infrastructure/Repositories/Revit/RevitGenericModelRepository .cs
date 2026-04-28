@@ -6,6 +6,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
     internal class RevitGenericModelRepository : IGenericModelRepository
     {
         private readonly Func<Document?> _doc;
+        private readonly IElementTypeCommandRepo _elementTypeCmdRepo;
 
         public RevitGenericModelRepository(Func<Document?> doc)
         {
