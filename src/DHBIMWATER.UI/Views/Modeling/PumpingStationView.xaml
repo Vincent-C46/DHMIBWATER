@@ -9,7 +9,7 @@
         d:DataContext="{d:DesignInstance vm:PumpingStationViewModel, IsDesignTimeCreatable=False}"
         
         Title="DHBIM WATER - PumpingStation Builder"
-        SizeToContent="Height" Width="1100" MinWidth="800"
+        Width="1100" MinWidth="800" MaxHeight="800"
         WindowStartupLocation="CenterScreen"
         Background="#F4F7F9" 
         AllowsTransparency="False" 
@@ -31,8 +31,8 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="100"/>
         </Grid.RowDefinitions>
 
         <controls:TitleBar Grid.Row="0" Grid.ColumnSpan="2"/>
@@ -42,8 +42,7 @@
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="15" ShadowDepth="2" Color="#DDE4EB" Opacity="0.3"/>
                 </Border.Effect>
-                <StackPanel Orientation="Vertical">
-                    <TabControl Style="{StaticResource PrimaryTabControlStyle}" Margin="20" Height="Auto">
+                    <TabControl Style="{StaticResource PrimaryTabControlStyle}" Margin="20">
                         <!--설계조건 탭-->
                         <TabItem Header="설계조건" Style="{StaticResource PrimaryTabItemStyle}">
                             <ScrollViewer VerticalScrollBarVisibility="Auto" Width="Auto">
@@ -342,9 +341,11 @@
                                             <StackPanel Orientation="Horizontal" Margin="0,10,0,5">
                                                 <TextBlock Text="" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                 <TextBlock Text="펌프 오프닝 타입" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
-                                                <RadioButton Content="사각형" GroupName="PumpOpeningType" Margin="10,0" VerticalAlignment="Center" IsChecked="True"/>
-                                                <RadioButton Content="원형" GroupName="PumpOpeningType"
-                                                             IsChecked="{Binding IsCircularOpening}"
+                                                <RadioButton Content="사각형" 
+                                                             IsChecked="{Binding IsRectangularOpening, Mode=TwoWay}"
+                                                             Margin="10,0" VerticalAlignment="Center"/>
+                                                <RadioButton Content="원형" 
+                                                             IsChecked="{Binding IsCircularOpening, Mode=TwoWay}"
                                                              Margin="10,0" VerticalAlignment="Center"/>
                                             </StackPanel>
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
@@ -511,7 +512,6 @@
                             </ScrollViewer>
                         </TabItem>
                     </TabControl>
-                </StackPanel>
             </Border>
         </Grid>
         <Grid Grid.Row="2" Height="Auto">

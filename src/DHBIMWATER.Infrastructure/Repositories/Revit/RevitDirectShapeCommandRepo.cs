@@ -58,10 +58,10 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                         failedDs.Name = $"{group.Key}_failed";
                     }
                 }
-
                 var ds = DirectShape.CreateElement(doc, new ElementId(BuiltInCategory.OST_Floors));
                 ds.SetShape(new GeometryObject[] { merged});
                 ds.Name = group.Key;
+                ds.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(group.Key);
 
                 ids.Add((int)ds.Id.Value);
             }

@@ -106,14 +106,14 @@ namespace DHBIMWATER.Application.UseCases
                     foreach (var openingDef in PumpingStationGeometryCalculator.CalculateRectangularSlabOpenings(dto))
                         _openingCmdRepo.CreateSlabOpening(openingDef);
                     // 슬래브 오프닝 (원형)
-                    //foreach (var openingDef in PumpingStationGeometryCalculator.CalculateCircularSlabOpenings(dto))
-                    //    _openingCmdRepo.CreateSlabOpening(openingDef);
+                    foreach (var openingDef in PumpingStationGeometryCalculator.CalculateCircularSlabOpenings(dto))
+                        _openingCmdRepo.CreateSlabOpening(openingDef);
                     // 벽체 오프닝 (사각형)
                     foreach (var openingDef in PumpingStationGeometryCalculator.CalculateRectangularWallOpenings(dto))
                         _openingCmdRepo.CreateWallOpening(openingDef);
                     // 벽체 오프닝 (원형)
-                    //foreach (var openingDef in PumpingStationGeometryCalculator.CalculateCircularWallOpenings(dto))
-                    //    _openingCmdRepo.CreateWallOpening(openingDef);
+                    foreach (var openingDef in PumpingStationGeometryCalculator.CalculateCircularWallOpenings(dto))
+                        _openingCmdRepo.CreateWallOpening(openingDef);
                     #endregion
 
                     #region 6. 결합

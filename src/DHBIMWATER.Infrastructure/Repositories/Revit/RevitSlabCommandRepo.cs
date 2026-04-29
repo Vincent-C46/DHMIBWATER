@@ -41,7 +41,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             IList<CurveLoop> curveLoopList = new List<CurveLoop> { curveLoop };
 
             var floorSpec = new FloorTypeSpec(slabDef.Thickness, $"일반 - {slabDef.Thickness}mm");
-            var floorTypeId = new ElementId(_elementTypeCmdRepo.FindOrCreateSlabType(floorSpec)); 
+            var floorTypeId = new ElementId((long)_elementTypeCmdRepo.FindOrCreateSlabType(floorSpec)); 
 
             var levelId = new FilteredElementCollector(doc)
                 .OfClass(typeof(Level))

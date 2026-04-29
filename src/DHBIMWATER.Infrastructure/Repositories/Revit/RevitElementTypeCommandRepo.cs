@@ -118,6 +118,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             // Find
             var existing = allBeamTypes.FirstOrDefault(b => b.Name.Contains(spec.Name));
             if (existing != null) return (int)existing.Id.Value;
+
             //Create
             var baseType = allBeamTypes.FirstOrDefault(fs => fs.LookupParameter("b") != null && fs.LookupParameter("h") != null);
 
@@ -132,6 +133,5 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
 
             return (int)newType.Id.Value;
         }
-
     }
 }

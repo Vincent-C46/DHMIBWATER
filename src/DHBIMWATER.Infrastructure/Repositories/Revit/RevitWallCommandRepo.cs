@@ -68,7 +68,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             Curve wallCurve = Line.CreateBound(startPt, endPt);
 
             var wallSpec = new WallTypeSpec(linearWallDefinition.Thickness, $"일반 - {linearWallDefinition.Thickness}mm");
-            var wallTypeId = new ElementId(_elementTypeCmdRepo.FindOrCreateWallType(wallSpec));
+            var wallTypeId = new ElementId((long)_elementTypeCmdRepo.FindOrCreateWallType(wallSpec));
 
             var wall = Wall.Create(doc, wallCurve, wallTypeId, wallLevel.Id,
                                     UC.MmToFt(linearWallDefinition.Height),
@@ -79,6 +79,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                 wall.Flip();
             WallUtils.DisallowWallJoinAtEnd(wall, 0);
             WallUtils.DisallowWallJoinAtEnd(wall, 1);
+
+            wall.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(linearWallDefinition.ElementCode);
+
             //_dialog.Info("RevitWallCommandRepo", $"CreateWall - Revit Implementation\n 벽체 높이: {linearWallDefinition.Height}mm");
 
             return (int)wall.Id.Value;
@@ -97,7 +100,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
 
             var wallTypeIntId = _elementTypeCmdRepo.FindOrCreateWallType(wallSpec);
             if (wallTypeIntId == 0) { _dialog.Warn("Error", "WallType 생성 실패"); return 0; }
-            var wallTypeId = new ElementId(wallTypeIntId);
+            var wallTypeId = new ElementId((long)wallTypeIntId);
 
             Level? wallLevel = new FilteredElementCollector(doc)
                                 .OfClass(typeof(Level))

@@ -54,7 +54,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         // 평면제원
         private double _b2;
         private double _b8;
-        private string _selectedOpeningType = "사각형";
+        private bool _isRectangularOpening = true;
         private double _b5 = 1600.0;
         private double _b9 = 4000.0;
         private double _l5;
@@ -66,7 +66,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private double _t3 = 400.0;
         private double _t4;
         private double _t5;
-        private double _t6 = 400.0;
+        private double _t6 = 300.0;
         private double _gb1;
         private double _gh1;
         #endregion
@@ -99,7 +99,24 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 }
             }
         }
-
+        public bool IsRectangularOpening
+        {
+            get { return _isRectangularOpening; }
+            set
+            {
+                if (_isRectangularOpening != value)
+                {
+                    _isRectangularOpening = value;
+                    OnPropertyChanged(nameof(IsRectangularOpening));
+                    OnPropertyChanged(nameof(IsCircularOpening));
+                }
+            }
+        }
+        public bool IsCircularOpening 
+        {
+            get => !_isRectangularOpening;
+            set => IsRectangularOpening = !value;
+        } 
         public double D
         {
             get { return _d; }
@@ -439,18 +456,18 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 }
             }
         }
-        public string SelectedOpeningType
-        {
-            get => _selectedOpeningType;
-            set
-            {
-                if (_selectedOpeningType != value)
-                {
-                    _selectedOpeningType = value;
-                    OnPropertyChanged(nameof(SelectedOpeningType));
-                }
-            }
-        }
+        //public string SelectedOpeningType
+        //{
+        //    get => _selectedOpeningType;
+        //    set
+        //    {
+        //        if (_selectedOpeningType != value)
+        //        {
+        //            _selectedOpeningType = value;
+        //            OnPropertyChanged(nameof(SelectedOpeningType));
+        //        }
+        //    }
+        //}
         public double B5
         {
             get { return _b5; }
@@ -633,7 +650,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         {
             designConditionDto = new PumpDesignConditionDto(SelectedPumpingStationType, SelectedEntranceType, D, HD, H2, N, LWL, HWL);
             profileSpecDto = new PumpProfileSpecDto(B1, B3, B4, B6, B7, H1, H5, H6, SelectedTheta, L1, L2, L3, L4, H3, H4, H7, OB1, OH1, NS, HS);
-            planSpecDto = new PumpPlanSpecDto(B2, B8, SelectedOpeningType, B5, B9, L5, B10);
+            planSpecDto = new PumpPlanSpecDto(B2, B8, IsRectangularOpening, B5, B9, L5, B10);
             typeSelectionDto = new PumpTypeSelectionDto(T1, T2, T3, T4, T5, T6, GB1, GH1);
             creationRequestDto = new PumpCreationRequestDto(designConditionDto, planSpecDto, profileSpecDto, typeSelectionDto);
 

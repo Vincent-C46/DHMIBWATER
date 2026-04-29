@@ -10,7 +10,7 @@ namespace DHBIMWATER.Application.DTOs.Revit.PumpingStation
     (
         double B2,
         double B8,
-        string SelectedOpeningType,
+        bool IsRectangularOpening,
         double B5,
         double B9,
         double L5,

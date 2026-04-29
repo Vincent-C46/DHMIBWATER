@@ -4,6 +4,7 @@ using DHBIMWATER.Core.Structures;
 using Autodesk.Revit.DB.Structure;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 using System.Windows.Controls;
+using Autodesk.Revit.UI;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Revit
 {
@@ -28,7 +29,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             var beamTyoeSpec = new BeamTypeSpec(beamDef.Width, beamDef.Height, $"{beamDef.Width} x {beamDef.Height}");
             int beamTypeId = _elementTypeCmdRepo.FindOrCreateBeamType(beamTyoeSpec);
 
-            var beamType = doc.GetElement(new ElementId(beamTypeId)) as FamilySymbol;
+            var beamType = doc.GetElement(new ElementId((long)beamTypeId)) as FamilySymbol;
 
             var curve = Line.CreateBound(new XYZ(UC.MmToFt(beamDef.StartPoint.X), UC.MmToFt(beamDef.StartPoint.Y), UC.MmToFt(beamDef.StartPoint.Z)),
                                          new XYZ(UC.MmToFt(beamDef.EndPoint.X), UC.MmToFt(beamDef.EndPoint.Y), UC.MmToFt(beamDef.EndPoint.Z)));
@@ -42,8 +43,38 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             StructuralFramingUtils.DisallowJoinAtEnd(beam, 1);
 
             beam.get_Parameter(BuiltInParameter.Z_JUSTIFICATION).Set(beamDef.Zjustification);
+            JoinWithSlab(beam);
 
             return (int)beam.Id.Value;
+        }
+
+        private void JoinWithSlab(Element beam)
+        {
+            var doc = _doc();
+            doc.Regenerate();
+            var intersectFilter = new ElementIntersectsElementFilter(beam);
+            var intersectSlabs = new FilteredElementCollector(doc)
+                .OfCategory(BuiltInCategory.OST_Floors)
+                .WhereElementIsNotElementType()
+                .WherePasses(intersectFilter)
+                .ToElements()
+                .ToList();
+
+            if (intersectSlabs.Count == 0) 
+                TaskDialog.Show("Alert", "겹치는 Slab가 없습니다" );
+
+            foreach(var slab in intersectSlabs)
+            {
+                try
+                {
+                    JoinGeometryUtils.JoinGeometry(doc, slab, beam);
+                }
+                catch(Exception ex)
+                {
+                    TaskDialog.Show("Error", ex.Message);
+                }
+            }
+            return;
         }
     }
 }
