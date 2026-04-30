@@ -65,6 +65,15 @@ namespace DHBIMWATER.Application.Services
                 Part = "밸브실슬래브",
             };
 
+            // 상부슬래브 오프닝 추가
+            upperSlabDef.SubPoints = new List<Point2D>()
+            {
+                new Point2D(totalLength - ts.T4 - pr.B7, 0),
+                new Point2D(totalLength - ts.T4, 0),
+                new Point2D(totalLength - ts.T4, totalWidth - ts.T4*2),
+                new Point2D(totalLength - ts.T4 - pr.B7, totalWidth - ts.T4*2),
+            };
+
             switch (d.SelectedEntranceType)
             {
                 case "좌안부":
@@ -78,7 +87,17 @@ namespace DHBIMWATER.Application.Services
                         new Point2D(0, totalWidth - ts.T4),
                     };
 
-                    if (d.SelectedPumpingStationType == "Type2")
+                    if (d.SelectedPumpingStationType == "Type1")
+                    {
+                        valveSlabDef.Points = new List<Point2D>()
+                        {
+                        new Point2D(totalLength - ts.T4 - pr.B7 - ts.T3, 0),
+                        new Point2D(totalLength - ts.T4 , 0),
+                        new Point2D(totalLength - ts.T4 , pl.B8 * d.N + ts.T5 * (d.N -1) ),
+                        new Point2D(totalLength - ts.T4 - pr.B7 - ts.T3, pl.B8 * d.N + ts.T5 * (d.N -1) )
+                        };
+                    }
+                    else if (d.SelectedPumpingStationType == "Type2")
                     {
                         valveSlabDef.Points = new List<Point2D>()
                         {
@@ -110,24 +129,35 @@ namespace DHBIMWATER.Application.Services
                         new Point2D(totalLength- (ts.T4 + pl.L5 + ts.T4 ), totalWidth  - ts.T4),
                         new Point2D(0, totalWidth - ts.T4),
                     };
-                    if (d.SelectedPumpingStationType == "Type2")
+
+                    if (d.SelectedPumpingStationType == "Type1")
                     {
                         valveSlabDef.Points = new List<Point2D>()
                         {
                         new Point2D(totalLength - ts.T4 - pr.B7 - ts.T3, 0),
                         new Point2D(totalLength - ts.T4 , 0),
-                        new Point2D(totalLength - ts.T4 , pl.B8 * d.N + ts.T5 * (d.N -1) ),
-                        new Point2D(totalLength - ts.T4 - pr.B7 - ts.T3, pl.B8 * d.N + ts.T5 * (d.N -1) )
+                        new Point2D(totalLength - ts.T4 , totalWidth - ts.T4*2 ),
+                        new Point2D(totalLength - ts.T4 - pr.B7 - ts.T3, totalWidth - ts.T4*2 )
                         };
                     }
-                    else
+                    else if (d.SelectedPumpingStationType == "Type2")
                     {
                         valveSlabDef.Points = new List<Point2D>()
                         {
-                        new Point2D(totalLength - ts.T4 - pr.B7 - ts.T3, -ts.T4),
-                        new Point2D(totalLength, -ts.T4),
-                        new Point2D(totalLength, pl.B8 * d.N + ts.T5 *(d.N - 1) + ts.T4 ),
-                        new Point2D(totalLength - ts.T4 - pr.B7 - ts.T3, pl.B8 * d.N + ts.T5 *(d.N - 1) + ts.T4 )
+                        new Point2D(totalLength - ts.T4 - pr.B7 , -ts.T4),
+                        new Point2D(totalLength , -ts.T4),
+                        new Point2D(totalLength , pl.B8 * d.N + ts.T5 * (d.N -1) ),
+                        new Point2D(totalLength - ts.T4 - pr.B7 , pl.B8 * d.N + ts.T5 * (d.N -1) )
+                        };
+                    }
+                    else     // Type3
+                    {
+                        valveSlabDef.Points = new List<Point2D>()
+                        {
+                        new Point2D(totalLength - ts.T4 - pr.B7, 0),
+                        new Point2D(totalLength - ts.T4 , 0),
+                        new Point2D(totalLength - ts.T4 , totalWidth - ts.T4*2 ),
+                        new Point2D(totalLength - ts.T4 - pr.B7, totalWidth - ts.T4*2 )
                         };
                     }
                     break;
@@ -139,17 +169,7 @@ namespace DHBIMWATER.Application.Services
                         new Point2D(totalLength, totalWidth- ts.T4),
                         new Point2D(0, totalWidth - ts.T4),
                     };
-                    if (d.SelectedPumpingStationType == "Type2")
-                    {
-                        valveSlabDef.Points = new List<Point2D>()
-                        {
-                            new Point2D(totalLength - ts.T4 - pr.B7 - ts.T3, -ts.T4),
-                            new Point2D(totalLength  , -ts.T4),
-                            new Point2D(totalLength , pl.B8 * d.N + ts.T5 * (d.N -1)  +ts.T4),
-                            new Point2D(totalLength - ts.T4 - pr.B7 - ts.T3, pl.B8 * d.N + ts.T5 * (d.N -1)  + ts.T4)
-                        };
-                    }
-                    else
+                    if (d.SelectedPumpingStationType == "Type1")
                     {
                         valveSlabDef.Points = new List<Point2D>()
                         {
@@ -157,6 +177,26 @@ namespace DHBIMWATER.Application.Services
                             new Point2D(totalLength - ts.T4 , 0),
                             new Point2D(totalLength - ts.T4 , pl.B8 * d.N + ts.T5 * (d.N -1) ),
                             new Point2D(totalLength - ts.T4 - pr.B7 - ts.T3, pl.B8 * d.N + ts.T5 * (d.N -1) )
+                        };
+                    }
+                    else if (d.SelectedPumpingStationType == "Type2")
+                    {
+                        valveSlabDef.Points = new List<Point2D>()
+                        {
+                            new Point2D(totalLength - ts.T4 - pr.B7 , -ts.T4),
+                            new Point2D(totalLength  , -ts.T4),
+                            new Point2D(totalLength , pl.B8 * d.N + ts.T5 * (d.N -1)  +ts.T4),
+                            new Point2D(totalLength - ts.T4 - pr.B7 , pl.B8 * d.N + ts.T5 * (d.N -1)  + ts.T4)
+                        };
+                    }
+                    else
+                    {
+                        valveSlabDef.Points = new List<Point2D>()
+                        {
+                            new Point2D(totalLength - ts.T4 - pr.B7 , 0),
+                            new Point2D(totalLength - ts.T4 , 0),
+                            new Point2D(totalLength - ts.T4 , pl.B8 * d.N + ts.T5 * (d.N -1) ),
+                            new Point2D(totalLength - ts.T4 - pr.B7 , pl.B8 * d.N + ts.T5 * (d.N -1) )
                         };
                     }
 
@@ -437,7 +477,6 @@ namespace DHBIMWATER.Application.Services
                         linearWalls.Add(valveRoomWallDef);
                     }
                     break;
-
                 case "우안부":
                     // 우안부 외벽1 (우안부, Type 무관) - 짧은 외벽 - W1-2
                     var r_outerWallDef1 = new LinearWallDefinition
@@ -736,14 +775,141 @@ namespace DHBIMWATER.Application.Services
 
                             linearWalls.Add(innerWallUnderValveDef);
                         }
+
+                        // 외벽3 - 동쪽 - W2
+                        var outerWallDef3 = new LinearWallDefinition
+                        {
+                            Thickness = ts.T4,
+                            Height = pr.H5,
+                            BaseOffset = 0,
+                            LevelName = FoundationPumpLevelName,
+                            ElementCode = "W2",
+                            Zone = "펌프장",
+                            Part = "펌프장 외벽",
+                        };
+                        outerWallDef3.StartPoint = new Point3D(totalLength - ts.T4 / 2, -ts.T4, 0);
+                        outerWallDef3.EndPoint = new Point3D(totalLength - ts.T4 / 2, totalWidth - ts.T4, 0);
+                        outerWallDef3.IsFlipped = true;
+                        linearWalls.Add(outerWallDef3);
+
+                        // 좌안부 밸브실 사이벽 - W4
+                        var valveRoomWallDef = new LinearWallDefinition
+                        {
+                            Thickness = ts.T3,
+                            Height = pr.H7 + d.D + pr.H6 - ts.T1,
+                            BaseOffset = 0,
+                            LevelName = ValveRoomLevelName,
+                            ElementCode = "W4",
+                            Zone = "밸브실",
+                            Part = "밸브실 사이벽",
+                        };
+                        valveRoomWallDef.StartPoint = new Point3D(totalLength - ts.T4 - pr.B7 - ts.T3 / 2, 0, 0);
+                        valveRoomWallDef.EndPoint = new Point3D(totalLength - ts.T4 - pr.B7 - ts.T3 / 2, totalWidth - ts.T4 * 2, 0);
+                        valveRoomWallDef.IsFlipped = true;
+                        linearWalls.Add(valveRoomWallDef);
                     }
                     else if (d.SelectedPumpingStationType == "Type2")
                     {
                         // 측면부 Type2 벽체 계산 로직
+                        // 좌안부 밸브실 사이벽 - W4
+                        var valveRoomWallDef = new LinearWallDefinition
+                        {
+                            Thickness = ts.T3,
+                            Height = pr.H5,
+                            BaseOffset = 0,
+                            LevelName = FoundationPumpLevelName,
+                            ElementCode = "W4",
+                            Zone = "밸브실",
+                            Part = "밸브실 사이벽",
+                        };
+                        valveRoomWallDef.StartPoint = new Point3D(totalLength - ts.T4 - pr.B7 - ts.T3 / 2, 0, 0);
+                        valveRoomWallDef.EndPoint = new Point3D(totalLength - ts.T4 - pr.B7 - ts.T3 / 2, totalWidth - ts.T4 * 2, 0);
+                        valveRoomWallDef.IsFlipped = true;
+                        linearWalls.Add(valveRoomWallDef);
+
+                        // 외벽2 - 동쪽 - W2
+                        var outerWallDef2 = new LinearWallDefinition
+                        {
+                            Thickness = ts.T4,
+                            Height = pr.H7 + d.D + pr.H6 - ts.T1,
+                            BaseOffset = 0,
+                            LevelName = ValveRoomLevelName,
+                            ElementCode = "W2",
+                            Zone = "펌프장",
+                            Part = "펌프장 외벽",
+                        };
+                        outerWallDef2.StartPoint = new Point3D(totalLength - ts.T4 / 2, -ts.T4, 0);
+                        outerWallDef2.EndPoint = new Point3D(totalLength - ts.T4 / 2, totalWidth - ts.T4, 0);
+                        outerWallDef2.IsFlipped = true;
+                        linearWalls.Add(outerWallDef2);
+
+                        // 외벽1 - 남쪽 - W1-1
+                        var outerWallDef1 = new LinearWallDefinition
+                        {
+                            Thickness = ts.T4,
+                            Height = pr.H7 + d.D + pr.H6 - ts.T1,
+                            BaseOffset = 0,
+                            LevelName = ValveRoomLevelName,
+                            ElementCode = "W1-1",
+                            Zone = "펌프장",
+                            Part = "펌프장 외벽",
+                        };
+                        outerWallDef1.StartPoint = new Point3D(totalLength - ts.T4 - pr.B7, -ts.T4 /2 , 0);
+                        outerWallDef1.EndPoint = new Point3D(totalLength - ts.T4 , - ts.T4/2, 0);
+                        outerWallDef1.IsFlipped = true;
+                        linearWalls.Add(outerWallDef1);
+
+                        // 외벽3 - 북쪽 - W1-1
+                        var outerWallDef3 = new LinearWallDefinition
+                        {
+                            Thickness = ts.T4,
+                            Height = pr.H7 + d.D + pr.H6 - ts.T1,
+                            BaseOffset = 0,
+                            LevelName = ValveRoomLevelName,
+                            ElementCode = "W1-1",
+                            Zone = "펌프장",
+                            Part = "펌프장 외벽",
+                        };
+                        outerWallDef3.StartPoint = new Point3D(totalLength - ts.T4 - pr.B7, totalWidth - ts.T4 - ts.T4/2, 0);
+                        outerWallDef3.EndPoint = new Point3D(totalLength - ts.T4, totalWidth - ts.T4 - ts.T4/2, 0);
+                        outerWallDef3.IsFlipped = true;
+                        linearWalls.Add(outerWallDef3);
+
                     }
                     else if (d.SelectedPumpingStationType == "Type3")
                     {
                         // 측면부 Type3 벽체 계산 로직
+                        // 좌안부 밸브실 사이벽 - W4
+                        var valveRoomWallDef = new LinearWallDefinition
+                        {
+                            Thickness = ts.T3,
+                            Height = pr.H5,
+                            BaseOffset = 0,
+                            LevelName = FoundationPumpLevelName,
+                            ElementCode = "W4",
+                            Zone = "밸브실",
+                            Part = "밸브실 사이벽",
+                        };
+                        valveRoomWallDef.StartPoint = new Point3D(totalLength - ts.T4 - pr.B7 - ts.T3 / 2, 0, 0);
+                        valveRoomWallDef.EndPoint = new Point3D(totalLength - ts.T4 - pr.B7 - ts.T3 / 2, totalWidth - ts.T4 * 2, 0);
+                        valveRoomWallDef.IsFlipped = true;
+                        linearWalls.Add(valveRoomWallDef);
+
+                        // 외벽3 - 동쪽 - W2
+                        var outerWallDef3 = new LinearWallDefinition
+                        {
+                            Thickness = ts.T4,
+                            Height = pr.H5,
+                            BaseOffset = 0,
+                            LevelName = FoundationPumpLevelName,
+                            ElementCode = "W2",
+                            Zone = "펌프장",
+                            Part = "펌프장 외벽",
+                        };
+                        outerWallDef3.StartPoint = new Point3D(totalLength - ts.T4 / 2, -ts.T4, 0);
+                        outerWallDef3.EndPoint = new Point3D(totalLength - ts.T4 / 2, totalWidth - ts.T4, 0);
+                        outerWallDef3.IsFlipped = true;
+                        linearWalls.Add(outerWallDef3);
                     }
                     break;
             }
@@ -931,8 +1097,8 @@ namespace DHBIMWATER.Application.Services
                             new Point3D(0, - ts.T4/2, d.LWL * 1000 - pr.H1),
                             new Point3D(x2, - ts.T4/2, d.LWL * 1000 - pr.H1),
                             new Point3D(x2 + pr.L3, - ts.T4/2,  d.LWL * 1000 - pr.H4),
-                            new Point3D(totalLength - ts.T4 - pr.B7, - ts.T4/2, d.LWL * 1000 - pr.H4),
-                            new Point3D(totalLength - ts.T4 - pr.B7, - ts.T4/2, d.HWL * 1000 + pr.H3),
+                            new Point3D(totalLength - ts.T4 - pr.B7- ts.T3, - ts.T4/2, d.LWL * 1000 - pr.H4),
+                            new Point3D(totalLength - ts.T4 - pr.B7- ts.T3, - ts.T4/2, d.HWL * 1000 + pr.H3),
                             new Point3D(0, - ts.T4/2, d.HWL * 1000 + pr.H3),
                         };
                         profileWalls.Add(r_outerProfileWallDef2);
@@ -1005,12 +1171,12 @@ namespace DHBIMWATER.Application.Services
                     else if (d.SelectedPumpingStationType == "Type2")
                     {
                         // 측면부 Type2 벽체 계산 로직
-                        // 측면부 외벽 -  프로파일 (긴 벽체, Type2) - W1-4
+                        // 측면부 외벽1 -  프로파일 (긴 벽체, Type2) - W1
                         var s_outerProfileWallDef2 = new ProfileWallDefinition
                         {
                             Thickness = ts.T4,
                             LevelName = FoundationPumpLevelName,
-                            ElementCode = "W1-4",
+                            ElementCode = "W1",
                             Zone = "",
                             Part = ""
                         };
@@ -1024,12 +1190,12 @@ namespace DHBIMWATER.Application.Services
                         };
                         profileWalls.Add(s_outerProfileWallDef2);
 
-                        // 측면부 외벽 - 프로파일 (긴 벽체, Type2) - W1-4
+                        // 측면부 외벽2 - 프로파일 (긴 벽체, Type2) - W1
                         var s_outerProfileWallDef3 = new ProfileWallDefinition
                         {
                             Thickness = ts.T4,
                             LevelName = FoundationPumpLevelName,
-                            ElementCode = "W1-4",
+                            ElementCode = "W1",
                             Zone = "",
                             Part = ""
                         };
@@ -1413,6 +1579,7 @@ namespace DHBIMWATER.Application.Services
                     openings.Add(pumpOpening);
                 }
 
+                // 제진기 오프닝
                 var screenOpening = new RectangularSlabOpeningDefinition
                 {
                     Width = pl.B2,
@@ -1426,17 +1593,17 @@ namespace DHBIMWATER.Application.Services
                 openings.Add(screenOpening);
             }
 
-            // 밸브실 상부 오프닝
-            var valveRoomOpening = new RectangularSlabOpeningDefinition
-            {
-                Width = pr.B7,
-                Length = d.N * pl.B8 + (d.N - 1) * ts.T5,
-                Position = new Point2D(totalLength - ts.T4 - pr.B7 / 2, (totalWidth - ts.T4 * 2) / 2),
-                LevelName = UpperSlabLevelName,
-                Name = "",
-                HostElementCode = "S1",
-            };
-            openings.Add(valveRoomOpening);
+            //// 밸브실 상부 오프닝
+            //var valveRoomOpening = new RectangularSlabOpeningDefinition
+            //{
+            //    Width = pr.B7,
+            //    Length = d.N * pl.B8 + (d.N - 1) * ts.T5,
+            //    Position = new Point2D(totalLength - ts.T4 - pr.B7 / 2, (totalWidth - ts.T4 * 2) / 2),
+            //    LevelName = UpperSlabLevelName,
+            //    Name = "",
+            //    HostElementCode = "S1",
+            //};
+            //openings.Add(valveRoomOpening);
 
             return openings;
         }

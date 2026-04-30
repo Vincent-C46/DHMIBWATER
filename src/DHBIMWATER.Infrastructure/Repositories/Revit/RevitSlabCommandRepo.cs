@@ -25,6 +25,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             var elementId = 0;
             List<XYZ> boundaryPoints = new List<XYZ>();
             CurveLoop curveLoop = new CurveLoop();
+            IList<CurveLoop> curveLoopList = new List<CurveLoop>();
 
             foreach (Point2D pt in slabDef.Points)
             {
@@ -38,7 +39,28 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                 Line line = Line.CreateBound(startPt, endPt);
                 curveLoop.Append(line);
             }
-            IList<CurveLoop> curveLoopList = new List<CurveLoop> { curveLoop };
+            curveLoopList.Add(curveLoop);
+
+            var subPoints = new List<XYZ>();
+            CurveLoop subCurveLoop = new CurveLoop();
+
+            if (slabDef.SubPoints != null)
+            {
+                foreach (Point2D pt in slabDef.SubPoints)
+                {
+                    subPoints.Add(new XYZ(UC.MmToFt(pt.X), UC.MmToFt(pt.Y), 0));
+                }
+
+                for (int i = 0; i < subPoints.Count; i++)
+                {
+                    var startPt = subPoints[i];
+                    var endPt = subPoints[(i + 1) % subPoints.Count];
+                    Line line = Line.CreateBound(startPt, endPt);
+                    subCurveLoop.Append(line);
+                }
+
+                curveLoopList.Add(subCurveLoop);
+            }
 
             var floorSpec = new FloorTypeSpec(slabDef.Thickness, $"일반 - {slabDef.Thickness}mm");
             var floorTypeId = new ElementId((long)_elementTypeCmdRepo.FindOrCreateSlabType(floorSpec)); 

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Revit
@@ -26,6 +27,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
 
             Level level = Level.Create(doc, UC.MmToFt(elevation));
             level.Name = levelName;
+
+
+
             return (int)level.Id.Value;
         }
 
@@ -44,6 +48,19 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                 level.Elevation = UC.MmToFt(elevation);
             }
             return (int)level.Id.Value;
+        }
+
+        public void CreatePlan()
+        {
+            var doc = _doc();
+            if (doc == null) return;
+
+            ViewFamilyType structViewType = new FilteredElementCollector(doc)
+                                                .OfClass(typeof(ViewFamilyType))
+                                                .Cast<ViewFamilyType>()
+                                                .FirstOrDefault(vft => vft.ViewFamily == ViewFamily.StructuralPlan);
+
+
         }
     }
 }

@@ -65,6 +65,8 @@ namespace DHBIMWATER.Application.UseCases
 
                     #region 1. 레벨 생성
                     var existingLevels = _levelQueryRepo.GetExistingLevelNames();
+                    var existingViewNames = _levelQueryRepo.GetExistingPlanNames();
+
                     foreach (var lvl in PumpingStationGeometryCalculator.CalculateLevels(dto))
                     {
                         var existLevel = existingLevels.FirstOrDefault(s => s.Contains(lvl.Name));
@@ -117,7 +119,7 @@ namespace DHBIMWATER.Application.UseCases
                     #endregion
 
                     #region 6. 결합
-
+                    // 보 작성 메서드 내부에서 상부 슬래브와 결합 (임시 조치)
                     #endregion
 
                     // 트랜잭션 커밋
