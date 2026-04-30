@@ -75,8 +75,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                                     UC.MmToFt(linearWallDefinition.BaseOffset),
                                     linearWallDefinition.IsFlipped, true);
 
-            if (linearWallDefinition.IsFlipped)
-                wall.Flip();
             WallUtils.DisallowWallJoinAtEnd(wall, 0);
             WallUtils.DisallowWallJoinAtEnd(wall, 1);
 

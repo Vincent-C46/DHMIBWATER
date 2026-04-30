@@ -16,8 +16,8 @@ namespace DHBIMWATER.Revit.UI
             List<IRibbonModule> modules = new List<IRibbonModule>()
             {
                 new ModelingRibbonModule(),
-                //new QuantityRibbonModule(),
-                //new UtilityRibbonModule()
+                new QuantityRibbonModule(),
+                new UtilityRibbonModule()
             };
 
             // 각 모듈별로 빌드 호출
