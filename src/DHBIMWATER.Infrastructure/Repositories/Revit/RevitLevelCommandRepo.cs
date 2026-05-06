@@ -28,8 +28,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             Level level = Level.Create(doc, UC.MmToFt(elevation));
             level.Name = levelName;
 
-
-
             return (int)level.Id.Value;
         }
 
@@ -56,9 +54,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             if (doc == null) return;
 
             ViewFamilyType structViewType = new FilteredElementCollector(doc)
-                                                .OfClass(typeof(ViewFamilyType))
-                                                .Cast<ViewFamilyType>()
-                                                .FirstOrDefault(vft => vft.ViewFamily == ViewFamily.StructuralPlan);
+                                            .OfClass(typeof(ViewFamilyType))
+                                            .Cast<ViewFamilyType>()
+                                            .FirstOrDefault(vft => vft.ViewFamily == ViewFamily.StructuralPlan);
 
 
         }

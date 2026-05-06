@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using DHBIMWATER.Application.DTOs.Revit.PumpingStation;
 
 namespace DHBIMWATER.Application.Interfaces
 {
-    internal class IExcelReader
+    public interface IExcelReader
     {
+        IEnumerable<PumpExcelDto> Read(string filePath, string sheetName);
     }
 }

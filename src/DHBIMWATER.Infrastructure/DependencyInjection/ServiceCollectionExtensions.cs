@@ -1,5 +1,4 @@
 using DHBIMWATER.Application.Interfaces;
-using DHBIMWATER.Application.UseCases;
 using DHBIMWATER.Infrastructure.Repositories.Mock;
 using DHBIMWATER.Infrastructure.Repositories.Revit;
 using DHBIMWATER.Infrastructure.Services.Mock;
@@ -20,7 +19,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IGenericModelRepository, RevitGenericModelRepository>();
         services.AddTransient<ITransactionContext, RevitTransactionContext>();
 
-        #region Element 관련
+        #region Element 관련 Repository 등록
         services.AddTransient<ILevelQueryRepo, RevitLevelQueryRepo>();
         services.AddTransient<ILevelCommandRepo, RevitLevelCommandRepo>();
         services.AddTransient<IElementTypeQueryRepo, RevitElementTypeQueryRepo>();
@@ -32,9 +31,13 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IDirectShapeCommandRepo, RevitDirectShapeCommandRepo>();
         #endregion
 
+        services.AddTransient<IExcelReader, RevitExcelPumpReader>();
+
+        #region Service 등록
         services.AddTransient<IFileDialogService, RevitFileDialogService>();
         services.AddTransient<IDialogService, RevitDialogService>();
         services.AddTransient<IGuideLineService, RevitGuideLineService>();
+        #endregion
 
         return services;
     }
@@ -60,9 +63,13 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IDirectShapeCommandRepo, MockDirectShapeCommandRepo>();
         #endregion
 
+        services.AddTransient<IExcelReader, MockExcelPumpReader>();
+
+        #region Service 등록
         services.AddTransient<IFileDialogService, MockFileDialogService>();
         services.AddTransient<IDialogService, MockDialogService>();
         services.AddTransient<IGuideLineService, MockGuideLineService>();
+        #endregion
 
         return services;
     }
