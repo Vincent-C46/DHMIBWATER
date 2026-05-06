@@ -32,6 +32,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IDirectShapeCommandRepo, RevitDirectShapeCommandRepo>();
         #endregion
 
+        services.AddTransient<IFileDialogService, RevitFileDialogService>();
         services.AddTransient<IDialogService, RevitDialogService>();
         services.AddTransient<IGuideLineService, RevitGuideLineService>();
 
@@ -59,6 +60,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IDirectShapeCommandRepo, MockDirectShapeCommandRepo>();
         #endregion
 
+        services.AddTransient<IFileDialogService, MockFileDialogService>();
         services.AddTransient<IDialogService, MockDialogService>();
         services.AddTransient<IGuideLineService, MockGuideLineService>();
 

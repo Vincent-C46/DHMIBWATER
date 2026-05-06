@@ -68,7 +68,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
 
             return;
         }
-
         public void CreateSlabOpening(CircularSlabOpeningDefinition openingDef)
         {
             var doc = _doc();
@@ -117,7 +116,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
 
             return;
         }
-
         public void CreateWallOpening(RectangularWallOpeningDefinition openingDef)
         {
             var doc = _doc();
@@ -171,7 +169,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             }
             return;
         }
-
         public void CreateWallOpening(CircularWallOpeningDefinition openingDef)
         {
             var doc = _doc();
