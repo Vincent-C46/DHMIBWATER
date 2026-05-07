@@ -26,6 +26,7 @@ namespace DHBIMWATER.Application.UseCases
         private readonly IDirectShapeCommandRepo _dsCmdRepo;
         private readonly IOpeningCommandRepo _openingCmdRepo;
         private readonly IDialogService _dialogService;
+        private readonly ISharedParameterRepository _sharedParameterRepo;
         #endregion
 
         #region Properties
@@ -41,7 +42,8 @@ namespace DHBIMWATER.Application.UseCases
                                            IBeamCommandRepo beamCmdRepo,
                                            IDirectShapeCommandRepo dsCmdRepo,
                                            IOpeningCommandRepo openingCmdRepo,
-                                           IDialogService dialogService)
+                                           IDialogService dialogService,
+                                           ISharedParameterRepository sharedParameterRepo)
         {
             _levelQueryRepo = levelQueryRepo;
             _levelCmdRepo = levelCmdRepo;
@@ -51,6 +53,7 @@ namespace DHBIMWATER.Application.UseCases
             _dsCmdRepo = dsCmdRepo;
             _dialogService = dialogService;
             _openingCmdRepo = openingCmdRepo;
+            _sharedParameterRepo = sharedParameterRepo;
             _tx = tx;
         }
         #endregion
@@ -66,43 +69,8 @@ namespace DHBIMWATER.Application.UseCases
                     _tx.Begin("Create PumpingStation");
 
                     #region 0. 공유 매개변수 / 프로젝트 매개변수 생성
-
-                    // GUID 하드코딩 - 변경 금지 ❌
-                    var guidDict = new Dictionary<string, Guid>()
-                                {
-                                    { "DH_Addin",       new Guid("f0ff9795-a26f-4a2f-869c-532d2c418fac") },
-                                    { "DH_ElementCode", new Guid("280f0a33-1456-4c43-9f01-ae6acf80769b") },
-                                    { "DH_Class",       new Guid("5b93b43c-abd7-435b-81b1-6b7ff51419c8") },
-                                    { "DH_Category",    new Guid("7e539f5b-80e4-4dd9-a7e1-ac070dbcaa24") },
-                                    { "DH_Zone",        new Guid("b60a47f3-3ede-45db-8491-b8f70de329a4") },
-                                    { "DH_Part",        new Guid("47c74ae0-3fc8-4a06-9c4e-80713b564b0c") },
-                                    // 형상 치수 정보
-                                    { "L1",             new Guid("24ef3fdc-96cb-4e32-bb49-c8ecacd92a58") },
-                                    { "W1",             new Guid("a6f6385b-2364-4288-a239-813d49e4a572") },
-                                    { "L2",             new Guid("180771e8-b65a-4f97-a8e4-d00a67fa4823") },
-                                    { "W2",             new Guid("f65c9ace-ffde-4b4f-a01c-b7dd303b0836") },
-                                    { "L3",             new Guid("f074ebb2-5306-4082-888f-99d53b4f6f9e") },
-                                    { "W3",             new Guid("e8fced45-637e-42bd-b9a9-e29f319e9f39") },
-                                    { "H",              new Guid("10337573-871a-40b7-8a3d-4dc3637e9349") },
-                                    { "ETC",            new Guid("5ef1d2b7-8766-482f-a81c-22fdcba1e72a") },
-                                    //{ "DH_RowNum",      new Guid("98122773-6f3c-49dc-a817-5bfb065d94a1") },
-                                    //{ "DH_ColNum",      new Guid("a207e5bc-87dd-4062-973f-149777f98762") },
-                                };
-
-
-                    var def1 = new SharedParameterDefinition() 
-                    { 
-                        BindingType = ParameterBindingType.Instance,
-                        GroupName = "DH_PumpingStation",
-                        GroupType = ParameterGroupType.Geometry,
-                        Name = "펌프장_구획명",
-                        SpecType = ParameterSpecType.Text,
-                        UserModifiable = true,
-                        Categories = new List<ParameterCategory>() { ParameterCategory.StructuralFraming, 
-                                                                     ParameterCategory.StructuralColumns }
-                    };
-
-
+                    var defs = GetPumpSharedParameterDefinitions();
+                    _sharedParameterRepo.EnsureParameters(defs);
                     #endregion
 
                     #region 1. 레벨 생성
@@ -130,7 +98,6 @@ namespace DHBIMWATER.Application.UseCases
                     // 기초 다이렉트쉐이프
                     var dsDefs = PumpingStationGeometryCalculator.CalculateSolids(dto);
                     var ids = _dsCmdRepo.CreateDirectShapes(dsDefs);
-
                     #endregion
 
                     #region 3. 벽체 생성
@@ -175,6 +142,41 @@ namespace DHBIMWATER.Application.UseCases
                     throw;
                 }
             }
+        }
+
+        private List<SharedParameterDefinition> GetPumpSharedParameterDefinitions()
+        {
+            var defs = new List<SharedParameterDefinition>();
+
+            var def1 = new SharedParameterDefinition()
+            {
+                Name = "DH_ElementCode",
+                SpecType = ParameterSpecType.Text,
+                GroupType = ParameterGroupType.Data,
+                BindingType = ParameterBindingType.Instance,
+                Categories = new List<ParameterCategory>() { ParameterCategory.StructuralFraming,
+                                                             ParameterCategory.StructuralColumns,
+                                                             ParameterCategory.GenericModel,
+                                                             ParameterCategory.Floors,
+                                                             ParameterCategory.Walls},
+            };
+            defs.Add(def1);
+
+            var def2 = new SharedParameterDefinition()
+            {
+                Name = "DH_Addin",
+                SpecType = ParameterSpecType.Text,
+                GroupType = ParameterGroupType.Data,
+                BindingType = ParameterBindingType.Instance,
+                Categories = new List<ParameterCategory>() { ParameterCategory.StructuralFraming,
+                                                             ParameterCategory.StructuralColumns,
+                                                             ParameterCategory.GenericModel,
+                                                             ParameterCategory.Floors,
+                                                             ParameterCategory.Walls},
+            };
+            defs.Add(def2);
+
+            return defs;
         }
         #endregion
     }

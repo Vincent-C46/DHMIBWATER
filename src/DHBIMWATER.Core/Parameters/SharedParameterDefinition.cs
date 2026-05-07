@@ -83,7 +83,7 @@ namespace DHBIMWATER.Core.Parameters
     {
         public required string Name { get; init; }
         public Guid? Guid { get; init; }
-        public required string GroupName { get; init; }
+        public string GroupName { get; init; } = "DHBIMWATER";
         public required ParameterSpecType SpecType { get; init; }
         public required ParameterGroupType GroupType { get; init; }
         public required ParameterBindingType BindingType { get; init; }
