@@ -78,7 +78,10 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             WallUtils.DisallowWallJoinAtEnd(wall, 0);
             WallUtils.DisallowWallJoinAtEnd(wall, 1);
 
-            wall.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(linearWallDefinition.ElementCode);
+            //wall.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(linearWallDefinition.ElementCode);
+            wall.LookupParameter("DH_ElementCode").Set(linearWallDefinition.ElementCode);
+            wall.LookupParameter("DH_Addin").Set("DHBIMWATER");
+
 
             //_dialog.Info("RevitWallCommandRepo", $"CreateWall - Revit Implementation\n 벽체 높이: {linearWallDefinition.Height}mm");
 
@@ -125,8 +128,13 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                 Curve line = Line.CreateBound(startXYZ, endXYZ);
                 profiles.Add(line);
             }
+
             var profileWall = Wall.Create(doc, profiles, wallTypeId, wallLevel.Id, true);
-            profileWall.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(profileWallDefinition.ElementCode);
+
+            //profileWall.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(profileWallDefinition.ElementCode);
+            profileWall.LookupParameter("DH_ElementCode").Set(profileWallDefinition.ElementCode);
+            profileWall.LookupParameter("DH_Addin").Set("DHBIMWATER");
+
             if (profileWallDefinition.IsFlipped) profileWall.Flip();
 
             WallUtils.DisallowWallJoinAtEnd(profileWall, 0);
@@ -135,6 +143,5 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             return (int)(profileWall.Id.Value);
         }
         #endregion
-
     }
 }

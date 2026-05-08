@@ -52,7 +52,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                     .OfClass(typeof(Floor))
                     .WhereElementIsNotElementType()
                     .Cast<Floor>()
-                    .FirstOrDefault(f => f.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).AsValueString() == openingDef.HostElementCode);
+                    .FirstOrDefault(f => f.LookupParameter("DH_ElementCode").AsValueString() == openingDef.HostElementCode);
 
             var hostLevel = new FilteredElementCollector(doc)
                 .OfCategory(BuiltInCategory.OST_Levels)
@@ -102,7 +102,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                     .OfClass(typeof(Floor))
                     .WhereElementIsNotElementType()
                     .Cast<Floor>()
-                    .FirstOrDefault(f => f.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).AsValueString() == openingDef.HostElementCode);
+                    .FirstOrDefault(f => f.LookupParameter("DH_ElementCode").AsValueString() == openingDef.HostElementCode);
             var hostLevel = new FilteredElementCollector(doc)
                 .OfCategory(BuiltInCategory.OST_Levels)
                 .WhereElementIsNotElementType()
@@ -147,7 +147,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                     .OfClass(typeof(Wall))
                     .WhereElementIsNotElementType()
                     .Cast<Wall>()
-                    .Where(f => f.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).AsValueString() == openingDef.HostElementCode)
+                    .Where(f => f.LookupParameter("DH_ElementCode").AsValueString() == openingDef.HostElementCode)
                     .ToList();
 
             if (hosts.Count == 0) return;
@@ -188,7 +188,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                 return;
             }
 
-
             if (!symbol.IsActive)
             {
                 symbol.Activate();
@@ -201,7 +200,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                     .OfClass(typeof(Wall))
                     .WhereElementIsNotElementType()
                     .Cast<Wall>()
-                    .FirstOrDefault(f => f.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).AsValueString() == openingDef.HostElementCode);
+                    .FirstOrDefault(f => f.LookupParameter("DH_ElementCode").AsValueString() == openingDef.HostElementCode);
 
             var hostLevel = new FilteredElementCollector(doc)
                 .OfCategory(BuiltInCategory.OST_Levels)

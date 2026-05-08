@@ -61,7 +61,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                 var ds = DirectShape.CreateElement(doc, new ElementId(BuiltInCategory.OST_Floors));
                 ds.SetShape(new GeometryObject[] { merged});
                 ds.Name = group.Key;
-                ds.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(group.Key);
+                //ds.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(group.Key);
+                ds.LookupParameter("DH_ElementCode")?.Set(group.Key);
+                ds.LookupParameter("DH_Addin")?.Set("DHBIMWATER");
 
                 ids.Add((int)ds.Id.Value);
             }

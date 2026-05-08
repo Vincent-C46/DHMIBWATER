@@ -158,9 +158,9 @@ namespace DHBIMWATER.Application.UseCases
                                                              ParameterCategory.StructuralColumns,
                                                              ParameterCategory.GenericModel,
                                                              ParameterCategory.Floors,
-                                                             ParameterCategory.Walls},
+                                                             ParameterCategory.Walls,
+                                                             ParameterCategory.Stairs,},
             };
-            defs.Add(def1);
 
             var def2 = new SharedParameterDefinition()
             {
@@ -172,9 +172,69 @@ namespace DHBIMWATER.Application.UseCases
                                                              ParameterCategory.StructuralColumns,
                                                              ParameterCategory.GenericModel,
                                                              ParameterCategory.Floors,
-                                                             ParameterCategory.Walls},
+                                                             ParameterCategory.Walls,
+                                                             ParameterCategory.Stairs,},
+                UserModifiable = false,
             };
-            defs.Add(def2);
+            
+            var def3 = new SharedParameterDefinition()
+            {
+                Name = "DH_Class",
+                SpecType = ParameterSpecType.Text,
+                GroupType = ParameterGroupType.Data,
+                BindingType = ParameterBindingType.Instance,
+                Categories = new List<ParameterCategory>() { ParameterCategory.StructuralFraming,
+                                                             ParameterCategory.StructuralColumns,
+                                                             ParameterCategory.GenericModel,
+                                                             ParameterCategory.Floors,
+                                                             ParameterCategory.Walls,
+                                                             ParameterCategory.Stairs,},
+            };
+
+            var def4 = new SharedParameterDefinition()
+            {
+                Name = "DH_Category",
+                SpecType = ParameterSpecType.Text,
+                GroupType = ParameterGroupType.Data,
+                BindingType = ParameterBindingType.Instance,
+                Categories = new List<ParameterCategory>() { ParameterCategory.StructuralFraming,
+                                                             ParameterCategory.StructuralColumns,
+                                                             ParameterCategory.GenericModel,
+                                                             ParameterCategory.Floors,
+                                                             ParameterCategory.Walls,
+                                                             ParameterCategory.Stairs,},
+            };
+
+            var def5 = new SharedParameterDefinition()
+            {
+                Name = "DH_Zone",
+                SpecType = ParameterSpecType.Text,
+                GroupType = ParameterGroupType.Data,
+                BindingType = ParameterBindingType.Instance,
+                Categories = new List<ParameterCategory>() { ParameterCategory.StructuralFraming,
+                                                             ParameterCategory.StructuralColumns,
+                                                             ParameterCategory.GenericModel,
+                                                             ParameterCategory.Floors,
+                                                             ParameterCategory.Walls,
+                                                             ParameterCategory.Stairs,},
+            };
+
+            var def6 = new SharedParameterDefinition()
+            {
+                Name = "DH_Part",
+                SpecType = ParameterSpecType.Text,
+                GroupType = ParameterGroupType.Data,
+                BindingType = ParameterBindingType.Instance,
+                Categories = new List<ParameterCategory>() { ParameterCategory.StructuralFraming,
+                                                             ParameterCategory.StructuralColumns,
+                                                             ParameterCategory.GenericModel,
+                                                             ParameterCategory.Floors,
+                                                             ParameterCategory.Walls,
+                                                             ParameterCategory.Stairs,},
+            };
+
+            var addList = new List<SharedParameterDefinition>() { def1, def2, def3, def4, def5, def6, };
+            defs.AddRange(addList);
 
             return defs;
         }

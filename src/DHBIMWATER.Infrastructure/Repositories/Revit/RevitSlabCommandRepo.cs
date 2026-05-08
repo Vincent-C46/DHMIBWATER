@@ -71,7 +71,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
 
             var floor = Floor.Create(doc, curveLoopList, floorTypeId, levelId);
             //floor.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(slabDef.ElementCode);
-            floor.LookupParameter("DH_ElementCode").Set(slabDef.ElementCode);
+            floor.LookupParameter("DH_ElementCode")?.Set(slabDef.ElementCode);
+            floor.LookupParameter("DH_Addin")?.Set("DHBIMWATER");
 
             return elementId;
         }

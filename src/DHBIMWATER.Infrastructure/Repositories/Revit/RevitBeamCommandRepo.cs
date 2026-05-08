@@ -44,6 +44,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
 
             beam.get_Parameter(BuiltInParameter.Z_JUSTIFICATION).Set(beamDef.Zjustification);
             JoinWithSlab(beam);
+            
+            beam.LookupParameter("DH_ElementCode")?.Set(beamDef.ElementCode);
+            beam.LookupParameter("DH_Addin")?.Set("DHBIMWATER");
 
             return (int)beam.Id.Value;
         }
