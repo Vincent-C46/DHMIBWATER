@@ -4,11 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DHBIMWATER.Application.DTOs.Revit
+namespace DHBIMWATER.Application.Interfaces
 {
-    public class WallDto
+    public class IWallTypeRepo
     {
-        public string WallType { get; set; } = string.Empty;
         
     }
 }

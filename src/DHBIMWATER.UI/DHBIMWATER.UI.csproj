@@ -1,24 +1,30 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<ItemGroup>
-	  <None Remove="Resources\Icons\Export.png" />
+	  <None Remove="Resources\Icons\pump.png" />
 	  <None Remove="Resources\Icons\revit.png" />
-	  <None Remove="Resources\Icons\Sheet.png" />
-	  <None Remove="Resources\Icons\Trash.png" />
-	  <None Remove="Resources\Icons\ViewDirection0.png" />
-	  <None Remove="Resources\Icons\ViewDirection1.png" />
-	  <None Remove="Resources\Icons\ViewDirection2.png" />
-	  <None Remove="Resources\Icons\ViewDirection3.png" />
-	  <None Remove="Resources\Icons\ViewDirection4.png" />
-	  <None Remove="Resources\Icons\ViewPlus.png" />
 	  <None Remove="Resources\Icons\water-tap.png" />
+	  <None Remove="Resources\Images\0-1.설계조건.png" />
+	  <None Remove="Resources\Images\1-1.수조부.png" />
+	  <None Remove="Resources\Images\1-2.수조부.png" />
+	  <None Remove="Resources\Images\1-3.수조부.png" />
+	  <None Remove="Resources\Images\1-4.수조부.png" />
+	  <None Remove="Resources\Images\10-1.펌프장_평면제원.png" />
+	  <None Remove="Resources\Images\10-2.펌프장_종단제원.png" />
+	  <None Remove="Resources\Images\2-1.밸브실.png" />
+	  <None Remove="Resources\Images\2-2.밸브실.png" />
+	  <None Remove="Resources\Images\3-1.부재선택.png" />
+	  <None Remove="Resources\Images\3-2.부재선택.png" />
+	  <None Remove="Resources\PumpStationImages\1-1.펌프장_평면제원.png" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Resource Include="Resources\Icons\Trash.png" />
-	  <Resource Include="Resources\Icons\ViewDirection0.png" />
-	  <Resource Include="Resources\Icons\ViewDirection1.png" />
-	  <Resource Include="Resources\Icons\ViewDirection2.png" />
+	  <Resource Include="Resources\PumpStationImages\1-1.펌프장_평면제원.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Resource>
+	  <Resource Include="Resources\PumpStationImages\1-2.펌프장_종단제원.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Resource>
 	</ItemGroup>
 
 	<ItemGroup>
@@ -34,20 +40,41 @@
 
 	<ItemGroup>
 		<Folder Include="ViewModels\Drafting\" />
+		<Folder Include="ViewModels\Utilities\" />
+		<Folder Include="ViewModels\Quantification\" />
 		<Folder Include="Views\Drafting\" />
+		<Folder Include="Views\Utilities\" />
+		<Folder Include="Views\Quantification\" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<Resource Include="Resources\Icons\Export.png" />
 		<Resource Include="Resources\Icons\modeling.png">
-			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Resource>
-		<Resource Include="Resources\Icons\revit.png" />
-		<Resource Include="Resources\Icons\Sheet.png" />
-		<Resource Include="Resources\Icons\ViewDirection3.png" />
-		<Resource Include="Resources\Icons\ViewDirection4.png" />
-		<Resource Include="Resources\Icons\ViewPlus.png" />
-		<Resource Include="Resources\Icons\water-tap.png" />
+		<Resource Include="Resources\Icons\pump.png">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Resources\Icons\revit.png">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Resources\Icons\water-tap.png">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Resources\Images\0-1.설계조건.png" />
+		<Resource Include="Resources\Images\1-1.수조부.png" />
+		<Resource Include="Resources\Images\1-2.수조부.png" />
+		<Resource Include="Resources\Images\1-3.수조부.png" />
+		<Resource Include="Resources\Images\1-4.수조부.png" />
+		<Resource Include="Resources\Images\2-1.밸브실.png" />
+		<Resource Include="Resources\Images\2-2.밸브실.png" />
+		<Resource Include="Resources\Images\3-1.부재선택.png" />
+		<Resource Include="Resources\Images\3-2.부재선택.png" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Views\Modeling\PumpingStationView.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
 	</ItemGroup>
 
 	<PropertyGroup>

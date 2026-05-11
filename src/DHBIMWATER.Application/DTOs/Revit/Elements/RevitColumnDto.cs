@@ -1,12 +1,12 @@
 using DHBIMWATER.Application.DTOs.Common;
 using DHBIMWATER.Application.DTOs.Geometry;
 
-namespace DHBIMWATER.Application.DTOs.Revit.Reservoir
+namespace DHBIMWATER.Application.DTOs.Revit.Elements
 {
     /// <summary>
     /// 배수지 기둥 정보를 담는 DTO
     /// </summary>
-    public class ReservoirColumnDto
+    public class RevitColumnDto
     {
         /// <summary>
         /// 요소 ID
