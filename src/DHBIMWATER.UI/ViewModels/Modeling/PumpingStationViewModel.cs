@@ -53,6 +53,8 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private int _ns;
         private double _hs = 200;
 
+        private double _h5;
+
         // 평면제원
         private double _b2;
         private double _b8;
@@ -166,7 +168,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_lwl != value)
                 {
                     _lwl = value;
-                    RecalculateDerivedValues();
+                    UpdateWLDependents();
                     OnPropertyChanged(nameof(LWL));
                 }
             }
@@ -179,7 +181,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_hwl != value)
                 {
                     _hwl = value;
-                    RecalculateDerivedValues();
+                    UpdateWLDependents();
                     OnPropertyChanged(nameof(HWL));
                 }
             }
@@ -235,7 +237,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_b6 != value)
                 {
                     _b6 = value;
-                    RecalculateDerivedValues();
                     OnPropertyChanged(nameof(B6));
                 }
             }
@@ -248,7 +249,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_b7 != value)
                 {
                     _b7 = value;
-                    RecalculateDerivedValues();
                     OnPropertyChanged(nameof(B7));
                 }
             }
@@ -354,6 +354,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_h3 != value)
                 {
                     _h3 = value;
+                    UpdateH3Dependents();
                     OnPropertyChanged(nameof(H3));
                 }
             }
@@ -366,7 +367,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_h4 != value)
                 {
                     _h4 = value;
-                    RecalculateDerivedValues();
+                    UpdateH4Dependents();
                     OnPropertyChanged(nameof(H4));
                 }
             }
@@ -436,7 +437,19 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
 
         // 읽기 전용
         public double H2 => (HWL - LWL) * 1000;
-        public double H5 => H2 + H3 + H4;
+        public double H5
+        {
+            get => _h5;
+            set
+            {
+                if(_h5 != value)
+                {
+                    _h5 = value;
+                    UpdateH5Dependents();
+                    OnPropertyChanged(nameof(H5));
+                }
+            }
+        }
 
         //평면제원
         public double B2
@@ -512,7 +525,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_b10 != value)
                 {
                     _b10 = value;
-                    RecalculateDerivedValues();
                     OnPropertyChanged(nameof(B10));
                 }
             }
@@ -554,7 +566,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_t3 != value)
                 {
                     _t3 = value;
-                    RecalculateDerivedValues();
                     OnPropertyChanged(nameof(T3));
                 }
             }
@@ -645,7 +656,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             _dialogService = dialogService;
             CreatePumpingStationCommand = new RelayCommand(CreatePumpingStation);
 
-            RecalculateDerivedValues();
+            InitializeDerivedValues();
         }
         #endregion
 
@@ -662,25 +673,27 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         }
 
         // 프로퍼티 업데이트
-        private void RecalculateDerivedValues()
+        // 생성시 초기화 메서드
+        private void InitializeDerivedValues()
         {
             // 종단제원
             _l2 = _h1;
-            //_h4 = 2.9 * _d;
+            _h4 = 2.9 * _d;
 
-            //if (SelectedTheta == "30˚")
-            //{
-            //    _l3 = Math.Ceiling((_h4 - _h1) / Math.Tan(30 * Math.PI / 180) / 100) * 100;
-            //    _l4 = Math.Ceiling(3 * _d / 100) * 100;
-            //}
-            //else if (SelectedTheta == "45˚")
-            //{
-            //    _l3 = Math.Ceiling((_h4 - _h1) / Math.Tan(45 * Math.PI / 180) / 100) * 100;
-            //    _l4 = Math.Ceiling(4.5 * _d / 100) * 100;
-            //}
+            if (SelectedTheta == "30˚")
+            {
+                _l3 = Math.Ceiling((_h4 - _h1) / Math.Tan(30 * Math.PI / 180) / 100) * 100;
+                _l4 = Math.Ceiling(3 * _d / 100) * 100;
+            }
+            else if (SelectedTheta == "45˚")
+            {
+                _l3 = Math.Ceiling((_h4 - _h1) / Math.Tan(45 * Math.PI / 180) / 100) * 100;
+                _l4 = Math.Ceiling(4.5 * _d / 100) * 100;
+            }
             _h3 = 1000 - _t1 + 100 - (H2 + _h4) % 100;
             _h7 = 1000 + 100 - _h6 % 100;
             _ns = (int)Math.Floor((_h4 - _h1) / _hs);
+            _h5 = H2 + _h3 + _h4;
 
             // 평면제원
             if (_h1 + H2 + _h3 + _t1 <= 5000)
@@ -690,7 +703,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             else
                 _b2 = 4000.0;
 
-            //_b8 = Math.Ceiling(3 * _d / 100) * 100;
+            _b8 = Math.Ceiling(3 * _d / 100) * 100;
 
             // 부재유형
             _t4 = Math.Ceiling((H5 + _t1) * 0.1 / 100) * 100;
@@ -765,12 +778,26 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         }
         private void UpdateL5Dependents()
         {
-            L5 = _b7 + _t3 + _b6 + _b5 / 2 + _l4 - _b10 - _t4;
+            L5 = _b7 + _t3 + _b6 + _b5 / 2 + _l4 - _b10 ;
         }
         private void UpdateH3Calculation()
         {
             H3 = 1000 - _t1 + 100 - (H2 + _h4) % 100;
-            // H3 setter → UpdateH3Dependents() 연쇄
+        }
+        private void UpdateH3Dependents()
+        {
+            H5 = H2 + H3 + H4;
+            UpdateB2Dependents();
+        }
+        private void UpdateH4Dependents()
+        {
+            UpdateH3Calculation();
+            NS = (int)Math.Floor((_h4 - _h1) / _hs);
+        }
+        private void UpdateWLDependents()
+        {
+            OnPropertyChanged(nameof(H2));
+            UpdateH3Calculation();
         }
         private void UpdateB2Dependents()
         {
@@ -783,7 +810,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private void UpdateH5Dependents()
         {
             T4 = Math.Ceiling((H5 + _t1) * 0.1 / 100) * 100;
-            // T4 setter → UpdateT4Dependents() 연쇄
         }
         private void UpdateT4Dependents()
         {
