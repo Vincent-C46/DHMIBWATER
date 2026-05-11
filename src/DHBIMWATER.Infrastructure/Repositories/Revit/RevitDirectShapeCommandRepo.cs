@@ -64,6 +64,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                 //ds.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(group.Key);
                 ds.LookupParameter("DH_ElementCode")?.Set(group.Key);
                 ds.LookupParameter("DH_Addin")?.Set("DHBIMWATER");
+                ds.LookupParameter("DH_Part")?.Set(group.ElementAt(0).Part);
 
                 ids.Add((int)ds.Id.Value);
             }

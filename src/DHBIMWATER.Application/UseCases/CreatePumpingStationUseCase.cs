@@ -233,7 +233,16 @@ namespace DHBIMWATER.Application.UseCases
                                                              ParameterCategory.Stairs,},
             };
 
-            var addList = new List<SharedParameterDefinition>() { def1, def2, def3, def4, def5, def6, };
+            var def7 = new SharedParameterDefinition()
+            {
+                Name = "DH_HostElementCode",
+                SpecType = ParameterSpecType.Text,
+                GroupType = ParameterGroupType.Data,
+                BindingType = ParameterBindingType.Instance,
+                Categories = new List<ParameterCategory>() { ParameterCategory.GenericModel,},
+            };
+
+            var addList = new List<SharedParameterDefinition>() { def1, def2, def3, def4, def5, def6, def7,};
             defs.AddRange(addList);
 
             return defs;

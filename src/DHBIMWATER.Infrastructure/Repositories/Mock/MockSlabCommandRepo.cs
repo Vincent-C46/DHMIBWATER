@@ -1,6 +1,7 @@
 ﻿using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Core.Geometry;
 using DHBIMWATER.Core.Structures;
+using DHBIMWATER.Infrastructure.Services.Mock;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +14,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Mock
     {
         public int CreateSlab(SlabDefinition slabDef)
         {
-            throw new NotImplementedException();
+            var mockDialogService = new MockDialogService();
+            mockDialogService.Info("Slab Creation", $"슬래브 작성 완료");
+            return 0;
         }
     }
 }

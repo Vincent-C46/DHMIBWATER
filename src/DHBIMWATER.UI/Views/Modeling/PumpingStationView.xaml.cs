@@ -21,11 +21,11 @@ namespace DHBIMWATER.UI.Views.Modeling
     /// </summary>
     public partial class PumpingStationView : Window
     {
-        public PumpingStationView(PumpingStationViewModel pumpingStationViewModel, Func<IntPtr> revitHandle)
+        public PumpingStationView(PumpingStationViewModel pumpingStationViewModel)
         {
             InitializeComponent();
             DataContext = pumpingStationViewModel;
-            new WindowInteropHelper(this).Owner = revitHandle();
+            //new WindowInteropHelper(this).Owner = revitHandle();
         }
     }
 }

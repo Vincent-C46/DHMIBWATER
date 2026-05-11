@@ -17,13 +17,15 @@ namespace DHBIMWATER.Infrastructure.Repositories.Mock
         public int CreateLinearWall(LinearWallDefinition linearWallDefinition)
         {
             var mockDialogService = new MockDialogService();
-            mockDialogService.Info("MockWallCommandRepo - CreateWall", $"Wall Length: {linearWallDefinition.WallCurve.Length}ft \nWall Count: EA");
-            return 123456;
+            mockDialogService.Info("LinearWall Creation", $"{linearWallDefinition.ElementCode} 작성완료");
+            return 0;
         }
 
         public int CreateProfileWall(ProfileWallDefinition profileWallDefinition)
         {
-            throw new NotImplementedException();
+            var mockDialogService = new MockDialogService();
+            mockDialogService.Info("ProfileWall Creation", $"{profileWallDefinition.ElementCode} 작성완료");
+            return 0;
         }
     }
 }

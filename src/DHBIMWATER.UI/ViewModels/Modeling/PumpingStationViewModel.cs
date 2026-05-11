@@ -18,6 +18,8 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         #region Fields
         private IDialogService _dialogService;
         private readonly CreatePumpingStationUseCase _createPumpingStationUseCase;
+        private string _planeImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/1-1.펌프장_평면제원.png";
+
 
         // 설계조건
         private string _selectedPumpingStationType = "Type1";
@@ -620,6 +622,18 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 }
             }
         }
+
+
+        public string PlaneImagePath
+        {
+            get => _planeImagePath;
+            set
+            {
+                _planeImagePath = value;
+                OnPropertyChanged(nameof(PlaneImagePath));
+            }
+        }
+
 
         // DTO
         public PumpDesignConditionDto designConditionDto { get; set; }

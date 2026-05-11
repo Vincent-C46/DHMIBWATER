@@ -1,6 +1,7 @@
 ﻿using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Core.Geometry;
 using DHBIMWATER.Core.Structures;
+using DHBIMWATER.Infrastructure.Services.Mock;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,22 +14,30 @@ namespace DHBIMWATER.Infrastructure.Repositories.Mock
     {
         public void CreateSlabOpening(RectangularSlabOpeningDefinition openingDef)
         {
-            throw new NotImplementedException();
+            var mockDialogService = new MockDialogService();
+            mockDialogService.Info("Opening Creation", $"{openingDef.Name} 작성완료");
+            return;
         }
 
         public void CreateSlabOpening(CircularSlabOpeningDefinition openingDef)
         {
-            throw new NotImplementedException();
+                        var mockDialogService = new MockDialogService();
+            mockDialogService.Info("Opening Creation", $"{openingDef.Name} 작성완료");
+            return;
         }
 
         public void CreateWallOpening(RectangularWallOpeningDefinition openingDef)
         {
-            throw new NotImplementedException();
+                        var mockDialogService = new MockDialogService();
+            mockDialogService.Info("Opening Creation", $"{openingDef.Name} 작성완료");
+            return;
         }
 
         public void CreateWallOpening(CircularWallOpeningDefinition openingDef)
         {
-            throw new NotImplementedException();
+                        var mockDialogService = new MockDialogService();
+            mockDialogService.Info("Opening Creation", $"{openingDef.Name} 작성완료");
+            return;
         }
     }
 }

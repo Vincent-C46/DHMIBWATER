@@ -1276,9 +1276,9 @@ namespace DHBIMWATER.Application.Services
                     Height = ts.GH1,
                     LevelName = UpperSlabLevelName,
 
-                    ElementCode = "",
+                    ElementCode = "G1",
                     Zone = "",
-                    Part = "",
+                    Part = "상부 거더",
                 };
                 var beamDef2 = new BeamDefinition()
                 {
@@ -1288,9 +1288,9 @@ namespace DHBIMWATER.Application.Services
                     Height = ts.GH1,
                     LevelName = UpperSlabLevelName,
 
-                    ElementCode = "",
+                    ElementCode = "G1",
                     Zone = "",
-                    Part = "",
+                    Part = "상부 거더",
                 };
                 var beamDef3 = new BeamDefinition()
                 {
@@ -1300,9 +1300,9 @@ namespace DHBIMWATER.Application.Services
                     Height = ts.GH1,
                     LevelName = UpperSlabLevelName,
 
-                    ElementCode = "",
+                    ElementCode = "G1",
                     Zone = "",
-                    Part = "",
+                    Part = "상부 거더",
                 };
 
                 beamDefs.Add(beamDef1);

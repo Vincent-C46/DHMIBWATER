@@ -66,6 +66,10 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             opening.LookupParameter("W").Set(UC.MmToFt(openingDef.Width));
             opening.LookupParameter("L").Set(UC.MmToFt(openingDef.Length));
 
+            //opening.LookupParameter("DH_ElementCode")?.Set(openingDef.ElementCode);
+            opening.LookupParameter("DH_Addin")?.Set("DHBIMWATER");
+            opening.LookupParameter("DH_HostElementCode")?.Set(openingDef.HostElementCode);
+
             return;
         }
         public void CreateSlabOpening(CircularSlabOpeningDefinition openingDef)
@@ -113,6 +117,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
 
             var opening = doc.Create.NewFamilyInstance(position, symbol, host, hostLevel, StructuralType.NonStructural);
             opening.LookupParameter("D").Set(UC.MmToFt(openingDef.Diameter));
+
+            opening.LookupParameter("DH_Addin")?.Set("DHBIMWATER");
+            opening.LookupParameter("DH_HostElementCode")?.Set(openingDef.HostElementCode);
 
             return;
         }
@@ -166,6 +173,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                 opening.LookupParameter("W").Set(UC.MmToFt(openingDef.Width));
                 opening.LookupParameter("H").Set(UC.MmToFt(openingDef.Height));
                 opening.get_Parameter(BuiltInParameter.INSTANCE_ELEVATION_PARAM).Set(UC.MmToFt(openingDef.OffsetZ));
+
+                opening.LookupParameter("DH_Addin")?.Set("DHBIMWATER");
+                opening.LookupParameter("DH_HostElementCode")?.Set(openingDef.HostElementCode);
             }
             return;
         }
@@ -212,6 +222,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             var opening = doc.Create.NewFamilyInstance(position, symbol, host, hostLevel, StructuralType.NonStructural);
             opening.LookupParameter("D").Set(UC.MmToFt(openingDef.Diameter));
             opening.get_Parameter(BuiltInParameter.INSTANCE_ELEVATION_PARAM).Set(UC.MmToFt(openingDef.OffsetZ));
+
+            opening.LookupParameter("DH_Addin")?.Set("DHBIMWATER");
+            opening.LookupParameter("DH_HostElementCode")?.Set(openingDef.HostElementCode);
 
             return;
         }

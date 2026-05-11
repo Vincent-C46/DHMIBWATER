@@ -86,14 +86,15 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                     ForgeTypeId specType = RevitParameterMapper.ToSpecTypeId(def.SpecType);
                     ForgeTypeId groupType = RevitParameterMapper.ToGroupTypeId(def.GroupType);
 
-
                     ExternalDefinitionCreationOptions options = new ExternalDefinitionCreationOptions(def.Name, specType);
 
                     options.GUID = guidDict.TryGetValue(def.Name, out var guid) ? guid : Guid.NewGuid();  // 지정된 GUID가 없으면 새로 생성
-                    options.Visible = def.UserModifiable;
+                    options.UserModifiable = def.UserModifiable;
+                    options.Visible = true;
 
                     // 공유 매개변수 생성
                     Definition sharedDef = group.Definitions.Create(options);
+                    //if (sharedDef == null) continue;
                     #endregion
 
                     #region 프로젝트 매개변수 생성
@@ -101,7 +102,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                     Binding binding = RevitParameterMapper.ToBinding(def.BindingType, categorySet, app);
 
                     if (!IsAlreadyBound(doc, def))
-                        bindingMap.Insert(sharedDef, binding, groupType); // 프로젝트 매개변수로 바인딩
+                        bindingMap.Insert(sharedDef, binding, groupType);
                     #endregion
                 }
             }
@@ -110,7 +111,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                 // 기존 공유매개변수 복원
                 app.SharedParametersFilename = previousFilePath;
             }
-
         }
 
         private static bool IsAlreadyBound(Document doc, SharedParameterDefinition def)

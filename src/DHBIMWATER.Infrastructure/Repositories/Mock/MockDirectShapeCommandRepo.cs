@@ -1,6 +1,7 @@
 ﻿using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Core.Geometry;
 using DHBIMWATER.Core.Structures;
+using DHBIMWATER.Infrastructure.Services.Mock;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,12 +14,16 @@ namespace DHBIMWATER.Infrastructure.Repositories.Mock
     {
         public int CreateDirectShape(SolidExtrusionDefinition solidExtrusionDef)
         {
-            throw new NotImplementedException();
+            var mockDialogService = new MockDialogService();
+            mockDialogService.Info("DirectShaep Creation", $"다이렉트 쉐이프 작성완료");
+            return 0;
         }
 
         public IReadOnlyList<int> CreateDirectShapes(IReadOnlyList<SolidExtrusionDefinition> solidExtrusionDefs)
         {
-            throw new NotImplementedException();
+            var mockDialogService = new MockDialogService();
+            mockDialogService.Info("DirectShaep Creation", $"다이렉트 쉐이프 작성완료");
+            return new List<int>();
         }
     }
 }
