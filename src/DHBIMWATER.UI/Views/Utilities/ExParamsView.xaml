@@ -1,0 +1,88 @@
+﻿<Window x:Class="DHBIMWATER.UI.Views.Utilities.ExParamsView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:DHBIMWATER.UI.Controls"
+        xmlns:vm="clr-namespace:DHBIMWATER.UI.ViewModels.GuideLine"        
+        behaviors:DialogResultBehavior.DialogResult="{Binding DialogResult}"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance vm:GuideLineViewModel, IsDesignTimeCreatable=False}"
+        xmlns:behaviors="clr-namespace:DHBIMWATER.UI.Behaviors"
+
+    Title="Export Parameters" 
+    Height="700" Width="1100"
+    WindowStartupLocation="CenterScreen"
+    Background="#F4F7F9" 
+    AllowsTransparency="False" 
+    WindowStyle="None"
+    FontFamily="Segoe UI, Malgun Gothic">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="0" CornerRadius="15" GlassFrameThickness="1" UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/DHBIMWATER.UI;component/Styles/Generic.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+
+        <controls:TitleBar Grid.Row="0"/>
+        
+        <!-- Content -->
+        <Grid Grid.Row="1" Margin="10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="3*"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- 카테고리-->
+            <GroupBox Header="카테고리 선택" Grid.Column="0" Margin="5">                
+                <ListBox x:Name="CategoryListBox"
+                         ItemsSource="{Binding Categories}"
+                         SelectedItem="{Binding SelectedCategory, Mode=TwoWay}"
+                         DisplayMemberPath="DisplayName"/>
+            </GroupBox>
+
+            <!-- 매개변수 선택-->
+            <GroupBox Header="매개변수 선택" Grid.Column="1" Margin="5">
+                <ListBox x:Name="ParameterListBox" ItemsSource="{Binding Parameters}"
+                         SelectionMode="Extended"
+                         behaviors:ListBoxSelectedItemsBehavior.SelectedItems="{Binding SelectedParameterItems}">
+
+                    <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <DockPanel LastChildFill="True" Margin="6,2">
+                                <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}"/>
+                                <TextBlock Text="{Binding Name}" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                            </DockPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+                </ListBox>
+            </GroupBox>
+        </Grid>
+        
+        <!-- 버튼 -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5">
+            <Button Content="전체 선택" Width="80" Margin="0,0,10,0" Command="{Binding SelectAllCommand}" Style="{StaticResource PrimaryButtonStyle}"/>
+            <Button Content="전체 해제" Width="80" Margin="0,0,10,0" Command="{Binding DeselectAllCommand}" Style="{StaticResource PrimaryButtonStyle}"/>
+            <Button Content="확인" Width="80" Margin="0,0,10,0" Command="{Binding ConfirmCommand}" Style="{StaticResource PrimaryButtonStyle}"/>
+            <Button Content="취소" Width="80" Command="{Binding CancelCommand}" Style="{StaticResource PrimaryButtonStyle}"/>
+        </StackPanel>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Left" Margin="4">
+            <Button Content="Import" Width="100" Command="{Binding ImportCommand}" Style="{StaticResource PrimaryButtonStyle}"/>
+        </StackPanel>
+
+    </Grid>
+
+</Window>

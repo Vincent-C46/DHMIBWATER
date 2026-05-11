@@ -2,6 +2,7 @@
 using DHBIMWATER.UI.Commands;
 using DHBIMWATER.UI.Views.GuideLine;
 using DHBIMWATER.UI.Views.Modeling;
+using DHBIMWATER.UI.Views.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows.Input;
 
@@ -14,6 +15,8 @@ namespace DHBIMWATER.UI.Sandbox
         public ICommand OpenModeling1ViewCommand { get; }
         public ICommand OpenGuideLineViewCommand { get; }
         public ICommand OpenWaterTankViewCommand { get; }
+        public ICommand OpenExParamsCommand { get; }
+
 
         public MainViewModel(IServiceProvider serviceProvider)
         {
@@ -21,19 +24,25 @@ namespace DHBIMWATER.UI.Sandbox
             OpenModeling1ViewCommand = new RelayCommand(OpenModeling1View);
             OpenGuideLineViewCommand = new RelayCommand(OpenGuideLineView);
             OpenWaterTankViewCommand = new RelayCommand(OpenWaterTankView);
+            OpenExParamsCommand = new RelayCommand(OpenExParamsView);
+        }
+
+        private void OpenExParamsView(object? obj)
+        {
+            var view = _serviceProvider.GetRequiredService<ExParamsView>();
+            view.ShowDialog();
         }
 
         private void OpenModeling1View(object? obj)
         {
             var view = _serviceProvider.GetRequiredService<Modeling1View>();
             view.ShowDialog();
-
         }
 
         private void OpenGuideLineView(object? obj)
         {
             var view = _serviceProvider.GetRequiredService<GuideLineView>();
-            view.ShowDialog();
+            view.ShowDialog();        
         }
 
         private void OpenWaterTankView(object? obj)
