@@ -54,8 +54,6 @@
                                     </Grid.ColumnDefinitions>
 
                                     <StackPanel Grid.Column="0" Margin="0,0,10,0">
-
-
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                             <TextBlock Text="펌프장 타입" Style="{StaticResource LabelTextBlockStyle}" Width="185" VerticalAlignment="Center"/>
                                             <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" 
@@ -354,7 +352,7 @@
                                                     <TextBlock Text="NS:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                     <TextBlock Text="기초 경사부 계단 단수" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                                                     <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                                                                 Text="{Binding NS}"
+                                                                 Text="{Binding NS}" IsReadOnly="True" Background="LightGray"
                                                                  Width="150" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                                     <TextBlock Text="단" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="30"/>
                                                 </StackPanel>
