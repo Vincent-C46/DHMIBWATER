@@ -1,7 +1,7 @@
 ﻿using DHBIMWATER.Application.DTOs.GuildeLine;
 using DHBIMWATER.Application.Interfaces;
 
-namespace DHBIMWATER.Infrastructure.Services.Revit.Parameter
+namespace DHBIMWATER.Infrastructure.Services.Revit
 {
     public class RevitGuideLineService : IGuideLineService
     {
