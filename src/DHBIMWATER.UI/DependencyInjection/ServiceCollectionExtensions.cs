@@ -1,7 +1,9 @@
 using DHBIMWATER.UI.ViewModels.GuideLine;
 using DHBIMWATER.UI.ViewModels.Modeling;
+using DHBIMWATER.UI.ViewModels.Utilities;
 using DHBIMWATER.UI.Views.GuideLine;
 using DHBIMWATER.UI.Views.Modeling;
+using DHBIMWATER.UI.Views.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DHBIMWATER.UI.DependencyInjection;
@@ -15,12 +17,14 @@ public static class ServiceCollectionExtensions
         services.AddTransient<PumpingStationView>();
         services.AddTransient<Modeling1View>();
         services.AddTransient<GuideLineView>();
+        services.AddTransient<ExParamsView>();
 
         // ViewModel µî·Ï
         services.AddTransient<WaterTankViewModel>();
         services.AddTransient<PumpingStationViewModel>();
         services.AddTransient<Modeling1ViewModel>();
         services.AddTransient<GuideLineViewModel>();
+        services.AddTransient<ExParamsViewModel>();
 
         return services;
     }

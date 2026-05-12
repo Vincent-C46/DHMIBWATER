@@ -10,19 +10,19 @@ namespace DHBIMWATER.Revit.UI
     {
         internal static void CreateRibbonPanel(UIControlledApplication app)
         {
-            // DHBIMWATER 리본 패널 생성
-            //string tabName = "DHBIMWATER";
-            //app.CreateRibbonTab(tabName);
+            //DHBIMWATER 리본 패널 생성//
+            string tabName = "DHBIMWATER";
+            app.CreateRibbonTab(tabName);
 
-            //// 대상 텝에 작성 ////
-            string tabName = "DH-Water";
-            RibbonUiHelper.EnsureRibbonTab(app, tabName);
+            ////// 대상 텝에 작성 ////
+            //string tabName = "DH-Water";
+            //RibbonUiHelper.EnsureRibbonTab(app, tabName);
 
 
             // 리본 모듈 리스트 - 패널 생성 및 버튼 추가 담당
             List<IRibbonModule> modules = new List<IRibbonModule>()
             {
-                //new ModelingRibbonModule(),
+                new ModelingRibbonModule(),
                 new DocumentationRibbonModule(),
                 new UtilityRibbonModule()
             };
