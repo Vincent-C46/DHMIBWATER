@@ -1,7 +1,7 @@
 ﻿using Autodesk.Revit.UI;
 using DHBIMWATER.Application.Interfaces;
 
-namespace DHBIMWATER.Infrastructure.Services.Revit
+namespace DHBIMWATER.Infrastructure.Services.Revit.Parameter
 {
     public class RevitDialogService : IDialogService
     {

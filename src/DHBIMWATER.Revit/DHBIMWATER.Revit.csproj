@@ -13,16 +13,16 @@
     <ProjectReference Include="..\DHBIMWATER.UI\DHBIMWATER.UI.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="RevitAPI">
-      <HintPath>C:\Program Files\Autodesk\Revit 2025\RevitAPI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="RevitAPIUI">
-      <HintPath>C:\Program Files\Autodesk\Revit 2025\RevitAPIUI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-  </ItemGroup>
+	<ItemGroup>
+		<Reference Include="RevitAPI">
+			<HintPath>C:\Program Files\Autodesk\Revit 2026\RevitAPI.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+		<Reference Include="RevitAPIUI">
+			<HintPath>C:\Program Files\Autodesk\Revit 2026\RevitAPIUI.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+	</ItemGroup>
 
   <PropertyGroup>
     <TargetFramework>net8.0-windows</TargetFramework>
@@ -33,7 +33,7 @@
   </PropertyGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="set &quot;DllPath=$(AppData)\Autodesk\REVIT\Addins\2025\DHBIMWATER&quot;&#xD;&#xA;if not exist &quot;%25DllPath%25&quot; mkdir &quot;%25DllPath%25&quot;&#xD;&#xA;&#xD;&#xA;if exist &quot;$(AppData)\Autodesk\REVIT\Addins\2025&quot; copy &quot;$(ProjectDir)*.addin&quot; &quot;$(AppData)\Autodesk\REVIT\Addins\2025\DHBIMWATER&quot;&#xD;&#xA;if exist &quot;$(AppData)\Autodesk\REVIT\Addins\2025&quot; copy &quot;$(ProjectDir)$(OutputPath)DHBIMWATER.Revit.dll&quot; &quot;$(AppData)\Autodesk\REVIT\Addins\2025\DHBIMWATER&quot;" />
+    <Exec Command="REM Copy to BuildOutput folder&#xD;&#xA;if not exist &quot;C:\BuildOutput\DHBIMWATER\&quot; mkdir &quot;C:\BuildOutput\DHBIMWATER\&quot;&#xD;&#xA;xcopy /Y &quot;$(TargetDir)DHBIMWATER.Revit.dll&quot; &quot;C:\BuildOutput\DHBIMWATER\&quot; /I&#xD;&#xA;xcopy /Y &quot;$(ProjectDir)DHBIMWATER.addin&quot; &quot;C:\BuildOutput\DHBIMWATER\&quot; /I" />
   </Target>
 
 </Project>

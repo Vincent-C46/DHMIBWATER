@@ -1,0 +1,77 @@
+﻿<Window x:Class="DHBIMWATER.UI.Views.Documentation.Sheets.DimensionTypeView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:DHBIMWATER.UI.Controls"
+         xmlns:behaviors="clr-namespace:DHBIMWATER.UI.Behaviors"
+        behaviors:DialogResultBehavior.DialogResult="{Binding DialogResult}"
+        mc:Ignorable="d"
+        Title="치수선 유형 선택"
+        Height="160" Width="300"
+        WindowStartupLocation="CenterScreen"
+        Background="#F4F7F9"
+        AllowsTransparency="False"
+        WindowStyle="None"
+        FontFamily="Segoe UI, Malgun Gothic">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="0" CornerRadius="15" GlassFrameThickness="1" UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/DHBIMWATER.UI;component/Styles/Generic.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid >
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+
+        </Grid.RowDefinitions>
+
+        <controls:TitleBar Grid.Row="0"/>
+
+        <!-- Top: Buttons -->
+        <Grid Grid.Row="1" Margin="12,10,12,5">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>                
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" VerticalAlignment="Center">
+                <StackPanel>
+                    <ComboBox Margin="0,0,0,0"
+                              Width="275" Height="35"
+                              Style="{StaticResource PrimaryComboBoxStyle}"
+                              ItemsSource="{Binding DimensionTypes}"
+                              SelectedItem="{Binding SelectedDimensionType}"
+                              DisplayMemberPath="Name"/>
+                </StackPanel>
+            </Grid>
+            
+            <Grid Grid.Row="1" HorizontalAlignment="Center" Margin="0,7,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="3*"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0" Content="OK"
+                        Width="90" FontSize="15" Margin="0,0"
+                        Style="{StaticResource PrimaryButtonStyle}"                        
+                        Command="{Binding ConfirmCommand}"
+                        IsDefault="True"/>
+
+                <Button Grid.Column="1" Content="Cancel"
+                        Width="90" FontSize="15" Margin="5,0,0,0"
+                        Style="{StaticResource PrimaryButtonStyle}"                        
+                        Command="{Binding CancelCommand}"
+                        IsCancel="True"/>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

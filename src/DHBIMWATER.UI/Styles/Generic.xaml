@@ -13,6 +13,7 @@
         <ResourceDictionary Source="/DHBIMWATER.UI;component/Styles/TabControls.xaml"/>
         <ResourceDictionary Source="/DHBIMWATER.UI;component/Styles/ProgressBars.xaml"/>
         <ResourceDictionary Source="/DHBIMWATER.UI;component/Styles/TextBlocks.xaml"/>
+        <ResourceDictionary Source="/DHBIMWATER.UI;component/Styles/IconButtons.xaml"/>
     </ResourceDictionary.MergedDictionaries>
     
 </ResourceDictionary>
