@@ -303,6 +303,16 @@ namespace DHBIMWATER.Application.UseCases.Sheets
             }
         }
 
+        public void OpenFirstReservoirSheet()
+        {
+            var firstSheet = GetReservoirSheets().FirstOrDefault();
+            if (firstSheet == null)
+                return;
+
+            _originalViewId = _sheetUseCase.GetActiveViewId();
+            _sheetUseCase.ActivateView(firstSheet.Id);
+        }
+
         public void CloseReservoirSheets()
         {
             if (string.IsNullOrWhiteSpace(_originalViewId))

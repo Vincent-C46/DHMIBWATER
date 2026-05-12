@@ -1,8 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<ItemGroup>
+	  <None Remove="Resources\Icons\Export.png" />
 	  <None Remove="Resources\Icons\pump.png" />
 	  <None Remove="Resources\Icons\revit.png" />
+	  <None Remove="Resources\Icons\Sheet.png" />
+	  <None Remove="Resources\Icons\Trash.png" />
+	  <None Remove="Resources\Icons\ViewDirection0.png" />
+	  <None Remove="Resources\Icons\ViewDirection1.png" />
+	  <None Remove="Resources\Icons\ViewDirection2.png" />
+	  <None Remove="Resources\Icons\ViewDirection3.png" />
+	  <None Remove="Resources\Icons\ViewDirection4.png" />
+	  <None Remove="Resources\Icons\ViewPlus.png" />
 	  <None Remove="Resources\Icons\water-tap.png" />
 	  <None Remove="Resources\Images\0-1.설계조건.png" />
 	  <None Remove="Resources\Images\1-1.수조부.png" />
@@ -19,6 +28,34 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Resource Include="Resources\Icons\Export.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	    <Generator>새 버전이면 복사</Generator>
+	  </Resource>
+	  <Resource Include="Resources\Icons\Sheet.png">
+	    <Generator>새 버전이면 복사</Generator>
+	  </Resource>
+	  <Resource Include="Resources\Icons\Trash.png">
+	    <Generator>새 버전이면 복사</Generator>
+	  </Resource>
+	  <Resource Include="Resources\Icons\ViewDirection0.png">
+	    <Generator>새 버전이면 복사</Generator>
+	  </Resource>
+	  <Resource Include="Resources\Icons\ViewDirection1.png">
+	    <Generator>새 버전이면 복사</Generator>
+	  </Resource>
+	  <Resource Include="Resources\Icons\ViewDirection2.png">
+	    <Generator>새 버전이면 복사</Generator>
+	  </Resource>
+	  <Resource Include="Resources\Icons\ViewDirection3.png">
+	    <Generator>새 버전이면 복사</Generator>
+	  </Resource>
+	  <Resource Include="Resources\Icons\ViewDirection4.png">
+	    <Generator>새 버전이면 복사</Generator>
+	  </Resource>
+	  <Resource Include="Resources\Icons\ViewPlus.png">
+	    <Generator>새 버전이면 복사</Generator>
+	  </Resource>
 	  <Resource Include="Resources\PumpStationImages\1-1.펌프장_평면제원.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Resource>
@@ -50,15 +87,19 @@
 	<ItemGroup>
 		<Resource Include="Resources\Icons\modeling.png">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<Generator>새 버전이면 복사</Generator>
 		</Resource>
 		<Resource Include="Resources\Icons\pump.png">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		  <Generator>새 버전이면 복사</Generator>
 		</Resource>
 		<Resource Include="Resources\Icons\revit.png">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		  <Generator>새 버전이면 복사</Generator>
 		</Resource>
 		<Resource Include="Resources\Icons\water-tap.png">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		  <Generator>새 버전이면 복사</Generator>
 		</Resource>
 		<Resource Include="Resources\Images\0-1.설계조건.png" />
 		<Resource Include="Resources\Images\1-1.수조부.png" />

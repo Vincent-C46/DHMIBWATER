@@ -11,12 +11,12 @@ namespace DHBIMWATER.Revit.UI.Modules
     {
         public void Build(UIControlledApplication app, string ribbonTabName)
         {
-            // 기존 페널 작성 //
-            //RibbonPanel panel = app.CreateRibbonPanel(ribbonTabName, "Documentation");
+            //기존 페널 작성 //
+            RibbonPanel panel = app.CreateRibbonPanel(ribbonTabName, "Documentation");
 
-            //// 대상 텝에 페널 작성 ////
-            string panelName = "Documentation";
-            RibbonPanel panel = RibbonUiHelper.GetOrCreateRibbonPanel(app, ribbonTabName, panelName);
+            ////// 대상 텝에 페널 작성 ////
+            //string panelName = "Documentation";
+            //RibbonPanel panel = RibbonUiHelper.GetOrCreateRibbonPanel(app, ribbonTabName, panelName);
 
             // 버튼이름, 리본에 표시될 텍스트, 어셈블리 경로, 실행될 커맨드 클래스 풀네임
             PushButtonData btn1 = new PushButtonData("SheetManagerCommand", "Sheets", Assembly.GetExecutingAssembly().Location, RevitCommandType<SheetManagerCommand>.FullName);
