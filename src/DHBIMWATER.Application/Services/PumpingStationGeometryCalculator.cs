@@ -76,7 +76,7 @@ namespace DHBIMWATER.Application.Services
 
             switch (d.SelectedEntranceType)
             {
-                case "좌안부":
+                case "우안부":
                     upperSlabDef.Points = new List<Point2D>()
                     {
                         new Point2D(0, -ts.T4),
@@ -119,7 +119,7 @@ namespace DHBIMWATER.Application.Services
                     }
 
                     break;
-                case "우안부":
+                case "좌안부":
                     upperSlabDef.Points = new List<Point2D>()
                     {
                         new Point2D(0, -ts.T4),
