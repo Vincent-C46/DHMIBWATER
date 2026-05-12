@@ -144,11 +144,17 @@ namespace DHBIMWATER.UI.ViewModels.Documentation.Sheets
                     messages.Add($"새로 생성된 시트: {result.CreatedCount}개");
 
                 _refreshSheets?.Invoke();
+                if (result.CreatedCount > 0)
+                    _useCase.OpenFirstReservoirSheet();
+
                 _dialogService.Warn("배수지 시트 생성", string.Join("\n", messages));
                 _reactivateWindow?.Invoke();
                 return;
             }
             _refreshSheets?.Invoke();
+            if (result.CreatedCount > 0)
+                _useCase.OpenFirstReservoirSheet();
+
             _dialogService.Info("배수지 시트 생성", $"{result.CreatedCount}개의 시트가 생성되었습니다.");
             _reactivateWindow?.Invoke();
         }

@@ -14,6 +14,7 @@ namespace DHBIMWATER.Application.UseCases.Sheets
         IList<DimensionTypeDto> GetDimensionTypes();
         void ApplyReservoirDimensions(string dimensionTypeName);
         void OpenReservoirSheets();
+        void OpenFirstReservoirSheet();
         void CloseReservoirSheets();
         void ApplyReservoirTags();
         void SetReservoirSheetRange(string startSheetNumber, int totalSheetCount);

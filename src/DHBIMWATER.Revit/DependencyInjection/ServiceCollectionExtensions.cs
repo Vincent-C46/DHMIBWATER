@@ -16,6 +16,10 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IExportParamsUseCase, ExportParamsUseCase>();
         services.AddTransient<IImportParamsUseCase, ImportParamsUseCase>();
 
+        services.AddTransient<RevitCategoryProvider>();
+        services.AddTransient<RevitCategoryParameterProvider>();
+        services.AddTransient<RevitExcelExporter>();
+
         services.AddTransient<IExportParamsGateway, RevitExportParamsGateway>();
         services.AddTransient<IImportParamsGateway, RevitImportParamsGateway>();
 
