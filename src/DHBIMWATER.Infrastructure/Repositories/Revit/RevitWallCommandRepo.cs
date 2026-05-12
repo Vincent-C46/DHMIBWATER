@@ -70,10 +70,26 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             var wallSpec = new WallTypeSpec(linearWallDefinition.Thickness, $"일반 - {linearWallDefinition.Thickness}mm");
             var wallTypeId = new ElementId((long)_elementTypeCmdRepo.FindOrCreateWallType(wallSpec));
 
-            var wall = Wall.Create(doc, wallCurve, wallTypeId, wallLevel.Id,
-                                    UC.MmToFt(linearWallDefinition.Height),
-                                    UC.MmToFt(linearWallDefinition.BaseOffset),
-                                    linearWallDefinition.IsFlipped, true);
+            //if (linearWallDefinition.Height <= 0)
+            //{
+            //    _dialog.Warn("Error", $"벽체 높이가 0이하 입니다.\nElementCode{linearWallDefinition.ElementCode}\nHeight: {linearWallDefinition.Height}");
+            //}
+
+            Wall wall;
+
+            try
+            {
+                wall = Wall.Create(doc, wallCurve, wallTypeId, wallLevel.Id,
+                        UC.MmToFt(linearWallDefinition.Height),
+                        UC.MmToFt(linearWallDefinition.BaseOffset),
+                        linearWallDefinition.IsFlipped, true);
+            }
+            catch (Exception ex)
+            {
+                _dialog.Warn("Error", $"벽체 생성 실패\nElementCode: {linearWallDefinition.ElementCode}\nException: {ex.Message}");
+                return 0;
+            }
+
 
             WallUtils.DisallowWallJoinAtEnd(wall, 0);
             WallUtils.DisallowWallJoinAtEnd(wall, 1);
@@ -130,7 +146,16 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                 profiles.Add(line);
             }
 
-            var profileWall = Wall.Create(doc, profiles, wallTypeId, wallLevel.Id, true);
+            Wall profileWall;
+            try
+            {
+                profileWall = Wall.Create(doc, profiles, wallTypeId, wallLevel.Id, true);
+            }
+            catch( Exception ex)
+            {
+                _dialog.Warn("Error", $"프로파일 벽체 생성 실패\nElementCode: {profileWallDefinition.ElementCode}\nException: {ex.Message}");
+                return 0;
+            }
 
             //profileWall.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(profileWallDefinition.ElementCode);
             profileWall.LookupParameter("DH_ElementCode")?.Set(profileWallDefinition.ElementCode);

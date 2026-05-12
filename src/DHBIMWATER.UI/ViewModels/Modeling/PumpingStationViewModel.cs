@@ -632,9 +632,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 }
             }
         }
-
         public string PlaneImagePath => _isRectangularOpening ? RectangularImagePath : CircularImagePath;
-
 
         // DTO
         public PumpDesignConditionDto designConditionDto { get; set; }
@@ -642,7 +640,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         public PumpProfileSpecDto profileSpecDto { get; set; }
         public PumpTypeSelectionDto typeSelectionDto { get; set; }
         public PumpCreationRequestDto creationRequestDto { get; set; }
-
         #endregion
 
         #region Commands
@@ -736,7 +733,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             OnPropertyChanged(nameof(L5));
             OnPropertyChanged(nameof(GH1));
         }
-
         private void UpdateDDependents()
         {
             H4 = 2.9 * _d;
