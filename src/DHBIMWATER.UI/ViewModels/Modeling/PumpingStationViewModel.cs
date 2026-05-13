@@ -7,6 +7,7 @@ using DHBIMWATER.UI.Commands;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using System.Security.Permissions;
+using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media.Media3D;
@@ -95,6 +96,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 {
                     _selectedPumpingStationType = value;
                     OnPropertyChanged(nameof(SelectedPumpingStationType));
+                    OnPropertyChanged(nameof(T6Visibility));                    
                     OnPropertyChanged(nameof(ProfileImagePath));
                 }
             }
@@ -110,6 +112,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                     _selectedEntranceType = value;
                     OnPropertyChanged(nameof(SelectedEntranceType));
                     OnPropertyChanged(nameof(PlanImagePath));
+                    OnPropertyChanged(nameof(T5Visibility));
                 }
             }
         }
@@ -606,6 +609,8 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 }
             }
         }
+        public string T5Visibility => SelectedEntranceType == "우안부" || SelectedEntranceType == "좌안부" ? "Visible" : "Collapsed";
+
         public double T6
         {
             get { return _t6; }
@@ -618,6 +623,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 }
             }
         }
+        public string T6Visibility => SelectedPumpingStationType == "Type1" ? "Visible" : "Collapsed";
 
         public double GB1
         {
