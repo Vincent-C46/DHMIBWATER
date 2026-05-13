@@ -1326,7 +1326,7 @@ namespace DHBIMWATER.Application.Services
 
             var solidExtrusionDefs = new List<SolidExtrusionDefinition>();
 
-            // 슬래브 계산 로직 추가 예정
+            // 공통 - 기초
             var calculatedTheta = Math.Atan((pr.H4 - pr.H1) / pr.L3);
             var fndBaseSolid = new SolidExtrusionDefinition();
             fndBaseSolid.ElementCode = "F1";
@@ -1381,7 +1381,6 @@ namespace DHBIMWATER.Application.Services
                                                 new Point3D(x2 - ts.T2 * Math.Tan(calculatedTheta / 2),         -ts.T4 - pl.B10, d.LWL*1000 - pr.H1 - ts.T2),
                                                 new Point3D(0,                                                  -ts.T4 - pl.B10, d.LWL*1000 - pr.H1 - ts.T2),
                                             };
-
                     subBaseSolid.Profile = new List<Point3D>()
                                             {
                                                 new Point3D(- subThk,                                                      -ts.T4 - pl.B10- subThk, d.LWL*1000 - pr.H1 - ts.T2),
@@ -1406,19 +1405,17 @@ namespace DHBIMWATER.Application.Services
                                                 new Point3D(x2 - ts.T2 * Math.Tan(calculatedTheta / 2),         -ts.T4 - pl.B10, d.LWL*1000 - pr.H1 - ts.T2),
                                                 new Point3D(0,                                                  -ts.T4 - pl.B10, d.LWL*1000 - pr.H1 - ts.T2),
                                             };
-
                     subBaseSolid.Profile = new List<Point3D>()
                                             {
-                                                new Point3D(- subThk,                                                  -ts.T4 - pl.B10- subThk, d.LWL*1000 - pr.H1 - ts.T2),
-                                                new Point3D(x2 - ts.T2 * Math.Tan(calculatedTheta / 2),                                                 -ts.T4 - pl.B10- subThk, d.LWL*1000 - pr.H1 - ts.T2),
-                                                new Point3D(x2 + pr.L3 - ts.T2 * Math.Tan(calculatedTheta / 2),                                         -ts.T4 - pl.B10- subThk, d.LWL*1000 - pr.H4- ts.T2),
-                                                new Point3D(totalLength + pl.B10 + subThk,                               -ts.T4 - pl.B10- subThk, d.LWL*1000 - pr.H4- ts.T2),
-                                                new Point3D(totalLength + pl.B10 + subThk,                               -ts.T4 - pl.B10- subThk, d.LWL*1000 - pr.H4 - ts.T2 - subThk),
-                                                new Point3D(x2 + pr.L3 - (ts.T2 + subThk) * Math.Tan(calculatedTheta / 2), -ts.T4 - pl.B10- subThk, d.LWL*1000 - pr.H4 - ts.T2- subThk),
-                                                new Point3D(x2 - (ts.T2 + subThk) * Math.Tan(calculatedTheta / 2),         -ts.T4 - pl.B10- subThk, d.LWL*1000 - pr.H1 - ts.T2- subThk),
-                                                new Point3D(- subThk,                                                  -ts.T4 - pl.B10- subThk, d.LWL*1000 - pr.H1 - ts.T2- subThk),
+                                                new Point3D(- subThk,                                                     -ts.T4 - pl.B10- subThk, d.LWL*1000 - pr.H1 - ts.T2),
+                                                new Point3D(x2 - ts.T2 * Math.Tan(calculatedTheta / 2),                   -ts.T4 - pl.B10- subThk, d.LWL*1000 - pr.H1 - ts.T2),
+                                                new Point3D(x2 + pr.L3 - ts.T2 * Math.Tan(calculatedTheta / 2),           -ts.T4 - pl.B10- subThk, d.LWL*1000 - pr.H4- ts.T2),
+                                                new Point3D(totalLength + pl.B10 + subThk,                                -ts.T4 - pl.B10- subThk, d.LWL*1000 - pr.H4- ts.T2),
+                                                new Point3D(totalLength + pl.B10 + subThk,                                -ts.T4 - pl.B10- subThk, d.LWL*1000 - pr.H4 - ts.T2 - subThk),
+                                                new Point3D(x2 + pr.L3 - (ts.T2 + subThk) * Math.Tan(calculatedTheta / 2),-ts.T4 - pl.B10- subThk, d.LWL*1000 - pr.H4 - ts.T2- subThk),
+                                                new Point3D(x2 - (ts.T2 + subThk) * Math.Tan(calculatedTheta / 2),        -ts.T4 - pl.B10- subThk, d.LWL*1000 - pr.H1 - ts.T2- subThk),
+                                                new Point3D(- subThk,                                                     -ts.T4 - pl.B10- subThk, d.LWL*1000 - pr.H1 - ts.T2- subThk),
                                             };
-
                     break;
             }
 
@@ -1470,6 +1467,7 @@ namespace DHBIMWATER.Application.Services
                 solidExtrusionDefs.Add(inletCurb);
             }
 
+            // 진입부 기초 및 버림 추가
             switch (d.SelectedEntranceType)
             {
                 case "우안부":
@@ -1477,10 +1475,10 @@ namespace DHBIMWATER.Application.Services
                     {
                         Profile = new List<Point3D>()
                         {
-                            new Point3D(totalLength + pl.B10,                     pl.B10, d.LWL*1000 - pr.H4),
+                            new Point3D(totalLength + pl.B10,                     -(ts.T4 + pl.B10),                          d.LWL*1000 - pr.H4),
                             new Point3D(totalLength + pl.B10,                     -ts.T5 - pl.B9 - ts.T4 - pl.B10, d.LWL*1000 - pr.H4),
                             new Point3D(totalLength - ts.T4 * 2 - pl.L5 - pl.B10, -ts.T5 - pl.B9 - ts.T4 - pl.B10, d.LWL*1000 - pr.H4),
-                            new Point3D(totalLength - ts.T4 * 2 - pl.L5 - pl.B10, pl.B10, d.LWL*1000 - pr.H4),
+                            new Point3D(totalLength - ts.T4 * 2 - pl.L5 - pl.B10, -(ts.T4 + pl.B10),                          d.LWL*1000 - pr.H4),
                         },
                         Normal = new Vector3D(0, 0, -1),
                         Distance = ts.T2,
@@ -1494,10 +1492,10 @@ namespace DHBIMWATER.Application.Services
                     {
                         Profile = new List<Point3D>()
                         {
-                            new Point3D(totalLength + pl.B10 + subThk,                     pl.B10 + subThk, d.LWL*1000 - ts.T2 - pr.H4),
+                            new Point3D(totalLength + pl.B10 + subThk,                     -(ts.T4 + pl.B10 + subThk),                         d.LWL*1000 - ts.T2 - pr.H4),
                             new Point3D(totalLength + pl.B10 + subThk,                     -ts.T5 - pl.B9 - ts.T4 - pl.B10 - subThk, d.LWL*1000 - ts.T2 - pr.H4),
                             new Point3D(totalLength - ts.T4 * 2 - pl.L5 - pl.B10 - subThk, -ts.T5 - pl.B9 - ts.T4 - pl.B10 - subThk, d.LWL*1000 - ts.T2 - pr.H4),
-                            new Point3D(totalLength - ts.T4 * 2 - pl.L5 - pl.B10 - subThk, pl.B10 + subThk, d.LWL*1000 - ts.T2 - pr.H4),
+                            new Point3D(totalLength - ts.T4 * 2 - pl.L5 - pl.B10 - subThk, -(ts.T4 + pl.B10 + subThk),                         d.LWL*1000 - ts.T2 - pr.H4),
                         },
                         Normal = new Vector3D(0, 0, -1),
                         Distance = subThk,
@@ -1513,10 +1511,10 @@ namespace DHBIMWATER.Application.Services
                     {
                         Profile = new List<Point3D>()
                         {
-                            new Point3D(totalLength + pl.B10,                     totalWidth - ts.T4 * 2 - (pl.B10),                          d.LWL*1000 - pr.H4),
+                            new Point3D(totalLength + pl.B10,                     totalWidth - ts.T4  + (pl.B10),                          d.LWL*1000 - pr.H4),
                             new Point3D(totalLength + pl.B10,                     totalWidth - ts.T4 * 2 - (-ts.T5 - pl.B9 - ts.T4 - pl.B10), d.LWL*1000 - pr.H4),
                             new Point3D(totalLength - ts.T4 * 2 - pl.L5 - pl.B10, totalWidth - ts.T4 * 2 - (-ts.T5 - pl.B9 - ts.T4 - pl.B10), d.LWL*1000 - pr.H4),
-                            new Point3D(totalLength - ts.T4 * 2 - pl.L5 - pl.B10, totalWidth - ts.T4 * 2 - (pl.B10),                          d.LWL*1000 - pr.H4),
+                            new Point3D(totalLength - ts.T4 * 2 - pl.L5 - pl.B10, totalWidth - ts.T4  + (pl.B10),                          d.LWL*1000 - pr.H4),
                         },
                         Normal = new Vector3D(0, 0, -1),
                         Distance = ts.T2,
@@ -1530,10 +1528,10 @@ namespace DHBIMWATER.Application.Services
                     {
                         Profile = new List<Point3D>()
                         {
-                            new Point3D(totalLength + pl.B10 + subThk,                     totalWidth - ts.T4 * 2 -(pl.B10 + subThk),                          d.LWL*1000 - ts.T2 - pr.H4),
+                            new Point3D(totalLength + pl.B10 + subThk,                     totalWidth - ts.T4  +(pl.B10 + subThk),                          d.LWL*1000 - ts.T2 - pr.H4),
                             new Point3D(totalLength + pl.B10 + subThk,                     totalWidth - ts.T4 * 2 -(-ts.T5 - pl.B9 - ts.T4 - pl.B10 - subThk), d.LWL*1000 - ts.T2 - pr.H4),
                             new Point3D(totalLength - ts.T4 * 2 - pl.L5 - pl.B10 - subThk, totalWidth - ts.T4 * 2 -(-ts.T5 - pl.B9 - ts.T4 - pl.B10 - subThk), d.LWL*1000 - ts.T2 - pr.H4),
-                            new Point3D(totalLength - ts.T4 * 2 - pl.L5 - pl.B10 - subThk, totalWidth - ts.T4 * 2 -(pl.B10 + subThk),                          d.LWL*1000 - ts.T2 - pr.H4),
+                            new Point3D(totalLength - ts.T4 * 2 - pl.L5 - pl.B10 - subThk, totalWidth - ts.T4  +(pl.B10 + subThk),                          d.LWL*1000 - ts.T2 - pr.H4),
                         },
                         Normal = new Vector3D(0, 0, -1),
                         Distance = subThk,
