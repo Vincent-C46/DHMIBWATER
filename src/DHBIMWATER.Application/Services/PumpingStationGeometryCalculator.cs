@@ -222,8 +222,8 @@ namespace DHBIMWATER.Application.Services
             // Linear 벽 계산 로직 추가 예정
             switch (d.SelectedEntranceType)
             {
-                case "좌안부":
-                    // 좌안부 외벽1 (좌안부, Type 무관) - 짧은 외벽 - W1-2
+                case "우안부": 
+                    // 우안부 외벽1 (우안부, Type 무관) - 짧은 외벽 - W1-2
                     var l_outerWallDef1 = new LinearWallDefinition
                     {
                         Thickness = ts.T4,
@@ -239,7 +239,7 @@ namespace DHBIMWATER.Application.Services
                     l_outerWallDef1.IsFlipped = true;
                     linearWalls.Add(l_outerWallDef1);
 
-                    // 좌안부 외벽2 (좌안부, Type 무관) - W1-3
+                    // 우안부 외벽2 (우안부, Type 무관) - W1-3
                     var l_outerWallDef2 = new LinearWallDefinition
                     {
                         Thickness = ts.T4,
@@ -297,7 +297,7 @@ namespace DHBIMWATER.Application.Services
                             linearWalls.Add(innerWallUnderValveDef);
                         }
 
-                        // 좌안부 내벽 (좌안부, Type1, Type3 적용) - W5
+                        // 우안부 내벽 (우안부, Type1, Type3 적용) - W5
                         var innerEntranceWallDef = new LinearWallDefinition
                         {
                             Thickness = ts.T5,
@@ -312,7 +312,7 @@ namespace DHBIMWATER.Application.Services
                         innerEntranceWallDef.EndPoint = new Point3D(totalLength - ts.T4, -ts.T5 / 2, 0);
                         linearWalls.Add(innerEntranceWallDef);
 
-                        // 좌안부 외벽3 (좌안부, Type1, Type3 적용) - 긴 외벽
+                        // 우안부 외벽3 (우안부, Type1, Type3 적용) - 긴 외벽
                         var outerWallDef3 = new LinearWallDefinition
                         {
                             Thickness = ts.T4,
@@ -328,7 +328,7 @@ namespace DHBIMWATER.Application.Services
                         outerWallDef3.IsFlipped = true;
                         linearWalls.Add(outerWallDef3);
 
-                        // 좌안부 밸브실 사이벽 - W4
+                        // 우안부 밸브실 사이벽 - W4
                         var valveRoomWallDef = new LinearWallDefinition
                         {
                             Thickness = ts.T3,
@@ -346,8 +346,8 @@ namespace DHBIMWATER.Application.Services
                     }
                     else if (d.SelectedPumpingStationType == "Type2")
                     {
-                        // 좌안부 Type2 벽체 계산 로직
-                        // 좌안부 내벽 (좌안부, Type1, Type3 적용) - W5
+                        // 우안부 Type2 벽체 계산 로직
+                        // 우안부 내벽 (우안부, Type1, Type3 적용) - W5
                         var innerEntranceWallDef = new LinearWallDefinition
                         {
                             Thickness = ts.T5,
@@ -362,7 +362,7 @@ namespace DHBIMWATER.Application.Services
                         innerEntranceWallDef.EndPoint = new Point3D(totalLength - ts.T4, -ts.T5 / 2, 0);
                         linearWalls.Add(innerEntranceWallDef);
 
-                        // 좌안부 외벽3 (좌안부, Type2 적용) (동쪽) - W2
+                        // 우안부 외벽3 (우안부, Type2 적용) (동쪽) - W2
                         var outerWallDef3 = new LinearWallDefinition
                         {
                             Thickness = ts.T4,
@@ -378,7 +378,7 @@ namespace DHBIMWATER.Application.Services
                         outerWallDef3.IsFlipped = true;
                         linearWalls.Add(outerWallDef3);
 
-                        // 좌안부 외벽3 (좌안부, Type2 적용) (동쪽) - W2-1
+                        // 우안부 외벽3 (우안부, Type2 적용) (동쪽) - W2-1
                         var outerWallDef4 = new LinearWallDefinition
                         {
                             Thickness = ts.T4,
@@ -394,7 +394,7 @@ namespace DHBIMWATER.Application.Services
                         outerWallDef4.IsFlipped = true;
                         linearWalls.Add(outerWallDef4);
 
-                        // 좌안부 밸브실 외벽3 (좌안부, Type2 적용) (북쪽) - W1-5
+                        // 우안부 밸브실 외벽3 (우안부, Type2 적용) (북쪽) - W1-5
                         var outerWallDef5 = new LinearWallDefinition
                         {
                             Thickness = ts.T4,
@@ -410,7 +410,7 @@ namespace DHBIMWATER.Application.Services
                         outerWallDef5.IsFlipped = true;
                         linearWalls.Add(outerWallDef5);
 
-                        // 좌안부 밸브실 사이벽 - W4
+                        // 우안부 밸브실 사이벽 - W4
                         var valveRoomWallDef = new LinearWallDefinition
                         {
                             Thickness = ts.T3,
@@ -477,8 +477,8 @@ namespace DHBIMWATER.Application.Services
                         linearWalls.Add(valveRoomWallDef);
                     }
                     break;
-                case "우안부":
-                    // 우안부 외벽1 (우안부, Type 무관) - 짧은 외벽 - W1-2
+                case "좌안부":
+                    // 좌안부 외벽1 (좌안부, Type 무관) - 짧은 외벽 - W1-2
                     var r_outerWallDef1 = new LinearWallDefinition
                     {
                         Thickness = ts.T4,
@@ -494,7 +494,7 @@ namespace DHBIMWATER.Application.Services
                     r_outerWallDef1.IsFlipped = true;
                     linearWalls.Add(r_outerWallDef1);
 
-                    // 우안부 외벽2 (우안부, Type 무관) - W1-3
+                    // 좌안부 외벽2 (좌안부, Type 무관) - W1-3
                     var r_outerWallDef2 = new LinearWallDefinition
                     {
                         Thickness = ts.T4,
@@ -552,7 +552,7 @@ namespace DHBIMWATER.Application.Services
                             linearWalls.Add(innerWallUnderValveDef);
                         }
 
-                        // 우안부 내벽 (우안부, Type1, Type3 적용) - W5
+                        // 좌안부 내벽 (좌안부, Type1, Type3 적용) - W5
                         var innerEntranceWallDef = new LinearWallDefinition
                         {
                             Thickness = ts.T5,
@@ -567,7 +567,7 @@ namespace DHBIMWATER.Application.Services
                         innerEntranceWallDef.EndPoint = new Point3D(totalLength - ts.T4, totalWidth - ts.T4 * 2 - (-ts.T5 / 2), 0);
                         linearWalls.Add(innerEntranceWallDef);
 
-                        // 우안부 외벽3 (우안부, Type1, Type3 적용) - 긴 외벽
+                        // 좌안부 외벽3 (좌안부, Type1, Type3 적용) - 긴 외벽
                         var outerWallDef3 = new LinearWallDefinition
                         {
                             Thickness = ts.T4,
@@ -583,7 +583,7 @@ namespace DHBIMWATER.Application.Services
                         outerWallDef3.IsFlipped = true;
                         linearWalls.Add(outerWallDef3);
 
-                        // 우안부 밸브실 사이벽 - W4
+                        // 좌안부 밸브실 사이벽 - W4
                         var valveRoomWallDef = new LinearWallDefinition
                         {
                             Thickness = ts.T3,
@@ -601,8 +601,8 @@ namespace DHBIMWATER.Application.Services
                     }
                     else if (d.SelectedPumpingStationType == "Type2")
                     {
-                        // 우안부 Type2 벽체 계산 로직
-                        // 우안부 내벽 (우안부, Type1, Type3 적용) - W5
+                        // 좌안부 Type2 벽체 계산 로직
+                        // 좌안부 내벽 (좌안부, Type1, Type3 적용) - W5
                         var innerEntranceWallDef = new LinearWallDefinition
                         {
                             Thickness = ts.T5,
@@ -617,7 +617,7 @@ namespace DHBIMWATER.Application.Services
                         innerEntranceWallDef.EndPoint = new Point3D(totalLength - ts.T4, totalWidth - ts.T4 * 2 - (-ts.T5 / 2), 0);
                         linearWalls.Add(innerEntranceWallDef);
 
-                        // 우안부 외벽3 (우안부, Type2 적용) (동쪽) - W2
+                        // 좌안부 외벽3 (좌안부, Type2 적용) (동쪽) - W2
                         var outerWallDef3 = new LinearWallDefinition
                         {
                             Thickness = ts.T4,
@@ -633,7 +633,7 @@ namespace DHBIMWATER.Application.Services
                         outerWallDef3.IsFlipped = true;
                         linearWalls.Add(outerWallDef3);
 
-                        // 우안부 외벽3 (우안부, Type2 적용) (동쪽) - W2-1
+                        // 좌안부 외벽3 (좌안부, Type2 적용) (동쪽) - W2-1
                         var outerWallDef4 = new LinearWallDefinition
                         {
                             Thickness = ts.T4,
@@ -649,7 +649,7 @@ namespace DHBIMWATER.Application.Services
                         outerWallDef4.IsFlipped = true;
                         linearWalls.Add(outerWallDef4);
 
-                        // 우안부 밸브실 외벽3 (우안부, Type2 적용) (북쪽) - W1-5
+                        // 좌안부 밸브실 외벽3 (좌안부, Type2 적용) (북쪽) - W1-5
                         var outerWallDef5 = new LinearWallDefinition
                         {
                             Thickness = ts.T4,
@@ -665,7 +665,7 @@ namespace DHBIMWATER.Application.Services
                         outerWallDef5.IsFlipped = true;
                         linearWalls.Add(outerWallDef5);
 
-                        // 우안부 밸브실 사이벽 - W4
+                        // 좌안부 밸브실 사이벽 - W4
                         var valveRoomWallDef = new LinearWallDefinition
                         {
                             Thickness = ts.T3,
@@ -683,8 +683,8 @@ namespace DHBIMWATER.Application.Services
                     }
                     else if (d.SelectedPumpingStationType == "Type3")
                     {
-                        // 우안부 Type3 벽체 계산 로직
-                        // 우안부 내벽 (우안부, Type1, Type3 적용)
+                        // 좌안부 Type3 벽체 계산 로직
+                        // 좌안부 내벽 (좌안부, Type1, Type3 적용)
                         var innerEntranceWallDef = new LinearWallDefinition
                         {
                             Thickness = ts.T5,
@@ -699,7 +699,7 @@ namespace DHBIMWATER.Application.Services
                         innerEntranceWallDef.EndPoint = new Point3D(totalLength - ts.T4, totalWidth - ts.T4 * 2 - (-ts.T5 / 2), 0);
                         linearWalls.Add(innerEntranceWallDef);
 
-                        // 우안부 외벽3 (우안부, Type1, Type3 적용) - 긴 외벽
+                        // 좌안부 외벽3 (좌안부, Type1, Type3 적용) - 긴 외벽
                         var outerWallDef3 = new LinearWallDefinition
                         {
                             Thickness = ts.T4,
@@ -715,7 +715,7 @@ namespace DHBIMWATER.Application.Services
                         outerWallDef3.IsFlipped = true;
                         linearWalls.Add(outerWallDef3);
 
-                        // 우안부 밸브실 사이벽 - W4
+                        // 좌안부 밸브실 사이벽 - W4
                         var valveRoomWallDef = new LinearWallDefinition
                         {
                             Thickness = ts.T3,
@@ -953,8 +953,8 @@ namespace DHBIMWATER.Application.Services
             // Profile 벽 계산 로직 추가 예정
             switch (d.SelectedEntranceType)
             {
-                case "좌안부":
-                    // 좌안부 공통 - 진입부측 프로파일 (짧은 벽체) - W1-1
+                case "우안부":
+                    // 우안부 공통 - 진입부측 프로파일 (짧은 벽체) - W1-1
                     var l_outerProfileWallDef1 = new ProfileWallDefinition
                     {
                         Thickness = ts.T4,
@@ -975,7 +975,7 @@ namespace DHBIMWATER.Application.Services
 
                     if (d.SelectedPumpingStationType == "Type1")
                     {
-                        // 좌안부 외벽 - 진입부 반대측 프로파일 (긴 벽체, Type1, Type3) - W1
+                        // 우안부 외벽 - 진입부 반대측 프로파일 (긴 벽체, Type1, Type3) - W1
                         var l_outerProfileWallDef2 = new ProfileWallDefinition
                         {
                             Thickness = ts.T4,
@@ -996,8 +996,8 @@ namespace DHBIMWATER.Application.Services
                     }
                     else if (d.SelectedPumpingStationType == "Type2")
                     {
-                        // 좌안부 Type2 벽체 계산 로직
-                        // 좌안부 외벽 - 진입부 반대측 프로파일 (긴 벽체, Type2) - W1-4
+                        // 우안부 Type2 벽체 계산 로직
+                        // 우안부 외벽 - 진입부 반대측 프로파일 (긴 벽체, Type2) - W1-4
                         var l_outerProfileWallDef2 = new ProfileWallDefinition
                         {
                             Thickness = ts.T4,
@@ -1018,8 +1018,8 @@ namespace DHBIMWATER.Application.Services
                     }
                     else if (d.SelectedPumpingStationType == "Type3")
                     {
-                        // 좌안부 Type3 벽체 계산 로직
-                        // 좌안부 외벽 - 진입부 반대측 프로파일 (긴 벽체, Type1, Type3) - W1
+                        // 우안부 Type3 벽체 계산 로직
+                        // 우안부 외벽 - 진입부 반대측 프로파일 (긴 벽체, Type1, Type3) - W1
                         var l_outerProfileWallDef2 = new ProfileWallDefinition
                         {
                             Thickness = ts.T4,
@@ -1039,8 +1039,8 @@ namespace DHBIMWATER.Application.Services
                         profileWalls.Add(l_outerProfileWallDef2);
                     }
                     break;
-                case "우안부":
-                    // 우안부 공통 - 진입부측 프로파일 (짧은 벽체) - W1-1
+                case "좌안부":
+                    // 좌안부 공통 - 진입부측 프로파일 (짧은 벽체) - W1-1
                     var r_outerProfileWallDef1 = new ProfileWallDefinition
                     {
                         Thickness = ts.T4,
@@ -1061,8 +1061,8 @@ namespace DHBIMWATER.Application.Services
 
                     if (d.SelectedPumpingStationType == "Type1")
                     {
-                        // 우안부 Type1 벽체 계산 로직
-                        // 우안부 외벽 - 진입부 반대측 프로파일 (긴 벽체, Type1, Type3) - W1
+                        // 좌안부 Type1 벽체 계산 로직
+                        // 좌안부 외벽 - 진입부 반대측 프로파일 (긴 벽체, Type1, Type3) - W1
                         var r_outerProfileWallDef2 = new ProfileWallDefinition
                         {
                             Thickness = ts.T4,
@@ -1083,8 +1083,8 @@ namespace DHBIMWATER.Application.Services
                     }
                     else if (d.SelectedPumpingStationType == "Type2")
                     {
-                        // 우안부 Type2 벽체 계산 로직
-                        // 우안부 외벽 - 진입부 반대측 프로파일 (긴 벽체, Type2) - W1-4
+                        // 좌안부 Type2 벽체 계산 로직
+                        // 좌안부 외벽 - 진입부 반대측 프로파일 (긴 벽체, Type2) - W1-4
                         var r_outerProfileWallDef2 = new ProfileWallDefinition
                         {
                             Thickness = ts.T4,
@@ -1105,8 +1105,8 @@ namespace DHBIMWATER.Application.Services
                     }
                     else if (d.SelectedPumpingStationType == "Type3")
                     {
-                        // 우안부 Type3 벽체 계산 로직
-                        // 우안부 외벽 - 진입부 반대측 프로파일 (긴 벽체, Type1, Type3) - W1
+                        // 좌안부 Type3 벽체 계산 로직
+                        // 좌안부 외벽 - 진입부 반대측 프로파일 (긴 벽체, Type1, Type3) - W1
                         var r_outerProfileWallDef2 = new ProfileWallDefinition
                         {
                             Thickness = ts.T4,
@@ -1472,8 +1472,8 @@ namespace DHBIMWATER.Application.Services
 
             switch (d.SelectedEntranceType)
             {
-                case "좌안부":
-                    var leftFndDef = new SolidExtrusionDefinition
+                case "우안부":
+                    var rightFndDef = new SolidExtrusionDefinition
                     {
                         Profile = new List<Point3D>()
                         {
@@ -1488,9 +1488,9 @@ namespace DHBIMWATER.Application.Services
                         Zone = "",
                         Part = "",
                     };
-                    solidExtrusionDefs.Add(leftFndDef);
+                    solidExtrusionDefs.Add(rightFndDef);
 
-                    var leftSubFndDef = new SolidExtrusionDefinition
+                    var rightSubFndDef = new SolidExtrusionDefinition
                     {
                         Profile = new List<Point3D>()
                         {
@@ -1505,11 +1505,11 @@ namespace DHBIMWATER.Application.Services
                         Zone = "",
                         Part = "",
                     };
-                    solidExtrusionDefs.Add(leftSubFndDef);
+                    solidExtrusionDefs.Add(rightSubFndDef);
 
                     break;
-                case "우안부":
-                    var rightFndDef = new SolidExtrusionDefinition
+                case "좌안부":
+                    var leftFndDef = new SolidExtrusionDefinition
                     {
                         Profile = new List<Point3D>()
                         {
@@ -1524,9 +1524,9 @@ namespace DHBIMWATER.Application.Services
                         Zone = "",
                         Part = "",
                     };
-                    solidExtrusionDefs.Add(rightFndDef);
+                    solidExtrusionDefs.Add(leftFndDef);
 
-                    var rightSubFndDef = new SolidExtrusionDefinition
+                    var leftSubFndDef = new SolidExtrusionDefinition
                     {
                         Profile = new List<Point3D>()
                         {
@@ -1541,7 +1541,7 @@ namespace DHBIMWATER.Application.Services
                         Zone = "",
                         Part = "",
                     };
-                    solidExtrusionDefs.Add(rightSubFndDef);
+                    solidExtrusionDefs.Add(leftSubFndDef);
                     break;
                 case "측면부":
                     break;
