@@ -25,7 +25,7 @@ namespace DHBIMWATER.UI.Views.Modeling
         {
             InitializeComponent();
             DataContext = pumpingStationViewModel;
-            this.MaxHeight = SystemParameters.WorkArea.Height;
+            //this.MaxHeight = SystemParameters.WorkArea.Height;
             //new WindowInteropHelper(this).Owner = revitHandle();
         }
 
