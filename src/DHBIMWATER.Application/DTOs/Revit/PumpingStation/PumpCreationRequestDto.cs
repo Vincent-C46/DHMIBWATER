@@ -10,7 +10,7 @@ namespace DHBIMWATER.Application.DTOs.Revit.PumpingStation
     (
         PumpDesignConditionDto DesignConditionDto,
         PumpPlanSpecDto PlanSpecDto,
-        PumpProfileSpecDto ProfileSpecDto,
-        PumpTypeSelectionDto TypeSelectionDto
+        PumpProfileSpecDto ProfileSpecDto
+        //PumpTypeSelectionDto TypeSelectionDto
     );
 }
