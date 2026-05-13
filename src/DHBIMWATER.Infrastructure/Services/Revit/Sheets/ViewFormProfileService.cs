@@ -28,6 +28,7 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             // "없음"이면 저장만 하고 끝
             if (string.IsNullOrWhiteSpace(form) || form == "없음")
             {
+                ViewCategoryService.SetViewCategory(view, "출력");
                 tx.Commit();
                 return;
             }
@@ -40,6 +41,7 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             var keep = GetKeepCategories(form);
             if (keep.Count == 0)
             {
+                ViewCategoryService.SetViewCategory(view, "출력");
                 tx.Commit();
                 return;
             }
@@ -112,6 +114,7 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             {
                 view.HideElements(hideIds);
             }
+            ViewCategoryService.SetViewCategory(view, "출력");
             tx.Commit();
         }
 
