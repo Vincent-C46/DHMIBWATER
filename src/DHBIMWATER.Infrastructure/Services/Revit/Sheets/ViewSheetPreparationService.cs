@@ -37,8 +37,8 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
                     ? sourceView.Name + suffix
                     : targetViewName;
 
-                duplicatedView.Name = GetUniqueViewName(desiredName);
-                SetViewCategory(duplicatedView, "SHT");
+                duplicatedView.Name = GetUniqueViewName(SanitizeViewName(desiredName));
+                ViewCategoryService.SetViewCategory(duplicatedView, "출력");
 
                 tx.Commit();
             }
@@ -63,8 +63,8 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
                 ? sourceView.Name + suffix
                 : targetViewName;
 
-            duplicatedView.Name = GetUniqueViewName(desiredName);
-            SetViewCategory(duplicatedView, "SHT");
+            duplicatedView.Name = GetUniqueViewName(SanitizeViewName(desiredName));
+            ViewCategoryService.SetViewCategory(duplicatedView, "출력");
 
             return duplicatedView;
         }
@@ -87,14 +87,21 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             return $"{baseName}({index})";
         }
 
-        private void SetViewCategory(View view, string value)
-        {
-            var p = view.LookupParameter("뷰 카테고리");
-            if (p == null)
-                p = view.LookupParameter("View Category");
+        private static string SanitizedFallbackName => "Sheet View";
 
-            if (p != null && !p.IsReadOnly)
-                p.Set(value);
+        private static string SanitizeViewName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return SanitizedFallbackName;
+
+            var invalidChars = new[] { '\\', ':', '{', '}', '[', ']', '|', ';', '<', '>', '?', '`', '~' };
+            var sanitized = name;
+
+            foreach (var invalidChar in invalidChars)
+                sanitized = sanitized.Replace(invalidChar, '_');
+
+            sanitized = sanitized.Trim();
+            return string.IsNullOrWhiteSpace(sanitized) ? SanitizedFallbackName : sanitized;
         }
 
         public void HideCopiedSectionMarkersOnReservoirPlanViews()

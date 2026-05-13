@@ -9,8 +9,5 @@
         public string TitleBlockName { get; set; }
         public string VisualStyle { get; set; }
         public string ViewTitleOnSheet { get; set; }
-        public double TitleOffsetX { get; set; }
-        public double TitleOffsetY { get; set; }
-        public double TitleLineLength { get; set; }
     }
 }

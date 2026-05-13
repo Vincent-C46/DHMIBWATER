@@ -23,6 +23,7 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
         private readonly ViewRemoveService _viewRemove;
         private readonly ViewScaleService _viewScale;
         private readonly ViewVisualStyleService _viewVisualStyle;
+        private readonly ViewCategoryService _viewCategory;
         private readonly DimensionService _dimension;
         private readonly DimensionSelectionService _dimSelection;
         private readonly ViewTitleOnSheetService _viewTitleOnSheet;
@@ -52,6 +53,7 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             _viewRemove = new ViewRemoveService(doc);
             _viewScale = new ViewScaleService(doc);
             _viewVisualStyle = new ViewVisualStyleService(doc);
+            _viewCategory = new ViewCategoryService(doc);
             _dimension = new DimensionService(doc);
             _dimSelection = new DimensionSelectionService(uidoc);
             _viewTitleOnSheet = new ViewTitleOnSheetService(doc);
@@ -115,6 +117,10 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
         {
             _viewTitleOnSheet.Update(viewId, titleOnSheet);
         }
+        public void UpdateViewCategory(string viewId, string category)
+        {
+            _viewCategory.Update(viewId, category);
+        }
         public void ApplyViewFormProfile(string viewId, string form)
         {
             _viewFormProfile.Apply(viewId, form);
@@ -151,6 +157,10 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
         {
             _viewportMove.MoveBySheetRatio(sheetId, viewId, uRatio, vRatio);
         }
+        public void ArrangeViewportsByDirection(string sheetId, string directionType)
+        {
+            _viewportMove.ArrangeByDirection(sheetId, directionType);
+        }
         public void SetViewportType(string sheetId, string viewId, string viewportTypeName)
         {
             _viewportType.SetViewportType(sheetId, viewId, viewportTypeName);
@@ -178,6 +188,10 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
         public void UpdateViewportTitleLayout(string sheetId, string viewId, double offsetX, double offsetY, double lineLength)
         {
             _viewportMove.UpdateTitleLayout(sheetId, viewId, offsetX, offsetY, lineLength);
+        }
+        public void UpdateReservoirViewportTitleLayout(string sheetId, string viewId, bool alignRightBottom)
+        {
+            _viewportMove.UpdateReservoirTitleLayout(sheetId, viewId, alignRightBottom);
         }
         public void ApplyTagsToSelectedOnCurrentView(IList<string> elementIds)
         {

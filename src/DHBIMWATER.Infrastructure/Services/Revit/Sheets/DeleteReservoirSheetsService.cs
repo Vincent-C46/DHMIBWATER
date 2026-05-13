@@ -6,6 +6,7 @@ using Autodesk.Revit.DB;
 namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
 {
     public class DeleteReservoirSheetsService
+
     {
         private readonly Document _doc;
 
@@ -62,7 +63,7 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
                 .OfClass(typeof(View))
                 .Cast<View>()
                 .Where(v => !v.IsTemplate)
-                .Where(v => HasSheetCategory(v, "SHT"))
+                .Where(v => ViewCategoryService.HasViewCategory(v, "출력"))
                 .Where(v => activeViewId == null || v.Id != activeViewId)
                 .Select(v => v.Id)
                 .ToList();
@@ -86,18 +87,6 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             }
         }
 
-        private bool HasSheetCategory(View view, string expected)
-        {
-            var p = view.LookupParameter("뷰 카테고리");
-            if (p == null)
-                p = view.LookupParameter("View Category");
-
-            if (p == null || !p.HasValue)
-                return false;
-
-            var value = p.AsString();
-            return string.Equals(value, expected, StringComparison.OrdinalIgnoreCase);
-        }
         private static HashSet<string> BuildReservoirSheetNumbers(string startSheetNumber, int totalSheetCount)
         {
             var numbers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

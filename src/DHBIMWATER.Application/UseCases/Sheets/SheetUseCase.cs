@@ -104,6 +104,10 @@ namespace DHBIMWATER.Application.UseCases.Sheets
         {
             _gateway.UpdateViewTitleOnSheet(viewId, titleOnSheet);
         }
+        public void UpdateViewCategory(string viewId, string category)
+        {
+            _gateway.UpdateViewCategory(viewId, category);
+        }
         public void ApplyViewFormProfile(string viewId, string form)
         {
             _gateway.ApplyViewFormProfile(viewId, form);
@@ -141,6 +145,10 @@ namespace DHBIMWATER.Application.UseCases.Sheets
         {
             _gateway.MoveViewportBySheetRatio(sheetId, viewId, uRatio, vRatio);
         }
+        public void ArrangeViewportsByDirection(string sheetId, string directionType)
+        {
+            _gateway.ArrangeViewportsByDirection(sheetId, directionType);
+        }
         public void SetViewportType(string sheetId, string viewId, string viewportTypeName)
         {
             _gateway.SetViewportType(sheetId, viewId, viewportTypeName);
@@ -168,6 +176,10 @@ namespace DHBIMWATER.Application.UseCases.Sheets
         public void UpdateViewportTitleLayout(string sheetId, string viewId, double offsetX, double offsetY, double lineLength)
         {
             _gateway.UpdateViewportTitleLayout(sheetId, viewId, offsetX, offsetY, lineLength);
+        }
+        public void UpdateReservoirViewportTitleLayout(string sheetId, string viewId, bool alignRightBottom)
+        {
+            _gateway.UpdateReservoirViewportTitleLayout(sheetId, viewId, alignRightBottom);
         }
         public void ApplyTagsToSelectedOnCurrentView()
         {
