@@ -1,6 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <None Remove="DHBIMWATER.Revit.csproj~RF33fc0b.TMP" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Costura.Fody" Version="6.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -32,8 +36,16 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <IsPublishable>False</IsPublishable>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <IsPublishable>False</IsPublishable>
+  </PropertyGroup>
+
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="REM Copy to BuildOutput folder&#xD;&#xA;if not exist &quot;C:\BuildOutput\DHBIMWATER\&quot; mkdir &quot;C:\BuildOutput\DHBIMWATER\&quot;&#xD;&#xA;xcopy /Y &quot;$(TargetDir)DHBIMWATER.Revit.dll&quot; &quot;C:\BuildOutput\DHBIMWATER\&quot; /I&#xD;&#xA;xcopy /Y &quot;$(ProjectDir)DHBIMWATER.addin&quot; &quot;C:\BuildOutput\DHBIMWATER\&quot; /I" />
+    <Exec Command="set &quot;AddinsRoot=$(AppData)\Autodesk\REVIT\Addins&quot;&#xD;&#xA;&#xD;&#xA;if exist &quot;%25AddinsRoot%25\2025&quot; (&#xA;    copy &quot;$(ProjectDir)*.addin&quot; &quot;%25AddinsRoot%25\2025&quot;&#xA;    if not exist &quot;%25AddinsRoot%25\2025\DHBIMWATER&quot; mkdir &quot;%25AddinsRoot%25\2025\DHBIMWATER&quot;&#xA;    copy &quot;$(ProjectDir)$(OutputPath)DHBIMWATER.Revit.dll&quot; &quot;%25AddinsRoot%25\2025\DHBIMWATER&quot;&#xA;)&#xA;if exist &quot;%25AddinsRoot%25\2026&quot; (&#xA;    copy &quot;$(ProjectDir)*.addin&quot; &quot;%25AddinsRoot%25\2026&quot;&#xA;    if not exist &quot;%25AddinsRoot%25\2026\DHBIMWATER&quot; mkdir &quot;%25AddinsRoot%25\2026\DHBIMWATER&quot;&#xA;    copy &quot;$(ProjectDir)$(OutputPath)DHBIMWATER.Revit.dll&quot; &quot;%25AddinsRoot%25\2026\DHBIMWATER&quot;&#xA;)" />
   </Target>
 
 </Project>

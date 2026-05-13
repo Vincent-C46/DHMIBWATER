@@ -8,12 +8,14 @@ namespace DHBIMWATER.Application.DTOs.Revit.PumpingStation
 {
     public record PumpPlanSpecDto
     (
-        double B2,
+
         double B8,
-        bool IsRectangularOpening,
-        double B5,
+
         double B9,
         double L5,
-        double B10
+        double B10,
+
+        double T5,
+        double T6
     );
 }
