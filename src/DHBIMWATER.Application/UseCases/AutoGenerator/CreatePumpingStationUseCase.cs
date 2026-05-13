@@ -12,7 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
-namespace DHBIMWATER.Application.UseCases
+namespace DHBIMWATER.Application.UseCases.AutoGenerator
 {
     public class CreatePumpingStationUseCase
     {
@@ -129,6 +129,10 @@ namespace DHBIMWATER.Application.UseCases
 
                     #region 6. 결합
                     // 보 작성 메서드 내부에서 상부 슬래브와 결합 (임시 조치)
+                    #endregion
+
+                    #region 7. 뷰 작성
+
                     #endregion
 
                     // 트랜잭션 커밋

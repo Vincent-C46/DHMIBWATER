@@ -1,4 +1,5 @@
 using DHBIMWATER.Application.UseCases;
+using DHBIMWATER.Application.UseCases.AutoGenerator;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DHBIMWATER.Application.DependencyInjection;

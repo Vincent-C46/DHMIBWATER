@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DHBIMWATER.Application.UseCases
+namespace DHBIMWATER.Application.UseCases.AutoGenerator
 {
     public class CreateReservoirUseCase
     {

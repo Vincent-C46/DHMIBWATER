@@ -1,7 +1,7 @@
 ﻿using DHBIMWATER.Application.DTOs.Revit.PumpingStation;
 using DHBIMWATER.Application.DTOs.Revit.Reservoir;
 using DHBIMWATER.Application.Interfaces;
-using DHBIMWATER.Application.UseCases;
+using DHBIMWATER.Application.UseCases.AutoGenerator;
 using DHBIMWATER.UI.Base;
 using DHBIMWATER.UI.Commands;
 using System.Collections.ObjectModel;
