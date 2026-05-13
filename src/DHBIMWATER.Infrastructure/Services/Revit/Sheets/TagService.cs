@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Autodesk.Revit.DB;
@@ -9,6 +9,8 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
     {
         private const string DhElementCodeParameterName = "DH_ElementCode";
         private const string ElementCodeParameterName = "ElementCode";
+        private const int MaxTagsPerRepeatedCode = 3;
+        private const double MinTagSpacingRatio = 0.28;
 
         private readonly Document _doc;
 
@@ -81,8 +83,9 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             var elements = ids
                 .Select(id => _doc.GetElement(id))
                 .Where(IsTaggableModelElement)
-                .Select(e => new TagTarget(e, GetElementCode(e)))
+                .Select(e => new TagTarget(e, GetElementCode(e), GetTagPoint(e, view)))
                 .Where(x => !string.IsNullOrWhiteSpace(x.ElementCode))
+                .Where(x => x.Point != null)
                 .ToList();
 
             if (elements.Count == 0)
@@ -93,27 +96,39 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
                 tx.Start();
 
                 RemoveDuplicateTagsOnView(view);
-                var existingTagKeys = BuildExistingTagKeys(view);
+                var existingTagCounts = BuildExistingTagCounts(view);
+                var existingTaggedIdsByKey = BuildExistingTaggedIdsByKey(view);
 
                 foreach (var target in SelectMultiCategoryTagTargets(elements))
                 {
                     var key = BuildMultiCategoryTagKey(target.ElementCode);
-                    if (existingTagKeys.Contains(key))
+                    if (GetTagCount(existingTagCounts, key) >= GetMaxTagCountForKey(key))
+                        continue;
+
+                    if (IsElementAlreadyTagged(existingTaggedIdsByKey, key, target.Element.Id))
                         continue;
 
                     if (TryCreateTag(view, target.Element, TagMode.TM_ADDBY_MULTICATEGORY, false))
-                        existingTagKeys.Add(key);
+                    {
+                        IncrementTagCount(existingTagCounts, key);
+                        AddTaggedElement(existingTaggedIdsByKey, key, target.Element.Id);
+                    }
                 }
 
                 foreach (var target in SelectCategoryTagTargets(elements))
                 {
                     var key = BuildCategoryTagKey(target.Element, target.ElementCode);
-                    if (existingTagKeys.Contains(key))
+                    if (GetTagCount(existingTagCounts, key) >= GetMaxTagCountForKey(key))
                         continue;
 
-                    var hasLeader = ShouldUseLeader(target.Element);
-                    if (TryCreateTag(view, target.Element, TagMode.TM_ADDBY_CATEGORY, hasLeader))
-                        existingTagKeys.Add(key);
+                    if (IsElementAlreadyTagged(existingTaggedIdsByKey, key, target.Element.Id))
+                        continue;
+
+                    if (TryCreateTag(view, target.Element, TagMode.TM_ADDBY_CATEGORY, ShouldUseLeader(target.Element)))
+                    {
+                        IncrementTagCount(existingTagCounts, key);
+                        AddTaggedElement(existingTaggedIdsByKey, key, target.Element.Id);
+                    }
                 }
 
                 RemoveDuplicateTagsOnView(view);
@@ -163,14 +178,64 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
         {
             return targets
                 .GroupBy(x => x.ElementCode, StringComparer.OrdinalIgnoreCase)
-                .Select(g => g.First());
+                .Select(g => SelectSpatialRepresentatives(g).First());
         }
 
         private static IEnumerable<TagTarget> SelectCategoryTagTargets(IList<TagTarget> targets)
         {
             return targets
                 .GroupBy(x => BuildCategoryTagKey(x.Element, x.ElementCode), StringComparer.OrdinalIgnoreCase)
-                .Select(g => g.First());
+                .SelectMany(SelectSpatialRepresentatives);
+        }
+
+        private static IEnumerable<TagTarget> SelectSpatialRepresentatives(IEnumerable<TagTarget> group)
+        {
+            var targets = group
+                .Where(x => x.Point != null)
+                .GroupBy(x => x.Element.Id.Value)
+                .Select(g => g.First())
+                .ToList();
+
+            if (targets.Count <= 1)
+                return targets;
+
+            var maxCount = Math.Min(MaxTagsPerRepeatedCode, targets.Count);
+            var center = new XYZ(
+                targets.Average(x => x.Point.X),
+                targets.Average(x => x.Point.Y),
+                targets.Average(x => x.Point.Z));
+
+            var minX = targets.Min(x => x.Point.X);
+            var maxX = targets.Max(x => x.Point.X);
+            var minY = targets.Min(x => x.Point.Y);
+            var maxY = targets.Max(x => x.Point.Y);
+            var extent = Math.Sqrt(Math.Pow(maxX - minX, 2) + Math.Pow(maxY - minY, 2));
+            var minSpacing = extent * MinTagSpacingRatio;
+
+            var selected = new List<TagTarget>
+            {
+                targets.OrderBy(x => x.Point.DistanceTo(center)).First()
+            };
+
+            while (selected.Count < maxCount)
+            {
+                var next = targets
+                    .Where(x => selected.All(s => s.Element.Id != x.Element.Id))
+                    .Select(x => new
+                    {
+                        Target = x,
+                        Distance = selected.Min(s => s.Point.DistanceTo(x.Point))
+                    })
+                    .OrderByDescending(x => x.Distance)
+                    .FirstOrDefault();
+
+                if (next == null || next.Distance < minSpacing)
+                    break;
+
+                selected.Add(next.Target);
+            }
+
+            return selected;
         }
 
         private bool TryCreateTag(View view, Element element, TagMode tagMode, bool hasLeader)
@@ -280,7 +345,6 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
                 BuiltInCategory.OST_StructuralFraming => new[] { "DH_구조 프레임 태그" },
                 BuiltInCategory.OST_Doors => new[] { "DH_문 태그" },
                 BuiltInCategory.OST_Windows => new[] { "DH_창 태그" },
-                BuiltInCategory.OST_Stairs => new[] { "DH_계단 태그" },
                 BuiltInCategory.OST_PipeCurves => new[] { "DH_배관 태그" },
                 _ => Array.Empty<string>()
             };
@@ -294,23 +358,84 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             return tagType.Name ?? string.Empty;
         }
 
-        private HashSet<string> BuildExistingTagKeys(View view)
+        private Dictionary<string, int> BuildExistingTagCounts(View view)
         {
-            var keys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var counts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var tag in GetTagsOnView(view))
             {
                 var key = TryBuildTagKey(tag);
                 if (!string.IsNullOrWhiteSpace(key))
-                    keys.Add(key);
+                    IncrementTagCount(counts, key);
             }
 
-            return keys;
+            return counts;
+        }
+
+        private Dictionary<string, HashSet<long>> BuildExistingTaggedIdsByKey(View view)
+        {
+            var taggedIdsByKey = new Dictionary<string, HashSet<long>>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var tag in GetTagsOnView(view))
+            {
+                var key = TryBuildTagKey(tag);
+                if (string.IsNullOrWhiteSpace(key))
+                    continue;
+
+                foreach (var taggedId in GetTaggedElementIds(tag))
+                    AddTaggedElement(taggedIdsByKey, key, taggedId);
+            }
+
+            return taggedIdsByKey;
+        }
+
+        private static int GetTagCount(Dictionary<string, int> counts, string key)
+        {
+            return counts.TryGetValue(key, out var count) ? count : 0;
+        }
+
+        private static int GetMaxTagCountForKey(string key)
+        {
+            return IsMultiCategoryTagKey(key) ? 1 : MaxTagsPerRepeatedCode;
+        }
+
+        private static bool IsMultiCategoryTagKey(string key)
+        {
+            return key.StartsWith("MULTI|", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static void IncrementTagCount(Dictionary<string, int> counts, string key)
+        {
+            counts[key] = GetTagCount(counts, key) + 1;
+        }
+
+        private static bool IsElementAlreadyTagged(
+            Dictionary<string, HashSet<long>> taggedIdsByKey,
+            string key,
+            ElementId elementId)
+        {
+            return taggedIdsByKey.TryGetValue(key, out var taggedIds) &&
+                   taggedIds.Contains(elementId.Value);
+        }
+
+        private static void AddTaggedElement(
+            Dictionary<string, HashSet<long>> taggedIdsByKey,
+            string key,
+            ElementId elementId)
+        {
+            if (!taggedIdsByKey.TryGetValue(key, out var taggedIds))
+            {
+                taggedIds = new HashSet<long>();
+                taggedIdsByKey[key] = taggedIds;
+            }
+
+            taggedIds.Add(elementId.Value);
         }
 
         private void RemoveDuplicateTagsOnView(View view)
         {
-            var firstTagByKey = new Dictionary<string, ElementId>(StringComparer.OrdinalIgnoreCase);
+            var keptCountByKey = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            var taggedIdsByKey = new Dictionary<string, HashSet<long>>(StringComparer.OrdinalIgnoreCase);
             var duplicateIds = new List<ElementId>();
 
             foreach (var tag in GetTagsOnView(view))
@@ -319,13 +444,18 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
                 if (string.IsNullOrWhiteSpace(key))
                     continue;
 
-                if (firstTagByKey.ContainsKey(key))
+                var taggedElementIds = GetTaggedElementIds(tag).ToList();
+                var hasAlreadyTaggedElement = taggedElementIds.Any(x => IsElementAlreadyTagged(taggedIdsByKey, key, x));
+
+                if (hasAlreadyTaggedElement || GetTagCount(keptCountByKey, key) >= GetMaxTagCountForKey(key))
                 {
                     duplicateIds.Add(tag.Id);
                     continue;
                 }
 
-                firstTagByKey.Add(key, tag.Id);
+                IncrementTagCount(keptCountByKey, key);
+                foreach (var taggedElementId in taggedElementIds)
+                    AddTaggedElement(taggedIdsByKey, key, taggedElementId);
             }
 
             if (duplicateIds.Count > 0)
@@ -338,6 +468,20 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
                 .OfClass(typeof(IndependentTag))
                 .Cast<IndependentTag>()
                 .ToList();
+        }
+
+        private static IEnumerable<ElementId> GetTaggedElementIds(IndependentTag tag)
+        {
+            try
+            {
+                return tag.GetTaggedLocalElementIds()
+                    .Where(x => x != ElementId.InvalidElementId)
+                    .ToList();
+            }
+            catch
+            {
+                return Enumerable.Empty<ElementId>();
+            }
         }
 
         private string TryBuildTagKey(IndependentTag tag)
@@ -418,13 +562,20 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
         private class TagTarget
         {
             public TagTarget(Element element, string elementCode)
+                : this(element, elementCode, null)
+            {
+            }
+
+            public TagTarget(Element element, string elementCode, XYZ point)
             {
                 Element = element;
                 ElementCode = elementCode;
+                Point = point;
             }
 
             public Element Element { get; }
             public string ElementCode { get; }
+            public XYZ Point { get; }
         }
     }
 }
