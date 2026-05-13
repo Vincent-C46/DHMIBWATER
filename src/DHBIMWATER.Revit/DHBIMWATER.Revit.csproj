@@ -1,6 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <None Remove="DHBIMWATER.Revit.csproj~RF33fc0b.TMP" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Costura.Fody" Version="6.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -32,8 +36,16 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <IsPublishable>False</IsPublishable>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <IsPublishable>False</IsPublishable>
+  </PropertyGroup>
+
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="set &quot;DllPath1=$(AppData)\Autodesk\REVIT\Addins\2025\DHBIMWATER&quot;&#xD;&#xA;set &quot;DllPath2=$(AppData)\Autodesk\REVIT\Addins\2026\DHBIMWATER&quot;&#xD;&#xA;if not exist &quot;%25DllPath1%25&quot; mkdir &quot;%25DllPath1%25&quot;&#xD;&#xA;if not exist &quot;%25DllPath2%25&quot; mkdir &quot;%25DllPath2%25&quot;&#xD;&#xA;&#xD;&#xA;if exist &quot;$(AppData)\Autodesk\REVIT\Addins\2025&quot; copy &quot;$(ProjectDir)*.addin&quot; &quot;$(AppData)\Autodesk\REVIT\Addins\2025\DHBIMWATER&quot;&#xD;&#xA;if exist &quot;$(AppData)\Autodesk\REVIT\Addins\2025&quot; copy &quot;$(ProjectDir)$(OutputPath)DHBIMWATER.Revit.dll&quot; &quot;$(AppData)\Autodesk\REVIT\Addins\2025\DHBIMWATER&quot;&#xD;&#xA;if exist &quot;$(AppData)\Autodesk\REVIT\Addins\2026&quot; copy &quot;$(ProjectDir)*.addin&quot; &quot;$(AppData)\Autodesk\REVIT\Addins\2026\DHBIMWATER&quot;&#xD;&#xA;if exist &quot;$(AppData)\Autodesk\REVIT\Addins\2026&quot; copy &quot;$(ProjectDir)$(OutputPath)DHBIMWATER.Revit.dll&quot; &quot;$(AppData)\Autodesk\REVIT\Addins\2026\DHBIMWATER&quot;" />
+    <Exec Command="set &quot;AddinsRoot=$(AppData)\Autodesk\REVIT\Addins&quot;&#xD;&#xA;&#xD;&#xA;if exist &quot;%25AddinsRoot%25\2025&quot; (&#xA;    copy &quot;$(ProjectDir)*.addin&quot; &quot;%25AddinsRoot%25\2025&quot;&#xA;    if not exist &quot;%25AddinsRoot%25\2025\DHBIMWATER&quot; mkdir &quot;%25AddinsRoot%25\2025\DHBIMWATER&quot;&#xA;    copy &quot;$(ProjectDir)$(OutputPath)DHBIMWATER.Revit.dll&quot; &quot;%25AddinsRoot%25\2025\DHBIMWATER&quot;&#xA;)&#xA;if exist &quot;%25AddinsRoot%25\2026&quot; (&#xA;    copy &quot;$(ProjectDir)*.addin&quot; &quot;%25AddinsRoot%25\2026&quot;&#xA;    if not exist &quot;%25AddinsRoot%25\2026\DHBIMWATER&quot; mkdir &quot;%25AddinsRoot%25\2026\DHBIMWATER&quot;&#xA;    copy &quot;$(ProjectDir)$(OutputPath)DHBIMWATER.Revit.dll&quot; &quot;%25AddinsRoot%25\2026\DHBIMWATER&quot;&#xA;)" />
   </Target>
 
 </Project>
