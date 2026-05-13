@@ -25,9 +25,11 @@ namespace DHBIMWATER.UI.Views.Modeling
         {
             InitializeComponent();
             DataContext = pumpingStationViewModel;
+            this.MaxHeight = SystemParameters.WorkArea.Height;
             //new WindowInteropHelper(this).Owner = revitHandle();
         }
 
+        /*
         private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (e.Source is not TabControl) return;
@@ -36,5 +38,6 @@ namespace DHBIMWATER.UI.Views.Modeling
             Width = double.NaN;
             SizeToContent = SizeToContent.Width;
         }
+        */
     }
 }
