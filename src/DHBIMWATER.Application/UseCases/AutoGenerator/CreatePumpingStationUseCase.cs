@@ -27,6 +27,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
         private readonly IOpeningCommandRepo _openingCmdRepo;
         private readonly IDialogService _dialogService;
         private readonly ISharedParameterRepository _sharedParameterRepo;
+        private readonly IViewCommandRepo _viewCommandRepo;
         #endregion
 
         #region Properties
@@ -43,7 +44,8 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                                            IDirectShapeCommandRepo dsCmdRepo,
                                            IOpeningCommandRepo openingCmdRepo,
                                            IDialogService dialogService,
-                                           ISharedParameterRepository sharedParameterRepo)
+                                           ISharedParameterRepository sharedParameterRepo,
+                                           IViewCommandRepo viewCommandRepo)
         {
             _levelQueryRepo = levelQueryRepo;
             _levelCmdRepo = levelCmdRepo;
@@ -54,6 +56,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
             _dialogService = dialogService;
             _openingCmdRepo = openingCmdRepo;
             _sharedParameterRepo = sharedParameterRepo;
+            _viewCommandRepo = viewCommandRepo;
             _tx = tx;
         }
         #endregion
@@ -75,20 +78,29 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
 
                     #region 1. 레벨 생성
                     var existingLevels = _levelQueryRepo.GetExistingLevelNames();
-                    var existingViewNames = _levelQueryRepo.GetExistingPlanNames();
+                    var existingEngineeringPlanNames = _levelQueryRepo.GetExistingPlanNames();
 
+                    // Level 생성
                     foreach (var lvl in PumpingStationGeometryCalculator.CalculateLevels(dto))
                     {
                         var existLevel = existingLevels.FirstOrDefault(s => s.Contains(lvl.Name));
+                        int levelId;
                         if (existLevel != null)
                         {
-                            _levelCmdRepo.UpdateLevel(existLevel, lvl.Elevation);
+                            levelId = _levelCmdRepo.UpdateLevel(existLevel, lvl.Elevation);
                         }
                         else
                         {
-                            _levelCmdRepo.CreateLevel(lvl.Name, lvl.Elevation);
+                            levelId = _levelCmdRepo.CreateLevel(lvl.Name, lvl.Elevation);
+                        }
+
+                        // 구조도 작성
+                        if (!existingEngineeringPlanNames.Contains(lvl.Name))
+                        {
+                            _levelCmdRepo.CreatePlan(levelId);
                         }
                     }
+
                     #endregion
 
                     #region 2. 슬래브 생성
@@ -131,8 +143,23 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                     // 보 작성 메서드 내부에서 상부 슬래브와 결합 (임시 조치)
                     #endregion
 
-                    #region 7. 뷰 작성
+                    #region 7. 뷰 작성                    
+                    var existingSectionViewNames  = _levelQueryRepo.GetExistingSectionNames();
+                    var sectionViewDefs = PumpingStationGeometryCalculator.CalculateSectionViews(dto);
 
+                    foreach (var viewDef in sectionViewDefs)
+                    {
+        
+                            try
+                            {
+                                _viewCommandRepo.CreateSectionView(viewDef);
+                            }
+                            catch (Exception ex)
+                            {
+                                _dialogService.Warn("Error", $"Failed to create section view '{viewDef.Name}': {ex.Message}");
+                            }
+                        
+                    }
                     #endregion
 
                     // 트랜잭션 커밋

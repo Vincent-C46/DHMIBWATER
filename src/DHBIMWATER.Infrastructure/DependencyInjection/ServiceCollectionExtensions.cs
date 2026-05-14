@@ -31,6 +31,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ISlabCommandRepo, RevitSlabCommandRepo>();
         services.AddTransient<IOpeningCommandRepo, RevitOpeningCommandRepo>();
         services.AddTransient<IDirectShapeCommandRepo, RevitDirectShapeCommandRepo>();
+        services.AddTransient<IViewCommandRepo, RevitViewCommandRepo>();
         #endregion
 
         services.AddTransient<IExcelReader, RevitExcelPumpReader>();
@@ -64,6 +65,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ISlabCommandRepo, MockSlabCommandRepo>();
         services.AddTransient<IOpeningCommandRepo, MockOpeningCommandRepo>();
         services.AddTransient<IDirectShapeCommandRepo, MockDirectShapeCommandRepo>();
+        services.AddTransient<IViewCommandRepo, MockViewCommandRepo>();
         #endregion
 
         services.AddTransient<IExcelReader, MockExcelPumpReader>();

@@ -222,7 +222,7 @@ namespace DHBIMWATER.Application.Services
             // Linear 벽 계산 로직 추가 예정
             switch (d.SelectedEntranceType)
             {
-                case "우안부": 
+                case "우안부":
                     // 우안부 외벽1 (우안부, Type 무관) - 짧은 외벽 - W1-2
                     var l_outerWallDef1 = new LinearWallDefinition
                     {
@@ -854,8 +854,8 @@ namespace DHBIMWATER.Application.Services
                             Zone = "펌프장",
                             Part = "펌프장 외벽",
                         };
-                        outerWallDef1.StartPoint = new Point3D(totalLength - pr.T4 - pr.B7, -pr.T4 /2 , 0);
-                        outerWallDef1.EndPoint = new Point3D(totalLength - pr.T4 , - pr.T4/2, 0);
+                        outerWallDef1.StartPoint = new Point3D(totalLength - pr.T4 - pr.B7, -pr.T4 / 2, 0);
+                        outerWallDef1.EndPoint = new Point3D(totalLength - pr.T4, -pr.T4 / 2, 0);
                         outerWallDef1.IsFlipped = true;
                         linearWalls.Add(outerWallDef1);
 
@@ -870,8 +870,8 @@ namespace DHBIMWATER.Application.Services
                             Zone = "펌프장",
                             Part = "펌프장 외벽",
                         };
-                        outerWallDef3.StartPoint = new Point3D(totalLength - pr.T4 - pr.B7, totalWidth - pr.T4 - pr.T4/2, 0);
-                        outerWallDef3.EndPoint = new Point3D(totalLength - pr.T4, totalWidth - pr.T4 - pr.T4/2, 0);
+                        outerWallDef3.StartPoint = new Point3D(totalLength - pr.T4 - pr.B7, totalWidth - pr.T4 - pr.T4 / 2, 0);
+                        outerWallDef3.EndPoint = new Point3D(totalLength - pr.T4, totalWidth - pr.T4 - pr.T4 / 2, 0);
                         outerWallDef3.IsFlipped = true;
                         linearWalls.Add(outerWallDef3);
 
@@ -1723,7 +1723,193 @@ namespace DHBIMWATER.Application.Services
                 openings.Add(wallOpening);
             }
             return openings;
+        }
+        public static IReadOnlyList<SectionViewDefinition> CalculateSectionViews(PumpCreationRequestDto dto)
+        {
+            var d = dto.DesignConditionDto;
+            var pr = dto.ProfileSpecDto;
+            var pl = dto.PlanSpecDto;
+            var totalLength = pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
+            var totalWidth = pr.T4 * 2 + (pl.B8 * d.N) + (pl.T5 * (d.N - 1));
 
+            var sectionViewDefs = new List<SectionViewDefinition>();
+
+            var offset = 500; // 여유치 (mm)
+
+            sectionViewDefs.Add(new SectionViewDefinition
+            {
+                Name = "A-A",
+                Min = new Point3D(-offset, pl.B8 / 2, d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
+                Max = new Point3D(totalLength + pl.B10 + offset, pl.B8 / 2 + offset, d.HWL * 1000 + pr.H3 + pr.T1 + offset),
+
+                BasisX = d.SelectedEntranceType == "좌안부" ? new Vector3D(-1, 0, 0) : new Vector3D(1, 0, 0),
+                BasisZ = d.SelectedEntranceType == "좌안부" ? new Vector3D(0, -1, 0) : new Vector3D(0, 1, 0),
+                //Flip = true
+            });
+
+            sectionViewDefs.Add(new SectionViewDefinition
+            {
+                Name = "B-B",
+                Min = new Point3D(-offset, pl.B8 - 100, d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
+                Max = new Point3D(totalLength + pl.B10 + offset, pl.B8 + pl.T5 + 100, d.HWL * 1000 + pr.H3 + pr.T1 + offset),
+
+                BasisX = d.SelectedEntranceType == "좌안부" ? new Vector3D(-1, 0, 0) : new Vector3D(1, 0, 0),
+                BasisZ = d.SelectedEntranceType == "좌안부" ? new Vector3D(0, -1, 0) : new Vector3D(0, 1, 0),
+                //Flip = true
+            });
+
+            var entranceSectionLength = (pl.B10 + pr.T4) * 2 + pl.L5;
+
+            if (d.SelectedEntranceType == "우안부")
+            {
+                sectionViewDefs.Add(new SectionViewDefinition
+                {
+                    Name = "C-C",
+                    Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - offset, -pl.T5 - pl.B9 - pr.T4 - pl.B10 - offset, d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
+                    Max = new Point3D(totalLength  + offset, -pl.T5 - pl.B9 - pr.T4 - pl.B10 + offset, d.HWL * 1000 + pr.H3 + pr.T1 + offset),
+
+                    BasisX = new Vector3D(1, 0, 0),
+                    BasisZ = new Vector3D(0, 1, 0),
+                    //Flip = true
+                });
+
+                sectionViewDefs.Add(new SectionViewDefinition
+                {
+                    Name = "D-D",
+                    Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - offset, -pl.T5 - pr.T4 - pl.B10 - offset, d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
+                    Max = new Point3D(totalLength  + offset, -pl.T5 - pr.T4 - pl.B10 + offset, d.HWL * 1000 + pr.H3 + pr.T1 + offset),
+
+                    BasisX = new Vector3D(1, 0, 0),
+                    BasisZ = new Vector3D(0, 1, 0),
+                    //Flip = true
+                });
+            }
+
+
+            if (d.SelectedEntranceType == "좌안부")
+            {
+                sectionViewDefs.Add(new SectionViewDefinition
+                {
+                    Name = "C-C",
+                    Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - offset, (totalWidth - pr.T4) - (-pl.T5 - pl.B9 - pr.T4 - pl.B10 - offset), d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
+                    Max = new Point3D(totalLength  + offset, (totalWidth - pr.T4) - (-pl.T5 - pl.B9 - pr.T4 - pl.B10 + offset), d.HWL * 1000 + pr.H3 + pr.T1 + offset),
+
+                    BasisX = new Vector3D(-1, 0, 0),
+                    BasisZ = new Vector3D(0, -1, 0),
+                    //Flip = true
+                });
+
+                sectionViewDefs.Add(new SectionViewDefinition
+                {
+                    Name = "D-D",
+                    Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - offset, (totalWidth - pr.T4) -( -pl.T5 - pr.T4 - pl.B10 - offset), d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
+                    Max = new Point3D(totalLength  + offset, (totalWidth - pr.T4)- (-pl.T5 - pr.T4 - pl.B10 + offset), d.HWL * 1000 + pr.H3 + pr.T1 + offset),
+
+                    BasisX = new Vector3D(-1, 0, 0),
+                    BasisZ = new Vector3D(0, -1, 0),
+                    //Flip = true
+                });
+            }
+
+            sectionViewDefs.Add(new SectionViewDefinition
+            {
+                Name = "F-F",
+                Min = new Point3D(pr.L1 / 2, -(pr.T4 + pl.B10 + offset), d.LWL * 1000 - (pr.H1 + pr.T2 + 100 + offset)),
+                Max = new Point3D(pr.L1 + pr.L2, totalWidth - pr.T4 + pl.B10 + 100 + offset, d.HWL * 1000 + pr.H3 + pr.T1 + offset),
+
+                BasisX = new Vector3D(0, -1, 0),
+                BasisZ = new Vector3D(1, 0, 0),
+                //Flip = true
+            });
+
+            sectionViewDefs.Add(new SectionViewDefinition
+            {
+                Name = "G-G",
+                Min = new Point3D(pr.B1 + pr.B2 - offset, -(pr.T4 + pl.B10 + offset), d.LWL * 1000 - (pr.H1 + pr.T2 + 100 + offset)),
+                Max = new Point3D(pr.B1 + pr.B2 + pr.GB1, totalWidth - pr.T4 + pl.B10 + 100 + offset, d.HWL * 1000 + pr.H3 + pr.T1 + offset),
+
+                BasisX = new Vector3D(0, -1, 0),
+                BasisZ = new Vector3D(1, 0, 0),
+                //Flip = true
+            });
+
+            double minWidth = d.SelectedEntranceType switch
+            {
+                "좌안부" => -(pr.T4 + pl.B10 + offset),
+                "우안부" => -(pl.T5 + pl.B9 + pr.T4 + pl.B10 + offset),
+                "측면부" => -(pr.T4 + pl.B10 + offset),
+                _ => throw new Exception()
+            };
+            double maxWidth = d.SelectedEntranceType switch
+            {
+                "좌안부" => totalWidth - pr.T4 * 2 + pl.T5 + pl.B9 + pr.T4 + pl.B10 + offset,
+                "우안부" => totalWidth - pr.T4 + pl.B10 + 100 + offset,
+                "측면부" => totalWidth - pr.T4 + pl.B10 + 100 + offset,
+                _ => throw new Exception()
+            };
+
+            sectionViewDefs.Add(new SectionViewDefinition
+            {
+                Name = "H-H",
+                Min = new Point3D(totalLength - pr.T4 - pl.L5 + 100,
+                                  minWidth,
+                                  d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
+                Max = new Point3D(totalLength - pr.T4 - pl.L5 + 100 + offset,
+                                  maxWidth,
+                                  d.HWL * 1000 + pr.H3 + pr.T1 + offset),
+
+                BasisX = new Vector3D(0, -1, 0),
+                BasisZ = new Vector3D(1, 0, 0),
+                //Flip = true
+            });
+
+            sectionViewDefs.Add(new SectionViewDefinition
+            {
+                Name = "I-I",
+                Min = new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2,
+                      minWidth,
+                      d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
+                Max = new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2 + 100,
+                      maxWidth,
+                      d.HWL * 1000 + pr.H3 + pr.T1 + offset),
+
+                BasisX = new Vector3D(0, -1, 0),
+                BasisZ = new Vector3D(1, 0, 0),
+                //Flip = true
+            });
+
+            sectionViewDefs.Add(new SectionViewDefinition
+            {
+                Name = "J-J",
+                Min = new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3 - 100,
+                      minWidth,
+                      d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
+                Max = new Point3D(totalLength - pr.T4 - pr.B7,
+                      maxWidth,
+                      d.HWL * 1000 + pr.H3 + pr.T1 + offset),
+
+                BasisX = new Vector3D(0, -1, 0),
+                BasisZ = new Vector3D(1, 0, 0),
+                //Flip = true
+            });
+
+            sectionViewDefs.Add(new SectionViewDefinition
+            {
+                Name = "K-K",
+                Min = new Point3D(totalLength - pr.T4 - offset,
+                                  minWidth,
+                                  d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
+                Max = new Point3D(totalLength + offset,
+                                  maxWidth,
+                                  d.HWL * 1000 + pr.H3 + pr.T1 + offset),
+
+                BasisX = new Vector3D(0, -1, 0),
+                BasisZ = new Vector3D(1, 0, 0),
+                //Flip = true
+            });
+
+
+            return sectionViewDefs;
         }
     }
 }
