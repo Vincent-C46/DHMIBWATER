@@ -789,6 +789,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             NS = (int)Math.Floor((_h4 - _h1) / _hs);
             UpdateThetaDependents();   // L3 재계산
             UpdateH3Calculation();     // H3 재계산
+            UpdateB2Calculation();   // B2 재계산
         }
         private void UpdateH6Dependents()
         {
@@ -852,6 +853,15 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private void UpdateL4Dependents()
         {
             L5 = _b7 + _t3 + _b6 + _b5 / 2 + _l4 - _b10 - _t4;
+        }
+        private void UpdateB2Calculation()
+        {
+            if ((H1 + H2 + H3 + T1) <= 5000)
+                B2 = 3000;
+            else if (5000 < (H1 + H2 + H3 + T1) && (H1 + H2 + H3 + T1) <= 7000)
+                B2 = 3500;
+            else
+                B2 = 4000;
         }
         #endregion
     }

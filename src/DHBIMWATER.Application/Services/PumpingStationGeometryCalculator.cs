@@ -1765,8 +1765,8 @@ namespace DHBIMWATER.Application.Services
                 sectionViewDefs.Add(new SectionViewDefinition
                 {
                     Name = "C-C",
-                    Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - offset, -pl.T5 - pl.B9 - pr.T4 - pl.B10 - offset, d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
-                    Max = new Point3D(totalLength  + offset, -pl.T5 - pl.B9 - pr.T4 - pl.B10 + offset, d.HWL * 1000 + pr.H3 + pr.T1 + offset),
+                    Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - pl.B10 - offset, -pl.T5 - pl.B9 + 100, d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
+                    Max = new Point3D(totalLength + pl.B10 + offset,                     -pl.T5 - pl.B9 + offset, d.HWL * 1000 + pr.H3 + pr.T1 + offset),
 
                     BasisX = new Vector3D(1, 0, 0),
                     BasisZ = new Vector3D(0, 1, 0),
@@ -1776,23 +1776,33 @@ namespace DHBIMWATER.Application.Services
                 sectionViewDefs.Add(new SectionViewDefinition
                 {
                     Name = "D-D",
-                    Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - offset, -pl.T5 - pr.T4 - pl.B10 - offset, d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
-                    Max = new Point3D(totalLength  + offset, -pl.T5 - pr.T4 - pl.B10 + offset, d.HWL * 1000 + pr.H3 + pr.T1 + offset),
+                    Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - pl.B10 - offset, -pl.T5 - offset, d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
+                    Max = new Point3D(totalLength + pl.B10 + offset,                     -pl.T5 + offset, d.HWL * 1000 + pr.H3 + pr.T1 + offset),
 
                     BasisX = new Vector3D(1, 0, 0),
                     BasisZ = new Vector3D(0, 1, 0),
                     //Flip = true
                 });
-            }
 
+                sectionViewDefs.Add(new SectionViewDefinition
+                {
+                    Name = "E-E",
+                    Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - pl.B10 - offset, -pl.T5 - pl.B9 - pr.T4  - pl.B10 - offset, d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
+                    Max = new Point3D(totalLength + pl.B10 + offset,                     + offset, d.HWL * 1000 + pr.H3 / 2),
+
+                    BasisX = new Vector3D(-1, 0, 0),
+                    BasisZ = new Vector3D(0, 0, -1),
+                    //Flip = true
+                });
+            }
 
             if (d.SelectedEntranceType == "좌안부")
             {
                 sectionViewDefs.Add(new SectionViewDefinition
                 {
                     Name = "C-C",
-                    Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - offset, (totalWidth - pr.T4) - (-pl.T5 - pl.B9 - pr.T4 - pl.B10 - offset), d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
-                    Max = new Point3D(totalLength  + offset, (totalWidth - pr.T4) - (-pl.T5 - pl.B9 - pr.T4 - pl.B10 + offset), d.HWL * 1000 + pr.H3 + pr.T1 + offset),
+                    Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - pl.B10 - offset, (totalWidth - pr.T4) - (-pl.T5 - pl.B9 + 100), d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
+                    Max = new Point3D(totalLength + pl.B10 + offset,                     (totalWidth - pr.T4) - (-pl.T5 - pl.B9 + offset), d.HWL * 1000 + pr.H3 + pr.T1 + offset),
 
                     BasisX = new Vector3D(-1, 0, 0),
                     BasisZ = new Vector3D(0, -1, 0),
@@ -1802,11 +1812,22 @@ namespace DHBIMWATER.Application.Services
                 sectionViewDefs.Add(new SectionViewDefinition
                 {
                     Name = "D-D",
-                    Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - offset, (totalWidth - pr.T4) -( -pl.T5 - pr.T4 - pl.B10 - offset), d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
-                    Max = new Point3D(totalLength  + offset, (totalWidth - pr.T4)- (-pl.T5 - pr.T4 - pl.B10 + offset), d.HWL * 1000 + pr.H3 + pr.T1 + offset),
+                    Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - pl.B10 - offset, (totalWidth - pr.T4) - (-pl.T5 - offset), d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
+                    Max = new Point3D(totalLength + pl.B10 + offset,                     (totalWidth - pr.T4) - (-pl.T5 + offset), d.HWL * 1000 + pr.H3 + pr.T1 + offset),
 
                     BasisX = new Vector3D(-1, 0, 0),
                     BasisZ = new Vector3D(0, -1, 0),
+                    //Flip = true
+                });
+
+                sectionViewDefs.Add(new SectionViewDefinition
+                {
+                    Name = "E-E",
+                    Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - pl.B10 - offset, (totalWidth - pr.T4) - (-pl.T5 - pl.B9 - pr.T4 - pl.B10 - offset), d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
+                    Max = new Point3D(totalLength + pl.B10 + offset, (totalWidth - pr.T4) - (offset),                                 d.HWL * 1000 + pr.H3 / 2),
+
+                    BasisX = new Vector3D(-1, 0, 0),
+                    BasisZ = new Vector3D(0, 0, -1),
                     //Flip = true
                 });
             }
@@ -1854,7 +1875,7 @@ namespace DHBIMWATER.Application.Services
                 Min = new Point3D(totalLength - pr.T4 - pl.L5 + 100,
                                   minWidth,
                                   d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
-                Max = new Point3D(totalLength - pr.T4 - pl.L5 + 100 + offset,
+                Max = new Point3D(totalLength - pr.T4 - pl.L5 +  offset,
                                   maxWidth,
                                   d.HWL * 1000 + pr.H3 + pr.T1 + offset),
 
