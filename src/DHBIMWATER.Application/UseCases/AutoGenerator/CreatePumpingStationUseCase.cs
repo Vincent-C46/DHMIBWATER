@@ -28,6 +28,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
         private readonly IDialogService _dialogService;
         private readonly ISharedParameterRepository _sharedParameterRepo;
         private readonly IViewCommandRepo _viewCommandRepo;
+        private readonly IExcelReader _excelReader;
         #endregion
 
         #region Properties
@@ -45,7 +46,8 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                                            IOpeningCommandRepo openingCmdRepo,
                                            IDialogService dialogService,
                                            ISharedParameterRepository sharedParameterRepo,
-                                           IViewCommandRepo viewCommandRepo)
+                                           IViewCommandRepo viewCommandRepo,
+                                           IExcelReader excelReader)
         {
             _levelQueryRepo = levelQueryRepo;
             _levelCmdRepo = levelCmdRepo;
@@ -57,6 +59,8 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
             _openingCmdRepo = openingCmdRepo;
             _sharedParameterRepo = sharedParameterRepo;
             _viewCommandRepo = viewCommandRepo;
+            _excelReader = excelReader;
+
             _tx = tx;
         }
         #endregion
@@ -64,6 +68,15 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
         #region Methods
         public void Execute(PumpCreationRequestDto dto)
         {
+            #region Excel 데이터 가져오기
+            //File.Open();
+            string excelFilePath = @"F:\02_Work\02_Project\06_펌프장\01_Docs\input data 산식.xlsx";
+            var excelDict = _excelReader.Read(excelFilePath);
+
+            _dialogService.Info("Success", $"Sheet 개수: {excelDict.Count}");
+            _dialogService.Info("Success", $"{excelDict["종단제원 입력"][28][13]}");
+            #endregion
+
             using (_tx)
             {
                 try

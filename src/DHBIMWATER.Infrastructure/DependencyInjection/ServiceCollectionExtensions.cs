@@ -1,5 +1,6 @@
 using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Core.Parameters;
+using DHBIMWATER.Infrastructure.Repositories.DB;
 using DHBIMWATER.Infrastructure.Repositories.Mock;
 using DHBIMWATER.Infrastructure.Repositories.Revit;
 using DHBIMWATER.Infrastructure.Services.Mock;
@@ -34,8 +35,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IViewCommandRepo, RevitViewCommandRepo>();
         #endregion
 
-        services.AddTransient<IExcelReader, RevitExcelPumpReader>();
         services.AddTransient<ISharedParameterRepository, RevitSharedParameterRepository>();
+        services.AddTransient<IExcelReader, ExcelReader>();
 
         #region Service 등록
         services.AddTransient<IFileDialogService, RevitFileDialogService>();
@@ -68,8 +69,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IViewCommandRepo, MockViewCommandRepo>();
         #endregion
 
-        services.AddTransient<IExcelReader, MockExcelPumpReader>();
         services.AddTransient<ISharedParameterRepository, MockSharedParameterRepository>();
+        services.AddTransient<IExcelReader, ExcelReader>();
 
         #region Service 등록
         services.AddTransient<IFileDialogService, MockFileDialogService>();

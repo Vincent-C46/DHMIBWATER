@@ -58,14 +58,14 @@
 
                                     <StackPanel Grid.Column="0" Margin="0,0,10,0">
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                                            <TextBlock Text="펌프장 타입" Style="{StaticResource LabelTextBlockStyle}" Width="180" VerticalAlignment="Center"/>
+                                            <TextBlock Text="펌프장 타입" Style="{StaticResource LabelTextBlockStyle}" Width="185" VerticalAlignment="Center"/>
                                             <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" 
                                              Width="100" Margin="10,0"
                                              ItemsSource="{Binding PumpingStaitonTypes}"
                                              SelectedItem="{Binding SelectedPumpingStationType}"/>
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                                            <TextBlock Text="진입부 위치" Style="{StaticResource LabelTextBlockStyle}" Width="180" VerticalAlignment="Center"/>
+                                            <TextBlock Text="진입부 위치" Style="{StaticResource LabelTextBlockStyle}" Width="185" VerticalAlignment="Center"/>
                                             <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" 
                                              Width="100" Margin="10,0,0,5"
                                              ItemsSource="{Binding EntranceTypes}"
@@ -224,21 +224,6 @@
                                                       SelectedItem="{Binding SelectedTheta}"/>
                                         </StackPanel>
 
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                                            <TextBlock Text="T1:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
-                                            <TextBlock Text="상부슬래브 두께" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
-                                            <TextBox Style="{StaticResource ReservoirTextBoxStyle}" 
-                                                         Text="{Binding T1}" Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
-                                            <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="50"/>
-                                        </StackPanel>
-
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                                            <TextBlock Text="T3:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
-                                            <TextBlock Text="중간슬래브 두께" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
-                                            <TextBox Style="{StaticResource ReservoirTextBoxStyle}" 
-                                                         Text="{Binding T3}" Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
-                                            <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="50"/>
-                                        </StackPanel>
                                         <Expander x:Name="DownExpander" Grid.Row="1"
                                                IsExpanded="{Binding IsExpanded}"
                                                ExpandDirection="Down">
@@ -250,7 +235,22 @@
 
                                             <StackPanel>
                                                 <TextBlock Style ="{StaticResource PrimaryTextBlockStyle}" Text="고정값" Margin="10"/>
+                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                                    <TextBlock Text="T1:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="상부슬래브 두께" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                    <TextBox Style="{StaticResource ReservoirTextBoxStyle}" 
+                                                         Text="{Binding T1}" Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
+                                                    <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="50"/>
+                                                </StackPanel>
 
+                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                                    <TextBlock Text="T3:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="중간슬래브 두께" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                    <TextBox Style="{StaticResource ReservoirTextBoxStyle}" 
+                                                         Text="{Binding T3}" Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
+                                                    <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="50"/>
+                                                </StackPanel>
+                                                
                                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                                     <TextBlock Text="B1:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                     <TextBlock Text="제진기 관리공간 폭" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
