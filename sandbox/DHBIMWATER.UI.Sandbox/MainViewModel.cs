@@ -28,7 +28,6 @@ namespace DHBIMWATER.UI.Sandbox
             OpenQuantityViewCommand = new RelayCommand(OpenQuantityView);
         }
 
-
         private void OpenModeling1View(object? obj)
         {
             var view = _serviceProvider.GetRequiredService<Modeling1View>();

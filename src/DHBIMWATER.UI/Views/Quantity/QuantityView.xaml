@@ -41,6 +41,25 @@
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="15" ShadowDepth="2" Color="#DDE4EB" Opacity="0.3"/>
                 </Border.Effect>
+
+                <ScrollViewer>
+                    <StackPanel Orientation="Horizontal">
+                        <DataGrid>
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="카테고리" Binding="{Binding Item}" Width="80"/>
+                                <DataGridTextColumn Header="ElementCode" Binding="{Binding Quantity}" Width="80"/>
+                                <DataGridTextColumn Header="공종" Binding="{Binding Quantity}" Width="80"/>
+                                <DataGridTextColumn Header="규격" Binding="{Binding Quantity}" Width="80"/>
+                                <DataGridTextColumn Header="재료" Binding="{Binding Quantity}" Width="80"/>
+                                <DataGridTextColumn Header="산출식" Binding="{Binding Quantity}" Width="80"/>
+                                <DataGridTextColumn Header="값" Binding="{Binding Quantity}" Width="80"/>
+                                <DataGridTextColumn Header="단위" Binding="{Binding Unit}" Width="80"/>
+                            </DataGrid.Columns>
+                            
+                        </DataGrid>
+                    </StackPanel>
+                </ScrollViewer>
+                
             </Border>
         </Grid>
     </Grid>

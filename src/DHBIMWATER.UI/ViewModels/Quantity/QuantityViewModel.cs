@@ -10,12 +10,15 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
     public class QuantityViewModel : ViewModelBase
     {
         #region Fields
+
         #endregion
 
         #region Properties
+
         #endregion
 
         #region Commands
+
         #endregion
 
         #region Constructor
@@ -25,6 +28,7 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         #endregion
 
         #region Methods
+
         #endregion
     }
 }
