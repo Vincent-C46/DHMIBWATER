@@ -24,7 +24,7 @@ namespace DHBIMWATER.Application.UseCases
         void UpdateViewVisualStyle(string viewId, string visualStyle);
         void ApplyAutoDimensions(string sheetId);
         void ApplyDimensions(string sheetId, DimensionMode mode);
-        void ApplyDimensionsOnCurrentView(DimensionMode mode, string dimensionTypeName);
+        void ApplyDimensionsOnCurrentView(DimensionMode mode, string dimensionTypeName, DimensionSide sides = DimensionSide.All, bool includeOverall = true);
 
         void UpdateViewTitleOnSheet(string viewId, string titleOnSheet);
         void UpdateViewCategory(string viewId, string category);
@@ -47,6 +47,8 @@ namespace DHBIMWATER.Application.UseCases
         void UpdateViewportTitleLayout(string sheetId, string viewId, double offsetX, double offsetY, double lineLength);
         void UpdateReservoirViewportTitleLayout(string sheetId, string viewId, bool alignRightBottom);
         void ApplyTagsToSelectedOnCurrentView();
+        void SaveSheetDirection(string sheetId, string directionType);
+        void HideSectionMarkersOnReservoirSectionViews();
         void HideCopiedSectionMarkersOnReservoirPlanViews();
         void ApplyTagsToAllOnCurrentView();
         void ApplyReservoirTags(string sheetId);

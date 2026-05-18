@@ -199,7 +199,7 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             set.Add(BuiltInCategory.OST_DetailComponents);
 
             return set;
-        }
+        }   
 
         private static HashSet<BuiltInCategory> GetHideAnnotationCategoriesByCategory(string form)
         {
@@ -217,13 +217,13 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
 
             return new HashSet<BuiltInCategory>
             {
-                BuiltInCategory.OST_SectionHeads,
-                BuiltInCategory.OST_Sections,
+                //BuiltInCategory.OST_SectionHeads,
+                //BuiltInCategory.OST_Sections,
                 BuiltInCategory.OST_Elev,
                 BuiltInCategory.OST_ElevationMarks,
                 BuiltInCategory.OST_CLines,
-                BuiltInCategory.OST_Viewers,
-                BuiltInCategory.OST_Views,
+                //BuiltInCategory.OST_Viewers,
+                //BuiltInCategory.OST_Views,
                 BuiltInCategory.OST_Levels,
                 BuiltInCategory.OST_Callouts
             };

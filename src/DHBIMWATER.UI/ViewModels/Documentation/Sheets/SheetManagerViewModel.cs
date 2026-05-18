@@ -24,6 +24,8 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
 
         public ObservableCollection<SheetRow> Sheets { get; } = new();        
         public string RequestedCurrentViewDimensionTypeName { get; private set; }
+        public DimensionSide RequestedCurrentViewDimensionSides { get; private set; }
+        public bool RequestedCurrentViewIncludeOverall { get; private set; }
         public bool RequestedCurrentViewSelectedObjects { get; private set; }
         public bool RequestedCurrentViewSelectedAnnotates { get; private set; }
 
@@ -126,6 +128,14 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
                             ViewType = v.ViewType
                         });
                     }
+                }
+
+                // 이벤트 구독 전에 저장된 방향 복원 (구독 전이라 QueueArrange 미발생)
+                if (!string.IsNullOrWhiteSpace(s.ViewDirName))
+                {
+                    var savedDir = row.ViewDirections.FirstOrDefault(x => x.Type == s.ViewDirName);
+                    if (savedDir != null)
+                        row.SelectedViewDirection = savedDir;
                 }
 
                 row.NameChanged += OnSheetNameChanged;
@@ -442,6 +452,7 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
                             _useCase.UpdateSheetParameters(ResolveSheetId(p.SheetId),
                                 p.DrawingTitle, p.DrawingMember, p.DrawingScale, p.DrawingNumber);
                             _useCase.RecenterViewportToSheetCenter(ResolveSheetId(p.SheetId), placedViewId);
+                            _useCase.UpdateReservoirViewportTitleLayout(ResolveSheetId(p.SheetId), placedViewId, false);
                         }
                         break;
 
@@ -459,6 +470,7 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
                         _useCase.UpdateSheetParameters(ResolveSheetId(p.SheetId),
                             p.DrawingTitle, p.DrawingMember, p.DrawingScale, p.DrawingNumber);
                         _useCase.RecenterViewportToSheetCenter(ResolveSheetId(p.SheetId), p.ViewId);
+                        _useCase.UpdateReservoirViewportTitleLayout(ResolveSheetId(p.SheetId), p.ViewId, false);
                         break;
 
                     case SheetActionType.RemoveView:
@@ -467,6 +479,7 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
 
                     case SheetActionType.ArrangeViews:
                         _useCase.ArrangeViewportsByDirection(ResolveSheetId(p.SheetId), p.ViewDirectionType);
+                        _useCase.SaveSheetDirection(ResolveSheetId(p.SheetId), p.ViewDirectionType);
                         break;
                 }
             }
@@ -523,15 +536,23 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
 
             if (vm.SelectedDimensionMode == DimensionMode.SelectedObjects)
             {
+                var dirVm = new DimensionDirectionViewModel();
+                var dirDlg = new DimensionDirectionView(dirVm);
+                if (dirDlg.ShowDialog() != true)
+                    return;
+
                 RequestedCurrentViewSelectedObjects = true;
                 RequestedCurrentViewDimensionTypeName = vm.SelectedDimensionType.Name;
+                RequestedCurrentViewDimensionSides = dirVm.SelectedSides;
+                RequestedCurrentViewIncludeOverall = dirVm.IsIncludeOverall;
                 DialogResult = false;
                 return;
             }
 
             _useCase.ApplyDimensionsOnCurrentView(
                 vm.SelectedDimensionMode,
-                vm.SelectedDimensionType.Name);
+                vm.SelectedDimensionType.Name,
+                DimensionSide.All);
         }
 
 

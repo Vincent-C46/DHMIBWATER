@@ -1,4 +1,4 @@
-﻿using DHBIMWATER.Application.DTOs.Revit.Sheets;
+using DHBIMWATER.Application.DTOs.Revit.Sheets;
 using DHBIMWATER.Application.UseCases.Sheets;
 using DHBIMWATER.UI.Base;
 using DHBIMWATER.UI.Commands;
@@ -58,7 +58,7 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
 
         public RelayCommand ConfirmCommand { get; }
         public RelayCommand CancelCommand { get; }
-       
+
 
         private bool? _dialogResult;
         public bool? DialogResult
