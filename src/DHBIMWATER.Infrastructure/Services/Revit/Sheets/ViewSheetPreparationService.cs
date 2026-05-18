@@ -104,6 +104,44 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             return string.IsNullOrWhiteSpace(sanitized) ? SanitizedFallbackName : sanitized;
         }
 
+        public void HideSectionMarkersOnReservoirSectionViews()
+        {
+            var targetViews = new FilteredElementCollector(_doc)
+                .OfClass(typeof(View))
+                .Cast<View>()
+                .Where(v =>
+                    !v.IsTemplate &&
+                    v is ViewSection &&
+                    v.Name.Contains("_시트", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (targetViews.Count == 0)
+                return;
+
+            var categoriesToHide = new[]
+            {
+                BuiltInCategory.OST_SectionHeads,
+                BuiltInCategory.OST_Sections,
+                BuiltInCategory.OST_Viewers
+            };
+
+            using var tx = new Transaction(_doc, "Hide Section Markers On Section Views");
+            tx.Start();
+
+            foreach (var view in targetViews)
+            {
+                foreach (var bic in categoriesToHide)
+                {
+                    var cat = Category.GetCategory(_doc, bic);
+                    if (cat == null) continue;
+                    if (!view.CanCategoryBeHidden(cat.Id)) continue;
+                    view.SetCategoryHidden(cat.Id, true);
+                }
+            }
+
+            tx.Commit();
+        }
+
         public void HideCopiedSectionMarkersOnReservoirPlanViews()
         {
             var targetViewNamePrefixes = new[]

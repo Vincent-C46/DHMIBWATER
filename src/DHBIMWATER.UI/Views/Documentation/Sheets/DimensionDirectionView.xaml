@@ -1,0 +1,124 @@
+<Window x:Class="DHBIMWATER.UI.Views.Documentation.Sheets.DimensionDirectionView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:controls="clr-namespace:DHBIMWATER.UI.Controls"
+        xmlns:behaviors="clr-namespace:DHBIMWATER.UI.Behaviors"
+        behaviors:DialogResultBehavior.DialogResult="{Binding DialogResult}"
+        mc:Ignorable="d"
+        Title="DimensionDirection"
+        Height="235" Width="250"
+        WindowStartupLocation="CenterScreen"
+        Background="#F4F7F9"
+        AllowsTransparency="False"
+        WindowStyle="None"
+        FontFamily="Segoe UI, Malgun Gothic">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="0" CornerRadius="15" GlassFrameThickness="1" UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/DHBIMWATER.UI;component/Styles/Generic.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="40"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="45"/>
+        </Grid.RowDefinitions>
+
+        <controls:TitleBar Grid.Row="0"/>
+
+        <!-- 방향 선택 레이아웃 -->
+        <Grid Grid.Row="1" Margin="15,10,15,5">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- 위 -->
+            <CheckBox Grid.Row="0" Grid.Column="1"
+                      Content="위"
+                      IsChecked="{Binding IsTopSelected, Mode=TwoWay}"
+                      HorizontalAlignment="Center"
+                      Margin="0,0,0,6"/>
+
+            <!-- 왼쪽 -->
+            <CheckBox Grid.Row="1" Grid.Column="0"
+                      Content="왼쪽"
+                      IsChecked="{Binding IsLeftSelected, Mode=TwoWay}"
+                      VerticalAlignment="Center"
+                      Margin="0,0,8,0"/>
+
+            <!-- 중앙 뷰 영역 표시 -->
+            <Border Grid.Row="1" Grid.Column="1"
+                    BorderBrush="#AABCD0" BorderThickness="2"
+                    Background="#E8EFF5"
+                    CornerRadius="4"
+                    MinWidth="70" MinHeight="50">
+                <TextBlock Text="VIEW"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           FontSize="11"
+                           Foreground="#7799AA"
+                           FontWeight="SemiBold"/>
+            </Border>
+
+            <!-- 오른쪽 -->
+            <CheckBox Grid.Row="1" Grid.Column="2"
+                      Content="오른쪽"
+                      IsChecked="{Binding IsRightSelected, Mode=TwoWay}"
+                      VerticalAlignment="Center"
+                      Margin="8,0,0,0"/>
+
+            <!-- 아래 -->
+            <CheckBox Grid.Row="2" Grid.Column="1"
+                      Content="아래"
+                      IsChecked="{Binding IsBottomSelected, Mode=TwoWay}"
+                      HorizontalAlignment="Center"
+                      Margin="0,6,0,0"/>
+        </Grid>
+
+        <!-- 전체 치수선 포함 옵션 -->
+        <CheckBox Grid.Row="2"
+                  Content="전체 치수선 포함"
+                  IsChecked="{Binding IsIncludeOverall, Mode=TwoWay}"
+                  HorizontalAlignment="Center"
+                  Margin="0,2,0,6"
+                  FontSize="13"/>
+
+        <!-- 버튼 -->
+        <Grid Grid.Row="3" HorizontalAlignment="Center" Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0" Content="OK"
+                    Width="80" FontSize="15"
+                    Style="{StaticResource PrimaryButtonStyle}"
+                    Command="{Binding ConfirmCommand}"
+                    IsDefault="True"/>
+
+            <Button Grid.Column="1" Content="Cancel"
+                    Width="80" FontSize="15"
+                    Style="{StaticResource PrimaryButtonStyle}"
+                    Command="{Binding CancelCommand}"
+                    Margin="5,0,0,0" IsCancel="True"/>
+        </Grid>
+    </Grid>
+</Window>

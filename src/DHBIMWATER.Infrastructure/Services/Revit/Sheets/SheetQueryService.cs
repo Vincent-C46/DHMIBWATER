@@ -8,10 +8,12 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
     public class SheetQueryService
     {
         private readonly Document _doc;
+        private readonly SheetDirectionStorageService _directionStorage;
 
         public SheetQueryService(Document doc)
         {
             _doc = doc;
+            _directionStorage = new SheetDirectionStorageService(doc);
         }
 
         public IList<SheetInfoDto> GetSheets()
@@ -30,7 +32,7 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
                     Id = s.Id.Value.ToString(),
                     SheetNumber = s.SheetNumber,
                     SheetName = s.Name,
-                    ViewDirName = ""
+                    ViewDirName = _directionStorage.Load(s) ?? ""
                 };
 
                 // ✅ Viewport에 배치된 뷰 추가

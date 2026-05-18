@@ -254,6 +254,7 @@ namespace DHBIMWATER.Application.UseCases.Sheets
                 _sheetUseCase.UpdateViewCategory(placedKeyMapViewId, "출력");
             }
             _sheetUseCase.HideCopiedSectionMarkersOnReservoirPlanViews();
+            _sheetUseCase.HideSectionMarkersOnReservoirSectionViews();
         }
 
         private static bool IsPlanPlacement(WaterReservoirViewPlacementDto placement)

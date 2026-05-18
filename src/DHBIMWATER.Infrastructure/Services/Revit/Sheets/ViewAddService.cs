@@ -50,6 +50,11 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             var centerV = (outline.Min.V + outline.Max.V) * 0.5;
             return new XYZ(centerU, centerV, 0);
         }
+        public void HideSectionMarkersOnReservoirSectionViews()
+        {
+            _prepare.HideSectionMarkersOnReservoirSectionViews();
+        }
+
         public void HideCopiedSectionMarkersOnReservoirPlanViews()
         {
             _prepare.HideCopiedSectionMarkersOnReservoirPlanViews();

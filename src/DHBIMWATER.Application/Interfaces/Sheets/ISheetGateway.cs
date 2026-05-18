@@ -2,6 +2,7 @@
 using DHBIMWATER.Application.DTOs.Revit;
 using DHBIMWATER.Application.DTOs.Revit.Sheet;
 using DHBIMWATER.Application.DTOs.Revit.Sheets;
+using DHBIMWATER.Application.UseCases.Sheets;
 
 
 namespace DHBIMWATER.Application.Interfaces.Sheets
@@ -26,7 +27,7 @@ namespace DHBIMWATER.Application.Interfaces.Sheets
         void ApplyAutoDimensions(string sheetId);
         void ApplyDimensionsToSelected(string sheetId, IList<string> elementIds);
         void ApplyAutoDimensionsOnCurrentView(string dimensionTypeName);
-        void ApplyDimensionsToSelectedOnCurrentView(IList<string> elementIds, string dimensionTypeName);
+        void ApplyDimensionsToSelectedOnCurrentView(IList<string> elementIds, string dimensionTypeName, DimensionSide sides = DimensionSide.All, bool includeOverall = true);
         void UpdateViewTitleOnSheet(string viewId, string titleOnSheet);
         void UpdateViewCategory(string viewId, string category);
         void ApplyViewFormProfile(string viewId, string form);
@@ -47,6 +48,8 @@ namespace DHBIMWATER.Application.Interfaces.Sheets
         void UpdateViewportTitleLayout(string sheetId, string viewId, double offsetX, double offsetY, double lineLength);
         void UpdateReservoirViewportTitleLayout(string sheetId, string viewId, bool alignRightBottom);
         void ApplyTagsToSelectedOnCurrentView(IList<string> elementIds);
+        void SaveSheetDirection(string sheetId, string directionType);
+        void HideSectionMarkersOnReservoirSectionViews();
         void HideCopiedSectionMarkersOnReservoirPlanViews();
         void ApplyTagsToAllOnCurrentView();
         void ApplyReservoirTags(string sheetId);

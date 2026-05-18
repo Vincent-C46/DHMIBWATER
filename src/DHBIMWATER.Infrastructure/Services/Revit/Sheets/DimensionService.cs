@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Autodesk.Revit.DB;
+using DHBIMWATER.Application.UseCases.Sheets;
 
 namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
 {
@@ -56,6 +57,12 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             AutoDimensionView(view, targets);
         }
         private void AutoDimensionView(View view, List<Element> targets)
+            => AutoDimensionView(view, targets, DimensionSide.All, true);
+
+        private void AutoDimensionView(View view, List<Element> targets, DimensionSide sides)
+            => AutoDimensionView(view, targets, sides, true);
+
+        private void AutoDimensionView(View view, List<Element> targets, DimensionSide sides, bool includeOverall)
         {
             if (targets == null || !targets.Any()) return;
 
@@ -79,7 +86,6 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             double rightChain = maxRightAll + chainGap;
             double rightTotal = maxRightAll + totalGap;
 
-
             foreach (var e in targets)
             {
                 if (!TryGetFaceRefs(view, e, right, up, out var minR, out var maxR, out var minU, out var maxU))
@@ -92,19 +98,29 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             }
             if (xRefs.Count >= 2)
             {
-                CreateChainDimensionAtTop(view, xRefs, right, up, topChain);
-                CreateOverallDimensionAtTop(view, xRefs, right, up, topTotal);
-
-                CreateChainDimensionAtBottom(view, xRefs, right, up, bottomChain);
-                CreateOverallDimensionAtBottom(view, xRefs, right, up, bottomTotal);
+                if (sides.HasFlag(DimensionSide.Top))
+                {
+                    CreateChainDimensionAtTop(view, xRefs, right, up, topChain);
+                    if (includeOverall) CreateOverallDimensionAtTop(view, xRefs, right, up, topTotal);
+                }
+                if (sides.HasFlag(DimensionSide.Bottom))
+                {
+                    CreateChainDimensionAtBottom(view, xRefs, right, up, bottomChain);
+                    if (includeOverall) CreateOverallDimensionAtBottom(view, xRefs, right, up, bottomTotal);
+                }
             }
             if (yRefs.Count >= 2)
             {
-                CreateChainDimensionAtLeft(view, yRefs, up, right, leftChain);
-                CreateOverallDimensionAtLeft(view, yRefs, up, right, leftTotal);
-             
-                CreateChainDimensionAtRight(view, yRefs, up, right, rightChain);
-                CreateOverallDimensionAtRight(view, yRefs, up, right, rightTotal);
+                if (sides.HasFlag(DimensionSide.Left))
+                {
+                    CreateChainDimensionAtLeft(view, yRefs, up, right, leftChain);
+                    if (includeOverall) CreateOverallDimensionAtLeft(view, yRefs, up, right, leftTotal);
+                }
+                if (sides.HasFlag(DimensionSide.Right))
+                {
+                    CreateChainDimensionAtRight(view, yRefs, up, right, rightChain);
+                    if (includeOverall) CreateOverallDimensionAtRight(view, yRefs, up, right, rightTotal);
+                }
             }
         }                   
 
@@ -490,7 +506,7 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             }
         }
 
-        public void ApplyDimensionsToSelectedOnCurrentView(IList<string> elementIds, string dimensionTypeName)
+        public void ApplyDimensionsToSelectedOnCurrentView(IList<string> elementIds, string dimensionTypeName, DimensionSide sides = DimensionSide.All, bool includeOverall = true)
         {
             if (elementIds == null || elementIds.Count == 0) return;
 
@@ -530,7 +546,7 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
                 var dimensionTypeId = GetDimensionTypeId(dimensionTypeName);
                 var beforeIds = GetDimensionIds(view);
 
-                AutoDimensionView(view, targets);
+                AutoDimensionView(view, targets, sides, includeOverall);
                 ApplyDimensionTypeToNewDimensions(view, beforeIds, dimensionTypeId);
 
                 tx.Commit();

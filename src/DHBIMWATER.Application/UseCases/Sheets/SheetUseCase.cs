@@ -85,7 +85,7 @@ namespace DHBIMWATER.Application.UseCases.Sheets
 
             _gateway.ApplyDimensionsToSelected(sheetId, pickedIds);
         }
-        public void ApplyDimensionsOnCurrentView(DimensionMode mode, string dimensionTypeName)
+        public void ApplyDimensionsOnCurrentView(DimensionMode mode, string dimensionTypeName, DimensionSide sides = DimensionSide.All, bool includeOverall = true)
         {
             if (mode == DimensionMode.AllObjects)
             {
@@ -97,7 +97,7 @@ namespace DHBIMWATER.Application.UseCases.Sheets
             if (pickedIds == null || pickedIds.Count == 0)
                 return;
 
-            _gateway.ApplyDimensionsToSelectedOnCurrentView(pickedIds, dimensionTypeName);
+            _gateway.ApplyDimensionsToSelectedOnCurrentView(pickedIds, dimensionTypeName, sides, includeOverall);
         }
 
         public void UpdateViewTitleOnSheet(string viewId, string titleOnSheet)
@@ -189,6 +189,16 @@ namespace DHBIMWATER.Application.UseCases.Sheets
 
             _gateway.ApplyTagsToSelectedOnCurrentView(pickedIds);
         }
+        public void SaveSheetDirection(string sheetId, string directionType)
+        {
+            _gateway.SaveSheetDirection(sheetId, directionType);
+        }
+
+        public void HideSectionMarkersOnReservoirSectionViews()
+        {
+            _gateway.HideSectionMarkersOnReservoirSectionViews();
+        }
+
         public void HideCopiedSectionMarkersOnReservoirPlanViews()
         {
             _gateway.HideCopiedSectionMarkersOnReservoirPlanViews();
