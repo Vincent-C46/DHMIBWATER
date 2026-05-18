@@ -1,13 +1,12 @@
-﻿using DHBIMWATER.UI.Base;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DHBIMWATER.UI.ViewModels.Quantity
+namespace DHBIMWATER.Application.UseCases.QuantityCalculator
 {
-    public class QuantityViewModel : ViewModelBase
+    public class CalculateQuantityUseCase
     {
         #region Fields
         #endregion
@@ -15,13 +14,7 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         #region Properties
         #endregion
 
-        #region Commands
-        #endregion
-
         #region Constructor
-        public QuantityViewModel()
-        {
-        }
         #endregion
 
         #region Methods

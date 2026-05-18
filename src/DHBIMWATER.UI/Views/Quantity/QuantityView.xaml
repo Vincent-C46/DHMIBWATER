@@ -8,8 +8,8 @@
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance vm:QuantityViewModel, IsDesignTimeCreatable=False}"
         Title="DHBIM WATER - Quantity Calculator"
-        SizeToContent="WidthAndHeight" MinWidth="500" MinHeight="300"
-        MaxHeight="1400"
+        SizeToContent="WidthAndHeight"
+        MinWidth="600" MinHeight="400"
         WindowStartupLocation="CenterScreen"
         Background="#F4F7F9" 
         AllowsTransparency="False" 
@@ -43,8 +43,5 @@
                 </Border.Effect>
             </Border>
         </Grid>
-
-
-
     </Grid>
 </Window>
