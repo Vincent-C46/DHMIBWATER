@@ -1,12 +1,12 @@
 using DHBIMWATER.Application.DTOs.Common;
 using DHBIMWATER.Application.DTOs.Geometry;
 
-namespace DHBIMWATER.Application.DTOs.Revit.Reservoir
+namespace DHBIMWATER.Application.DTOs.Revit.Elements
 {
     /// <summary>
-    /// 배수지 벽체 정보를 담는 DTO
+    /// 배수지 슬래브(바닥/지붕) 정보를 담는 DTO
     /// </summary>
-    public class ReservoirWallDto
+    public class RevitSlabDto
     {
         /// <summary>
         /// 요소 ID
@@ -14,54 +14,54 @@ namespace DHBIMWATER.Application.DTOs.Revit.Reservoir
         public int ElementId { get; set; }
 
         /// <summary>
-        /// 벽체 이름
+        /// 슬래브 이름
         /// </summary>
         public string Name { get; set; } = string.Empty;
 
         /// <summary>
-        /// 벽 타입 이름
+        /// 슬래브 타입 이름
         /// </summary>
-        public string WallTypeName { get; set; } = string.Empty;
+        public string SlabTypeName { get; set; } = string.Empty;
 
         /// <summary>
-        /// 벽 높이 (미터)
+        /// 슬래브 유형 (바닥/지붕)
         /// </summary>
-        public double Height { get; set; }
+        public string SlabCategory { get; set; } = string.Empty;
 
         /// <summary>
-        /// 벽 두께 (미터)
+        /// 슬래브 두께 (미터)
         /// </summary>
         public double Thickness { get; set; }
 
         /// <summary>
-        /// 벽 길이 (미터)
-        /// </summary>
-        public double Length { get; set; }
-
-        /// <summary>
-        /// 벽 면적 (제곱미터)
+        /// 슬래브 면적 (제곱미터)
         /// </summary>
         public double Area { get; set; }
 
         /// <summary>
-        /// 벽 체적 (세제곱미터)
+        /// 슬래브 체적 (세제곱미터)
         /// </summary>
         public double Volume { get; set; }
 
         /// <summary>
-        /// 시작점
+        /// 둘레 길이 (미터)
         /// </summary>
-        public Point3DDto StartPoint { get; set; } = new();
-
-        /// <summary>
-        /// 끝점
-        /// </summary>
-        public Point3DDto EndPoint { get; set; } = new();
+        public double Perimeter { get; set; }
 
         /// <summary>
         /// 레벨 이름
         /// </summary>
         public string? LevelName { get; set; }
+
+        /// <summary>
+        /// 레벨로부터의 오프셋 (미터)
+        /// </summary>
+        public double OffsetFromLevel { get; set; }
+
+        /// <summary>
+        /// 중심점
+        /// </summary>
+        public Point3DDto CenterPoint { get; set; } = new();
 
         /// <summary>
         /// 재료 정보

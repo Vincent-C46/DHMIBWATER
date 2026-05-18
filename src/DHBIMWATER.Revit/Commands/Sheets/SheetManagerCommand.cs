@@ -41,7 +41,9 @@ namespace DHBIMWATER.Revit.Commands.Sheets
             {
                 useCase.ApplyDimensionsOnCurrentView(
                     DimensionMode.SelectedObjects,
-                    vm.RequestedCurrentViewDimensionTypeName);
+                    vm.RequestedCurrentViewDimensionTypeName,
+                    vm.RequestedCurrentViewDimensionSides,
+                    vm.RequestedCurrentViewIncludeOverall);
 
                 var reopenedVm = new SheetManagerViewModel(useCase, waterReservoirUseCase, dialogService);
                 var reopenedView = new SheetManagerView { DataContext = reopenedVm };

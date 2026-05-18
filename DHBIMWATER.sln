@@ -26,6 +26,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "installer", "installer", "{
 		installer\.gitignore = installer\.gitignore
 		installer\DHBIMWATER_2025.nsi = installer\DHBIMWATER_2025.nsi
 		installer\DHBIMWATER_2026.nsi = installer\DHBIMWATER_2026.nsi
+		installer\DHBIMWATER_25~26.nsi = installer\DHBIMWATER_25~26.nsi
 		installer\License.txt = installer\License.txt
 	EndProjectSection
 EndProject

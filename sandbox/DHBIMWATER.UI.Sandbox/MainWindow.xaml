@@ -38,6 +38,10 @@
                                    FontWeight="Normal"
                                    Command="{Binding OpenWaterTankViewCommand}"
                                    LargeIcon="pack://application:,,,/DHBIMWATER.UI;component/Resources/Icons/water-tap.png"/>
+                    <fluent:Button Header="펌프장&#x0a;모델링"
+                                   FontWeight="Normal"
+                                   Command="{Binding OpenPumpingStationViewCommand}"
+                                   LargeIcon="pack://application:,,,/DHBIMWATER.UI;component/Resources/Icons/pump.png"/>
                 </fluent:RibbonGroupBox>
                 
                 <fluent:RibbonGroupBox Header="수량산출">

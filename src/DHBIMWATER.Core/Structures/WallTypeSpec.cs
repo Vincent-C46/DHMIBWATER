@@ -4,10 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DHBIMWATER.Application.UseCases
+namespace DHBIMWATER.Core.Structures
 {
-    public class CreateWallUseCase
-    {
-
-    }
+    public record WallTypeSpec(double Thickness, string Name = null);
 }

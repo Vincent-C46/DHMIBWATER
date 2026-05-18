@@ -85,7 +85,7 @@ namespace DHBIMWATER.Application.UseCases.Sheets
 
             _gateway.ApplyDimensionsToSelected(sheetId, pickedIds);
         }
-        public void ApplyDimensionsOnCurrentView(DimensionMode mode, string dimensionTypeName)
+        public void ApplyDimensionsOnCurrentView(DimensionMode mode, string dimensionTypeName, DimensionSide sides = DimensionSide.All, bool includeOverall = true)
         {
             if (mode == DimensionMode.AllObjects)
             {
@@ -97,12 +97,16 @@ namespace DHBIMWATER.Application.UseCases.Sheets
             if (pickedIds == null || pickedIds.Count == 0)
                 return;
 
-            _gateway.ApplyDimensionsToSelectedOnCurrentView(pickedIds, dimensionTypeName);
+            _gateway.ApplyDimensionsToSelectedOnCurrentView(pickedIds, dimensionTypeName, sides, includeOverall);
         }
 
         public void UpdateViewTitleOnSheet(string viewId, string titleOnSheet)
         {
             _gateway.UpdateViewTitleOnSheet(viewId, titleOnSheet);
+        }
+        public void UpdateViewCategory(string viewId, string category)
+        {
+            _gateway.UpdateViewCategory(viewId, category);
         }
         public void ApplyViewFormProfile(string viewId, string form)
         {
@@ -141,6 +145,10 @@ namespace DHBIMWATER.Application.UseCases.Sheets
         {
             _gateway.MoveViewportBySheetRatio(sheetId, viewId, uRatio, vRatio);
         }
+        public void ArrangeViewportsByDirection(string sheetId, string directionType)
+        {
+            _gateway.ArrangeViewportsByDirection(sheetId, directionType);
+        }
         public void SetViewportType(string sheetId, string viewId, string viewportTypeName)
         {
             _gateway.SetViewportType(sheetId, viewId, viewportTypeName);
@@ -169,6 +177,10 @@ namespace DHBIMWATER.Application.UseCases.Sheets
         {
             _gateway.UpdateViewportTitleLayout(sheetId, viewId, offsetX, offsetY, lineLength);
         }
+        public void UpdateReservoirViewportTitleLayout(string sheetId, string viewId, bool alignRightBottom)
+        {
+            _gateway.UpdateReservoirViewportTitleLayout(sheetId, viewId, alignRightBottom);
+        }
         public void ApplyTagsToSelectedOnCurrentView()
         {
             var pickedIds = _gateway.PickDimensionTargetIds();
@@ -177,6 +189,16 @@ namespace DHBIMWATER.Application.UseCases.Sheets
 
             _gateway.ApplyTagsToSelectedOnCurrentView(pickedIds);
         }
+        public void SaveSheetDirection(string sheetId, string directionType)
+        {
+            _gateway.SaveSheetDirection(sheetId, directionType);
+        }
+
+        public void HideSectionMarkersOnReservoirSectionViews()
+        {
+            _gateway.HideSectionMarkersOnReservoirSectionViews();
+        }
+
         public void HideCopiedSectionMarkersOnReservoirPlanViews()
         {
             _gateway.HideCopiedSectionMarkersOnReservoirPlanViews();

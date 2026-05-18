@@ -32,8 +32,16 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <IsPublishable>False</IsPublishable>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <IsPublishable>False</IsPublishable>
+  </PropertyGroup>
+
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="REM Copy to BuildOutput folder&#xD;&#xA;if not exist &quot;C:\BuildOutput\DHBIMWATER\&quot; mkdir &quot;C:\BuildOutput\DHBIMWATER\&quot;&#xD;&#xA;xcopy /Y &quot;$(TargetDir)DHBIMWATER.Revit.dll&quot; &quot;C:\BuildOutput\DHBIMWATER\&quot; /I&#xD;&#xA;xcopy /Y &quot;$(ProjectDir)DHBIMWATER.addin&quot; &quot;C:\BuildOutput\DHBIMWATER\&quot; /I" />
+    <Exec Command="if not exist &quot;C:\BuildOutput\DHBIMWATER\&quot; mkdir &quot;C:\BuildOutput\DHBIMWATER\&quot;&#xD;&#xA;xcopy /Y &quot;$(TargetDir)DHBIMWATER.Revit.dll&quot; &quot;C:\BuildOutput\DHBIMWATER\&quot; /I&#xD;&#xA;xcopy /Y &quot;$(ProjectDir)DHBIMWATER.addin&quot; &quot;C:\BuildOutput\DHBIMWATER\&quot; /I&#xD;&#xA;if not exist &quot;C:\ProgramData\Autodesk\Revit\Addins\2026\DHBIMWATER\&quot; mkdir &quot;C:\ProgramData\Autodesk\Revit\Addins\2026\DHBIMWATER\&quot;&#xD;&#xA;xcopy /Y &quot;$(TargetDir)DHBIMWATER.Revit.dll&quot; &quot;C:\ProgramData\Autodesk\Revit\Addins\2026\DHBIMWATER\&quot; /I&#xD;&#xA;xcopy /Y &quot;$(ProjectDir)DHBIMWATER.addin&quot; &quot;C:\ProgramData\Autodesk\Revit\Addins\2026\&quot; /I" />
   </Target>
 
 </Project>

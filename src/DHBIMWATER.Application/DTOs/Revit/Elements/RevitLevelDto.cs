@@ -3,7 +3,7 @@ namespace DHBIMWATER.Application.DTOs.Revit.Elements
     /// <summary>
     /// Revit 레벨 정보를 담는 DTO
     /// </summary>
-    public class LevelDto
+    public class RevitLevelDto
     {
         /// <summary>
         /// 레벨 ID

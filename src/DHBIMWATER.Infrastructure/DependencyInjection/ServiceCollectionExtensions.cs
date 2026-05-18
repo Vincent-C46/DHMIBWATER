@@ -1,10 +1,11 @@
 using DHBIMWATER.Application.Interfaces;
-using DHBIMWATER.Application.Interfaces.Parameter;
-using DHBIMWATER.Application.UseCases;
+using DHBIMWATER.Core.Parameters;
 using DHBIMWATER.Infrastructure.Repositories.Mock;
 using DHBIMWATER.Infrastructure.Repositories.Revit;
 using DHBIMWATER.Infrastructure.Services.Mock;
+using DHBIMWATER.Infrastructure.Services.Revit;
 using DHBIMWATER.Infrastructure.Services.Revit.Parameter;
+using DHBIMWATER.Infrastructure.Transactions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DHBIMWATER.Infrastructure.DependencyInjection;
@@ -18,14 +19,28 @@ public static class ServiceCollectionExtensions
     {
         // Revit 실제 구현 등록
         services.AddSingleton<IGenericModelRepository, RevitGenericModelRepository>();
+        services.AddTransient<ITransactionContext, RevitTransactionContext>();
+
+        #region Element 관련 Repository 등록
+        services.AddTransient<ILevelQueryRepo, RevitLevelQueryRepo>();
+        services.AddTransient<ILevelCommandRepo, RevitLevelCommandRepo>();
+        services.AddTransient<IElementTypeQueryRepo, RevitElementTypeQueryRepo>();
+        services.AddTransient<IElementTypeCommandRepo, RevitElementTypeCommandRepo>();
+        services.AddTransient<IWallCommandRepo, RevitWallCommandRepo>();
+        services.AddTransient<IBeamCommandRepo, RevitBeamCommandRepo>();
+        services.AddTransient<ISlabCommandRepo, RevitSlabCommandRepo>();
+        services.AddTransient<IOpeningCommandRepo, RevitOpeningCommandRepo>();
+        services.AddTransient<IDirectShapeCommandRepo, RevitDirectShapeCommandRepo>();
+        #endregion
+
+        services.AddTransient<IExcelReader, RevitExcelPumpReader>();
+        services.AddTransient<ISharedParameterRepository, RevitSharedParameterRepository>();
+
+        #region Service 등록
+        services.AddTransient<IFileDialogService, RevitFileDialogService>();
         services.AddTransient<IDialogService, RevitDialogService>();
         services.AddTransient<IGuideLineService, RevitGuideLineService>();
-        services.AddTransient<RevitCategoryProvider>();
-        services.AddTransient<RevitCategoryParameterProvider>();
-        services.AddTransient<RevitExcelExporter>();
-        services.AddTransient<IExportParamsGateway, RevitExportParamsGateway>();      
-        services.AddTransient<IImportParamsGateway, RevitImportParamsGateway>();
-
+        #endregion
 
         return services;
     }
@@ -37,10 +52,28 @@ public static class ServiceCollectionExtensions
     {
         // Mock 구현 등록 (Revit 없이 동작)
         services.AddSingleton<IGenericModelRepository, MockGenericModelRepository>();
+        services.AddTransient<ITransactionContext, MockTransactionContext>();
+
+        #region Element 관련
+        services.AddTransient<ILevelQueryRepo, MockLevelQueryRepo>();
+        services.AddTransient<ILevelCommandRepo, MockLevelCommandRepo>();
+        services.AddTransient<IElementTypeQueryRepo, MockElementTypeQueryRepo>();
+        services.AddTransient<IElementTypeCommandRepo, MockElementTypeCommandRepo>();
+        services.AddTransient<IWallCommandRepo, MockWallCommandRepo>();
+        services.AddTransient<IBeamCommandRepo, MockBeamCommandRepo>();
+        services.AddTransient<ISlabCommandRepo, MockSlabCommandRepo>();
+        services.AddTransient<IOpeningCommandRepo, MockOpeningCommandRepo>();
+        services.AddTransient<IDirectShapeCommandRepo, MockDirectShapeCommandRepo>();
+        #endregion
+
+        services.AddTransient<IExcelReader, MockExcelPumpReader>();
+        services.AddTransient<ISharedParameterRepository, MockSharedParameterRepository>();
+
+        #region Service 등록
+        services.AddTransient<IFileDialogService, MockFileDialogService>();
         services.AddTransient<IDialogService, MockDialogService>();
         services.AddTransient<IGuideLineService, MockGuideLineService>();
-        services.AddTransient<IExportParamsGateway, MockExportParamsGateway>();
-
+        #endregion
 
         return services;
     }

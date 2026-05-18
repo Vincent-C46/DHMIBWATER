@@ -134,26 +134,26 @@ namespace DHBIMWATER.Application.UseCases.Sheets
         {
             return new List<WaterReservoirViewPlacementDto>
             {
-                new WaterReservoirViewPlacementDto{ViewName = "수조부 상부슬래브", ViewTitleOnSheet = "상 부 슬 래 브", Scale = 80, Form = "일반도", TitleBlockName = "A1",     VisualStyle = "은선", TitleOffsetX = 1.9,   TitleOffsetY = 0,     TitleLineLength = 0.18},
-                new WaterReservoirViewPlacementDto{ViewName = "밸브실 중간슬래브", ViewTitleOnSheet = "중 간 슬 래 브", Scale = 80, Form = "일반도", TitleBlockName = "A1",     VisualStyle = "은선", TitleOffsetX = 1.9,   TitleOffsetY = 0,     TitleLineLength = 0.18},
-                new WaterReservoirViewPlacementDto{ViewName = "수조부 바닥슬래브", ViewTitleOnSheet = "하 부 슬 래 브", Scale = 80, Form = "일반도", TitleBlockName = "A1",     VisualStyle = "은선", TitleOffsetX = 1.9,   TitleOffsetY = 0,     TitleLineLength = 0.18},
-                new WaterReservoirViewPlacementDto{ViewName = "A",                 ViewTitleOnSheet = "A-A 단 면 도",   Scale = 80, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선", TitleOffsetX = 0.77,  TitleOffsetY = -0.3,  TitleLineLength = 0.18},
-                new WaterReservoirViewPlacementDto{ViewName = "B",                 ViewTitleOnSheet = "B-B 단 면 도",   Scale = 80, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선", TitleOffsetX = 0.77,  TitleOffsetY = -0.3,  TitleLineLength = 0.18},
-                new WaterReservoirViewPlacementDto{ViewName = "C",                 ViewTitleOnSheet = "C-C 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선", TitleOffsetX = 1.27,  TitleOffsetY = -0.3,  TitleLineLength = 0.18},
-                new WaterReservoirViewPlacementDto{ViewName = "D",                 ViewTitleOnSheet = "D-D 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선", TitleOffsetX = 1.27,  TitleOffsetY = -0.3,  TitleLineLength = 0.18},
-                new WaterReservoirViewPlacementDto{ViewName = "E",                 ViewTitleOnSheet = "E-E 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선", TitleOffsetX = 0.9,   TitleOffsetY = -0.3,  TitleLineLength = 0.18},
-                new WaterReservoirViewPlacementDto{ViewName = "F",                 ViewTitleOnSheet = "F-F 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선", TitleOffsetX = 0.9,   TitleOffsetY = -0.3,  TitleLineLength = 0.18},
-                new WaterReservoirViewPlacementDto{ViewName = "G",                 ViewTitleOnSheet = "G-G 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선", TitleOffsetX = 0.9,   TitleOffsetY = -0.3,  TitleLineLength = 0.18},
-                new WaterReservoirViewPlacementDto{ViewName = "H",                 ViewTitleOnSheet = "H-H 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선", TitleOffsetX = 0.9,   TitleOffsetY = -0.3,  TitleLineLength = 0.18},
-                new WaterReservoirViewPlacementDto{ViewName = "I",                 ViewTitleOnSheet = "I-I 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선", TitleOffsetX = 0.9,   TitleOffsetY = -0.3,  TitleLineLength = 0.18},
-                new WaterReservoirViewPlacementDto{ViewName = "J",                 ViewTitleOnSheet = "J-J 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선", TitleOffsetX = 0.9,   TitleOffsetY = -0.3,  TitleLineLength = 0.18},
-                new WaterReservoirViewPlacementDto{ViewName = "K",                 ViewTitleOnSheet = "K-K 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선", TitleOffsetX = 0.9,   TitleOffsetY = -0.3,  TitleLineLength = 0.18},
-                new WaterReservoirViewPlacementDto{ViewName = "L",                 ViewTitleOnSheet = "L-L 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선", TitleOffsetX = 0.9,   TitleOffsetY = -0.3,  TitleLineLength = 0.18},
-                new WaterReservoirViewPlacementDto{ViewName = "M",                 ViewTitleOnSheet = "M-M 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선", TitleOffsetX = 0.9,   TitleOffsetY = -0.3,  TitleLineLength = 0.18},
-                new WaterReservoirViewPlacementDto{ViewName = "N",                 ViewTitleOnSheet = "N-N 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선", TitleOffsetX = 0.9,   TitleOffsetY = -0.3,  TitleLineLength = 0.18},
-                new WaterReservoirViewPlacementDto{ViewName = "O",                 ViewTitleOnSheet = "O-O 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선", TitleOffsetX = 0.9,   TitleOffsetY = -0.3,  TitleLineLength = 0.18},
-                new WaterReservoirViewPlacementDto{ViewName = "P",                 ViewTitleOnSheet = "P-P 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선", TitleOffsetX = 0.9,   TitleOffsetY = -0.3,  TitleLineLength = 0.18},
-                new WaterReservoirViewPlacementDto{ViewName = "Q",                 ViewTitleOnSheet = "Q-Q 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선", TitleOffsetX = 0.9,   TitleOffsetY = -0.3,  TitleLineLength = 0.18}
+                new WaterReservoirViewPlacementDto{ViewName = "수조부 상부슬래브", ViewTitleOnSheet = "상 부 슬 래 브", Scale = 80, Form = "일반도", TitleBlockName = "A1",     VisualStyle = "은선"},
+                new WaterReservoirViewPlacementDto{ViewName = "밸브실 중간슬래브", ViewTitleOnSheet = "중 간 슬 래 브", Scale = 80, Form = "일반도", TitleBlockName = "A1",     VisualStyle = "은선"},
+                new WaterReservoirViewPlacementDto{ViewName = "수조부 바닥슬래브", ViewTitleOnSheet = "하 부 슬 래 브", Scale = 80, Form = "일반도", TitleBlockName = "A1",     VisualStyle = "은선"},
+                new WaterReservoirViewPlacementDto{ViewName = "A",                 ViewTitleOnSheet = "A-A 단 면 도",   Scale = 80, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선"},
+                new WaterReservoirViewPlacementDto{ViewName = "B",                 ViewTitleOnSheet = "B-B 단 면 도",   Scale = 80, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선"},
+                new WaterReservoirViewPlacementDto{ViewName = "C",                 ViewTitleOnSheet = "C-C 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선"},
+                new WaterReservoirViewPlacementDto{ViewName = "D",                 ViewTitleOnSheet = "D-D 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선"},
+                new WaterReservoirViewPlacementDto{ViewName = "E",                 ViewTitleOnSheet = "E-E 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선"},
+                new WaterReservoirViewPlacementDto{ViewName = "F",                 ViewTitleOnSheet = "F-F 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선"},
+                new WaterReservoirViewPlacementDto{ViewName = "G",                 ViewTitleOnSheet = "G-G 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선"},
+                new WaterReservoirViewPlacementDto{ViewName = "H",                 ViewTitleOnSheet = "H-H 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선"},
+                new WaterReservoirViewPlacementDto{ViewName = "I",                 ViewTitleOnSheet = "I-I 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선"},
+                new WaterReservoirViewPlacementDto{ViewName = "J",                 ViewTitleOnSheet = "J-J 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선"},
+                new WaterReservoirViewPlacementDto{ViewName = "K",                 ViewTitleOnSheet = "K-K 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선"},
+                new WaterReservoirViewPlacementDto{ViewName = "L",                 ViewTitleOnSheet = "L-L 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선"},
+                new WaterReservoirViewPlacementDto{ViewName = "M",                 ViewTitleOnSheet = "M-M 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선"},
+                new WaterReservoirViewPlacementDto{ViewName = "N",                 ViewTitleOnSheet = "N-N 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선"},
+                new WaterReservoirViewPlacementDto{ViewName = "O",                 ViewTitleOnSheet = "O-O 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선"},
+                new WaterReservoirViewPlacementDto{ViewName = "P",                 ViewTitleOnSheet = "P-P 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선"},
+                new WaterReservoirViewPlacementDto{ViewName = "Q",                 ViewTitleOnSheet = "Q-Q 단 면 도",   Scale = 50, Form = "일반도", TitleBlockName = "A1_Key", VisualStyle = "은선"}
             };
         }
 
@@ -228,7 +228,8 @@ namespace DHBIMWATER.Application.UseCases.Sheets
                         placement.Scale > 0 ? $"1:{placement.Scale}" : string.Empty, sheet.SheetNumber);
 
                     _sheetUseCase.RecenterViewportToSheetCenter(sheet.Id, placedViewId);
-                    _sheetUseCase.UpdateViewportTitleLayout(sheet.Id, placedViewId, placement.TitleOffsetX, placement.TitleOffsetY, placement.TitleLineLength);
+                    _sheetUseCase.UpdateReservoirViewportTitleLayout(sheet.Id, placedViewId, IsPlanPlacement(placement));
+                    _sheetUseCase.UpdateViewCategory(placedViewId, "출력");
                 }
             }
             foreach (var km in keyMaps.Take(keyMapLimit))
@@ -250,8 +251,17 @@ namespace DHBIMWATER.Application.UseCases.Sheets
                 _sheetUseCase.FilterKeyMapSections(placedKeyMapViewId, km.SectionName);
                 _sheetUseCase.SetViewportType(sheet.Id, placedKeyMapViewId, "제목 없음");
                 _sheetUseCase.MoveViewportBySheetRatio(sheet.Id, placedKeyMapViewId, 0.855, 0.82);
+                _sheetUseCase.UpdateViewCategory(placedKeyMapViewId, "출력");
             }
             _sheetUseCase.HideCopiedSectionMarkersOnReservoirPlanViews();
+            _sheetUseCase.HideSectionMarkersOnReservoirSectionViews();
+        }
+
+        private static bool IsPlanPlacement(WaterReservoirViewPlacementDto placement)
+        {
+            return string.Equals(placement.ViewName, "수조부 상부슬래브", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(placement.ViewName, "밸브실 중간슬래브", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(placement.ViewName, "수조부 바닥슬래브", StringComparison.OrdinalIgnoreCase);
         }
 
 
@@ -301,6 +311,16 @@ namespace DHBIMWATER.Application.UseCases.Sheets
             {
                 _sheetUseCase.ActivateView(firstSheet.Id);
             }
+        }
+
+        public void OpenFirstReservoirSheet()
+        {
+            var firstSheet = GetReservoirSheets().FirstOrDefault();
+            if (firstSheet == null)
+                return;
+
+            _originalViewId = _sheetUseCase.GetActiveViewId();
+            _sheetUseCase.ActivateView(firstSheet.Id);
         }
 
         public void CloseReservoirSheets()

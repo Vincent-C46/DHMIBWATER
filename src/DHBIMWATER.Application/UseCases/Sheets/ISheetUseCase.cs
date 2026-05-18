@@ -24,9 +24,10 @@ namespace DHBIMWATER.Application.UseCases
         void UpdateViewVisualStyle(string viewId, string visualStyle);
         void ApplyAutoDimensions(string sheetId);
         void ApplyDimensions(string sheetId, DimensionMode mode);
-        void ApplyDimensionsOnCurrentView(DimensionMode mode, string dimensionTypeName);
+        void ApplyDimensionsOnCurrentView(DimensionMode mode, string dimensionTypeName, DimensionSide sides = DimensionSide.All, bool includeOverall = true);
 
         void UpdateViewTitleOnSheet(string viewId, string titleOnSheet);
+        void UpdateViewCategory(string viewId, string category);
         void ApplyViewFormProfile(string viewId, string form);
         void RecenterViewportToSheetCenter(string sheetId, string viewId);
         void DeleteReservoirSheetsAndViews(string startSheetNumber, int totalSheetCount);
@@ -37,13 +38,17 @@ namespace DHBIMWATER.Application.UseCases
         void FilterKeyMapSections(string viewId, string sectionName);
         void MoveViewportToPoint(string sheetId, string viewId, double x, double y);
         void MoveViewportBySheetRatio(string sheetId, string viewId, double uRatio, double vRatio);
+        void ArrangeViewportsByDirection(string sheetId, string directionType);
         void SetViewportType(string sheetId, string viewId, string viewportTypeName);
         void ApplyReservoirDimensions(string sheetId, string dimensionTypeName);
         void DeleteDimensionsOnSheet(string sheetId);
         string GetActiveViewId();
         void ActivateView(string viewId);
         void UpdateViewportTitleLayout(string sheetId, string viewId, double offsetX, double offsetY, double lineLength);
+        void UpdateReservoirViewportTitleLayout(string sheetId, string viewId, bool alignRightBottom);
         void ApplyTagsToSelectedOnCurrentView();
+        void SaveSheetDirection(string sheetId, string directionType);
+        void HideSectionMarkersOnReservoirSectionViews();
         void HideCopiedSectionMarkersOnReservoirPlanViews();
         void ApplyTagsToAllOnCurrentView();
         void ApplyReservoirTags(string sheetId);

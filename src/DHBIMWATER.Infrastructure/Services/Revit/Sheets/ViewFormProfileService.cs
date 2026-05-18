@@ -28,6 +28,7 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             // "없음"이면 저장만 하고 끝
             if (string.IsNullOrWhiteSpace(form) || form == "없음")
             {
+                ViewCategoryService.SetViewCategory(view, "출력");
                 tx.Commit();
                 return;
             }
@@ -40,6 +41,7 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             var keep = GetKeepCategories(form);
             if (keep.Count == 0)
             {
+                ViewCategoryService.SetViewCategory(view, "출력");
                 tx.Commit();
                 return;
             }
@@ -112,6 +114,7 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             {
                 view.HideElements(hideIds);
             }
+            ViewCategoryService.SetViewCategory(view, "출력");
             tx.Commit();
         }
 
@@ -196,7 +199,7 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             set.Add(BuiltInCategory.OST_DetailComponents);
 
             return set;
-        }
+        }   
 
         private static HashSet<BuiltInCategory> GetHideAnnotationCategoriesByCategory(string form)
         {
@@ -214,13 +217,13 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
 
             return new HashSet<BuiltInCategory>
             {
-                BuiltInCategory.OST_SectionHeads,
-                BuiltInCategory.OST_Sections,
+                //BuiltInCategory.OST_SectionHeads,
+                //BuiltInCategory.OST_Sections,
                 BuiltInCategory.OST_Elev,
                 BuiltInCategory.OST_ElevationMarks,
                 BuiltInCategory.OST_CLines,
-                BuiltInCategory.OST_Viewers,
-                BuiltInCategory.OST_Views,
+                //BuiltInCategory.OST_Viewers,
+                //BuiltInCategory.OST_Views,
                 BuiltInCategory.OST_Levels,
                 BuiltInCategory.OST_Callouts
             };

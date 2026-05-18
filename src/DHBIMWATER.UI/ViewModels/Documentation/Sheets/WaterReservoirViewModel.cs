@@ -144,11 +144,17 @@ namespace DHBIMWATER.UI.ViewModels.Documentation.Sheets
                     messages.Add($"새로 생성된 시트: {result.CreatedCount}개");
 
                 _refreshSheets?.Invoke();
+                if (result.CreatedCount > 0)
+                    _useCase.OpenFirstReservoirSheet();
+
                 _dialogService.Warn("배수지 시트 생성", string.Join("\n", messages));
                 _reactivateWindow?.Invoke();
                 return;
             }
             _refreshSheets?.Invoke();
+            if (result.CreatedCount > 0)
+                _useCase.OpenFirstReservoirSheet();
+
             _dialogService.Info("배수지 시트 생성", $"{result.CreatedCount}개의 시트가 생성되었습니다.");
             _reactivateWindow?.Invoke();
         }
@@ -163,12 +169,12 @@ namespace DHBIMWATER.UI.ViewModels.Documentation.Sheets
 
         private void DeleteSheetsAndViews()
         {
-            if (!_dialogService.Confirm("배수지 삭제", "배수지용 시트와 SHT 뷰를 모두 삭제하시겠습니까?"))
+            if (!_dialogService.Confirm("배수지 삭제", "배수지용 시트와 출력 뷰를 모두 삭제하시겠습니까?"))
                 return;
 
             _useCase.DeleteReservoirSheetsAndViews();
             _refreshSheets?.Invoke();
-            _dialogService.Info("배수지 삭제", "배수지용 시트와 SHT 뷰가 삭제되었습니다.");
+            _dialogService.Info("배수지 삭제", "배수지용 시트와 출력 뷰가 삭제되었습니다.");
             _reactivateWindow?.Invoke();
         }
 
@@ -185,12 +191,12 @@ namespace DHBIMWATER.UI.ViewModels.Documentation.Sheets
 
         private void DeleteViews()
         {
-            if (!_dialogService.Confirm("배수지 뷰 삭제", "배수지용 SHT 뷰를 삭제하시겠습니까?"))
+            if (!_dialogService.Confirm("배수지 뷰 삭제", "배수지용 출력 뷰를 삭제하시겠습니까?"))
                 return;
 
             _useCase.DeleteReservoirViews();
             _refreshSheets?.Invoke();
-            _dialogService.Info("배수지 뷰 삭제", "배수지용 SHT 뷰가 삭제되었습니다.");
+            _dialogService.Info("배수지 뷰 삭제", "배수지용 출력 뷰가 삭제되었습니다.");
             _reactivateWindow?.Invoke();
         }
 

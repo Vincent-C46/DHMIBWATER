@@ -24,6 +24,8 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
 
         public ObservableCollection<SheetRow> Sheets { get; } = new();        
         public string RequestedCurrentViewDimensionTypeName { get; private set; }
+        public DimensionSide RequestedCurrentViewDimensionSides { get; private set; }
+        public bool RequestedCurrentViewIncludeOverall { get; private set; }
         public bool RequestedCurrentViewSelectedObjects { get; private set; }
         public bool RequestedCurrentViewSelectedAnnotates { get; private set; }
 
@@ -52,7 +54,7 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
         public RelayCommand CancelCommand { get; }
         public RelayCommand DimensionCommand { get; }
         public RelayCommand WaterReservoirCommand { get; }
-        public enum SheetActionType { Create, Delete, Copy, Rename, AddView, ReplaceView, RemoveView }
+        public enum SheetActionType { Create, Delete, Copy, Rename, AddView, ReplaceView, RemoveView, ArrangeViews }
         public RelayCommand AnnotateCommand { get; }
 
 
@@ -74,6 +76,7 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
             public string DrawingMember { get; set; }
             public string DrawingScale { get; set; }
             public string DrawingNumber { get; set; }
+            public string ViewDirectionType { get; set; }
 
         }
 
@@ -127,7 +130,16 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
                     }
                 }
 
+                // 이벤트 구독 전에 저장된 방향 복원 (구독 전이라 QueueArrange 미발생)
+                if (!string.IsNullOrWhiteSpace(s.ViewDirName))
+                {
+                    var savedDir = row.ViewDirections.FirstOrDefault(x => x.Type == s.ViewDirName);
+                    if (savedDir != null)
+                        row.SelectedViewDirection = savedDir;
+                }
+
                 row.NameChanged += OnSheetNameChanged;
+                row.DirectionChanged += OnSheetDirectionChanged;
                 Sheets.Add(row);
             }
         }
@@ -152,6 +164,7 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
                 SheetName = vm.SheetName
             };
             row.NameChanged += OnSheetNameChanged;
+            row.DirectionChanged += OnSheetDirectionChanged;
             Sheets.Add(row);
 
             _pending.Add(new SheetPendingAction
@@ -196,6 +209,8 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
                 DrawingScale = selected.Scale > 0 ? $"1:{selected.Scale}" : string.Empty,
                 DrawingNumber = row.SheetNumber
             });
+
+            QueueArrange(row);
         }
 
 
@@ -212,6 +227,8 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
                 SheetId = row.Id,
                 ViewId = last.ViewId
             });
+
+            QueueArrange(row);
         }
 
 
@@ -255,6 +272,8 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
                 DrawingScale = selected.Scale > 0 ? $"1:{selected.Scale}" : string.Empty,
                 DrawingNumber = SelectedSheet?.SheetNumber
             });
+
+            QueueArrange(SelectedSheet);
         }
 
         private void Remove()
@@ -306,7 +325,10 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
                 SheetNumber = SelectedSheet.SheetNumber + "_COPY",
                 SheetName = SelectedSheet.SheetName + "_Copy"
             };
+            row.SelectedViewDirection = row.ViewDirections.FirstOrDefault(x =>
+                x.Type == SelectedSheet.SelectedViewDirection?.Type) ?? row.ViewDirections.FirstOrDefault();
             row.NameChanged += OnSheetNameChanged;
+            row.DirectionChanged += OnSheetDirectionChanged;
             Sheets.Add(row);
 
             _pending.Add(new SheetPendingAction
@@ -336,6 +358,27 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
                 Type = SheetActionType.Rename,
                 SheetId = row.Id,
                 SheetName = row.SheetName
+            });
+        }
+
+        private void OnSheetDirectionChanged(SheetRow row)
+        {
+            QueueArrange(row);
+        }
+
+        private void QueueArrange(SheetRow row)
+        {
+            if (row == null) return;
+
+            _pending.RemoveAll(p =>
+                p.Type == SheetActionType.ArrangeViews &&
+                p.SheetId == row.Id);
+
+            _pending.Add(new SheetPendingAction
+            {
+                Type = SheetActionType.ArrangeViews,
+                SheetId = row.Id,
+                ViewDirectionType = row.SelectedViewDirection?.Type ?? "Center"
             });
         }
 
@@ -409,6 +452,7 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
                             _useCase.UpdateSheetParameters(ResolveSheetId(p.SheetId),
                                 p.DrawingTitle, p.DrawingMember, p.DrawingScale, p.DrawingNumber);
                             _useCase.RecenterViewportToSheetCenter(ResolveSheetId(p.SheetId), placedViewId);
+                            _useCase.UpdateReservoirViewportTitleLayout(ResolveSheetId(p.SheetId), placedViewId, false);
                         }
                         break;
 
@@ -426,10 +470,16 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
                         _useCase.UpdateSheetParameters(ResolveSheetId(p.SheetId),
                             p.DrawingTitle, p.DrawingMember, p.DrawingScale, p.DrawingNumber);
                         _useCase.RecenterViewportToSheetCenter(ResolveSheetId(p.SheetId), p.ViewId);
+                        _useCase.UpdateReservoirViewportTitleLayout(ResolveSheetId(p.SheetId), p.ViewId, false);
                         break;
 
                     case SheetActionType.RemoveView:
                         _useCase.RemoveView(ResolveSheetId(p.SheetId), p.ViewId);
+                        break;
+
+                    case SheetActionType.ArrangeViews:
+                        _useCase.ArrangeViewportsByDirection(ResolveSheetId(p.SheetId), p.ViewDirectionType);
+                        _useCase.SaveSheetDirection(ResolveSheetId(p.SheetId), p.ViewDirectionType);
                         break;
                 }
             }
@@ -486,15 +536,23 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
 
             if (vm.SelectedDimensionMode == DimensionMode.SelectedObjects)
             {
+                var dirVm = new DimensionDirectionViewModel();
+                var dirDlg = new DimensionDirectionView(dirVm);
+                if (dirDlg.ShowDialog() != true)
+                    return;
+
                 RequestedCurrentViewSelectedObjects = true;
                 RequestedCurrentViewDimensionTypeName = vm.SelectedDimensionType.Name;
+                RequestedCurrentViewDimensionSides = dirVm.SelectedSides;
+                RequestedCurrentViewIncludeOverall = dirVm.IsIncludeOverall;
                 DialogResult = false;
                 return;
             }
 
             _useCase.ApplyDimensionsOnCurrentView(
                 vm.SelectedDimensionMode,
-                vm.SelectedDimensionType.Name);
+                vm.SelectedDimensionType.Name,
+                DimensionSide.All);
         }
 
 
@@ -538,6 +596,7 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
 
 
             public event Action<SheetRow> NameChanged;
+            public event Action<SheetRow> DirectionChanged;
 
             private string _sheetNumber;
             public ObservableCollection<SheetViewRow> Views { get; set; } = new();
@@ -599,15 +658,23 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
                 new ViewDirectionItem { Name = "지그재그 세로", Type = "ZVertical" }
             };
 
+            public SheetRow()
+            {
+                _selectedViewDirection = ViewDirections.FirstOrDefault();
+                _viewDirName = _selectedViewDirection?.Name;
+            }
+
             private ViewDirectionItem _selectedViewDirection;
             public ViewDirectionItem SelectedViewDirection
             {
                 get => _selectedViewDirection;
                 set
                 {
+                    if (_selectedViewDirection == value) return;
                     _selectedViewDirection = value;
                     OnPropertyChanged();
                     ViewDirName = value?.Name;
+                    DirectionChanged?.Invoke(this);
                 }
             }
             private string _viewDirName;
