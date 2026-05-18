@@ -1,6 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<ItemGroup>
+	  <Compile Remove="ViewModels\Drafting\**" />
+	  <Compile Remove="ViewModels\Quantification\**" />
+	  <Compile Remove="Views\Drafting\**" />
+	  <Compile Remove="Views\Quantification\**" />
+	  <EmbeddedResource Remove="ViewModels\Drafting\**" />
+	  <EmbeddedResource Remove="ViewModels\Quantification\**" />
+	  <EmbeddedResource Remove="Views\Drafting\**" />
+	  <EmbeddedResource Remove="Views\Quantification\**" />
+	  <None Remove="ViewModels\Drafting\**" />
+	  <None Remove="ViewModels\Quantification\**" />
+	  <None Remove="Views\Drafting\**" />
+	  <None Remove="Views\Quantification\**" />
+	  <Page Remove="ViewModels\Drafting\**" />
+	  <Page Remove="ViewModels\Quantification\**" />
+	  <Page Remove="Views\Drafting\**" />
+	  <Page Remove="Views\Quantification\**" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <None Remove="Resources\Icons\Export.png" />
 	  <None Remove="Resources\Icons\pump.png" />
 	  <None Remove="Resources\Icons\revit.png" />
@@ -83,12 +102,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="ViewModels\Drafting\" />
 		<Folder Include="ViewModels\Utilities\" />
-		<Folder Include="ViewModels\Quantification\" />
-		<Folder Include="Views\Drafting\" />
 		<Folder Include="Views\Utilities\" />
-		<Folder Include="Views\Quantification\" />
 	</ItemGroup>
 
 	<ItemGroup>

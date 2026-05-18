@@ -27,6 +27,8 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
         private readonly IOpeningCommandRepo _openingCmdRepo;
         private readonly IDialogService _dialogService;
         private readonly ISharedParameterRepository _sharedParameterRepo;
+        private readonly IViewCommandRepo _viewCommandRepo;
+        private readonly IExcelReader _excelReader;
         #endregion
 
         #region Properties
@@ -43,7 +45,9 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                                            IDirectShapeCommandRepo dsCmdRepo,
                                            IOpeningCommandRepo openingCmdRepo,
                                            IDialogService dialogService,
-                                           ISharedParameterRepository sharedParameterRepo)
+                                           ISharedParameterRepository sharedParameterRepo,
+                                           IViewCommandRepo viewCommandRepo,
+                                           IExcelReader excelReader)
         {
             _levelQueryRepo = levelQueryRepo;
             _levelCmdRepo = levelCmdRepo;
@@ -54,6 +58,9 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
             _dialogService = dialogService;
             _openingCmdRepo = openingCmdRepo;
             _sharedParameterRepo = sharedParameterRepo;
+            _viewCommandRepo = viewCommandRepo;
+            _excelReader = excelReader;
+
             _tx = tx;
         }
         #endregion
@@ -61,6 +68,15 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
         #region Methods
         public void Execute(PumpCreationRequestDto dto)
         {
+            #region Excel 데이터 가져오기
+            //File.Open();
+            string excelFilePath = @"F:\02_Work\02_Project\06_펌프장\01_Docs\input data 산식.xlsx";
+            var excelDict = _excelReader.Read(excelFilePath);
+
+            _dialogService.Info("Success", $"Sheet 개수: {excelDict.Count}");
+            _dialogService.Info("Success", $"{excelDict["종단제원 입력"][28][13]}");
+            #endregion
+
             using (_tx)
             {
                 try
@@ -75,20 +91,29 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
 
                     #region 1. 레벨 생성
                     var existingLevels = _levelQueryRepo.GetExistingLevelNames();
-                    var existingViewNames = _levelQueryRepo.GetExistingPlanNames();
+                    var existingEngineeringPlanNames = _levelQueryRepo.GetExistingPlanNames();
 
+                    // Level 생성
                     foreach (var lvl in PumpingStationGeometryCalculator.CalculateLevels(dto))
                     {
                         var existLevel = existingLevels.FirstOrDefault(s => s.Contains(lvl.Name));
+                        int levelId;
                         if (existLevel != null)
                         {
-                            _levelCmdRepo.UpdateLevel(existLevel, lvl.Elevation);
+                            levelId = _levelCmdRepo.UpdateLevel(existLevel, lvl.Elevation);
                         }
                         else
                         {
-                            _levelCmdRepo.CreateLevel(lvl.Name, lvl.Elevation);
+                            levelId = _levelCmdRepo.CreateLevel(lvl.Name, lvl.Elevation);
+                        }
+
+                        // 구조도 작성
+                        if (!existingEngineeringPlanNames.Contains(lvl.Name))
+                        {
+                            _levelCmdRepo.CreatePlan(levelId);
                         }
                     }
+
                     #endregion
 
                     #region 2. 슬래브 생성
@@ -131,8 +156,23 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                     // 보 작성 메서드 내부에서 상부 슬래브와 결합 (임시 조치)
                     #endregion
 
-                    #region 7. 뷰 작성
+                    #region 7. 뷰 작성                    
+                    var existingSectionViewNames  = _levelQueryRepo.GetExistingSectionNames();
+                    var sectionViewDefs = PumpingStationGeometryCalculator.CalculateSectionViews(dto);
 
+                    foreach (var viewDef in sectionViewDefs)
+                    {
+        
+                            try
+                            {
+                                _viewCommandRepo.CreateSectionView(viewDef);
+                            }
+                            catch (Exception ex)
+                            {
+                                _dialogService.Warn("Error", $"Failed to create section view '{viewDef.Name}': {ex.Message}");
+                            }
+                        
+                    }
                     #endregion
 
                     // 트랜잭션 커밋
@@ -148,6 +188,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
             }
         }
 
+        // 공유 매개변수 작성
         private List<SharedParameterDefinition> GetPumpSharedParameterDefinitions()
         {
             var defs = new List<SharedParameterDefinition>();
@@ -239,14 +280,28 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
 
             var def7 = new SharedParameterDefinition()
             {
-                Name = "DH_HostElementCode",
+                Name = "DH_HostId",
                 SpecType = ParameterSpecType.Text,
                 GroupType = ParameterGroupType.Data,
                 BindingType = ParameterBindingType.Instance,
                 Categories = new List<ParameterCategory>() { ParameterCategory.GenericModel,},
             };
 
-            var addList = new List<SharedParameterDefinition>() { def1, def2, def3, def4, def5, def6, def7,};
+            var def8 = new SharedParameterDefinition()
+            {
+                Name = "DH_Formula",
+                SpecType = ParameterSpecType.Text,
+                GroupType = ParameterGroupType.Data,
+                BindingType = ParameterBindingType.Instance,
+                Categories = new List<ParameterCategory>() { ParameterCategory.StructuralFraming,
+                                                             ParameterCategory.StructuralColumns,
+                                                             ParameterCategory.GenericModel,
+                                                             ParameterCategory.Floors,
+                                                             ParameterCategory.Walls,
+                                                             ParameterCategory.Stairs,},
+            };
+
+            var addList = new List<SharedParameterDefinition>() { def1, def2, def3, def4, def5, def6, def7, def8, };
             defs.AddRange(addList);
 
             return defs;

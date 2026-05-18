@@ -42,7 +42,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             StructuralFramingUtils.DisallowJoinAtEnd(beam, 0);
             StructuralFramingUtils.DisallowJoinAtEnd(beam, 1);
 
-            beam.get_Parameter(BuiltInParameter.Z_JUSTIFICATION).Set(beamDef.Zjustification);
+            beam.get_Parameter(BuiltInParameter.Z_JUSTIFICATION).Set(beamDef.ZJustification);
             JoinWithSlab(beam);
             
             beam.LookupParameter("DH_ElementCode")?.Set(beamDef.ElementCode);

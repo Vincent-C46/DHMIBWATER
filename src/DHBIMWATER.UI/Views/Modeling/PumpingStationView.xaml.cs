@@ -25,16 +25,11 @@ namespace DHBIMWATER.UI.Views.Modeling
         {
             InitializeComponent();
             DataContext = pumpingStationViewModel;
-            //new WindowInteropHelper(this).Owner = revitHandle();
-        }
-
-        private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (e.Source is not TabControl) return;
-            // SizeToContent를 한 번 Manual로 리셋 후 재설정해야 작아지는 방향으로도 동작함
-            SizeToContent = SizeToContent.Manual;
-            Width = double.NaN;
-            SizeToContent = SizeToContent.Width;
+            ContentRendered += (s, e) =>
+            {
+                SizeToContent = SizeToContent.Manual;
+                SizeToContent = SizeToContent.WidthAndHeight;
+            };
         }
     }
 }

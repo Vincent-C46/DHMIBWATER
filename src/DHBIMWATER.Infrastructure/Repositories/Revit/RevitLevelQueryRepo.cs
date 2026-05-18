@@ -18,7 +18,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
         {
             var doc = _doc();
             if (doc == null) return new List<string>();
-            
+
             var col = new FilteredElementCollector(doc)
                           .OfCategory(BuiltInCategory.OST_Levels)
                           .WhereElementIsNotElementType()
@@ -34,13 +34,29 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
         {
             var doc = _doc();
 
-            var viewPlanNames = new FilteredElementCollector(doc)
+            List<string> existingEngineeringPlanNames = new FilteredElementCollector(doc)
                 .OfClass(typeof(ViewPlan))
                 .Cast<ViewPlan>()
-                .Select(view => view.Name)
+                .Where(vp => vp.ViewType == ViewType.EngineeringPlan)
+                .Select(vp => vp.Name)
                 .ToList();
 
-            return viewPlanNames;
+            return existingEngineeringPlanNames;
         }
+
+        public IEnumerable<string> GetExistingSectionNames()
+        {
+            var doc = _doc();
+
+            List<string> existingSectionViewNames = new FilteredElementCollector(doc)
+                                                        .OfClass(typeof(ViewSection))
+                                                        .WhereElementIsNotElementType()
+                                                        .Cast<ViewSection>()
+                                                        .Select(vs => vs.Name)
+                                                        .ToList();
+
+            return existingSectionViewNames;
+        }
+
     }
 }

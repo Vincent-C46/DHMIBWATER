@@ -46,6 +46,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
 
                     // 기존 Level 리스트 조회
                     var existingLevels = _levelQueryRepo.GetExistingLevelNames();
+                    var existingEngineeringPlanNames = _levelQueryRepo.GetExistingPlanNames();
 
                     // Level 생성
                     string tankFoundLevelName = "수조부 바닥슬래브";

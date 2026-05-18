@@ -19,8 +19,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         #region Fields
         private IDialogService _dialogService;
         private readonly CreatePumpingStationUseCase _createPumpingStationUseCase;
-        private string RectangularImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/1-1.펌프장_평면제원.png";
-        private string CircularImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/1-2.펌프장_종단제원.png";
 
         private string ProfileType1ImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/1-1.종단제원.png";
         private string ProfileType2ImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/1-1.종단제원.png";
@@ -183,6 +181,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 {
                     _lwl = value;
                     UpdateWLDependents();
+                    UpdateB2Calculation();   // B2 재계산
                     OnPropertyChanged(nameof(LWL));
                 }
             }
@@ -196,6 +195,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 {
                     _hwl = value;
                     UpdateWLDependents();
+                    UpdateB2Calculation();   // B2 재계산
                     OnPropertyChanged(nameof(HWL));
                 }
             }
@@ -275,7 +275,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_h1 != value)
                 {
                     _h1 = value;
-                    //RecalculateDerivedValues();
                     UpdateH1Dependents();
                     OnPropertyChanged(nameof(H1));
                 }
@@ -474,7 +473,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_b2 != value)
                 {
                     _b2 = value;
-                    UpdateB2Dependents();
                     OnPropertyChanged(nameof(B2));
                 }
             }
@@ -791,6 +789,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             NS = (int)Math.Floor((_h4 - _h1) / _hs);
             UpdateThetaDependents();   // L3 재계산
             UpdateH3Calculation();     // H3 재계산
+            UpdateB2Calculation();   // B2 재계산
         }
         private void UpdateH6Dependents()
         {
@@ -799,6 +798,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private void UpdateT1Dependents()
         {
             UpdateH3Calculation();
+            UpdateB2Calculation();
             GH1 = _t1 + 300;
         }
         private void UpdateHSDependents()
@@ -816,7 +816,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private void UpdateH3Dependents()
         {
             H5 = H2 + H3 + H4;
-            UpdateB2Dependents();
+            UpdateB2Calculation();
         }
         private void UpdateH4Dependents()
         {
@@ -828,14 +828,14 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             OnPropertyChanged(nameof(H2));
             UpdateH3Calculation();
         }
-        private void UpdateB2Dependents()
-        {
-            // B2 계산
-            double sum = _h1 + H2 + _h3 + _t1;
-            B2 = sum <= 5000 ? 3000.0
-               : sum <= 7000 ? 3500.0
-               : 4000.0;
-        }
+        //private void UpdateB2Dependents()
+        //{
+        //    // B2 계산
+        //    double sum = _h1 + H2 + _h3 + _t1;
+        //    B2 = sum <= 5000 ? 3000.0
+        //       : sum <= 7000 ? 3500.0
+        //       : 4000.0;
+        //}
         private void UpdateH5Dependents()
         {
             T4 = Math.Ceiling((H5 + _t1) * 0.1 / 100) * 100;
@@ -854,6 +854,15 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private void UpdateL4Dependents()
         {
             L5 = _b7 + _t3 + _b6 + _b5 / 2 + _l4 - _b10 - _t4;
+        }
+        private void UpdateB2Calculation()
+        {
+            if ((H1 + H2 + H3 + T1) <= 5000)
+                B2 = 3000;
+            else if (5000 < (H1 + H2 + H3 + T1) && (H1 + H2 + H3 + T1) <= 7000)
+                B2 = 3500;
+            else
+                B2 = 4000;
         }
         #endregion
     }
