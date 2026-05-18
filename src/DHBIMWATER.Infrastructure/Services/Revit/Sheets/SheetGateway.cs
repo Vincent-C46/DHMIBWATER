@@ -5,12 +5,14 @@ using DHBIMWATER.Application.DTOs.Revit;
 using DHBIMWATER.Application.DTOs.Revit.Sheet;
 using DHBIMWATER.Application.DTOs.Revit.Sheets;
 using DHBIMWATER.Application.Interfaces.Sheets;
+using DHBIMWATER.Application.UseCases.Sheets;
 
 
 namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
 {
     public class SheetGateway : ISheetGateway
     {
+        private readonly SheetDirectionStorageService _sheetDirection;
         private readonly SheetQueryService _query;
         private readonly SheetCreateService _create;
         private readonly SheetDeleteService _delete;
@@ -41,6 +43,7 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
         private readonly TagService _tag;
         public SheetGateway(Document doc, UIDocument uidoc)
         {
+            _sheetDirection = new SheetDirectionStorageService(doc);
             _query = new SheetQueryService(doc);
             _create = new SheetCreateService(doc);
             _delete = new SheetDeleteService(doc);
@@ -108,9 +111,9 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             _dimension.ApplyAutoDimensionsOnCurrentView(dimensionTypeName);
         }
 
-        public void ApplyDimensionsToSelectedOnCurrentView(IList<string> elementIds, string dimensionTypeName)
+        public void ApplyDimensionsToSelectedOnCurrentView(IList<string> elementIds, string dimensionTypeName, DimensionSide sides = DimensionSide.All, bool includeOverall = true)
         {
-            _dimension.ApplyDimensionsToSelectedOnCurrentView(elementIds, dimensionTypeName);
+            _dimension.ApplyDimensionsToSelectedOnCurrentView(elementIds, dimensionTypeName, sides, includeOverall);
         }
 
         public void UpdateViewTitleOnSheet(string viewId, string titleOnSheet)
@@ -197,6 +200,16 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
         {
             _tag.ApplyTagsToSelectedOnCurrentView(elementIds);
         }
+        public void SaveSheetDirection(string sheetId, string directionType)
+        {
+            _sheetDirection.Save(sheetId, directionType);
+        }
+
+        public void HideSectionMarkersOnReservoirSectionViews()
+        {
+            _viewAdd.HideSectionMarkersOnReservoirSectionViews();
+        }
+
         public void HideCopiedSectionMarkersOnReservoirPlanViews()
         {
             _viewAdd.HideCopiedSectionMarkersOnReservoirPlanViews();

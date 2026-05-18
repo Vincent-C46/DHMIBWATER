@@ -155,6 +155,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<UseWPF>true</UseWPF>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+		<BaseOutputPath></BaseOutputPath>
 	</PropertyGroup>
 
 </Project>
