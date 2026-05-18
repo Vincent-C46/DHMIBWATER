@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace DHBIMWATER.UI.ViewModels.Quantity
 {
-    public class QuantityCalculationViewModel : ViewModelBase
+    public class QuantityViewModel : ViewModelBase
     {
 
     }

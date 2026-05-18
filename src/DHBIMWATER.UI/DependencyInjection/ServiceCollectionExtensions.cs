@@ -24,7 +24,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<PumpingStationView>();
 
         // Quantity
-        services.AddTransient<QuantityCalculationView>();
+        services.AddTransient<QuantityView>();
 
         // Utilities
         services.AddTransient<ExParamsView>();
@@ -40,7 +40,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<PumpingStationViewModel>();
 
         // Quantity
-        services.AddTransient<QuantityCalculationViewModel>();
+        services.AddTransient<QuantityViewModel>();
 
         // Utilities
         services.AddTransient<ExParamsViewModel>();
