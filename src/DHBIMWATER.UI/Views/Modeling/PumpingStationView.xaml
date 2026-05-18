@@ -35,7 +35,8 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <controls:TitleBar Grid.Row="0" Grid.ColumnSpan="2"/>
+        
+        <controls:TitleBar Grid.Row="0"/>
 
         <Grid Grid.Row="1" Margin="30,10,30,10" Width="Auto">
             <Border Grid.Column="1"  Background="White" CornerRadius="15" Margin="10,0,0,0">

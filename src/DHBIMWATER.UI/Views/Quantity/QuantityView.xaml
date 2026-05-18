@@ -31,12 +31,79 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <controls:TitleBar Grid.Row="0" Grid.ColumnSpan="2"/>
+        
+        <controls:TitleBar Grid.Row="0"/>
+        
+        <!-- ToolBar -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal">
+            <Button>수량 추출</Button>
+            <Button>재계산</Button>
+        </StackPanel>
 
-        <Grid Grid.Row="1" Margin="30,10,30,10" Width="Auto">
+        <!-- GroupingBar -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal">
+            <TextBlock>그룹핑</TextBlock>
+            <Button>없음</Button>
+            <Button>공종별</Button>
+        </StackPanel>
+        
+        <!-- Content -->
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <!-- MainPanel -->
+                <ColumnDefinition Width="260"/>
+                <!-- SidePanel -->
+            </Grid.ColumnDefinitions>
+
+            <!-- MainPanel -->
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <!-- SummaryCards -->
+                    <RowDefinition Height="*"/>
+                    <!-- DataGrid ★ -->
+                </Grid.RowDefinitions>
+
+                <UniformGrid Grid.Row="0" Columns="3">
+                    <!-- 카드 3개 -->
+                </UniformGrid>
+
+                <DataGrid Grid.Row="1"/>
+            </Grid>
+
+            <!-- SidePanel -->
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <!-- DetailSection -->
+                    <RowDefinition Height="*"/>
+                    <!-- GroupSummary ★ -->
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0">
+                    <!-- 상세 항목들 -->
+                </StackPanel>
+
+                <ScrollViewer Grid.Row="1">
+                    <!-- 그룹 집계 목록 -->
+                </ScrollViewer>
+            </Grid>
+        </Grid>
+
+        <!-- StatusBar -->
+        <DockPanel Grid.Row="4">
+            <TextBlock>자동 86개</TextBlock>
+            <TextBlock DockPanel.Dock="Right">전체 97개</TextBlock>
+        </DockPanel>
+
+<!--
+        <Grid Grid.Row="3" Margin="30,10,30,10" Width="Auto">
             <Border Grid.Column="1"  Background="White" CornerRadius="15" Margin="10,0,0,0">
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="15" ShadowDepth="2" Color="#DDE4EB" Opacity="0.3"/>
@@ -62,5 +129,7 @@
                 
             </Border>
         </Grid>
+    -->     
+        
     </Grid>
 </Window>
