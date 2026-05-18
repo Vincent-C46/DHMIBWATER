@@ -3,10 +3,48 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:DHBIMWATER.UI.Views.Quantity"
+        xmlns:controls="clr-namespace:DHBIMWATER.UI.Controls"
+        xmlns:vm="clr-namespace:DHBIMWATER.UI.ViewModels.Quantity"
         mc:Ignorable="d"
-        Title="QuantityView" Height="450" Width="800">
+        d:DataContext="{d:DesignInstance vm:QuantityViewModel, IsDesignTimeCreatable=False}"
+        Title="DHBIM WATER - Quantity Calculator"
+        SizeToContent="WidthAndHeight" MinWidth="500" MinHeight="300"
+        MaxHeight="1400"
+        WindowStartupLocation="CenterScreen"
+        Background="#F4F7F9" 
+        AllowsTransparency="False" 
+        WindowStyle="None"
+        FontFamily="Segoe UI, Malgun Gothic">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/DHBIMWATER.UI;component/Styles/Generic.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="0" CornerRadius="15" GlassFrameThickness="1" UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
+
     <Grid>
-        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <controls:TitleBar Grid.Row="0" Grid.ColumnSpan="2"/>
+
+        <Grid Grid.Row="1" Margin="30,10,30,10" Width="Auto">
+            <Border Grid.Column="1"  Background="White" CornerRadius="15" Margin="10,0,0,0">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="15" ShadowDepth="2" Color="#DDE4EB" Opacity="0.3"/>
+                </Border.Effect>
+            </Border>
+        </Grid>
+
+
+
     </Grid>
 </Window>
