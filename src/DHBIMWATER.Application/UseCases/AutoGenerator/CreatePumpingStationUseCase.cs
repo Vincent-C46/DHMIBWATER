@@ -188,6 +188,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
             }
         }
 
+        // 공유 매개변수 작성
         private List<SharedParameterDefinition> GetPumpSharedParameterDefinitions()
         {
             var defs = new List<SharedParameterDefinition>();
@@ -279,14 +280,28 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
 
             var def7 = new SharedParameterDefinition()
             {
-                Name = "DH_HostElementCode",
+                Name = "DH_HostId",
                 SpecType = ParameterSpecType.Text,
                 GroupType = ParameterGroupType.Data,
                 BindingType = ParameterBindingType.Instance,
                 Categories = new List<ParameterCategory>() { ParameterCategory.GenericModel,},
             };
 
-            var addList = new List<SharedParameterDefinition>() { def1, def2, def3, def4, def5, def6, def7,};
+            var def8 = new SharedParameterDefinition()
+            {
+                Name = "DH_Formula",
+                SpecType = ParameterSpecType.Text,
+                GroupType = ParameterGroupType.Data,
+                BindingType = ParameterBindingType.Instance,
+                Categories = new List<ParameterCategory>() { ParameterCategory.StructuralFraming,
+                                                             ParameterCategory.StructuralColumns,
+                                                             ParameterCategory.GenericModel,
+                                                             ParameterCategory.Floors,
+                                                             ParameterCategory.Walls,
+                                                             ParameterCategory.Stairs,},
+            };
+
+            var addList = new List<SharedParameterDefinition>() { def1, def2, def3, def4, def5, def6, def7, def8, };
             defs.AddRange(addList);
 
             return defs;
