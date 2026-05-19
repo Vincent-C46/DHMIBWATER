@@ -69,12 +69,12 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
         public void Execute(PumpCreationRequestDto dto)
         {
             #region Excel 데이터 가져오기
-            //File.Open();
-            string excelFilePath = @"F:\02_Work\02_Project\06_펌프장\01_Docs\input data 산식.xlsx";
-            var excelDict = _excelReader.Read(excelFilePath);
+            ////File.Open();
+            //string excelFilePath = @"F:\02_Work\02_Project\06_펌프장\01_Docs\input data 산식.xlsx";
+            //var excelDict = _excelReader.Read(excelFilePath);
 
-            _dialogService.Info("Success", $"Sheet 개수: {excelDict.Count}");
-            _dialogService.Info("Success", $"{excelDict["종단제원 입력"][28][13]}");
+            //_dialogService.Info("Success", $"Sheet 개수: {excelDict.Count}");
+            //_dialogService.Info("Success", $"{excelDict["종단제원 입력"][28][13]}");
             #endregion
 
             using (_tx)
