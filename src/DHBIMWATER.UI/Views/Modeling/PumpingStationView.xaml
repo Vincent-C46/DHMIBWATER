@@ -35,7 +35,8 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <controls:TitleBar Grid.Row="0" Grid.ColumnSpan="2"/>
+        
+        <controls:TitleBar Grid.Row="0"/>
 
         <Grid Grid.Row="1" Margin="30,10,30,10" Width="Auto">
             <Border Grid.Column="1"  Background="White" CornerRadius="15" Margin="10,0,0,0">
@@ -205,7 +206,6 @@
                                             <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="30"/>
                                         </StackPanel>
 
-
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,15" Style="{Binding DisabledStackPanelStyle}">
                                             <TextBlock Text="H6:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                             <TextBlock Text="밸브받침 높이" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
@@ -250,7 +250,7 @@
                                                          Text="{Binding T3}" Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                                     <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="50"/>
                                                 </StackPanel>
-                                                
+
                                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                                     <TextBlock Text="B1:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                     <TextBlock Text="제진기 관리공간 폭" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
@@ -318,7 +318,7 @@
 
                                                 <Separator Margin="0,0,0,10"/>
 
-                                               
+
                                                 <StackPanel Orientation="Horizontal">
                                                     <TextBlock Style ="{StaticResource PrimaryTextBlockStyle}" Text="계산값" Margin="10"/>
                                                     <!--
@@ -436,7 +436,7 @@
                                                         <TextBlock Text="단" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="30"/>
                                                     </StackPanel>
                                                 </StackPanel>
-                                                
+
 
                                             </StackPanel>
                                         </Expander>
@@ -503,9 +503,8 @@
                                                              Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                                     <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="30"/>
                                                 </StackPanel>
-                                                
-                                                <Separator Margin="0,0,0,10"/>
 
+                                                <Separator Margin="0,0,0,10"/>
 
                                                 <StackPanel Orientation="Horizontal">
                                                     <TextBlock Style ="{StaticResource PrimaryTextBlockStyle}" Text="계산값" Margin="10"/>
@@ -513,7 +512,7 @@
                                                     <CheckBox Content="수동 입력" IsChecked="{Binding UseManualValueProfile}" Margin="10" VerticalAlignment="Center"/>
                                                     -->
                                                 </StackPanel>
-                                                
+
                                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,15" Visibility="{Binding T5Visibility}">
                                                     <TextBlock Text="T5:" Style="{StaticResource LabelTextBlockStyle}" Width="35" VerticalAlignment="Center"/>
                                                     <TextBlock Text="진입부 내벽 두께" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>

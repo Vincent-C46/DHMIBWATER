@@ -56,8 +56,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.DB
                 rows = sheet.Rows
                             .Cast<DataRow>()
                             .Select(row => row.ItemArray
-                            .Select(cell => cell?.ToString() ?? string.Empty)
-                            .ToArray())
+                                              .Select(cell => cell?.ToString() ?? string.Empty)
+                                              .ToArray())
                             .ToList();
             }
             return rows;
