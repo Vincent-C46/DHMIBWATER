@@ -17,9 +17,9 @@ namespace DHBIMWATER.UI.Views.Documentation.Sheets
     /// <summary>
     /// PumpingStationView_waml.xaml에 대한 상호 작용 논리
     /// </summary>
-    public partial class PumpingStationView : Window
+    public partial class PumpingStationSheetsView : Window
     {
-        public PumpingStationView()
+        public PumpingStationSheetsView()
         {
             InitializeComponent();
         }

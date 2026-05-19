@@ -83,8 +83,8 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
         public SheetInfoDto CopySheet(string sheetId) => _copy.CopySheet(sheetId);
         public void RenameSheet(string sheetId, string newName) => _rename.RenameSheet(sheetId, newName);
         public IList<TitleBlockDto> GetTitleBlocks() => _titleBlocks.GetTitleBlocks();
-        public string AddViewToSheet(string sheetId, string viewId, string suffix = "_시트", string targetViewName = null)
-            => _viewAdd.AddViewToSheet(sheetId, viewId, suffix, targetViewName);
+        public string AddViewToSheet(string sheetId, string viewId, string suffix = "_시트", string targetViewName = null, bool duplicate = true)
+            => _viewAdd.AddViewToSheet(sheetId, viewId, suffix, targetViewName, duplicate);
         public void ReplaceViewOnSheet(string sheetId, string oldViewId, string newViewId)
             => _viewReplace.ReplaceViewOnSheet(sheetId, oldViewId, newViewId);
         public void RemoveView(string sheetId, string viewId)
