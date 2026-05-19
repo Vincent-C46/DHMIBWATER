@@ -18,6 +18,8 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
     {
         #region Fields
         private readonly ITransactionContext _tx;
+        private readonly IDialogService _dialogService;
+
         private readonly ILevelQueryRepo _levelQueryRepo;
         private readonly ILevelCommandRepo _levelCmdRepo;
         private readonly IWallCommandRepo _wallCmdRepo;
@@ -25,7 +27,6 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
         private readonly IBeamCommandRepo _beamCmdRepo;
         private readonly IDirectShapeCommandRepo _dsCmdRepo;
         private readonly IOpeningCommandRepo _openingCmdRepo;
-        private readonly IDialogService _dialogService;
         private readonly ISharedParameterRepository _sharedParameterRepo;
         private readonly IViewCommandRepo _viewCommandRepo;
         private readonly IExcelReader _excelReader;
@@ -37,6 +38,8 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
 
         #region Constructor
         public CreatePumpingStationUseCase(ITransactionContext tx,
+                                           IDialogService dialogService,
+
                                            ILevelQueryRepo levelQueryRepo,
                                            ILevelCommandRepo levelCmdRepo,
                                            ISlabCommandRepo slabCmdRepo,
@@ -44,7 +47,6 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                                            IBeamCommandRepo beamCmdRepo,
                                            IDirectShapeCommandRepo dsCmdRepo,
                                            IOpeningCommandRepo openingCmdRepo,
-                                           IDialogService dialogService,
                                            ISharedParameterRepository sharedParameterRepo,
                                            IViewCommandRepo viewCommandRepo,
                                            IExcelReader excelReader)

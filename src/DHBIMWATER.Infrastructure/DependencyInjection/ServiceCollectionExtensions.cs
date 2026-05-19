@@ -1,8 +1,11 @@
 using DHBIMWATER.Application.Interfaces;
+using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Core.Parameters;
 using DHBIMWATER.Infrastructure.Repositories.DB;
 using DHBIMWATER.Infrastructure.Repositories.Mock;
+using DHBIMWATER.Infrastructure.Repositories.Mock.Quantity;
 using DHBIMWATER.Infrastructure.Repositories.Revit;
+using DHBIMWATER.Infrastructure.Repositories.Revit.Quantity;
 using DHBIMWATER.Infrastructure.Services.Mock;
 using DHBIMWATER.Infrastructure.Services.Revit;
 using DHBIMWATER.Infrastructure.Services.Revit.Parameter;
@@ -22,7 +25,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IGenericModelRepository, RevitGenericModelRepository>();
         services.AddTransient<ITransactionContext, RevitTransactionContext>();
 
-        #region Element 관련 Repository 등록
+        #region Element 관련
         services.AddTransient<ILevelQueryRepo, RevitLevelQueryRepo>();
         services.AddTransient<ILevelCommandRepo, RevitLevelCommandRepo>();
         services.AddTransient<IElementTypeQueryRepo, RevitElementTypeQueryRepo>();
@@ -33,6 +36,11 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IOpeningCommandRepo, RevitOpeningCommandRepo>();
         services.AddTransient<IDirectShapeCommandRepo, RevitDirectShapeCommandRepo>();
         services.AddTransient<IViewCommandRepo, RevitViewCommandRepo>();
+        #endregion
+
+        #region Quantity 관련
+        services.AddTransient<IQuantityExtractor, RevitWallExtractor>();
+
         #endregion
 
         services.AddTransient<ISharedParameterRepository, RevitSharedParameterRepository>();
@@ -67,6 +75,10 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IOpeningCommandRepo, MockOpeningCommandRepo>();
         services.AddTransient<IDirectShapeCommandRepo, MockDirectShapeCommandRepo>();
         services.AddTransient<IViewCommandRepo, MockViewCommandRepo>();
+        #endregion
+
+        #region Quantity 관련 등록
+        services.AddTransient<IQuantityExtractor, MockWallExtractor>();
         #endregion
 
         services.AddTransient<ISharedParameterRepository, MockSharedParameterRepository>();

@@ -10,6 +10,7 @@
         Title="DHBIM WATER - Quantity Calculator"
         SizeToContent="WidthAndHeight"
         MinWidth="600" MinHeight="400"
+        Width="1000"
         WindowStartupLocation="CenterScreen"
         Background="#F4F7F9" 
         AllowsTransparency="False" 
@@ -38,27 +39,87 @@
         </Grid.RowDefinitions>
         
         <controls:TitleBar Grid.Row="0"/>
-        
-        <!-- ToolBar -->
-        <StackPanel Grid.Row="1" Orientation="Horizontal">
-            <Button>수량 추출</Button>
-            <Button>재계산</Button>
-        </StackPanel>
 
-        <!-- GroupingBar -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal">
-            <TextBlock>그룹핑</TextBlock>
-            <Button>없음</Button>
-            <Button>공종별</Button>
-        </StackPanel>
-        
+        <Border Grid.Row="1"
+                BorderBrush="#E2E8F0"
+                BorderThickness="0,0,0,1"
+                Background="#FFFFFF"
+                Padding="16,8">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Content="▶  수량 추출"
+                        Command="{Binding ExtractCommand}"
+                        Background="#1E2433" Foreground="White"
+                        BorderThickness="0"
+                        Padding="14,6" FontSize="12"
+                        Margin="0,0,8,0"/>
+                <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Margin="4,0"/>
+                <Button Content="↺  재계산"
+                        Command="{Binding RecalculateCommand}"
+                        Padding="12,6" FontSize="12"
+                        Margin="0,0,4,0"/>
+                <Button Content="필터"
+                        Command="{Binding FilterCommand}"
+                        Padding="12,6" FontSize="12"
+                        Margin="0,0,8,0"/>
+                <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Margin="4,0"/>
+                <Button Content="CSV"
+                        Command="{Binding ExportCsvCommand}"
+                        Foreground="#27500A"
+                        Padding="12,6" FontSize="12"
+                        Margin="0,0,4,0"/>
+                <Button Content="JSON"
+                        Command="{Binding ExportJsonCommand}"
+                        Foreground="#27500A"
+                        Padding="12,6" FontSize="12"
+                        Margin="0,0,4,0"/>
+                <Button Content="Excel"
+                        Command="{Binding ExportExcelCommand}"
+                        Foreground="#27500A"
+                        Padding="12,6" FontSize="12"/>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="2"
+                BorderBrush="#E2E8F0"
+                BorderThickness="0,0,0,1"
+                Background="#FFFFFF"
+                Padding="16,6">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="그룹핑"
+                           FontSize="11"
+                           Foreground="#888780"
+                           VerticalAlignment="Center"
+                           Margin="0,0,10,0"/>
+                <RadioButton Content="없음"
+                             GroupName="Grouping"
+                             IsChecked="{Binding IsGroupNone}"
+                             Margin="0,0,6,0" FontSize="11"/>
+                <RadioButton Content="공종별"
+                             GroupName="Grouping"
+                             IsChecked="{Binding IsGroupByWorkType}"
+                             Margin="0,0,6,0" FontSize="11"/>
+                <RadioButton Content="ElementCode별"
+                             GroupName="Grouping"
+                             IsChecked="{Binding IsGroupByElementCode}"
+                             Margin="0,0,6,0" FontSize="11"/>
+                <RadioButton Content="카테고리별"
+                             GroupName="Grouping"
+                             IsChecked="{Binding IsGroupByCategory}"
+                             Margin="0,0,6,0" FontSize="11"/>
+                <RadioButton Content="재료별"
+                             GroupName="Grouping"
+                             IsChecked="{Binding IsGroupByMaterial}"
+                             FontSize="11"/>
+            </StackPanel>
+        </Border>
+
         <!-- Content -->
         <Grid Grid.Row="3">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
-                <!-- MainPanel -->
+                <ColumnDefinition Width="Auto"/>
+                <!-- Splitter -->
                 <ColumnDefinition Width="260"/>
-                <!-- SidePanel -->
             </Grid.ColumnDefinitions>
 
             <!-- MainPanel -->
@@ -67,69 +128,247 @@
                     <RowDefinition Height="Auto"/>
                     <!-- SummaryCards -->
                     <RowDefinition Height="*"/>
-                    <!-- DataGrid ★ -->
+                    <!-- DataGrid -->
                 </Grid.RowDefinitions>
 
-                <UniformGrid Grid.Row="0" Columns="3">
-                    <!-- 카드 3개 -->
-                </UniformGrid>
+                <!-- SummaryCards -->
+                <Border Grid.Row="0"
+                        BorderBrush="#E2E8F0"
+                        BorderThickness="0,0,0,1"
+                        Padding="16,10">
+                    <UniformGrid Columns="3" Rows="1">
+                        <!-- 콘크리트 -->
+                        <Border Background="#F1EFE8" CornerRadius="8"
+                                Padding="12,8" Margin="0,0,8,0">
+                            <StackPanel>
+                                <TextBlock Text="콘크리트" FontSize="10" Foreground="#888780"/>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
+                                    <TextBlock Text="{Binding TotalConcrete, StringFormat=F1}"
+                                               FontSize="18" FontWeight="Medium"/>
+                                    <TextBlock Text=" m³" FontSize="10"
+                                               Foreground="#888780" VerticalAlignment="Bottom" Margin="2,0,0,2"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                        <!-- 거푸집 -->
+                        <Border Background="#F1EFE8" CornerRadius="8"
+                                Padding="12,8" Margin="0,0,8,0">
+                            <StackPanel>
+                                <TextBlock Text="거푸집" FontSize="10" Foreground="#888780"/>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
+                                    <TextBlock Text="{Binding TotalFormwork, StringFormat=F1}"
+                                               FontSize="18" FontWeight="Medium"/>
+                                    <TextBlock Text=" m²" FontSize="10"
+                                               Foreground="#888780" VerticalAlignment="Bottom" Margin="2,0,0,2"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                        <!-- 미완료 -->
+                        <Border Background="#FCEBEB" CornerRadius="8" Padding="12,8">
+                            <StackPanel>
+                                <TextBlock Text="미완료 항목" FontSize="10" Foreground="#A32D2D"/>
+                                <TextBlock Text="{Binding IncompleteCount}"
+                                           FontSize="18" FontWeight="Medium"
+                                           Foreground="#E24B4A"/>
+                            </StackPanel>
+                        </Border>
+                    </UniformGrid>
+                </Border>
 
-                <DataGrid Grid.Row="1"/>
+                <!-- DataGrid -->
+                <DataGrid Grid.Row="1"
+                          ItemsSource="{Binding QuantityItems}"
+                          SelectedItem="{Binding SelectedItem}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          SelectionMode="Single"
+                          GridLinesVisibility="Horizontal"
+                          HeadersVisibility="Column"
+                          CanUserReorderColumns="True"
+                          CanUserSortColumns="True"
+                          CanUserResizeColumns="True"
+                          FontSize="11"
+                          RowHeight="28"
+                          BorderThickness="0"
+                          Background="White">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="카테고리"   Binding="{Binding Category}"     Width="70"/>
+                        <DataGridTextColumn Header="ElementId"  Binding="{Binding ElementId}"    Width="70"/>
+                        <DataGridTextColumn Header="코드"       Binding="{Binding ElementCode}"  Width="60"/>
+                        <DataGridTextColumn Header="공종"       Binding="{Binding WorkType}"     Width="90"/>
+                        <DataGridTextColumn Header="규격"       Binding="{Binding Specification}" Width="80"/>
+                        <DataGridTextColumn Header="재료"       Binding="{Binding Material}"     Width="80"/>
+                        <DataGridTextColumn Header="산출식"     Binding="{Binding Formula}"      Width="*"/>
+                        <DataGridTextColumn Header="값"         Binding="{Binding Value, StringFormat=F2}" Width="60"/>
+                        <DataGridTextColumn Header="단위"       Binding="{Binding Unit}"         Width="44"/>
+                        <DataGridTextColumn Header="상태"       Binding="{Binding Status}"       Width="56"/>
+                    </DataGrid.Columns>
+
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Status}"
+                                             Value="Manual">
+                                    <Setter Property="Background" Value="#FAEEDA"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.RowStyle>
+                </DataGrid>
             </Grid>
 
+            <!-- GridSplitter -->
+            <GridSplitter Grid.Column="1"
+                          Width="4"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Stretch"
+                          Background="#E2E8F0"
+                          ShowsPreview="True"/>
+
             <!-- SidePanel -->
-            <Grid Grid.Column="1">
+            <Grid Grid.Column="2" Background="White">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <!-- DetailSection -->
                     <RowDefinition Height="*"/>
-                    <!-- GroupSummary ★ -->
+                    <!-- GroupSummary -->
                 </Grid.RowDefinitions>
 
-                <StackPanel Grid.Row="0">
-                    <!-- 상세 항목들 -->
-                </StackPanel>
+                <!-- DetailSection -->
+                <Border Grid.Row="0"
+                        BorderBrush="#E2E8F0"
+                        BorderThickness="0,0,0,1"
+                        Padding="14,12">
+                    <StackPanel>
+                        <TextBlock Text="선택 항목"
+                                   FontSize="10" FontWeight="Medium"
+                                   Foreground="#888780"
+                                   Margin="0,0,0,8"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="22"/>
+                                <RowDefinition Height="22"/>
+                                <RowDefinition Height="22"/>
+                                <RowDefinition Height="22"/>
+                                <RowDefinition Height="22"/>
+                                <RowDefinition Height="22"/>
+                                <RowDefinition Height="22"/>
+                            </Grid.RowDefinitions>
 
-                <ScrollViewer Grid.Row="1">
-                    <!-- 그룹 집계 목록 -->
-                </ScrollViewer>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="카테고리" FontSize="11" Foreground="#888780" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedItem.Category}" FontSize="11" FontWeight="Medium" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="ElementId" FontSize="11" Foreground="#888780" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedItem.ElementId}" FontSize="11" FontWeight="Medium" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="코드" FontSize="11" Foreground="#888780" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedItem.ElementCode}" FontSize="11" FontWeight="Medium" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="공종" FontSize="11" Foreground="#888780" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedItem.WorkType}" FontSize="11" FontWeight="Medium" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="재료" FontSize="11" Foreground="#888780" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding SelectedItem.Material}" FontSize="11" FontWeight="Medium" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+
+                            <TextBlock Grid.Row="5" Grid.Column="0" Text="산출식" FontSize="11" Foreground="#888780" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding SelectedItem.Formula}" FontSize="11" FontWeight="Medium" HorizontalAlignment="Right" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+
+                            <TextBlock Grid.Row="6" Grid.Column="0" Text="값" FontSize="11" Foreground="#888780" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Row="6" Grid.Column="1" FontSize="11" FontWeight="Medium" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <Run Text="{Binding SelectedItem.Value, StringFormat=F2}"/>
+                                <Run Text=" "/>
+                                <Run Text="{Binding SelectedItem.Unit}" Foreground="#888780"/>
+                            </TextBlock>
+                        </Grid>
+
+                        <!-- Revit 하이라이트 표시 -->
+                        <Border Background="#E6F1FB"
+                                BorderBrush="#85B7EB"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Padding="8,6"
+                                Margin="0,10,0,0"
+                                Visibility="{Binding IsItemSelected}">
+                            <TextBlock Text="Revit에서 하이라이트됨"
+                                       FontSize="11"
+                                       Foreground="#0C447C"/>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- GroupSummary -->
+                <Grid Grid.Row="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0"
+                               Text="그룹 집계"
+                               FontSize="10" FontWeight="Medium"
+                               Foreground="#888780"
+                               Padding="14,10,14,6"/>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding GroupSummaries}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="#E2E8F0"
+                                            BorderThickness="0,0,0,1"
+                                            Padding="14,6">
+                                        <Grid>
+                                            <TextBlock Text="{Binding Name}"
+                                                       FontSize="11"
+                                                       HorizontalAlignment="Left"
+                                                       VerticalAlignment="Center"/>
+                                            <StackPanel Orientation="Horizontal"
+                                                        HorizontalAlignment="Right"
+                                                        VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Total, StringFormat=F1}"
+                                                           FontSize="11" FontWeight="Medium"/>
+                                                <TextBlock Text="{Binding Unit}"
+                                                           FontSize="10" Foreground="#888780"
+                                                           Margin="3,0,0,0" VerticalAlignment="Bottom"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
             </Grid>
         </Grid>
 
         <!-- StatusBar -->
-        <DockPanel Grid.Row="4">
-            <TextBlock>자동 86개</TextBlock>
-            <TextBlock DockPanel.Dock="Right">전체 97개</TextBlock>
-        </DockPanel>
-
-<!--
-        <Grid Grid.Row="3" Margin="30,10,30,10" Width="Auto">
-            <Border Grid.Column="1"  Background="White" CornerRadius="15" Margin="10,0,0,0">
-                <Border.Effect>
-                    <DropShadowEffect BlurRadius="15" ShadowDepth="2" Color="#DDE4EB" Opacity="0.3"/>
-                </Border.Effect>
-
-                <ScrollViewer>
-                    <StackPanel Orientation="Horizontal">
-                        <DataGrid>
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="카테고리" Binding="{Binding Item}" Width="80"/>
-                                <DataGridTextColumn Header="ElementCode" Binding="{Binding Quantity}" Width="80"/>
-                                <DataGridTextColumn Header="공종" Binding="{Binding Quantity}" Width="80"/>
-                                <DataGridTextColumn Header="규격" Binding="{Binding Quantity}" Width="80"/>
-                                <DataGridTextColumn Header="재료" Binding="{Binding Quantity}" Width="80"/>
-                                <DataGridTextColumn Header="산출식" Binding="{Binding Quantity}" Width="80"/>
-                                <DataGridTextColumn Header="값" Binding="{Binding Quantity}" Width="80"/>
-                                <DataGridTextColumn Header="단위" Binding="{Binding Unit}" Width="80"/>
-                            </DataGrid.Columns>
-                            
-                        </DataGrid>
-                    </StackPanel>
-                </ScrollViewer>
-                
-            </Border>
-        </Grid>
-    -->     
-        
+        <Border Grid.Row="4"
+                BorderBrush="#E2E8F0"
+                BorderThickness="0,1,0,0"
+                Background="#F8FAFC"
+                Padding="16,5">
+            <DockPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse Width="6" Height="6" Fill="#639922" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                    <TextBlock FontSize="10" Foreground="#888780" Margin="0,0,12,0">
+                        <Run Text="자동 "/><Run Text="{Binding AutoCount}"/>
+                        <Run Text="개"/>
+                    </TextBlock>
+                    <Ellipse Width="6" Height="6" Fill="#BA7517" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                    <TextBlock FontSize="10" Foreground="#888780" Margin="0,0,12,0">
+                        <Run Text="수동 "/><Run Text="{Binding ManualCount}"/>
+                        <Run Text="개"/>
+                    </TextBlock>
+                </StackPanel>
+                <TextBlock DockPanel.Dock="Right"
+                           FontSize="10" Foreground="#888780"
+                           VerticalAlignment="Center">
+                    <Run Text="전체 "/><Run Text="{Binding TotalCount}"/><Run Text="개 항목"/>
+                </TextBlock>
+            </DockPanel>
+        </Border>
     </Grid>
 </Window>
