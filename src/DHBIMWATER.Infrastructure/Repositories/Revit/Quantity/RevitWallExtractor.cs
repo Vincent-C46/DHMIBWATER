@@ -1,4 +1,6 @@
 ﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.UI;
+using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Core.Parameters;
 using DHBIMWATER.Core.Quantity;
@@ -20,6 +22,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             if (doc == null) return false;
 
             var elem = doc.GetElement(new ElementId(elementId));
+            //TaskDialog.Show("Debug", elem?.GetType().Name ?? "null");
 
             return elem is Wall;
         }
@@ -31,36 +34,50 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 return Enumerable.Empty<QuantityItem>();
 
             var wall = (Wall)doc.GetElement(new ElementId(elementId));
-            var area = UC.Ft2ToM2(wall.get_Parameter(BuiltInParameter.HOST_AREA_COMPUTED).AsDouble());
-
             var cs = wall.WallType.GetCompoundStructure();
-            double thickness = UC.FtToM(cs.GetLayers()
+
+            // 객체 추출값
+            var area = Math.Round(UC.Ft2ToM2(wall.get_Parameter(BuiltInParameter.HOST_AREA_COMPUTED).AsDouble()), 2);
+            double thickness = Math.Round(UC.FtToM(cs.GetLayers()
                                           .Where(l => l.Function == MaterialFunctionAssignment.Structure)
-                                          .Sum(l => l.Width));
+                                          .Sum(l => l.Width)), 2);
+
+
+            var varDict = new Dictionary<string, double>
+            {
+                ["A"] = area,
+                ["Thk"] = thickness,
+            };
+
+            //var concFormula = "A x Thk";
+            var concFormula = "A * Thk";
+            string? concRendered = FormulaCalculator.Render(concFormula, varDict);
+            double concValue = FormulaCalculator.Calculate(concFormula, varDict);
+
             var quantityItems = new List<QuantityItem>();
 
             // 콘크리트
             var concreteItem = new QuantityItem
             {
                 ElementId = elementId,
-                Category = wall.LookupParameter("DH_Category").ToString(),
-                ElementCode = wall.LookupParameter("DH_ElementCode").ToString(),
-                WorkType = "벽",
-                Specification = "철근 콘크리트",
+                Category = wall.LookupParameter("DH_Category")?.ToString() ?? string.Empty,
+                ElementCode = wall.LookupParameter("DH_ElementCode")?.ToString() ?? string.Empty,
+                WorkType = "철근콘크리트",
+                Specification = "25-18-250",
                 Material = string.Empty,
-                Formula = $"{area}(A) * {thickness}(Thk)",
-                Value = area * thickness,
-                Unit = "m²"
+                Formula = concRendered,
+                Value = concValue,
+                Unit = "m³"
             };
 
             // 거푸집
             var exteriorFormItem = new QuantityItem
             {
                 ElementId = elementId,
-                Category = wall.LookupParameter("DH_Category").ToString(),
-                ElementCode = wall.LookupParameter("DH_ElementCode").ToString(),
-                WorkType = "벽",
-                Specification = "외측 거푸집",
+                Category = wall.LookupParameter("DH_Category")?.ToString() ?? string.Empty,
+                ElementCode = wall.LookupParameter("DH_ElementCode")?.ToString() ?? string.Empty,
+                WorkType ="거푸집",
+                Specification = "유로폼",
                 Material = string.Empty,
                 Formula = $"{area}(A)",
                 Value = area,
@@ -70,8 +87,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var interiorFormItem = new QuantityItem
             {
                 ElementId = elementId,
-                Category = wall.LookupParameter("DH_Category").ToString(),
-                ElementCode = wall.LookupParameter("DH_ElementCode").ToString(),
+                Category = wall.LookupParameter("DH_Category")?.ToString() ?? string.Empty,
+                ElementCode = wall.LookupParameter("DH_ElementCode")?.ToString() ?? string.Empty,
                 WorkType = "벽",
                 Specification = "내측 거푸집",
                 Material = string.Empty,
@@ -80,7 +97,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 Unit = "m²"
             };
 
-            var listToAdd = new List<QuantityItem>() { concreteItem, };
+            var listToAdd = new List<QuantityItem>() { concreteItem, exteriorFormItem, interiorFormItem };
             quantityItems.AddRange(listToAdd);
 
             return quantityItems;
