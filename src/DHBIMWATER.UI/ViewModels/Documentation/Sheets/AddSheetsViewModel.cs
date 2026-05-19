@@ -32,6 +32,13 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
             set { _sheetName = value; OnPropertyChanged(); }
         }
 
+        private string _sheetSubtitle;
+        public string SheetSubtitle
+        {
+            get => _sheetSubtitle;
+            set { _sheetSubtitle = value; OnPropertyChanged(); }
+        }
+
         private bool? _dialogResult;
         public bool? DialogResult
         {

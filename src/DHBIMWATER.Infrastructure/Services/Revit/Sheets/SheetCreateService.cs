@@ -20,10 +20,18 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             using (var tx = new Transaction(_doc, "Create Sheet"))
             {
                 tx.Start();
-                sheet = ViewSheet.Create(_doc, tbId);
-                sheet.SheetNumber = sheetNumber;
-                sheet.Name = sheetName;
-                tx.Commit();
+                try
+                {
+                    sheet = ViewSheet.Create(_doc, tbId);
+                    sheet.SheetNumber = sheetNumber;
+                    sheet.Name = sheetName;
+                    tx.Commit();
+                }
+                catch
+                {
+                    tx.RollBack();
+                    return null;
+                }
             }
 
             return new SheetInfoDto
