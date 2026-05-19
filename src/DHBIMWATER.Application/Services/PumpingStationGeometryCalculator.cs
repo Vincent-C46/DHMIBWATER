@@ -1738,7 +1738,7 @@ namespace DHBIMWATER.Application.Services
 
             sectionViewDefs.Add(new SectionViewDefinition
             {
-                Name = "A-A",
+                Name = "A",
                 Min = new Point3D(-offset, pl.B8 / 2, d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
                 Max = new Point3D(totalLength + pl.B10 + offset, pl.B8 / 2 + offset, d.HWL * 1000 + pr.H3 + pr.T1 + offset),
 
@@ -1749,7 +1749,7 @@ namespace DHBIMWATER.Application.Services
 
             sectionViewDefs.Add(new SectionViewDefinition
             {
-                Name = "B-B",
+                Name = "B",
                 Min = new Point3D(-offset, pl.B8 - 100, d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
                 Max = new Point3D(totalLength + pl.B10 + offset, pl.B8 + pl.T5 + 100, d.HWL * 1000 + pr.H3 + pr.T1 + offset),
 
@@ -1764,7 +1764,7 @@ namespace DHBIMWATER.Application.Services
             {
                 sectionViewDefs.Add(new SectionViewDefinition
                 {
-                    Name = "C-C",
+                    Name = "C",
                     Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - pl.B10 - offset, -pl.T5 - pl.B9 + 100, d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
                     Max = new Point3D(totalLength + pl.B10 + offset,                     -pl.T5 - pl.B9 + offset, d.HWL * 1000 + pr.H3 + pr.T1 + offset),
 
@@ -1775,7 +1775,7 @@ namespace DHBIMWATER.Application.Services
 
                 sectionViewDefs.Add(new SectionViewDefinition
                 {
-                    Name = "D-D",
+                    Name = "D",
                     Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - pl.B10 - offset, -pl.T5 - offset, d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
                     Max = new Point3D(totalLength + pl.B10 + offset,                     -pl.T5 + offset, d.HWL * 1000 + pr.H3 + pr.T1 + offset),
 
@@ -1786,7 +1786,7 @@ namespace DHBIMWATER.Application.Services
 
                 sectionViewDefs.Add(new SectionViewDefinition
                 {
-                    Name = "E-E",
+                    Name = "E",
                     Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - pl.B10 - offset, -pl.T5 - pl.B9 - pr.T4  - pl.B10 - offset, d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
                     Max = new Point3D(totalLength + pl.B10 + offset,                     + offset, d.HWL * 1000 + pr.H3 / 2),
 
@@ -1800,7 +1800,7 @@ namespace DHBIMWATER.Application.Services
             {
                 sectionViewDefs.Add(new SectionViewDefinition
                 {
-                    Name = "C-C",
+                    Name = "C",
                     Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - pl.B10 - offset, (totalWidth - pr.T4) - (-pl.T5 - pl.B9 + 100), d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
                     Max = new Point3D(totalLength + pl.B10 + offset,                     (totalWidth - pr.T4) - (-pl.T5 - pl.B9 + offset), d.HWL * 1000 + pr.H3 + pr.T1 + offset),
 
@@ -1811,7 +1811,7 @@ namespace DHBIMWATER.Application.Services
 
                 sectionViewDefs.Add(new SectionViewDefinition
                 {
-                    Name = "D-D",
+                    Name = "D",
                     Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - pl.B10 - offset, (totalWidth - pr.T4) - (-pl.T5 - offset), d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
                     Max = new Point3D(totalLength + pl.B10 + offset,                     (totalWidth - pr.T4) - (-pl.T5 + offset), d.HWL * 1000 + pr.H3 + pr.T1 + offset),
 
@@ -1822,7 +1822,7 @@ namespace DHBIMWATER.Application.Services
 
                 sectionViewDefs.Add(new SectionViewDefinition
                 {
-                    Name = "E-E",
+                    Name = "E",
                     Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - pl.B10 - offset, (totalWidth - pr.T4) - (-pl.T5 - pl.B9 - pr.T4 - pl.B10 - offset), d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
                     Max = new Point3D(totalLength + pl.B10 + offset, (totalWidth - pr.T4) - (offset),                                 d.HWL * 1000 + pr.H3 / 2),
 
@@ -1834,7 +1834,7 @@ namespace DHBIMWATER.Application.Services
 
             sectionViewDefs.Add(new SectionViewDefinition
             {
-                Name = "F-F",
+                Name = "F",
                 Min = new Point3D(pr.L1 / 2, -(pr.T4 + pl.B10 + offset), d.LWL * 1000 - (pr.H1 + pr.T2 + 100 + offset)),
                 Max = new Point3D(pr.L1 + pr.L2, totalWidth - pr.T4 + pl.B10 + 100 + offset, d.HWL * 1000 + pr.H3 + pr.T1 + offset),
 
@@ -1845,7 +1845,7 @@ namespace DHBIMWATER.Application.Services
 
             sectionViewDefs.Add(new SectionViewDefinition
             {
-                Name = "G-G",
+                Name = "G",
                 Min = new Point3D(pr.B1 + pr.B2 - offset, -(pr.T4 + pl.B10 + offset), d.LWL * 1000 - (pr.H1 + pr.T2 + 100 + offset)),
                 Max = new Point3D(pr.B1 + pr.B2 + pr.GB1, totalWidth - pr.T4 + pl.B10 + 100 + offset, d.HWL * 1000 + pr.H3 + pr.T1 + offset),
 
@@ -1871,7 +1871,7 @@ namespace DHBIMWATER.Application.Services
 
             sectionViewDefs.Add(new SectionViewDefinition
             {
-                Name = "H-H",
+                Name = "H",
                 Min = new Point3D(totalLength - pr.T4 - pl.L5 + 100,
                                   minWidth,
                                   d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
@@ -1886,7 +1886,7 @@ namespace DHBIMWATER.Application.Services
 
             sectionViewDefs.Add(new SectionViewDefinition
             {
-                Name = "I-I",
+                Name = "I",
                 Min = new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2,
                       minWidth,
                       d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
@@ -1901,7 +1901,7 @@ namespace DHBIMWATER.Application.Services
 
             sectionViewDefs.Add(new SectionViewDefinition
             {
-                Name = "J-J",
+                Name = "J",
                 Min = new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3 - 100,
                       minWidth,
                       d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
@@ -1916,7 +1916,7 @@ namespace DHBIMWATER.Application.Services
 
             sectionViewDefs.Add(new SectionViewDefinition
             {
-                Name = "K-K",
+                Name = "K",
                 Min = new Point3D(totalLength - pr.T4 - offset,
                                   minWidth,
                                   d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),

@@ -35,25 +35,39 @@ namespace DHBIMWATER.Application.UseCases.QuantityCalculator
         #endregion
 
         #region Methods
-        public void Execute()
+        public IEnumerable<QuantityItem> Execute()
         {
-            using (_tx)
+            var quantityItems = new List<QuantityItem>();
+
+            //using (_tx)
             {
                 try
                 {
-                    _tx.Begin("Calculate Quantity");
+                    //_tx.Begin("Calculate Quantity");
+                    foreach (var extractor in _extractors)
+                    {
+                        var ids = extractor.CollectElementIds();
+                        if (!ids.Any()) continue;   // 없으면 다음 Extractor 순환
 
-                    //bool result = _extractors.FirstOrDefault(e => e.CanExtract(000000)).CanExtract;
-                    IEnumerable<QuantityItem> qItems = _extractors.FirstOrDefault(e => e.CanExtract(454153)).Extract(454153);
-                    _dialogService.Info("Info", $"산출식: {qItems.FirstOrDefault().Formula}\n값: {qItems.FirstOrDefault().Value}");
+                        foreach (var id in ids)
+                            quantityItems.AddRange(extractor.Extract(id));
+                    }
 
-                    _tx.Commit();
+                    if (quantityItems.Any())
+                    {
+                        var item = quantityItems.FirstOrDefault(r => r.WorkType.Contains("콘크리트"));
+                        //_dialogService.Info("Info",$"공종: {item.WorkType}\n규격: {item.Specification}\n산출식: {item.Formula}\n값: {item.Value}");
+                    }
+
+                    return quantityItems;
+
+                    //_tx.Commit();
                 }
                 catch (Exception ex)
                 {
-                    _tx.Rollback();
+                    //_tx.Rollback();
                     _dialogService.Warn("Error", $"Error Message: {ex.Message}");
-                    return;
+                    return quantityItems;
                 }
             }
             #endregion

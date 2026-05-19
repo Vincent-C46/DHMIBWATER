@@ -10,8 +10,8 @@
         Title="DHBIM WATER - Quantity Calculator"
         SizeToContent="WidthAndHeight"
         MinWidth="600" MinHeight="400"
-        MaxWidth="1000"
-        WindowStartupLocation="CenterScreen"
+        MaxWidth="1600" MaxHeight="1000"
+        WindowStartupLocation="CenterOwner"
         Background="#F4F7F9" 
         AllowsTransparency="False" 
         WindowStyle="None"
@@ -201,7 +201,9 @@
                         <DataGridTextColumn Header="산출식"     Binding="{Binding Formula}"      Width="*"/>
                         <DataGridTextColumn Header="값"         Binding="{Binding Value, StringFormat=F2}" Width="60"/>
                         <DataGridTextColumn Header="단위"       Binding="{Binding Unit}"         Width="44"/>
+                        <!--
                         <DataGridTextColumn Header="상태"       Binding="{Binding Status}"       Width="56"/>
+                        -->
                     </DataGrid.Columns>
 
                     <DataGrid.RowStyle>

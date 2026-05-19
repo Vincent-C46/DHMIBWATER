@@ -1,23 +1,17 @@
 ﻿using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
-using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Application.Interfaces.Quantity;
-using DHBIMWATER.Core.Parameters;
 using DHBIMWATER.Core.Quantity;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 {
-    public class RevitWallExtractor : IQuantityExtractor
+    public class RevitFloorExtractor : IQuantityExtractor
     {
         private readonly Func<Document?> _doc;
-        public RevitWallExtractor(Func<Document?> doc)
+        public RevitFloorExtractor(Func<Document?> doc)
         {
             _doc = doc;
         }
-
-        public IEnumerable<long> CollectElementIds()
-            => new FilteredElementCollector(_doc()).OfClass(typeof(Wall)).WhereElementIsNotElementType().Select(w => w.Id.Value);
 
         public bool CanExtract(long elementId)
         {
@@ -27,8 +21,12 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var elem = doc.GetElement(new ElementId(elementId));
             //TaskDialog.Show("Debug", elem?.GetType().Name ?? "null");
 
-            return elem is Wall;
+            return elem is Floor;
         }
+
+        public IEnumerable<long> CollectElementIds()
+            => new FilteredElementCollector(_doc()).OfClass(typeof(Floor)).WhereElementIsNotElementType().Select(w => w.Id.Value);
+
 
         public IEnumerable<QuantityItem> Extract(long elementId)
         {
@@ -36,11 +34,13 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             if (doc == null)
                 return Enumerable.Empty<QuantityItem>();
 
-            var wall = (Wall)doc.GetElement(new ElementId(elementId));
-            var cs = wall.WallType.GetCompoundStructure();
+            var floor = (Floor)doc.GetElement(new ElementId(elementId));
+            var cs = floor.FloorType.GetCompoundStructure();
+
+            var quantityItems = new List<QuantityItem>();
 
             // 객체 추출값
-            var area = Math.Round(UC.Ft2ToM2(wall.get_Parameter(BuiltInParameter.HOST_AREA_COMPUTED).AsDouble()), 2);
+            var area = Math.Round(UC.Ft2ToM2(floor.get_Parameter(BuiltInParameter.HOST_AREA_COMPUTED).AsDouble()), 2);
             double thickness = Math.Round(UC.FtToM(cs.GetLayers()
                                           .Where(l => l.Function == MaterialFunctionAssignment.Structure)
                                           .Sum(l => l.Width)), 2);
@@ -52,18 +52,22 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             };
 
             var concFormula = "A x Thk";
+
             //var concFormula = "A * Thk";
             string? concRendered = FormulaCalculator.Render(concFormula, varDict);
             double concValue = FormulaCalculator.Calculate(concFormula, varDict);
 
-            var quantityItems = new List<QuantityItem>();
+            var formFormula = "A";
+            string? formRendered = FormulaCalculator.Render(formFormula, varDict);
+            double formValue = FormulaCalculator.Calculate(formFormula, varDict);
+
 
             // 콘크리트
             var concreteItem = new QuantityItem
             {
                 ElementId = elementId,
-                Category = wall.LookupParameter("DH_Category")?.AsString() ?? string.Empty,
-                ElementCode = wall.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
+                Category = floor.LookupParameter("DH_Category")?.AsString() ?? string.Empty,
+                ElementCode = floor.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
                 WorkType = "철근콘크리트",
                 Specification = "25-18-250",
                 Material = string.Empty,
@@ -73,33 +77,20 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             };
 
             // 거푸집
-            var exteriorFormItem = new QuantityItem
+            var bottomFormItem = new QuantityItem
             {
                 ElementId = elementId,
-                Category = wall.LookupParameter("DH_Category")?.AsString() ?? string.Empty,
-                ElementCode = wall.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
-                WorkType ="거푸집",
-                Specification = "유로폼",
+                Category = floor.LookupParameter("DH_Category")?.AsString() ?? string.Empty,
+                ElementCode = floor.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
+                WorkType = "거푸집",
+                Specification = "합판 4회",
                 Material = string.Empty,
-                Formula = $"{area}(A)",
-                Value = area,
+                Formula = formRendered,
+                Value = formValue,
                 Unit = "m²"
             };
 
-            var interiorFormItem = new QuantityItem
-            {
-                ElementId = elementId,
-                Category = wall.LookupParameter("DH_Category")?.AsString() ?? string.Empty,
-                ElementCode = wall.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
-                WorkType = "벽",
-                Specification = "내측 거푸집",
-                Material = string.Empty,
-                Formula = $"{area}(A)",
-                Value = area,
-                Unit = "m²"
-            };
-
-            var listToAdd = new List<QuantityItem>() { concreteItem, exteriorFormItem, interiorFormItem };
+            var listToAdd = new List<QuantityItem>() { concreteItem, bottomFormItem, };
             quantityItems.AddRange(listToAdd);
 
             return quantityItems;

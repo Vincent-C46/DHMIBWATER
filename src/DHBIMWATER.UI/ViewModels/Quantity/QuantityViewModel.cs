@@ -1,10 +1,12 @@
 ﻿using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Application.UseCases.AutoGenerator;
 using DHBIMWATER.Application.UseCases.QuantityCalculator;
+using DHBIMWATER.Core.Quantity;
 using DHBIMWATER.UI.Base;
 using DHBIMWATER.UI.Commands;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,9 +20,21 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         private IDialogService _dialogService;
         private readonly CalculateQuantityUseCase _calculateQuantityUseCase;
 
+        private QuantityItem? _selectedItem;
         #endregion
 
         #region Properties
+        public ObservableCollection<QuantityItem> QuantityItems { get; private set; } = new();
+        public QuantityItem? SelectedItem
+        {
+            get => _selectedItem;
+            set
+            {
+                if (_selectedItem != value)
+                    _selectedItem = value;
+                OnPropertyChanged();
+            }
+        }
         #endregion
 
         #region Commands
@@ -32,15 +46,20 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         {
             _calculateQuantityUseCase = useCase;
             _dialogService = dialogService;
-            ExtractCommand = new RelayCommand(GetCalculateQuantity);
+
+            var items = _calculateQuantityUseCase.Execute();
+            QuantityItems = new ObservableCollection<QuantityItem>(items);
+
+            //ExtractCommand = new RelayCommand(GetCalculateQuantity);
         }
         #endregion
 
         #region Methods
-        private void  GetCalculateQuantity(object? obj)
+        private void GetCalculateQuantity(object? obj)
         {
-            _calculateQuantityUseCase.Execute();
-            return;
+            var items = _calculateQuantityUseCase.Execute();
+            QuantityItems = new ObservableCollection<QuantityItem>(items);
+            OnPropertyChanged(nameof(QuantityItems));
         }
         #endregion
     }

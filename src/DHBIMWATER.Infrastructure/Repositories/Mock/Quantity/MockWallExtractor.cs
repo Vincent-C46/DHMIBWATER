@@ -7,7 +7,12 @@ namespace DHBIMWATER.Infrastructure.Repositories.Mock.Quantity
     {
         public bool CanExtract(long elementId)
         {
-            return true;
+            return false;
+        }
+
+        public IEnumerable<long> CollectElementIds()
+        {
+            return new List<long>();
         }
 
         public IEnumerable<QuantityItem> Extract(long elementId)
