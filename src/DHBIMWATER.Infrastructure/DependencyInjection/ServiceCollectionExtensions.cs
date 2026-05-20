@@ -6,6 +6,7 @@ using DHBIMWATER.Infrastructure.Repositories.Mock;
 using DHBIMWATER.Infrastructure.Repositories.Mock.Quantity;
 using DHBIMWATER.Infrastructure.Repositories.Revit;
 using DHBIMWATER.Infrastructure.Repositories.Revit.Quantity;
+using DHBIMWATER.Infrastructure.Services.Didas;
 using DHBIMWATER.Infrastructure.Services.Mock;
 using DHBIMWATER.Infrastructure.Services.Revit;
 using DHBIMWATER.Infrastructure.Services.Revit.Parameter;
@@ -51,6 +52,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IFileDialogService, RevitFileDialogService>();
         services.AddTransient<IDialogService, RevitDialogService>();
         services.AddTransient<IGuideLineService, RevitGuideLineService>();
+        services.AddSingleton<IUsageLogger, DidasUsageService>();   // Didas 로그 연계
         #endregion
 
         return services;

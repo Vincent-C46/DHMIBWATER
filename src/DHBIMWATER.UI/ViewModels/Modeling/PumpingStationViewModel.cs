@@ -19,6 +19,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         #region Fields
         private IDialogService _dialogService;
         private readonly CreatePumpingStationUseCase _createPumpingStationUseCase;
+        private readonly IUsageLogger _usageLogger;
 
         private string ProfileType1ImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/1-1.종단제원.png";
         private string ProfileType2ImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/1-1.종단제원.png";
@@ -678,10 +679,11 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         #endregion
 
         #region Constructor
-        public PumpingStationViewModel(CreatePumpingStationUseCase useCase, IDialogService dialogService, IElementTypeQueryRepo elementTypeQueryRepo)
+        public PumpingStationViewModel(CreatePumpingStationUseCase useCase, IDialogService dialogService, IElementTypeQueryRepo elementTypeQueryRepo, IUsageLogger usageLogger)
         {
             _createPumpingStationUseCase = useCase;
             _dialogService = dialogService;
+            _usageLogger = usageLogger;
             CreatePumpingStationCommand = new RelayCommand(CreatePumpingStation);
 
             InitializeDerivedValues();
@@ -697,6 +699,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             //typeSelectionDto = new PumpTypeSelectionDto(T1, T2, T3, T4, T5, T6, GB1, GH1);
             creationRequestDto = new PumpCreationRequestDto(designConditionDto, planSpecDto, profileSpecDto);
 
+            _ = _usageLogger.LogAsync();
             _createPumpingStationUseCase.Execute(creationRequestDto);
         }
 

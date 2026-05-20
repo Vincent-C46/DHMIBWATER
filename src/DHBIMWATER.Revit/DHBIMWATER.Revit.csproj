@@ -17,9 +17,12 @@
     <ProjectReference Include="..\DHBIMWATER.Application\DHBIMWATER.Application.csproj" />
     <ProjectReference Include="..\DHBIMWATER.Infrastructure\DHBIMWATER.Infrastructure.csproj" />
     <ProjectReference Include="..\DHBIMWATER.UI\DHBIMWATER.UI.csproj" />
-  </ItemGroup>
+  </ItemGroup>  
 
 	<ItemGroup>
+		<Reference Include="DidasUsage">
+			<HintPath>libs\DidasUsage\DidasUsage.dll</HintPath>
+		</Reference>
 		<Reference Include="RevitAPI">
 			<HintPath>C:\Program Files\Autodesk\Revit 2026\RevitAPI.dll</HintPath>
 			<Private>False</Private>
@@ -28,6 +31,12 @@
 			<HintPath>C:\Program Files\Autodesk\Revit 2026\RevitAPIUI.dll</HintPath>
 			<Private>False</Private>
 		</Reference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="libs\DidasUsage\DidasReader.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 
   <PropertyGroup>
@@ -47,7 +56,7 @@
   </PropertyGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="set &quot;AddinsRoot=$(AppData)\Autodesk\REVIT\Addins&quot;&#xD;&#xA;&#xD;&#xA;if exist &quot;%25AddinsRoot%25\2025&quot; (&#xA;    copy &quot;$(ProjectDir)*.addin&quot; &quot;%25AddinsRoot%25\2025&quot;&#xA;    if not exist &quot;%25AddinsRoot%25\2025\DHBIMWATER&quot; mkdir &quot;%25AddinsRoot%25\2025\DHBIMWATER&quot;&#xA;    copy &quot;$(ProjectDir)$(OutputPath)DHBIMWATER.Revit.dll&quot; &quot;%25AddinsRoot%25\2025\DHBIMWATER&quot;&#xA;) &#xA;if exist &quot;%25AddinsRoot%25\2026&quot; (&#xA;    copy &quot;$(ProjectDir)*.addin&quot; &quot;%25AddinsRoot%25\2026&quot;&#xA;    if not exist &quot;%25AddinsRoot%25\2026\DHBIMWATER&quot; mkdir &quot;%25AddinsRoot%25\2026\DHBIMWATER&quot;&#xA;    copy &quot;$(ProjectDir)$(OutputPath)DHBIMWATER.Revit.dll&quot; &quot;%25AddinsRoot%25\2026\DHBIMWATER&quot;&#xA;)" />
+    <Exec Command="set &quot;AddinsRoot=$(AppData)\Autodesk\REVIT\Addins&quot;&#xD;&#xA;&#xD;&#xA;if exist &quot;%25AddinsRoot%25\2025&quot; (&#xA;    copy &quot;$(ProjectDir)*.addin&quot; &quot;%25AddinsRoot%25\2025&quot;&#xA;    if not exist &quot;%25AddinsRoot%25\2025\DHBIMWATER&quot; mkdir &quot;%25AddinsRoot%25\2025\DHBIMWATER&quot;&#xA;    copy &quot;$(ProjectDir)$(OutputPath)DHBIMWATER.Revit.dll&quot; &quot;%25AddinsRoot%25\2025\DHBIMWATER&quot;&#xA;    copy &quot;$(ProjectDir)libs\DidasUsage\DidasUsage.dll&quot; &quot;%25AddinsRoot%25\2025\DHBIMWATER&quot;&#xA;    copy &quot;$(ProjectDir)libs\DidasUsage\DidasReader.dll&quot; &quot;%25AddinsRoot%25\2025\DHBIMWATER&quot;&#xA;) &#xA;if exist &quot;%25AddinsRoot%25\2026&quot; (&#xA;    copy &quot;$(ProjectDir)*.addin&quot; &quot;%25AddinsRoot%25\2026&quot;&#xA;    if not exist &quot;%25AddinsRoot%25\2026\DHBIMWATER&quot; mkdir &quot;%25AddinsRoot%25\2026\DHBIMWATER&quot;&#xA;    copy &quot;$(ProjectDir)$(OutputPath)DHBIMWATER.Revit.dll&quot; &quot;%25AddinsRoot%25\2026\DHBIMWATER&quot;&#xA;    copy &quot;$(ProjectDir)libs\DidasUsage\DidasUsage.dll&quot; &quot;%25AddinsRoot%25\2026\DHBIMWATER&quot;&#xA;    copy &quot;$(ProjectDir)libs\DidasUsage\DidasReader.dll&quot; &quot;%25AddinsRoot%25\2026\DHBIMWATER&quot;&#xA;)" />
   </Target>
 
 </Project>

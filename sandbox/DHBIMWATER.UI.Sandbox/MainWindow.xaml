@@ -43,13 +43,15 @@
                 </fluent:RibbonGroupBox>
                 
                 <fluent:RibbonGroupBox Header="수량산출">
+                    
                     <fluent:Button Header="수량산출"
                                    FontWeight="Normal"
                                    LargeIcon="pack://application:,,,/DHBIMWATER.UI;component/Resources/Icons/Quantity.png"
                                    Command="{Binding OpenQuantityViewCommand}"/>
-                    <fluent:Button Header="수량산출2"
+                    
+                    <fluent:Button Header="수량산출1"
                                    FontWeight="Normal"/>
-                    <fluent:Button Header="수량산출3"   
+                    <fluent:Button Header="수량산출2"   
                                    FontWeight="Normal"/>
                 </fluent:RibbonGroupBox>
                 
