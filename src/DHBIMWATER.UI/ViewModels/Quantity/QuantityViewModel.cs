@@ -1,15 +1,8 @@
 ﻿using DHBIMWATER.Application.Interfaces;
-using DHBIMWATER.Application.UseCases.AutoGenerator;
 using DHBIMWATER.Application.UseCases.QuantityCalculator;
 using DHBIMWATER.Core.Quantity;
 using DHBIMWATER.UI.Base;
-using DHBIMWATER.UI.Commands;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace DHBIMWATER.UI.ViewModels.Quantity
