@@ -27,8 +27,11 @@ namespace DHBIMWATER.UI.Views.Quantity
             DataContext = quantityViewModel;
             ContentRendered += (s, e) =>
             {
-                SizeToContent = SizeToContent.Manual;
-                SizeToContent = SizeToContent.WidthAndHeight;
+                Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Background, new Action(() =>
+                {
+                    SizeToContent = SizeToContent.Manual;
+                    SizeToContent = SizeToContent.WidthAndHeight;
+                }));
             };
         }
     }
