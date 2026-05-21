@@ -25,7 +25,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             if (doc == null) return false;
 
             var elem = doc.GetElement(new ElementId(elementId));
-            //TaskDialog.Show("Debug", elem?.GetType().Name ?? "null");
 
             return elem is Wall;
         }
