@@ -1,8 +1,8 @@
-﻿using DHBIMWATER.Application.Interfaces.Quantity;
-using Autodesk.Revit.DB;
-using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
+﻿using Autodesk.Revit.DB;
+using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Core.Quantity;
 using DHBIMWATER.Infrastructure.Helpers;
+using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
 
 namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
@@ -10,7 +10,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
     public class RevitBeamExtractor : IQuantityExtractor
     {
         private readonly Func<Document?> _doc;
-        
+
         public RevitBeamExtractor(Func<Document?> doc)
         {
             _doc = doc;
@@ -23,7 +23,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             var elem = doc.GetElement(new ElementId(elementId));
 
-            return elem is FamilyInstance fi &&  fi.Category.Id.Value == (int)BuiltInCategory.OST_StructuralFraming;
+            return elem is FamilyInstance fi && fi.Category.Id.Value == (int)BuiltInCategory.OST_StructuralFraming;
         }
 
         public IEnumerable<long> CollectElementIds()
@@ -56,8 +56,15 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var b = FamilyInstanceHelper.FindParameter(beam, "b") ?? 0;
             var d = FamilyInstanceHelper.FindParameter(beam, "d") ?? 0;
             var h = FamilyInstanceHelper.FindParameter(beam, "h") ?? 0;
-
             string typeName = beam.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).AsValueString() ?? string.Empty;
+
+            string materialName = string.Empty;
+            var materialId = beam.get_Parameter(BuiltInParameter.STRUCTURAL_MATERIAL_PARAM)?.AsElementId();
+            
+            if (materialId == null || materialId == ElementId.InvalidElementId)
+                materialName = string.Empty;
+            else
+                materialName = (doc.GetElement(materialId) as Material).Name;
 
             var varDict = new Dictionary<string, double>
             {
@@ -74,11 +81,11 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var concreteItem = new QuantityItem
             {
                 ElementId = elementId,
-                Category = beam.LookupParameter("DH_Category")?.AsString() ?? string.Empty,
+                Category = beam.Category.Name ?? string.Empty,
                 ElementCode = beam.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
                 WorkType = "철근콘크리트",
                 Specification = typeName,
-                Material = string.Empty,
+                Material = materialName,
                 Formula = concRendered,
                 Value = concValue,
                 Unit = "m³"

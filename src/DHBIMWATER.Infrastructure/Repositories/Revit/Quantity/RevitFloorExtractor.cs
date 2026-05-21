@@ -1,6 +1,7 @@
 ﻿using Autodesk.Revit.DB;
 using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Core.Quantity;
+using System.Data.Common;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
@@ -52,6 +53,14 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                                           .Where(l => l.Function == MaterialFunctionAssignment.Structure)
                                           .Sum(l => l.Width));
 
+            string materialName = string.Empty;
+            var materialId = floor.get_Parameter(BuiltInParameter.STRUCTURAL_MATERIAL_PARAM)?.AsElementId();
+
+            if (materialId == null || materialId == ElementId.InvalidElementId)
+                materialName = string.Empty;
+            else
+                materialName = (doc.GetElement(materialId) as Material).Name;
+
             var varDict = new Dictionary<string, double>
             {
                 ["A"] = area,
@@ -77,7 +86,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 ElementCode = floor.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
                 WorkType = "철근콘크리트",
                 Specification = "25-18-250",
-                Material = string.Empty,
+                Material = materialName,
                 Formula = concRendered,
                 Value = concValue,
                 Unit = "m³"

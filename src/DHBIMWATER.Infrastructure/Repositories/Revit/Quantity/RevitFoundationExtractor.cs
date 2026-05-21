@@ -2,6 +2,7 @@
 using Autodesk.Revit.UI;
 using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Core.Quantity;
+using DHBIMWATER.Infrastructure.Helpers;
 using System.Windows.Controls;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
@@ -38,9 +39,61 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
         public IEnumerable<QuantityItem> Extract(long elementId)
         {
-            //TaskDialog.Show("Alert", "기초");
+            var doc = _doc();
+            if (doc == null)
+                return Enumerable.Empty<QuantityItem>();
 
-            return new List<QuantityItem>();
+            var fnd = doc.GetElement(new ElementId(elementId)) as FamilyInstance;
+            var quantityItems = new List<QuantityItem>();
+
+            // 구조 기초 슬래브는 Floor 에서 산출
+            if (fnd is Floor) return Enumerable.Empty<QuantityItem>();
+
+            // 객체 추출값
+            var b = FamilyInstanceHelper.FindParameter(fnd, "폭") ?? FamilyInstanceHelper.FindParameter(fnd, "b") ?? 0;
+            var d = FamilyInstanceHelper.FindParameter(fnd, "길이") ?? FamilyInstanceHelper.FindParameter(fnd, "d") ?? 0;
+            var h = FamilyInstanceHelper.FindParameter(fnd, "기초 두께") ?? FamilyInstanceHelper.FindParameter(fnd, "h") ?? 0;
+
+            string typeName = fnd.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).AsValueString() ?? string.Empty;
+
+
+            string materialName = string.Empty;
+            var materialId = fnd.get_Parameter(BuiltInParameter.STRUCTURAL_MATERIAL_PARAM)?.AsElementId();
+
+            if (materialId == null || materialId == ElementId.InvalidElementId)
+                materialName = string.Empty;
+            else
+                materialName = (doc.GetElement(materialId) as Material).Name;
+
+            var varDict = new Dictionary<string, double>
+            {
+                ["B"] = b,
+                ["D"] = d,
+                ["H"] = h,
+            };
+
+            const string concFormula = "B x H x L";
+            string? concRendered = FormulaCalculator.Render(concFormula, varDict);
+            double concValue = FormulaCalculator.Calculate(concFormula, varDict);
+
+            // 철근콘크리트
+            var concreteItem = new QuantityItem
+            {
+                ElementId = elementId,
+                Category = fnd.Category.Name ?? string.Empty,
+                ElementCode = fnd.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
+                WorkType = "철근콘크리트",
+                Specification = typeName,
+                Material = materialName,
+                Formula = concRendered,
+                Value = concValue,
+                Unit = "m³"
+            };
+
+            var listToAdd = new List<QuantityItem>() { concreteItem, };
+            quantityItems.AddRange(listToAdd);
+
+            return quantityItems;
         }
     }
 }

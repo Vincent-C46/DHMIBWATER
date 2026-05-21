@@ -2,6 +2,7 @@
 using Autodesk.Revit.UI;
 using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Core.Quantity;
+using System.Windows.Controls;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
@@ -37,6 +38,21 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
         public IEnumerable<QuantityItem> Extract(long elementId)
         {
+            var doc = _doc();
+            if (doc == null)
+                return Enumerable.Empty<QuantityItem>();
+
+            var generic = doc.GetElement(new ElementId(elementId)) as FamilyInstance;
+            var quantityItems = new List<QuantityItem>();
+
+            string materialName = string.Empty;
+            var materialId = generic.get_Parameter(BuiltInParameter.STRUCTURAL_MATERIAL_PARAM)?.AsElementId();
+
+            if (materialId == null || materialId == ElementId.InvalidElementId)
+                materialName = string.Empty;
+            else
+                materialName = (doc.GetElement(materialId) as Material).Name;
+
             //TaskDialog.Show("Alert", "일반모델");
 
             return new List<QuantityItem>();
