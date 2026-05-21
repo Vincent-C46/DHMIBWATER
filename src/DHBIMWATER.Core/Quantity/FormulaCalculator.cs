@@ -15,7 +15,7 @@ namespace DHBIMWATER.Core.Quantity
             expr = expr.Replace("＋", "+");
 
             foreach (var (key, value) in varDict)
-                expr = Regex.Replace(expr, $@"\b{key}\b", value.ToString());
+                expr = Regex.Replace(expr, $@"\b{key}\b", value.ToString(System.Globalization.CultureInfo.InvariantCulture));
 
             return Convert.ToDouble(new DataTable().Compute(expr, null));
         }
@@ -26,7 +26,7 @@ namespace DHBIMWATER.Core.Quantity
             var result = formula;
 
             foreach (var (key, value) in varDict)
-                result = Regex.Replace(result, $@"\b{key}\b", $"{value:F2} [{key}]");
+                result = Regex.Replace(result, $@"\b{key}\b", $"{value:F2} ({key})");
 
             return result;
         }

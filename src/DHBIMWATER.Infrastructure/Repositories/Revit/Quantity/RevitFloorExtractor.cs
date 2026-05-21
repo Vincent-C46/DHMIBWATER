@@ -25,8 +25,15 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
         }
 
         public IEnumerable<long> CollectElementIds()
-            => new FilteredElementCollector(_doc()).OfClass(typeof(Floor)).WhereElementIsNotElementType().Select(w => w.Id.Value);
+        {
+            var doc = _doc();
+            if (doc == null) return Enumerable.Empty<long>();
 
+            return new FilteredElementCollector(doc)
+            .OfClass(typeof(Floor))
+            .WhereElementIsNotElementType()
+            .Select(r => r.Id.Value);
+        }
 
         public IEnumerable<QuantityItem> Extract(long elementId)
         {
@@ -40,10 +47,10 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var quantityItems = new List<QuantityItem>();
 
             // 객체 추출값
-            var area = Math.Round(UC.Ft2ToM2(floor.get_Parameter(BuiltInParameter.HOST_AREA_COMPUTED).AsDouble()), 2);
-            double thickness = Math.Round(UC.FtToM(cs.GetLayers()
+            var area = UC.Ft2ToM2(floor.get_Parameter(BuiltInParameter.HOST_AREA_COMPUTED).AsDouble());
+            double thickness = UC.FtToM(cs.GetLayers()
                                           .Where(l => l.Function == MaterialFunctionAssignment.Structure)
-                                          .Sum(l => l.Width)), 2);
+                                          .Sum(l => l.Width));
 
             var varDict = new Dictionary<string, double>
             {

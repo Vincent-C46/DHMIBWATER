@@ -1,6 +1,7 @@
-﻿using DHBIMWATER.Application.Interfaces.Quantity;
+﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.UI;
+using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Core.Quantity;
-using Autodesk.Revit.DB;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
@@ -36,7 +37,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
         public IEnumerable<QuantityItem> Extract(long elementId)
         {
-            throw new NotImplementedException();
+            //TaskDialog.Show("Alert", "일반모델");
+
+            return new List<QuantityItem>();
         }
     }
 }

@@ -22,6 +22,27 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/DHBIMWATER.UI;component/Styles/Generic.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+
+            <CollectionViewSource x:Key="GroupedByWorkType"
+                              Source="{Binding QuantityItems}">
+                <CollectionViewSource.GroupDescriptions>
+                    <PropertyGroupDescription PropertyName="WorkType"/>
+                </CollectionViewSource.GroupDescriptions>
+            </CollectionViewSource>
+
+            <CollectionViewSource x:Key="GroupedByElementCode"
+                              Source="{Binding QuantityItems}">
+                <CollectionViewSource.GroupDescriptions>
+                    <PropertyGroupDescription PropertyName="ElementCode"/>
+                </CollectionViewSource.GroupDescriptions>
+            </CollectionViewSource>
+            
+            <CollectionViewSource x:Key="GroupedByCategory"
+                              Source="{Binding QuantityItems}">
+                <CollectionViewSource.GroupDescriptions>
+                    <PropertyGroupDescription PropertyName="Category"/>
+                </CollectionViewSource.GroupDescriptions>
+            </CollectionViewSource>
         </ResourceDictionary>
     </Window.Resources>
 
@@ -87,23 +108,96 @@
                     CornerRadius="10"
                     BorderBrush="{StaticResource BorderBrush}"
                     BorderThickness="1"
-                    ClipToBounds="True"
-                    Width="Auto">
-                <DataGrid ItemsSource="{Binding QuantityItems}"
-                          SelectedItem="{Binding SelectedItem}"
-                          Style="{StaticResource QuantityDataGridStyle}">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="카테고리" Binding="{Binding Category}"             Width="Auto" MinWidth="50"/>
-                        <DataGridTextColumn Header="ElementId" Binding="{Binding ElementId}"          Width="Auto" MinWidth="50"/>
-                        <DataGridTextColumn Header="코드"      Binding="{Binding ElementCode}"        Width="Auto" MinWidth="50"/>
-                        <DataGridTextColumn Header="공종"      Binding="{Binding WorkType}"           Width="Auto" MinWidth="50"/>
-                        <DataGridTextColumn Header="규격"      Binding="{Binding Specification}"      Width="Auto" MinWidth="50"/>
-                        <DataGridTextColumn Header="재료"      Binding="{Binding Material}"           Width="Auto" MinWidth="50"/>
-                        <DataGridTextColumn Header="산출식"    Binding="{Binding Formula}"            Width="1*" MinWidth="50"/>
-                        <DataGridTextColumn Header="값"        Binding="{Binding Value, StringFormat=F3}" Width="Auto" MinWidth="50"/>
-                        <DataGridTextColumn Header="단위"      Binding="{Binding Unit}"              Width="Auto" MinWidth="50" />
-                    </DataGrid.Columns>
-                </DataGrid>
+                    ClipToBounds="True">
+
+                <TabControl Style="{StaticResource PrimaryTabControlStyle}">
+                    <!-- 공종별 집계 -->
+                    <TabItem Header="공종별">
+                        <DataGrid ItemsSource="{Binding Source={StaticResource GroupedByWorkType}}"
+                                  Style="{StaticResource QuantityDataGridStyle}">           
+                            <DataGrid.GroupStyle>
+                                <GroupStyle>
+                                    <GroupStyle.HeaderTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Name}"
+                                           Padding="8,4"/>
+                                        </DataTemplate>
+                                    </GroupStyle.HeaderTemplate>
+                                </GroupStyle>
+                            </DataGrid.GroupStyle>
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="카테고리"  Binding="{Binding Category}"                Width="Auto" MinWidth="50"/>
+                                <DataGridTextColumn Header="코드"      Binding="{Binding ElementCode}"             Width="Auto" MinWidth="50"/>
+                                <DataGridTextColumn Header="공종"      Binding="{Binding WorkType}"                Width="Auto" MinWidth="50"/>
+                                <DataGridTextColumn Header="산출식"    Binding="{Binding Formula}"                 Width="1*"   MinWidth="50"/>
+                                <DataGridTextColumn Header="값"        Binding="{Binding Value, StringFormat=F3}"  Width="Auto" MinWidth="50"/>
+                                <DataGridTextColumn Header="단위"      Binding="{Binding Unit}"                    Width="Auto" MinWidth="50"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </TabItem>
+
+                    <!-- ElementCode별 집계 -->
+                    <TabItem Header="ElementCode별">
+                        <DataGrid ItemsSource="{Binding Source={StaticResource GroupedByElementCode}}"
+                      Style="{StaticResource QuantityDataGridStyle}">
+                            <DataGrid.GroupStyle>
+                                <GroupStyle>
+                                    <GroupStyle.HeaderTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Name}"
+                                           Padding="8,4"/>
+                                        </DataTemplate>
+                                    </GroupStyle.HeaderTemplate>
+                                </GroupStyle>
+                            </DataGrid.GroupStyle>
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="카테고리"  Binding="{Binding Category}"                Width="Auto" MinWidth="50"/>
+                                <DataGridTextColumn Header="코드"      Binding="{Binding ElementCode}"             Width="Auto" MinWidth="50"/>
+                                <DataGridTextColumn Header="공종"      Binding="{Binding WorkType}"                Width="Auto" MinWidth="50"/>
+                                <DataGridTextColumn Header="산출식"    Binding="{Binding Formula}"                 Width="1*"   MinWidth="50"/>
+                                <DataGridTextColumn Header="값"        Binding="{Binding Value, StringFormat=F3}"  Width="Auto" MinWidth="50"/>
+                                <DataGridTextColumn Header="단위"      Binding="{Binding Unit}"                    Width="Auto" MinWidth="50"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </TabItem>
+                    
+                    <!-- 카테고리 -->
+                    <TabItem Header="카테고리별">
+                        <DataGrid ItemsSource="{Binding Source={StaticResource GroupedByCategory}}"
+                    Style="{StaticResource QuantityDataGridStyle}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="카테고리"  Binding="{Binding Category}"                Width="Auto" MinWidth="50"/>
+                                <DataGridTextColumn Header="ElementId" Binding="{Binding ElementId}"               Width="Auto" MinWidth="50"/>
+                                <DataGridTextColumn Header="코드"      Binding="{Binding ElementCode}"             Width="Auto" MinWidth="50"/>
+                                <DataGridTextColumn Header="공종"      Binding="{Binding WorkType}"                Width="Auto" MinWidth="50"/>
+                                <DataGridTextColumn Header="규격"      Binding="{Binding Specification}"           Width="Auto" MinWidth="50"/>
+                                <DataGridTextColumn Header="재료"      Binding="{Binding Material}"                Width="Auto" MinWidth="50"/>
+                                <DataGridTextColumn Header="산출식"    Binding="{Binding Formula}"                 Width="1*"   MinWidth="50"/>
+                                <DataGridTextColumn Header="값"        Binding="{Binding Value, StringFormat=F3}"  Width="Auto" MinWidth="50"/>
+                                <DataGridTextColumn Header="단위"      Binding="{Binding Unit}"                    Width="Auto" MinWidth="50"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </TabItem>
+
+                    <!-- 상세 목록 -->
+                    <TabItem Header="상세 목록">
+                        <DataGrid ItemsSource="{Binding QuantityItems}"
+                                  SelectedItem="{Binding SelectedItem}"
+                                  Style="{StaticResource QuantityDataGridStyle}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="카테고리"  Binding="{Binding Category}"                Width="Auto" MinWidth="50"/>
+                                <DataGridTextColumn Header="ElementId" Binding="{Binding ElementId}"               Width="Auto" MinWidth="50"/>
+                                <DataGridTextColumn Header="코드"      Binding="{Binding ElementCode}"             Width="Auto" MinWidth="50"/>
+                                <DataGridTextColumn Header="공종"      Binding="{Binding WorkType}"                Width="Auto" MinWidth="50"/>
+                                <DataGridTextColumn Header="규격"      Binding="{Binding Specification}"           Width="Auto" MinWidth="50"/>
+                                <DataGridTextColumn Header="재료"      Binding="{Binding Material}"                Width="Auto" MinWidth="50"/>
+                                <DataGridTextColumn Header="산출식"    Binding="{Binding Formula}"                 Width="1*"   MinWidth="50"/>
+                                <DataGridTextColumn Header="값"        Binding="{Binding Value, StringFormat=F3}"  Width="Auto" MinWidth="50"/>
+                                <DataGridTextColumn Header="단위"      Binding="{Binding Unit}"                    Width="Auto" MinWidth="50"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </TabItem>
+                </TabControl>
             </Border>
 
             <!-- GridSplitter -->

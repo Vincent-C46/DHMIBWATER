@@ -48,9 +48,10 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var quantityItems = new List<QuantityItem>();
 
             // 객체 추출값
-            var length = Math.Round(UC.FtToM(rebar.get_Parameter(BuiltInParameter.REBAR_ELEM_LENGTH).AsDouble()), 2);
+            var length = UC.FtToM(rebar.get_Parameter(BuiltInParameter.REBAR_ELEM_LENGTH)?.AsDouble() ?? 0);
             int count = rebar.get_Parameter(BuiltInParameter.REBAR_ELEM_QUANTITY_OF_BARS).AsInteger();
             string typeName = rebar.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).AsValueString() ?? string.Empty;
+            long hostId = rebar.GetHostId().Value;
 
             var rebarDict = RebarDatabase.KSD3504.All;  // KS D 3504 철근 규격
             var key = rebarDict.Keys.FirstOrDefault(k => typeName.Contains(k));
@@ -74,7 +75,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             // 철근
             var rebarItem = new QuantityItem
             {
-                ElementId = elementId,
+                HostElementId = hostId,
+                ElementId = hostId,
                 Category = rebar.LookupParameter("DH_Category")?.AsString() ?? string.Empty,
                 ElementCode = rebar.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
                 WorkType = "철근",

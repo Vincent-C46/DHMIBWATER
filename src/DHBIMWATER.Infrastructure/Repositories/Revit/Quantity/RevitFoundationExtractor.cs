@@ -1,4 +1,5 @@
 ﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.UI;
 using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Core.Quantity;
 using System.Windows.Controls;
@@ -37,7 +38,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
         public IEnumerable<QuantityItem> Extract(long elementId)
         {
-            throw new NotImplementedException();
+            //TaskDialog.Show("Alert", "기초");
+
+            return new List<QuantityItem>();
         }
     }
 }

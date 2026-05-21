@@ -1,17 +1,17 @@
-﻿using Autodesk.Revit.DB;
-using Autodesk.Revit.DB.Structure;
-using DHBIMWATER.Application.Interfaces.Quantity;
-using DHBIMWATER.Core.Quantity;
-using DHBIMWATER.Core.Structures;
-using DHBIMWATER.Infrastructure.Helpers;
+﻿using DHBIMWATER.Application.Interfaces.Quantity;
+using Autodesk.Revit.DB;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
+using DHBIMWATER.Core.Quantity;
+using DHBIMWATER.Infrastructure.Helpers;
+
 
 namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 {
-    public class RevitColumnExtractor : IQuantityExtractor
+    public class RevitBeamExtractor : IQuantityExtractor
     {
         private readonly Func<Document?> _doc;
-        public RevitColumnExtractor(Func<Document?> doc)
+        
+        public RevitBeamExtractor(Func<Document?> doc)
         {
             _doc = doc;
         }
@@ -23,7 +23,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             var elem = doc.GetElement(new ElementId(elementId));
 
-            return elem is FamilyInstance fi && fi.Category.Id.Value == (int)BuiltInCategory.OST_StructuralColumns;
+            return elem is FamilyInstance fi &&  fi.Category.Id.Value == (int)BuiltInCategory.OST_StructuralFraming;
         }
 
         public IEnumerable<long> CollectElementIds()
@@ -32,9 +32,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             if (doc == null) return Enumerable.Empty<long>();
 
             return new FilteredElementCollector(doc)
-            .OfCategory(BuiltInCategory.OST_StructuralColumns)
-            .WhereElementIsNotElementType()
-            .Select(r => r.Id.Value);
+                        .OfCategory(BuiltInCategory.OST_StructuralFraming)
+                        .WhereElementIsNotElementType()
+                        .Select(r => r.Id.Value);
         }
 
         public IEnumerable<QuantityItem> Extract(long elementId)
@@ -43,45 +43,44 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             if (doc == null)
                 return Enumerable.Empty<QuantityItem>();
 
-            var column = doc.GetElement(new ElementId(elementId)) as FamilyInstance;
+            var beam = doc.GetElement(new ElementId(elementId)) as FamilyInstance;
 
-            if (column == null)
+            if (beam == null)
                 return Enumerable.Empty<QuantityItem>();
 
             var quantityItems = new List<QuantityItem>();
 
             // 객체 추출값
-            var length = UC.FtToM(column.get_Parameter(BuiltInParameter.INSTANCE_LENGTH_PARAM)?.AsDouble() ?? 0);
-            var b = FamilyInstanceHelper.FindParameter(column, "b") ?? 0;
-            var d = FamilyInstanceHelper.FindParameter(column, "d") ?? 0;
-            var h = FamilyInstanceHelper.FindParameter(column, "h") ?? 0;
-            var r = FamilyInstanceHelper.FindParameter(column, "r") ?? 0;
+            var length = UC.FtToM(beam.get_Parameter(BuiltInParameter.INSTANCE_LENGTH_PARAM)?.AsDouble() ?? 0);
 
-            string typeName = column.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).AsValueString() ?? string.Empty;
+            var b = FamilyInstanceHelper.FindParameter(beam, "b") ?? 0;
+            var d = FamilyInstanceHelper.FindParameter(beam, "d") ?? 0;
+            var h = FamilyInstanceHelper.FindParameter(beam, "h") ?? 0;
+
+            string typeName = beam.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).AsValueString() ?? string.Empty;
 
             var varDict = new Dictionary<string, double>
             {
                 ["L"] = length,
                 ["B"] = b,
                 ["H"] = h,
-                ["D"] = d,
             };
 
             const string concFormula = "B x H x L";
-            string? columnRendered = FormulaCalculator.Render(concFormula, varDict);
-            double columnValue = FormulaCalculator.Calculate(concFormula, varDict);
+            string? concRendered = FormulaCalculator.Render(concFormula, varDict);
+            double concValue = FormulaCalculator.Calculate(concFormula, varDict);
 
             // 철근콘크리트
             var concreteItem = new QuantityItem
             {
                 ElementId = elementId,
-                Category = column.LookupParameter("DH_Category")?.AsString() ?? string.Empty,
-                ElementCode = column.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
+                Category = beam.LookupParameter("DH_Category")?.AsString() ?? string.Empty,
+                ElementCode = beam.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
                 WorkType = "철근콘크리트",
                 Specification = typeName,
                 Material = string.Empty,
-                Formula = columnRendered,
-                Value = columnValue,
+                Formula = concRendered,
+                Value = concValue,
                 Unit = "m³"
             };
 

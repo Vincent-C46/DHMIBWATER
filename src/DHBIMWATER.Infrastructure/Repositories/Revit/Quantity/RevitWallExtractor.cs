@@ -17,8 +17,15 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
         }
 
         public IEnumerable<long> CollectElementIds()
-            => new FilteredElementCollector(_doc()).OfClass(typeof(Wall)).WhereElementIsNotElementType().Select(w => w.Id.Value);
+{
+            var doc = _doc();
+            if (doc == null) return Enumerable.Empty<long>();
 
+            return new FilteredElementCollector(doc)
+            .OfClass(typeof(Wall))  
+            .WhereElementIsNotElementType()
+            .Select(r => r.Id.Value);
+        }
         public bool CanExtract(long elementId)
         {
             var doc = _doc();
@@ -39,10 +46,10 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var cs = wall.WallType.GetCompoundStructure();
 
             // 객체 추출값
-            var area = Math.Round(UC.Ft2ToM2(wall.get_Parameter(BuiltInParameter.HOST_AREA_COMPUTED).AsDouble()), 2);
-            double thickness = Math.Round(UC.FtToM(cs.GetLayers()
+            var area = UC.Ft2ToM2(wall.get_Parameter(BuiltInParameter.HOST_AREA_COMPUTED).AsDouble());
+            double thickness = UC.FtToM(cs.GetLayers()
                                           .Where(l => l.Function == MaterialFunctionAssignment.Structure)
-                                          .Sum(l => l.Width)), 2);
+                                          .Sum(l => l.Width));
 
             var varDict = new Dictionary<string, double>
             {
@@ -80,7 +87,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 WorkType ="거푸집",
                 Specification = "유로폼",
                 Material = string.Empty,
-                Formula = $"{area}(A)",
+                Formula = $"{area:F2}(A)",
                 Value = area,
                 Unit = "m²"
             };
@@ -93,7 +100,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 WorkType = "벽",
                 Specification = "내측 거푸집",
                 Material = string.Empty,
-                Formula = $"{area}(A)",
+                Formula = $"{area:F2}(A)",
                 Value = area,
                 Unit = "m²"
             };

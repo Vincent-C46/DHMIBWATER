@@ -1,6 +1,7 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Architecture;
 using Autodesk.Revit.DB.Structure;
+using Autodesk.Revit.UI;
 using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Core.Quantity;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
@@ -38,7 +39,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
         public IEnumerable<QuantityItem> Extract(long elementId)
         {
-            throw new NotImplementedException();
+            //TaskDialog.Show("Alert", "계단");
+            return new List<QuantityItem>();
         }
     }
 }

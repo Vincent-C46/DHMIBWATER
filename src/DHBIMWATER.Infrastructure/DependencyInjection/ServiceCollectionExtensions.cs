@@ -40,7 +40,7 @@ public static class ServiceCollectionExtensions
         #endregion
 
         #region Quantity 관련
-        services.AddTransient<IQuantityExtractor, RevitBeamExtraxtor>();
+        services.AddTransient<IQuantityExtractor, RevitBeamExtractor>();
         services.AddTransient<IQuantityExtractor, RevitColumnExtractor>();
         services.AddTransient<IQuantityExtractor, RevitFloorExtractor>();
         services.AddTransient<IQuantityExtractor, RevitFoundationExtractor>();
