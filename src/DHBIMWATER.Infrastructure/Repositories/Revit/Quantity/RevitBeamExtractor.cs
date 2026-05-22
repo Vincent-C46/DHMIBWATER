@@ -53,9 +53,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             // 객체 추출값
             var length = UC.FtToM(beam.get_Parameter(BuiltInParameter.INSTANCE_LENGTH_PARAM)?.AsDouble() ?? 0);
 
-            var b = FamilyInstanceHelper.FindParameter(beam, "b") ?? 0;
-            var d = FamilyInstanceHelper.FindParameter(beam, "d") ?? 0;
-            var h = FamilyInstanceHelper.FindParameter(beam, "h") ?? 0;
+            var b = UC.FtToM(FamilyInstanceHelper.FindParameter(beam, "b") ?? 0) ;
+            var d = UC.FtToM(FamilyInstanceHelper.FindParameter(beam, "d") ?? 0) ;
+            var h = UC.FtToM(FamilyInstanceHelper.FindParameter(beam, "h") ?? 0) ;
             string typeName = beam.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).AsValueString() ?? string.Empty;
 
             //string materialName = string.Empty;

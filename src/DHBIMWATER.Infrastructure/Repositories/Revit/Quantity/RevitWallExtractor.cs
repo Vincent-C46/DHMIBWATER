@@ -57,7 +57,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 ["Thk"] = thickness,
             };
 
-            var concFormula = "A x Thk";
+            var concFormula = "A x Thk x PI^2";
             //var concFormula = "A * Thk";
             string? concRendered = FormulaCalculator.Render(concFormula, varDict);
             double concValue = FormulaCalculator.Calculate(concFormula, varDict);
@@ -86,6 +86,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 ElementCode = wall.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
                 WorkType ="거푸집",
                 Specification = "유로폼",
+                SubSpecification = "7m이상",
                 RawFormula = "A",
                 RenderedFormula = $"{area:F2}(A)",
                 Value = area,
@@ -97,8 +98,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 ElementId = elementId,
                 Category = wall.LookupParameter("DH_Category")?.AsString() ?? string.Empty,
                 ElementCode = wall.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
-                WorkType = "벽",
-                Specification = "내측 거푸집",
+                WorkType = "거푸집",
+                Specification = "유로품",
+                SubSpecification = "0~7m",
                 RawFormula = "A",
                 RenderedFormula = $"{area:F2}(A)",
                 Value = area,

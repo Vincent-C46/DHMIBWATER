@@ -52,10 +52,10 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             // 객체 추출값
             var length = UC.FtToM(column.get_Parameter(BuiltInParameter.INSTANCE_LENGTH_PARAM)?.AsDouble() ?? 0);
-            var b = FamilyInstanceHelper.FindParameter(column, "b") ?? 0;
-            var d = FamilyInstanceHelper.FindParameter(column, "d") ?? 0;
-            var h = FamilyInstanceHelper.FindParameter(column, "h") ?? 0;
-            var r = FamilyInstanceHelper.FindParameter(column, "r") ?? 0;
+            var b = UC.FtToM(FamilyInstanceHelper.FindParameter(column, "b") ?? 0);
+            var d = UC.FtToM(FamilyInstanceHelper.FindParameter(column, "d") ?? 0);
+            var h = UC.FtToM(FamilyInstanceHelper.FindParameter(column, "h") ?? 0);
+            var r = UC.FtToM(FamilyInstanceHelper.FindParameter(column, "r") ?? 0);
 
             string typeName = column.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).AsValueString() ?? string.Empty;
 

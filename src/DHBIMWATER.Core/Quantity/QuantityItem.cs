@@ -6,10 +6,16 @@ using System.Threading.Tasks;
 
 namespace DHBIMWATER.Core.Quantity
 {
+    public enum QuantityStatus
+    {
+        Auto,
+        Manual,
+    }
+
     public record QuantityItem
     {
         // 필수
-        public required string WorkType { get; init; }      // 공종: 콘크리트, 거푸집
+        public string WorkType { get; init; } = string.Empty;      // 공종: 콘크리트, 거푸집
         public string Unit { get; init; } = string.Empty;          // 단위: m³, m², 무단위
 
         public long ElementId { get; init; }                       // ElementId
@@ -23,5 +29,6 @@ namespace DHBIMWATER.Core.Quantity
         public string RawFormula { get; init; } = string.Empty;       // 산식: B × D × L
         public string RenderedFormula { get; init; } = string.Empty;   // 산식: 0.6(B) × 0.7(D) × 10.0(L)
         public double Value { get; init; }                         // 값: 5.0
+        public QuantityStatus Status { get; init; }
     }
 }

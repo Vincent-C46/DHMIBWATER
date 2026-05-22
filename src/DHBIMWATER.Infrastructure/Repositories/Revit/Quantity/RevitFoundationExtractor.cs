@@ -50,9 +50,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             if (fnd is Floor) return Enumerable.Empty<QuantityItem>();
 
             // 객체 추출값
-            var b = FamilyInstanceHelper.FindParameter(fnd, "폭") ?? FamilyInstanceHelper.FindParameter(fnd, "b") ?? 0;
-            var d = FamilyInstanceHelper.FindParameter(fnd, "길이") ?? FamilyInstanceHelper.FindParameter(fnd, "d") ?? 0;
-            var h = FamilyInstanceHelper.FindParameter(fnd, "기초 두께") ?? FamilyInstanceHelper.FindParameter(fnd, "h") ?? 0;
+            var b = UC.FtToM(FamilyInstanceHelper.FindParameter(fnd, "폭") ?? FamilyInstanceHelper.FindParameter(fnd, "b") ?? 0);
+            var d = UC.FtToM(FamilyInstanceHelper.FindParameter(fnd, "길이") ?? FamilyInstanceHelper.FindParameter(fnd, "d") ?? 0);
+            var h = UC.FtToM(FamilyInstanceHelper.FindParameter(fnd, "기초 두께") ?? FamilyInstanceHelper.FindParameter(fnd, "h") ?? 0);
 
             string typeName = fnd.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).AsValueString() ?? string.Empty;
 
@@ -63,7 +63,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 ["H"] = h,
             };
 
-            const string concFormula = "B x H x L";
+            const string concFormula = "B x D x H";
             string? concRendered = FormulaCalculator.Render(concFormula, varDict);
             double concValue = FormulaCalculator.Calculate(concFormula, varDict);
 

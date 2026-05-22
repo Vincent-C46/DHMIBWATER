@@ -14,7 +14,7 @@ namespace DHBIMWATER.Revit.Commands.Quantity
         {
             var view = ServiceContainer.GetService<QuantityView>();
             new WindowInteropHelper(view).Owner = commandData.Application.MainWindowHandle;
-            view.ShowDialog();
+                view.ShowDialog();
             return Result.Succeeded;
         }
     }

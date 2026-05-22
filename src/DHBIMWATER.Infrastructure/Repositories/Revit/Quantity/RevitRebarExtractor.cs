@@ -76,15 +76,15 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var rebarItem = new QuantityItem
             {
                 HostElementId = hostId,
-                ElementId = hostId,
+                ElementId = elementId,
                 Category = rebar.LookupParameter("DH_Category")?.AsString() ?? string.Empty,
                 ElementCode = rebar.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
                 WorkType = "철근",
-                Specification = typeName,
+                Specification = key,
                 RawFormula = rebarFormula,
                 RenderedFormula = rebarRendered,
                 Value = rebarValue,
-                Unit = "kg"
+                Unit = "t"
             };
 
             var listToAdd = new List<QuantityItem>() { rebarItem, };
