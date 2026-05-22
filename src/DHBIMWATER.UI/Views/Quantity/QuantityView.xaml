@@ -246,12 +246,8 @@
                                     <TextBlock Width="150" Style="{StaticResource BodyTextBlockStyle}" Text="{Binding SelectedItem.WorkType}" FontSize="11" FontWeight="Medium" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Height = "22">
-                                    <TextBlock Width="90" Text="재료" FontSize="11" Foreground="#888780" VerticalAlignment="Center"/>
-                                    <TextBlock Width="150" Style="{StaticResource BodyTextBlockStyle}" Text="{Binding SelectedItem.Material}" FontSize="11" FontWeight="Medium" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                </StackPanel>
-                                <StackPanel Orientation="Horizontal" Height = "22">
                                     <TextBlock Width="90" Text="산출식" FontSize="11" Foreground="#888780" VerticalAlignment="Center"/>
-                                    <TextBlock Width="150" Style="{StaticResource BodyTextBlockStyle}" Text="{Binding SelectedItem.Formula}" FontSize="11" FontWeight="Medium" HorizontalAlignment="Left" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Width="150" Style="{StaticResource BodyTextBlockStyle}" Text="{Binding SelectedItem.RenderedFormula}" FontSize="11" FontWeight="Medium" HorizontalAlignment="Left" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Height = "22">
                                     <TextBlock Width="90" Text="값" FontSize="11" Foreground="#888780" VerticalAlignment="Center"/>

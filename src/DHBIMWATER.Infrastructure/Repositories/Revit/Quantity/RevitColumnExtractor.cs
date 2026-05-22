@@ -59,13 +59,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             string typeName = column.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).AsValueString() ?? string.Empty;
 
-            string materialName = string.Empty;
-            var materialId = column.get_Parameter(BuiltInParameter.STRUCTURAL_MATERIAL_PARAM)?.AsElementId();
 
-            if (materialId == null || materialId == ElementId.InvalidElementId)
-                materialName = string.Empty;
-            else
-                materialName = (doc.GetElement(materialId) as Material).Name;
 
             var varDict = new Dictionary<string, double>
             {
@@ -75,7 +69,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 ["D"] = d,
             };
 
-            const string concFormula = "B x H x L";
+            string concFormula = "B x H x L";
             string? columnRendered = FormulaCalculator.Render(concFormula, varDict);
             double columnValue = FormulaCalculator.Calculate(concFormula, varDict);
 
@@ -87,8 +81,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 ElementCode = column.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
                 WorkType = "철근콘크리트",
                 Specification = typeName,
-                Material = materialName,
-                Formula = columnRendered,
+                RawFormula = concFormula,
+                RenderedFormula = columnRendered ?? string.Empty,
                 Value = columnValue,
                 Unit = "m³"
             };

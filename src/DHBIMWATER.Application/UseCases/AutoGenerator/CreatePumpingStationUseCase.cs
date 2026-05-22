@@ -29,6 +29,8 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
         private readonly IOpeningCommandRepo _openingCmdRepo;
         private readonly ISharedParameterRepository _sharedParameterRepo;
         private readonly IViewCommandRepo _viewCommandRepo;
+        private readonly ISetParameterRepo _setParameterRepo;
+
         private readonly IExcelReader _excelReader;
         #endregion
 
@@ -49,6 +51,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                                            IOpeningCommandRepo openingCmdRepo,
                                            ISharedParameterRepository sharedParameterRepo,
                                            IViewCommandRepo viewCommandRepo,
+                                           ISetParameterRepo setParameterRepo,
                                            IExcelReader excelReader)
         {
             _levelQueryRepo = levelQueryRepo;
@@ -61,6 +64,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
             _openingCmdRepo = openingCmdRepo;
             _sharedParameterRepo = sharedParameterRepo;
             _viewCommandRepo = viewCommandRepo;
+            _setParameterRepo = setParameterRepo;
             _excelReader = excelReader;
 
             _tx = tx;
@@ -175,6 +179,10 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                             }
                         
                     }
+                    #endregion
+
+                    #region 8. 타입 설명 추가
+                    _setParameterRepo.SetTypeParameter(dto);
                     #endregion
 
                     // 트랜잭션 커밋

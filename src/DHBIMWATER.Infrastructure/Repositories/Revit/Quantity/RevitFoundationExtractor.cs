@@ -56,15 +56,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             string typeName = fnd.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).AsValueString() ?? string.Empty;
 
-
-            string materialName = string.Empty;
-            var materialId = fnd.get_Parameter(BuiltInParameter.STRUCTURAL_MATERIAL_PARAM)?.AsElementId();
-
-            if (materialId == null || materialId == ElementId.InvalidElementId)
-                materialName = string.Empty;
-            else
-                materialName = (doc.GetElement(materialId) as Material).Name;
-
             var varDict = new Dictionary<string, double>
             {
                 ["B"] = b,
@@ -84,8 +75,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 ElementCode = fnd.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
                 WorkType = "철근콘크리트",
                 Specification = typeName,
-                Material = materialName,
-                Formula = concRendered,
+                RawFormula = concFormula,
+                RenderedFormula = concRendered,
                 Value = concValue,
                 Unit = "m³"
             };

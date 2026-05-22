@@ -53,13 +53,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                                           .Where(l => l.Function == MaterialFunctionAssignment.Structure)
                                           .Sum(l => l.Width));
 
-            string materialName = string.Empty;
-            var materialId = floor.get_Parameter(BuiltInParameter.STRUCTURAL_MATERIAL_PARAM)?.AsElementId();
-
-            if (materialId == null || materialId == ElementId.InvalidElementId)
-                materialName = string.Empty;
-            else
-                materialName = (doc.GetElement(materialId) as Material).Name;
 
             var varDict = new Dictionary<string, double>
             {
@@ -73,11 +66,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             string? concRendered = FormulaCalculator.Render(concFormula, varDict);
             double concValue = FormulaCalculator.Calculate(concFormula, varDict);
 
-            var formFormula = "A";
-            string? formRendered = FormulaCalculator.Render(formFormula, varDict);
-            double formValue = FormulaCalculator.Calculate(formFormula, varDict);
-
-
             // 콘크리트
             var concreteItem = new QuantityItem
             {
@@ -86,11 +74,15 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 ElementCode = floor.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
                 WorkType = "철근콘크리트",
                 Specification = "25-18-250",
-                Material = materialName,
-                Formula = concRendered,
+                RawFormula = concFormula,
+                RenderedFormula = concRendered,
                 Value = concValue,
                 Unit = "m³"
             };
+
+            var formFormula = "A";
+            string? formRendered = FormulaCalculator.Render(formFormula, varDict);
+            double formValue = FormulaCalculator.Calculate(formFormula, varDict);
 
             // 거푸집
             var bottomFormItem = new QuantityItem
@@ -100,8 +92,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 ElementCode = floor.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
                 WorkType = "거푸집",
                 Specification = "합판 4회",
-                Material = string.Empty,
-                Formula = formRendered,
+                RawFormula = formFormula,
+                RenderedFormula = formRendered,
                 Value = formValue,
                 Unit = "m²"
             };

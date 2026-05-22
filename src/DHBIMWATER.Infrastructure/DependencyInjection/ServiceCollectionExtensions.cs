@@ -37,6 +37,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IOpeningCommandRepo, RevitOpeningCommandRepo>();
         services.AddTransient<IDirectShapeCommandRepo, RevitDirectShapeCommandRepo>();
         services.AddTransient<IViewCommandRepo, RevitViewCommandRepo>();
+        services.AddTransient<ISetParameterRepo, RevitSetParameterRepo>();
         #endregion
 
         #region Quantity 관련

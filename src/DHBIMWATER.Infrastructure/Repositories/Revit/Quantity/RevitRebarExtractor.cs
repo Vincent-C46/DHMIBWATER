@@ -81,8 +81,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 ElementCode = rebar.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
                 WorkType = "철근",
                 Specification = typeName,
-                Material = string.Empty,
-                Formula = rebarRendered,
+                RawFormula = rebarFormula,
+                RenderedFormula = rebarRendered,
                 Value = rebarValue,
                 Unit = "kg"
             };

@@ -27,8 +27,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Mock.Quantity
                     ElementCode = "WALL-001",
                     WorkType = "Construction",
                     Specification = "Generic Wall",
-                    Material = "Concrete",
-                    Formula = "Length * Height",
+                    RenderedFormula = "Length * Height",
                     Value = 100.0,
                     Unit = "m²"
                 }

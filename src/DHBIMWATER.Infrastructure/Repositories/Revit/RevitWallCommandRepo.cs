@@ -99,6 +99,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             wall.LookupParameter("DH_ElementCode")?.Set(linearWallDefinition.ElementCode);
             wall.LookupParameter("DH_Part")?.Set(linearWallDefinition.Part);
             wall.LookupParameter("DH_Zone")?.Set(linearWallDefinition.Zone);
+            wall.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set("");
 
             //_dialog.Info("RevitWallCommandRepo", $"CreateWall - Revit Implementation\n 벽체 높이: {linearWallDefinition.Height}mm");
 

@@ -72,8 +72,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 ElementCode = wall.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
                 WorkType = "철근콘크리트",
                 Specification = "25-18-250",
-                Material = string.Empty,
-                Formula = concRendered,
+                RawFormula = concFormula,
+                RenderedFormula = concRendered,
                 Value = concValue,
                 Unit = "m³"
             };
@@ -86,8 +86,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 ElementCode = wall.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
                 WorkType ="거푸집",
                 Specification = "유로폼",
-                Material = string.Empty,
-                Formula = $"{area:F2}(A)",
+                RawFormula = "A",
+                RenderedFormula = $"{area:F2}(A)",
                 Value = area,
                 Unit = "m²"
             };
@@ -99,8 +99,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 ElementCode = wall.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
                 WorkType = "벽",
                 Specification = "내측 거푸집",
-                Material = string.Empty,
-                Formula = $"{area:F2}(A)",
+                RawFormula = "A",
+                RenderedFormula = $"{area:F2}(A)",
                 Value = area,
                 Unit = "m²"
             };
