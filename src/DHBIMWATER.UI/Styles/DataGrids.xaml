@@ -47,6 +47,7 @@
         <Setter Property="RowHeight" Value="35"/>
         <Setter Property="Background" Value="{StaticResource WhiteBrush}"/>
         <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="FontWeight" Value="Medium"/>
         <Setter Property="RowBackground" Value="{StaticResource WhiteBrush}"/>
         <Setter Property="AlternatingRowBackground" Value="{StaticResource AlternatingRowBrush}"/>
         <Setter Property="GridLinesVisibility" Value="Horizontal"/>

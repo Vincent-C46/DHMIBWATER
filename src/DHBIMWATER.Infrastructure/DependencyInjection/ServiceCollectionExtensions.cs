@@ -49,6 +49,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IQuantityExtractor, RevitRebarExtractor>();
         services.AddTransient<IQuantityExtractor, RevitStairsExtractor>();
         services.AddTransient<IQuantityExtractor, RevitWallExtractor>();
+        services.AddTransient<IQuantityExtractor, RevitRailingExtractor>();
         #endregion
 
         services.AddTransient<ISharedParameterRepository, RevitSharedParameterRepository>();

@@ -39,7 +39,7 @@
                     <PropertyGroupDescription PropertyName="ElementCode"/>
                 </CollectionViewSource.GroupDescriptions>
             </CollectionViewSource>
-            
+
         </ResourceDictionary>
     </Window.Resources>
 
@@ -107,12 +107,14 @@
                     BorderThickness="1"
                     ClipToBounds="True">
 
-                <TabControl Style="{StaticResource PrimaryTabControlStyle}">
+                <TabControl Style="{StaticResource PrimaryTabControlStyle}"
+                            SelectedIndex="{Binding SelectedTabIndex}">
                     <!-- 공종별 집계 -->
                     <TabItem Header="공종별">
                         <DataGrid ItemsSource="{Binding Source={StaticResource SummaryItemsSource}}"
                                   AutoGenerateColumns="False"
                                   IsReadOnly="True"
+                                  SelectedItem="{Binding SelectedSummaryItem}"
                                   Style="{StaticResource QuantityDataGridStyle}">
 
                             <DataGrid.RowStyle>
@@ -137,19 +139,11 @@
                     </TabItem>
 
                     <!-- ElementCode별 집계 -->
-                    <TabItem Header="ElementCode별">
+                    <TabItem Header="Code별">
                         <DataGrid ItemsSource="{Binding Source={StaticResource GroupedByElementCode}}"
-                      Style="{StaticResource QuantityDataGridStyle}">
-                            <DataGrid.GroupStyle>
-                                <GroupStyle>
-                                    <GroupStyle.HeaderTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding Name}"
-                                           Padding="8,4"/>
-                                        </DataTemplate>
-                                    </GroupStyle.HeaderTemplate>
-                                </GroupStyle>
-                            </DataGrid.GroupStyle>
+                                  SelectedItem="{Binding SelectedSummaryItem}"
+                                  Style="{StaticResource QuantityDataGridStyle}">
+
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="카테고리"  Binding="{Binding Category}"                Width="Auto" MinWidth="50"/>
                                 <DataGridTextColumn Header="코드"      Binding="{Binding ElementCode}"             Width="Auto" MinWidth="50"/>
@@ -160,7 +154,7 @@
                             </DataGrid.Columns>
                         </DataGrid>
                     </TabItem>
-                    
+
                     <!-- 상세 목록 -->
                     <TabItem Header="상세 목록">
                         <DataGrid ItemsSource="{Binding QuantityItems}"

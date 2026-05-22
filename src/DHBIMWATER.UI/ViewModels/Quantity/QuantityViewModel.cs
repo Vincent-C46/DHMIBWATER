@@ -15,6 +15,9 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         private readonly CalculateQuantityUseCase _calculateQuantityUseCase;
         public ObservableCollection<QuantitySummaryItem> SummaryItems { get; set; }
         private QuantityItem? _selectedItem;
+        private QuantitySummaryItem? _selectedSummaryItem;
+        private int _selectedTabIndex;
+
         #endregion
 
         #region Properties
@@ -26,6 +29,28 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             {
                 if (_selectedItem != value)
                     _selectedItem = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public QuantitySummaryItem? SelectedSummaryItem
+        {
+            get => _selectedSummaryItem;
+            set
+            {
+                if (_selectedSummaryItem != value)
+                    _selectedSummaryItem = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public int SelectedTabIndex
+        {
+            get => _selectedTabIndex;
+            set
+            {
+                if (_selectedTabIndex != value)
+                    _selectedTabIndex = value;
                 OnPropertyChanged();
             }
         }
@@ -55,7 +80,6 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             var items = _calculateQuantityUseCase.Execute();
             QuantityItems = new ObservableCollection<QuantityItem>(items);
             OnPropertyChanged(nameof(QuantityItems));
-
             UpdateSummary();
         }
 
@@ -74,7 +98,7 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             var result = new List<QuantitySummaryItem>();
 
             var byWorkType = QuantityItems.GroupBy(i => i.WorkType)
-                .OrderBy(g => GetWorkTypeOrder(g.Key));    // IGrouping<string, QuantityItem> 의 집합. 여기서 string은 그룹핑한 WorkType
+                .OrderBy(g => GetWorkTypeOrder(g.Key));         // IGrouping<string, QuantityItem> 의 집합. 여기서 string은 그룹핑한 WorkType
 
             foreach (var workTypeGroup in byWorkType)
             {
