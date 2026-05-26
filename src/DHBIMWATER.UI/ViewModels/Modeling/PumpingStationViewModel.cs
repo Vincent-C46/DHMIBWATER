@@ -15,13 +15,13 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private readonly CreatePumpingStationUseCase _createPumpingStationUseCase;
         private readonly IUsageLogger _usageLogger;
 
-        private string ProfileType1ImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/1-1.종단제원.png";
-        private string ProfileType2ImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/1-1.종단제원.png";
-        private string ProfileType3ImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/1-1.종단제원.png";
+        private string ProfileType1ImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-1_종단제원.png";
+        private string ProfileType2ImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-2_종단제원.png";
+        private string ProfileType3ImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-3_종단제원.png";
 
-        private string PlanLeftImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/2-1.평면제원_좌안부_배경제거.png";
-        private string PlanRightImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/2-2.평면제원_우안부.png";
-        private string PlanDefaultImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/2-3.평면제원_측면부.png";
+        private string PlanLeftImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-1_평면제원-좌안진입.png";
+        private string PlanRightImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-1_평면제원-우안진입.png";
+        private string PlanDefaultImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-1_평면제원-측면진입.png";
 
         // 설계조건
         private string _selectedPumpingStationType = "Type1";
@@ -30,7 +30,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private double _hd = 5.0;
         private int _n = 3;
         private double _lwl = 0.0;
-        private double _hwl = 2.5;  
+        private double _hwl = 2.5;
 
         // 종단제원
         private double _b1 = 1200.0;
@@ -89,12 +89,24 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 {
                     _selectedPumpingStationType = value;
                     OnPropertyChanged(nameof(SelectedPumpingStationType));
-                    OnPropertyChanged(nameof(T6Visibility));                    
+                    OnPropertyChanged(nameof(T6Visibility));
                     OnPropertyChanged(nameof(ProfileImagePath));
+                    OnPropertyChanged(nameof(T5Visibility));
+
+                    OnPropertyChanged(nameof(EntranceTypes));
+                    if (value != "Type1" && _selectedEntranceType != "측면부")
+                    {
+                        _selectedEntranceType = "측면부";
+                        OnPropertyChanged(nameof(SelectedEntranceType));
+                        OnPropertyChanged(nameof(PlanImagePath));
+                    }
                 }
             }
         }
-        public ObservableCollection<string> EntranceTypes { get; } = new() { "좌안부", "우안부", "측면부", };
+        // Type1일 때만 좌안부·우안부·측면부 전체 노출, Type2·3은 측면부만
+        public IReadOnlyList<string> EntranceTypes => _selectedPumpingStationType == "Type1"
+            ? new List<string> { "좌안부", "우안부", "측면부" }
+            : new List<string> { "측면부" };
         public string SelectedEntranceType
         {
             get => _selectedEntranceType;
@@ -123,11 +135,11 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 }
             }
         }
-        public bool IsCircularOpening 
+        public bool IsCircularOpening
         {
             get => !_isRectangularOpening;
             set => IsRectangularOpening = !value;
-        } 
+        }
 
         public double D
         {
@@ -450,7 +462,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             get => _h5;
             set
             {
-                if(_h5 != value)
+                if (_h5 != value)
                 {
                     _h5 = value;
                     UpdateH5Dependents();
@@ -481,7 +493,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 {
                     _b8 = value;
                     //RecalculateDerivedValues();
-                    UpdateB8Dependents(); 
+                    UpdateB8Dependents();
                     OnPropertyChanged(nameof(B8));
                 }
             }
@@ -602,7 +614,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 }
             }
         }
-        public string T5Visibility => SelectedEntranceType == "우안부" || SelectedEntranceType == "좌안부" ? "Visible" : "Collapsed";
+        public string T5Visibility => SelectedEntranceType == "측면부" ? "Collapsed" : "Visible" ;
 
         public double T6
         {
@@ -689,7 +701,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         {
             designConditionDto = new PumpDesignConditionDto(SelectedPumpingStationType, SelectedEntranceType, D, HD, H2, N, LWL, HWL);
             profileSpecDto = new PumpProfileSpecDto(B1, B3, B4, B6, B7, H1, H5, H6, SelectedTheta, L1, L2, L3, L4, H3, H4, H7, OB1, OH1, NS, HS, T1, T2, T3, T4, GB1, GH1, B2, IsRectangularOpening, B5);
-            planSpecDto = new PumpPlanSpecDto(B8,  B9, L5, B10, T5, T6);
+            planSpecDto = new PumpPlanSpecDto(B8, B9, L5, B10, T5, T6);
             //typeSelectionDto = new PumpTypeSelectionDto(T1, T2, T3, T4, T5, T6, GB1, GH1);
             creationRequestDto = new PumpCreationRequestDto(designConditionDto, planSpecDto, profileSpecDto);
 
@@ -804,7 +816,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         }
         private void UpdateL5Dependents()
         {
-            L5 = _b7 + _t3 + _b6 + _b5 / 2 + _l4 - _b10 ;
+            L5 = _b7 + _t3 + _b6 + _b5 / 2 + _l4 - _b10;
         }
         private void UpdateH3Calculation()
         {

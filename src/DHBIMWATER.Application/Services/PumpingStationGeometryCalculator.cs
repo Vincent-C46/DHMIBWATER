@@ -57,14 +57,13 @@ namespace DHBIMWATER.Application.Services
             };
             var valveSlabDef = new SlabDefinition
             {
-                Thickness = pr.T3,
+                Thickness = d.SelectedPumpingStationType == "Type2" ? pr.T3 : pr.T3,
                 ElevationZ = upperSlabDef.ElevationZ - (pr.H7 + d.D + pr.H6),
                 LevelName = ValveRoomLevelName,
                 ElementCode = "MS1",
                 Zone = "",
                 Part = "밸브실슬래브",
             };
-
             // 상부슬래브 오프닝 추가
             upperSlabDef.SubPoints = new List<Point2D>()
             {
@@ -162,15 +161,16 @@ namespace DHBIMWATER.Application.Services
                     }
                     break;
                 case "측면부":
-                    upperSlabDef.Points = new List<Point2D>()
+
+                    if (d.SelectedPumpingStationType == "Type1")
+                    {
+                        upperSlabDef.Points = new List<Point2D>()
                     {
                         new Point2D(0, -pr.T4),
                         new Point2D(totalLength, - pr.T4),
                         new Point2D(totalLength, totalWidth- pr.T4),
                         new Point2D(0, totalWidth - pr.T4),
                     };
-                    if (d.SelectedPumpingStationType == "Type1")
-                    {
                         valveSlabDef.Points = new List<Point2D>()
                         {
                             new Point2D(totalLength - pr.T4 - pr.B7 - pr.T3, 0),
@@ -181,16 +181,30 @@ namespace DHBIMWATER.Application.Services
                     }
                     else if (d.SelectedPumpingStationType == "Type2")
                     {
+                        upperSlabDef.Points = new List<Point2D>()
+                    {
+                        new Point2D(0, -pr.T4),
+                        new Point2D(totalLength - pr.T4 + pr.T3, - pr.T4),
+                        new Point2D(totalLength - pr.T4 + pr.T3, totalWidth- pr.T4),
+                        new Point2D(0, totalWidth - pr.T4),
+                    };
                         valveSlabDef.Points = new List<Point2D>()
                         {
-                            new Point2D(totalLength - pr.T4 - pr.B7 , -pr.T4),
-                            new Point2D(totalLength  , -pr.T4),
-                            new Point2D(totalLength , pl.B8 * d.N + pl.T5 * (d.N -1)  +pr.T4),
-                            new Point2D(totalLength - pr.T4 - pr.B7 , pl.B8 * d.N + pl.T5 * (d.N -1)  + pr.T4)
+                            new Point2D(totalLength - pr.T4 - pr.B7, -pr.T4),
+                            new Point2D(totalLength- pr.T4 + pr.T3, -pr.T4),
+                            new Point2D(totalLength- pr.T4 + pr.T3, pl.B8 * d.N + pl.T5 * (d.N -1)  +pr.T4),
+                            new Point2D(totalLength - pr.T4 - pr.B7, pl.B8 * d.N + pl.T5 * (d.N -1)  + pr.T4)
                         };
                     }
                     else
                     {
+                        upperSlabDef.Points = new List<Point2D>()
+                    {
+                        new Point2D(0, -pr.T4),
+                        new Point2D(totalLength, - pr.T4),
+                        new Point2D(totalLength, totalWidth- pr.T4),
+                        new Point2D(0, totalWidth - pr.T4),
+                    };
                         valveSlabDef.Points = new List<Point2D>()
                         {
                             new Point2D(totalLength - pr.T4 - pr.B7 , 0),
@@ -811,26 +825,43 @@ namespace DHBIMWATER.Application.Services
                     else if (d.SelectedPumpingStationType == "Type2")
                     {
                         // 측면부 Type2 벽체 계산 로직
-                        // 좌안부 밸브실 사이벽 - W4
+                        // 측면부 밸브실 사이벽 - W4
                         var valveRoomWallDef = new LinearWallDefinition
                         {
                             Thickness = pr.T3,
-                            Height = pr.H5,
-                            BaseOffset = 0,
-                            LevelName = FoundationPumpLevelName,
+                            Height = pr.T3 + pr.H6 + d.D + pr.H7 - pr.T1,
+                            BaseOffset = -pr.T3,
+                            LevelName = ValveRoomLevelName,
                             ElementCode = "W4",
                             Zone = "밸브실",
                             Part = "밸브실 사이벽",
                         };
-                        valveRoomWallDef.StartPoint = new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3 / 2, 0, 0);
-                        valveRoomWallDef.EndPoint = new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3 / 2, totalWidth - pr.T4 * 2, 0);
+                        valveRoomWallDef.StartPoint = new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3 / 2, -pr.T4, 0);
+                        valveRoomWallDef.EndPoint = new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3 / 2, totalWidth - pr.T4, 0);
                         valveRoomWallDef.IsFlipped = true;
                         linearWalls.Add(valveRoomWallDef);
+
+                        // 측면부 밸브실 사이벽 - W4-1
+                        var valveRoomWallDef2 = new LinearWallDefinition
+                        {
+                            Thickness = pr.T4,
+                            Height = pr.H5 + pr.T1 - pr.H7 - d.D - pr.H6 - pr.T3,
+                            BaseOffset = 0,
+                            LevelName = FoundationPumpLevelName,
+                            ElementCode = "W4-1",
+                            Zone = "밸브실",
+                            Part = "밸브실 하부 외벽",
+                        };
+                        valveRoomWallDef2.StartPoint = new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3 + pr.T4 / 2, -pr.T4, 0);
+                        valveRoomWallDef2.EndPoint = new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3 + pr.T4 / 2, totalWidth - pr.T4, 0);
+                        valveRoomWallDef2.IsFlipped = true;
+                        linearWalls.Add(valveRoomWallDef2);
+
 
                         // 외벽2 - 동쪽 - W2
                         var outerWallDef2 = new LinearWallDefinition
                         {
-                            Thickness = pr.T4,
+                            Thickness = pr.T3,
                             Height = pr.H7 + d.D + pr.H6 - pr.T1,
                             BaseOffset = 0,
                             LevelName = ValveRoomLevelName,
@@ -838,8 +869,8 @@ namespace DHBIMWATER.Application.Services
                             Zone = "펌프장",
                             Part = "펌프장 외벽",
                         };
-                        outerWallDef2.StartPoint = new Point3D(totalLength - pr.T4 / 2, -pr.T4, 0);
-                        outerWallDef2.EndPoint = new Point3D(totalLength - pr.T4 / 2, totalWidth - pr.T4, 0);
+                        outerWallDef2.StartPoint = new Point3D(totalLength - pr.T4 + pr.T3 / 2, -pr.T4, 0);
+                        outerWallDef2.EndPoint = new Point3D(totalLength - pr.T4 + pr.T3 / 2, totalWidth - pr.T4, 0);
                         outerWallDef2.IsFlipped = true;
                         linearWalls.Add(outerWallDef2);
 
@@ -883,9 +914,9 @@ namespace DHBIMWATER.Application.Services
                         var valveRoomWallDef = new LinearWallDefinition
                         {
                             Thickness = pr.T3,
-                            Height = pr.H5,
-                            BaseOffset = 0,
-                            LevelName = FoundationPumpLevelName,
+                            Height = pr.T3 + pr.H6 + d.D + pr.H7 - pr.T1,
+                            BaseOffset = -pr.T3,
+                            LevelName = ValveRoomLevelName,
                             ElementCode = "W4",
                             Zone = "밸브실",
                             Part = "밸브실 사이벽",
@@ -894,6 +925,22 @@ namespace DHBIMWATER.Application.Services
                         valveRoomWallDef.EndPoint = new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3 / 2, totalWidth - pr.T4 * 2, 0);
                         valveRoomWallDef.IsFlipped = true;
                         linearWalls.Add(valveRoomWallDef);
+
+                        // 좌안부 밸브실 사이벽 - W4-1
+                        var valveRoomWallDef2 = new LinearWallDefinition
+                        {
+                            Thickness = pr.T4,
+                            Height = pr.H5 + pr.T1 - pr.H7 - d.D - pr.H6 - pr.T3,
+                            BaseOffset = 0,
+                            LevelName = FoundationPumpLevelName,
+                            ElementCode = "W4-1",
+                            Zone = "밸브실",
+                            Part = "밸브실 하부벽",
+                        };
+                        valveRoomWallDef2.StartPoint = new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3  + pr.T4 / 2, 0, 0);
+                        valveRoomWallDef2.EndPoint = new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3  + pr.T4 / 2, totalWidth - pr.T4 * 2, 0);
+                        valveRoomWallDef2.IsFlipped = true;
+                        linearWalls.Add(valveRoomWallDef2);
 
                         // 외벽3 - 동쪽 - W2
                         var outerWallDef3 = new LinearWallDefinition
@@ -1184,8 +1231,8 @@ namespace DHBIMWATER.Application.Services
                             new Point3D(0, pl.B8 * d.N + pl.T5 * (d.N-1) + pr.T4/2, d.LWL * 1000 - pr.H1),
                             new Point3D(x2, pl.B8 * d.N + pl.T5 * (d.N-1) + pr.T4/2, d.LWL * 1000 - pr.H1),
                             new Point3D(x2 + pr.L3, pl.B8 * d.N + pl.T5 * (d.N-1) + pr.T4/2,  d.LWL * 1000 - pr.H4),
-                            new Point3D(totalLength - pr.T4 - pr.B7, pl.B8 * d.N + pl.T5 * (d.N-1) + pr.T4/2, d.LWL * 1000 - pr.H4),
-                            new Point3D(totalLength - pr.T4 - pr.B7, pl.B8 * d.N + pl.T5 * (d.N-1) + pr.T4/2, d.HWL * 1000 + pr.H3),
+                            new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3, pl.B8 * d.N + pl.T5 * (d.N-1) + pr.T4/2, d.LWL * 1000 - pr.H4),
+                            new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3, pl.B8 * d.N + pl.T5 * (d.N-1) + pr.T4/2, d.HWL * 1000 + pr.H3),
                             new Point3D(0, pl.B8 * d.N + pl.T5 * (d.N-1) + pr.T4/2, d.HWL * 1000 + pr.H3),
                         };
                         profileWalls.Add(s_outerProfileWallDef2);
@@ -1203,8 +1250,8 @@ namespace DHBIMWATER.Application.Services
                             new Point3D(0, - pr.T4/2, d.LWL * 1000 - pr.H1),
                             new Point3D(x2, - pr.T4/2, d.LWL * 1000 - pr.H1),
                             new Point3D(x2 + pr.L3, - pr.T4/2,  d.LWL * 1000 - pr.H4),
-                            new Point3D(totalLength - pr.T4 - pr.B7, - pr.T4/2, d.LWL * 1000 - pr.H4),
-                            new Point3D(totalLength - pr.T4 - pr.B7, - pr.T4/2, d.HWL * 1000 + pr.H3),
+                            new Point3D(totalLength - pr.T4 - pr.B7- pr.T3, - pr.T4/2, d.LWL * 1000 - pr.H4),
+                            new Point3D(totalLength - pr.T4 - pr.B7- pr.T3, - pr.T4/2, d.HWL * 1000 + pr.H3),
                             new Point3D(0, - pr.T4/2, d.HWL * 1000 + pr.H3),
                         };
                         profileWalls.Add(s_outerProfileWallDef3);
@@ -1375,8 +1422,8 @@ namespace DHBIMWATER.Application.Services
                                                 new Point3D(0,                                                  -pr.T4 - pl.B10, d.LWL*1000 - pr.H1),
                                                 new Point3D(x2,                                                 -pr.T4 - pl.B10, d.LWL*1000 - pr.H1),
                                                 new Point3D(x2 + pr.L3,                                         -pr.T4 - pl.B10, d.LWL*1000 - pr.H4),
-                                                new Point3D(totalLength - pr.T4 - pr.B7,                        -pr.T4 - pl.B10, d.LWL*1000 - pr.H4),
-                                                new Point3D(totalLength - pr.T4 - pr.B7,                        -pr.T4 - pl.B10, d.LWL*1000 - pr.H4 - pr.T2),
+                                                new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3 + pr.T4+ pl.B10,        -pr.T4 - pl.B10, d.LWL*1000 - pr.H4),
+                                                new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3 + pr.T4+ pl.B10,        -pr.T4 - pl.B10, d.LWL*1000 - pr.H4 - pr.T2),
                                                 new Point3D(x2 + pr.L3 - pr.T2 * Math.Tan(calculatedTheta / 2), -pr.T4 - pl.B10, d.LWL*1000 - pr.H4 - pr.T2),
                                                 new Point3D(x2 - pr.T2 * Math.Tan(calculatedTheta / 2),         -pr.T4 - pl.B10, d.LWL*1000 - pr.H1 - pr.T2),
                                                 new Point3D(0,                                                  -pr.T4 - pl.B10, d.LWL*1000 - pr.H1 - pr.T2),
@@ -1386,8 +1433,8 @@ namespace DHBIMWATER.Application.Services
                                                 new Point3D(- subThk,                                                      -pr.T4 - pl.B10- subThk, d.LWL*1000 - pr.H1 - pr.T2),
                                                 new Point3D(x2 - pr.T2 * Math.Tan(calculatedTheta / 2),                    -pr.T4 - pl.B10- subThk, d.LWL*1000 - pr.H1 - pr.T2),
                                                 new Point3D(x2 + pr.L3 - pr.T2 * Math.Tan(calculatedTheta / 2),            -pr.T4 - pl.B10- subThk, d.LWL*1000 - pr.H4- pr.T2),
-                                                new Point3D(totalLength - pr.T4 - pr.B7 + subThk,                          -pr.T4 - pl.B10- subThk, d.LWL*1000 - pr.H4- pr.T2),
-                                                new Point3D(totalLength - pr.T4 - pr.B7 + subThk,                          -pr.T4 - pl.B10- subThk, d.LWL*1000 - pr.H4 - pr.T2 - subThk),
+                                                new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3 + pr.T4+ pl.B10 + subThk,                          -pr.T4 - pl.B10- subThk, d.LWL*1000 - pr.H4- pr.T2),
+                                                new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3 + pr.T4+ pl.B10 + subThk,                          -pr.T4 - pl.B10- subThk, d.LWL*1000 - pr.H4 - pr.T2 - subThk),
                                                 new Point3D(x2 + pr.L3 - (pr.T2 + subThk) * Math.Tan(calculatedTheta / 2), -pr.T4 - pl.B10- subThk, d.LWL*1000 - pr.H4 - pr.T2- subThk),
                                                 new Point3D(x2 - (pr.T2 + subThk) * Math.Tan(calculatedTheta / 2),         -pr.T4 - pl.B10- subThk, d.LWL*1000 - pr.H1 - pr.T2- subThk),
                                                 new Point3D(- subThk,                                                      -pr.T4 - pl.B10- subThk, d.LWL*1000 - pr.H1 - pr.T2- subThk),
@@ -1766,7 +1813,7 @@ namespace DHBIMWATER.Application.Services
                 {
                     Name = "C",
                     Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - pl.B10 - offset, -pl.T5 - pl.B9 + 100, d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
-                    Max = new Point3D(totalLength + pl.B10 + offset,                     -pl.T5 - pl.B9 + offset, d.HWL * 1000 + pr.H3 + pr.T1 + offset),
+                    Max = new Point3D(totalLength + pl.B10 + offset, -pl.T5 - pl.B9 + offset, d.HWL * 1000 + pr.H3 + pr.T1 + offset),
 
                     BasisX = new Vector3D(1, 0, 0),
                     BasisZ = new Vector3D(0, 1, 0),
@@ -1777,7 +1824,7 @@ namespace DHBIMWATER.Application.Services
                 {
                     Name = "D",
                     Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - pl.B10 - offset, -pl.T5 - offset, d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
-                    Max = new Point3D(totalLength + pl.B10 + offset,                     -pl.T5 + offset, d.HWL * 1000 + pr.H3 + pr.T1 + offset),
+                    Max = new Point3D(totalLength + pl.B10 + offset, -pl.T5 + offset, d.HWL * 1000 + pr.H3 + pr.T1 + offset),
 
                     BasisX = new Vector3D(1, 0, 0),
                     BasisZ = new Vector3D(0, 1, 0),
@@ -1787,8 +1834,8 @@ namespace DHBIMWATER.Application.Services
                 sectionViewDefs.Add(new SectionViewDefinition
                 {
                     Name = "E",
-                    Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - pl.B10 - offset, -pl.T5 - pl.B9 - pr.T4  - pl.B10 - offset, d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
-                    Max = new Point3D(totalLength + pl.B10 + offset,                     + offset, d.HWL * 1000 + pr.H3 / 2),
+                    Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - pl.B10 - offset, -pl.T5 - pl.B9 - pr.T4 - pl.B10 - offset, d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
+                    Max = new Point3D(totalLength + pl.B10 + offset, +offset, d.HWL * 1000 + pr.H3 / 2),
 
                     BasisX = new Vector3D(-1, 0, 0),
                     BasisZ = new Vector3D(0, 0, -1),
@@ -1802,7 +1849,7 @@ namespace DHBIMWATER.Application.Services
                 {
                     Name = "C",
                     Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - pl.B10 - offset, (totalWidth - pr.T4) - (-pl.T5 - pl.B9 + 100), d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
-                    Max = new Point3D(totalLength + pl.B10 + offset,                     (totalWidth - pr.T4) - (-pl.T5 - pl.B9 + offset), d.HWL * 1000 + pr.H3 + pr.T1 + offset),
+                    Max = new Point3D(totalLength + pl.B10 + offset, (totalWidth - pr.T4) - (-pl.T5 - pl.B9 + offset), d.HWL * 1000 + pr.H3 + pr.T1 + offset),
 
                     BasisX = new Vector3D(-1, 0, 0),
                     BasisZ = new Vector3D(0, -1, 0),
@@ -1813,7 +1860,7 @@ namespace DHBIMWATER.Application.Services
                 {
                     Name = "D",
                     Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - pl.B10 - offset, (totalWidth - pr.T4) - (-pl.T5 - offset), d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
-                    Max = new Point3D(totalLength + pl.B10 + offset,                     (totalWidth - pr.T4) - (-pl.T5 + offset), d.HWL * 1000 + pr.H3 + pr.T1 + offset),
+                    Max = new Point3D(totalLength + pl.B10 + offset, (totalWidth - pr.T4) - (-pl.T5 + offset), d.HWL * 1000 + pr.H3 + pr.T1 + offset),
 
                     BasisX = new Vector3D(-1, 0, 0),
                     BasisZ = new Vector3D(0, -1, 0),
@@ -1824,7 +1871,7 @@ namespace DHBIMWATER.Application.Services
                 {
                     Name = "E",
                     Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - pl.B10 - offset, (totalWidth - pr.T4) - (-pl.T5 - pl.B9 - pr.T4 - pl.B10 - offset), d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
-                    Max = new Point3D(totalLength + pl.B10 + offset, (totalWidth - pr.T4) - (offset),                                 d.HWL * 1000 + pr.H3 / 2),
+                    Max = new Point3D(totalLength + pl.B10 + offset, (totalWidth - pr.T4) - (offset), d.HWL * 1000 + pr.H3 / 2),
 
                     BasisX = new Vector3D(-1, 0, 0),
                     BasisZ = new Vector3D(0, 0, -1),
@@ -1875,7 +1922,7 @@ namespace DHBIMWATER.Application.Services
                 Min = new Point3D(totalLength - pr.T4 - pl.L5 + 100,
                                   minWidth,
                                   d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
-                Max = new Point3D(totalLength - pr.T4 - pl.L5 +  offset,
+                Max = new Point3D(totalLength - pr.T4 - pl.L5 + offset,
                                   maxWidth,
                                   d.HWL * 1000 + pr.H3 + pr.T1 + offset),
 

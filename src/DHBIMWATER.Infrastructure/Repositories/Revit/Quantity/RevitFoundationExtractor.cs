@@ -3,6 +3,7 @@ using Autodesk.Revit.UI;
 using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Core.Quantity;
 using DHBIMWATER.Infrastructure.Helpers;
+using System.Windows;
 using System.Windows.Controls;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
@@ -46,13 +47,32 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var fnd = doc.GetElement(new ElementId(elementId)) as FamilyInstance;
             var quantityItems = new List<QuantityItem>();
 
+            string materialName = string.Empty;
+            var materialId = fnd.get_Parameter(BuiltInParameter.STRUCTURAL_MATERIAL_PARAM)?.AsElementId();
+
+            if (materialId == null || materialId == ElementId.InvalidElementId)
+                materialName = string.Empty;
+            else
+                materialName = (doc.GetElement(materialId) as Material).Name;
+
             // 구조 기초 슬래브는 Floor 에서 산출
             if (fnd is Floor) return Enumerable.Empty<QuantityItem>();
 
             // 객체 추출값
-            var b = UC.FtToM(FamilyInstanceHelper.FindParameter(fnd, "폭") ?? FamilyInstanceHelper.FindParameter(fnd, "b") ?? 0);
-            var d = UC.FtToM(FamilyInstanceHelper.FindParameter(fnd, "길이") ?? FamilyInstanceHelper.FindParameter(fnd, "d") ?? 0);
-            var h = UC.FtToM(FamilyInstanceHelper.FindParameter(fnd, "기초 두께") ?? FamilyInstanceHelper.FindParameter(fnd, "h") ?? 0);
+            var b = UC.FtToM(FamilyInstanceHelper.FindParameter(fnd, "b") ??
+                             FamilyInstanceHelper.FindParameter(fnd, "w") ??
+                             FamilyInstanceHelper.FindParameter(fnd, "width") ??
+                             FamilyInstanceHelper.FindParameter(fnd, "폭") ?? 0);
+            var d = UC.FtToM(FamilyInstanceHelper.FindParameter(fnd, "d") ??
+                             FamilyInstanceHelper.FindParameter(fnd, "l") ??
+                             FamilyInstanceHelper.FindParameter(fnd, "Length") ??
+                             FamilyInstanceHelper.FindParameter(fnd, "길이") ?? 0);
+            var h = UC.FtToM(FamilyInstanceHelper.FindParameter(fnd, "h") ?? 
+                             FamilyInstanceHelper.FindParameter(fnd, "Thickness") ?? 
+                             FamilyInstanceHelper.FindParameter(fnd, "Thk") ??
+                             FamilyInstanceHelper.FindParameter(fnd, "두께") ??
+                             FamilyInstanceHelper.FindParameter(fnd, "기초 두께") ??
+                             FamilyInstanceHelper.FindParameter(fnd, "Height") ?? 0);
 
             string typeName = fnd.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).AsValueString() ?? string.Empty;
 
@@ -66,6 +86,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             const string concFormula = "B x D x H";
             string? concRendered = FormulaCalculator.Render(concFormula, varDict);
             double concValue = FormulaCalculator.Calculate(concFormula, varDict);
+            string workType = materialName.Contains("무근") || h < 0.15 ?  "무근콘크리트" : "철근콘크리트";
 
             // 철근콘크리트
             var concreteItem = new QuantityItem
@@ -73,8 +94,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 ElementId = elementId,
                 Category = fnd.Category.Name ?? string.Empty,
                 ElementCode = fnd.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
-                WorkType = "철근콘크리트",
-                Specification = typeName,
+                WorkType = workType,
+                Specification = materialName,
                 RawFormula = concFormula,
                 RenderedFormula = concRendered,
                 Value = concValue,

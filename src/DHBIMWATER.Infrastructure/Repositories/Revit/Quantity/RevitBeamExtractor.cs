@@ -53,18 +53,23 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             // 객체 추출값
             var length = UC.FtToM(beam.get_Parameter(BuiltInParameter.INSTANCE_LENGTH_PARAM)?.AsDouble() ?? 0);
 
-            var b = UC.FtToM(FamilyInstanceHelper.FindParameter(beam, "b") ?? 0) ;
-            var d = UC.FtToM(FamilyInstanceHelper.FindParameter(beam, "d") ?? 0) ;
-            var h = UC.FtToM(FamilyInstanceHelper.FindParameter(beam, "h") ?? 0) ;
+            var b = UC.FtToM(FamilyInstanceHelper.FindParameter(beam, "b") ?? FamilyInstanceHelper.FindParameter(beam, "width") ?? FamilyInstanceHelper.FindParameter(beam, "폭") ??0) ;
+            var h = UC.FtToM(FamilyInstanceHelper.FindParameter(beam, "h") ?? FamilyInstanceHelper.FindParameter(beam, "d") ?? FamilyInstanceHelper.FindParameter(beam, "높이") ?? FamilyInstanceHelper.FindParameter(beam, "Height") ?? 0) ;
             string typeName = beam.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).AsValueString() ?? string.Empty;
 
-            //string materialName = string.Empty;
-            //var materialId = beam.get_Parameter(BuiltInParameter.STRUCTURAL_MATERIAL_PARAM)?.AsElementId();
-            
-            //if (materialId == null || materialId == ElementId.InvalidElementId)
-            //    materialName = string.Empty;
-            //else
-            //    materialName = (doc.GetElement(materialId) as Material).Name;
+            string materialName = string.Empty;
+            var materialId = beam.get_Parameter(BuiltInParameter.STRUCTURAL_MATERIAL_PARAM)?.AsElementId();
+
+            if (materialId == null || materialId == ElementId.InvalidElementId)
+                materialName = string.Empty;
+            else
+                materialName = (doc.GetElement(materialId) as Material).Name;
+
+            var solid = beam.get_Geometry(new Options())
+                            .OfType<Solid>()
+                            .FirstOrDefault(s => s.Volume > 0);
+
+            var a = UC.Ft3ToM3(solid.Volume);
 
             var varDict = new Dictionary<string, double>
             {
@@ -84,7 +89,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 Category = beam.Category.Name ?? string.Empty,
                 ElementCode = beam.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
                 WorkType = "철근콘크리트",
-                Specification = typeName,
+                Specification = materialName,
+                //SubSpecification = $"{a:F3} m³",
                 RawFormula = concFormula,
                 RenderedFormula = concRendered,
                 Value = concValue,

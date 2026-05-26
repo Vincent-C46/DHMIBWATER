@@ -51,13 +51,17 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                                           .Where(l => l.Function == MaterialFunctionAssignment.Structure)
                                           .Sum(l => l.Width));
 
+            var structureLayer = cs.GetLayers().FirstOrDefault(l => l.Function == MaterialFunctionAssignment.Structure);
+            var material = doc.GetElement(structureLayer?.MaterialId) as Material;
+            var materialName = material?.Name ?? string.Empty;
+
             var varDict = new Dictionary<string, double>
             {
                 ["A"] = area,
                 ["Thk"] = thickness,
             };
 
-            var concFormula = "A x Thk x PI^2";
+            var concFormula = "A x Thk";
             //var concFormula = "A * Thk";
             string? concRendered = FormulaCalculator.Render(concFormula, varDict);
             double concValue = FormulaCalculator.Calculate(concFormula, varDict);
@@ -71,7 +75,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 Category = wall.LookupParameter("DH_Category")?.AsString() ?? string.Empty,
                 ElementCode = wall.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
                 WorkType = "철근콘크리트",
-                Specification = "25-18-250",
+                Specification = materialName,
                 RawFormula = concFormula,
                 RenderedFormula = concRendered,
                 Value = concValue,

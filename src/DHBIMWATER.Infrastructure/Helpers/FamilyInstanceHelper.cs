@@ -11,8 +11,7 @@ namespace DHBIMWATER.Infrastructure.Helpers
             var param = fi.Parameters
                           .OfType<Parameter>()
                           .FirstOrDefault(p => p.Definition.Name.ToLower() == lower);
-
-            if (param != null) return param.AsDouble();
+            if (param != null && param.HasValue) return param.AsDouble();
 
             var symbol = fi.Symbol;
             if (symbol == null) return null;

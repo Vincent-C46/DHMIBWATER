@@ -53,6 +53,10 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                                           .Where(l => l.Function == MaterialFunctionAssignment.Structure)
                                           .Sum(l => l.Width));
 
+            var structureLayer = cs.GetLayers().FirstOrDefault(l => l.Function == MaterialFunctionAssignment.Structure);
+
+            var material = doc.GetElement(structureLayer?.MaterialId) as Material;
+            var materialName = material?.Name ?? string.Empty;
 
             var varDict = new Dictionary<string, double>
             {
@@ -65,6 +69,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             //var concFormula = "A * Thk";
             string? concRendered = FormulaCalculator.Render(concFormula, varDict);
             double concValue = FormulaCalculator.Calculate(concFormula, varDict);
+            string workType = thickness < 0.15 || materialName.Contains("무근") ? "무근콘크리트" : "철근콘크리트";
 
             // 콘크리트
             var concreteItem = new QuantityItem
@@ -72,8 +77,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 ElementId = elementId,
                 Category = floor.LookupParameter("DH_Category")?.AsString() ?? string.Empty,
                 ElementCode = floor.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
-                WorkType = "철근콘크리트",
-                Specification = "25-18-250",
+                WorkType = workType,
+                Specification = materialName,
                 RawFormula = concFormula,
                 RenderedFormula = concRendered,
                 Value = concValue,

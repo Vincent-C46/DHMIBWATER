@@ -50,6 +50,15 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             var quantityItems = new List<QuantityItem>();
 
+            string materialName = string.Empty;
+            var materialId = column.get_Parameter(BuiltInParameter.STRUCTURAL_MATERIAL_PARAM)?.AsElementId();
+
+            if (materialId == null || materialId == ElementId.InvalidElementId)
+                materialName = string.Empty;
+            else
+                materialName = (doc.GetElement(materialId) as Material).Name;
+
+
             // 객체 추출값
             var length = UC.FtToM(column.get_Parameter(BuiltInParameter.INSTANCE_LENGTH_PARAM)?.AsDouble() ?? 0);
             var b = UC.FtToM(FamilyInstanceHelper.FindParameter(column, "b") ?? 0);
@@ -59,17 +68,14 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             string typeName = column.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).AsValueString() ?? string.Empty;
 
-
-
             var varDict = new Dictionary<string, double>
             {
                 ["L"] = length,
                 ["B"] = b,
-                ["H"] = h,
-                ["D"] = d,
+                ["D"] = d != 0 ? d : (h != 0 ? h : b),
             };
 
-            string concFormula = "B x H x L";
+            string concFormula = "B x D x L";
             string? columnRendered = FormulaCalculator.Render(concFormula, varDict);
             double columnValue = FormulaCalculator.Calculate(concFormula, varDict);
 
@@ -80,7 +86,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 Category = column.Category.Name ?? string.Empty,
                 ElementCode = column.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
                 WorkType = "철근콘크리트",
-                Specification = typeName,
+                Specification = materialName,
                 RawFormula = concFormula,
                 RenderedFormula = columnRendered ?? string.Empty,
                 Value = columnValue,
