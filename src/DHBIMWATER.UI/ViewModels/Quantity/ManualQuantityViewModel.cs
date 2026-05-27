@@ -11,13 +11,12 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
 
     public class ManualQuantityViewModel : ViewModelBase
     {
-        // ── Mode ──────────────────────────────────────────────────────────────
         public QuantityInputMode Mode { get; }
         public bool IsEditMode => Mode == QuantityInputMode.Edit;
         public string Title => IsEditMode ? "수량 항목 수정" : "수량 항목 추가";
         public string ConfirmButtonText => IsEditMode ? "저장" : "추가";
 
-        // ── Fields ────────────────────────────────────────────────────────────
+        #region Fields
         private string _workType = string.Empty;
         private string _unit = "m³";
         private string _rawFormula = string.Empty;
@@ -26,9 +25,10 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         private string _specification = string.Empty;
         private string _subSpecification = string.Empty;
         private string _preview = string.Empty;
+        #endregion
 
         // ── Properties ────────────────────────────────────────────────────────
-        public List<string> UnitOptions { get; } = ["m³", "m²", "m", "EA", "kg", "ton", "식"];
+        public List<string> UnitOptions { get; } = ["EA", "m", "m²", "m³", "공m³", "ton"];
 
         public string WorkType
         {
@@ -186,7 +186,7 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
                 var dict = VariableInputs.ToDictionary(v => v.Name, v => v.Value);
                 ResultItem = new QuantityItem
                 {
-                    ElementId        = 0,
+                    ElementId        = -1,
                     WorkType         = WorkType.Trim(),
                     Unit             = Unit,
                     Category         = Category.Trim(),

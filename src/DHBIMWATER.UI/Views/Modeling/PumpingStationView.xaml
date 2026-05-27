@@ -188,7 +188,7 @@
                                                          Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                             <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="30"/>
                                         </StackPanel>
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,15" Visibility="{Binding B4Visibility}">
                                             <TextBlock Text="B4:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                             <TextBlock Text="펌프 유지관리 공간 폭" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                                             <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
@@ -444,9 +444,6 @@
              Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                                     <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="30"/>
                                                 </StackPanel>
-
-
-
                                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                                     <TextBlock Text="B2:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                     <TextBlock Text="제진기 오프닝 길이" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
@@ -667,7 +664,7 @@
 
                                     <StackPanel Grid.Column="0" Margin="0,0,10,0" Height="Auto" VerticalAlignment="Top">
 
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,15" Visibility="{Binding B9Visibility}">
                                             <TextBlock Text="B9:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                             <TextBlock Text="진입부 폭" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                                             <TextBox Style="{StaticResource PrimaryTextBoxStyle}"

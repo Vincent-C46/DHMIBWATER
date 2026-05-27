@@ -1334,7 +1334,6 @@ namespace DHBIMWATER.Application.Services
                     Width = pr.GB1,
                     Height = pr.GH1,
                     LevelName = UpperSlabLevelName,
-
                     ElementCode = "G1",
                     Zone = "",
                     Part = "상부 거더",
@@ -1353,7 +1352,7 @@ namespace DHBIMWATER.Application.Services
                 };
 
                 beamDefs.Add(beamDef1);
-                beamDefs.Add(beamDef2);
+                if (d.SelectedPumpingStationType == "Type1") beamDefs.Add(beamDef2);
                 beamDefs.Add(beamDef3);
             }
 

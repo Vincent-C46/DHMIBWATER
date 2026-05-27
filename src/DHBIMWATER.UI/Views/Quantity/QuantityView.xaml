@@ -31,7 +31,7 @@
                 </CollectionViewSource.GroupDescriptions>
             </CollectionViewSource>
             -->
-            
+
             <conv:GroupElementCountConverter x:Key="ElementCountConverter"/>
 
             <CollectionViewSource x:Key="SummaryItemsSource"
@@ -76,17 +76,25 @@
                     <Button Width="120" Command="{Binding ExtractCommand}"
                             Padding="14,6" Style="{StaticResource PrimaryButtonStyle}">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xe72c;" FontFamily="Segoe MDL2 Assets"
-                                       FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <Image Source="/DHBIMWATER.UI;component/Resources/Quantity/refresh-arrow_white.png" Width="18" Margin="0,0,6,0" VerticalAlignment="Center"/>
                             <TextBlock Text="수량 재산출" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-                    <Button Width="100" Command="{Binding AddManualItemCommand}"
-                            Padding="14,6" Margin="8,0,0,0" Style="{StaticResource ExportButtonStyle}">
+                    <Button Width="80" Command="{Binding AddManualItemCommand}"
+                            Padding="14,6" Margin="8,0,0,0" Style="{StaticResource ExportButtonStyle}"
+                            BorderThickness="2">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xe710;" FontFamily="Segoe MDL2 Assets"
-                                       FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="항목 추가" VerticalAlignment="Center"/>
+                            <Image Source="/DHBIMWATER.UI;component/Resources/Quantity/add.png" Width="18" Margin="0,0,6,0" VerticalAlignment="Center"/>
+
+                            <TextBlock Text="추가" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Width="80" Command="{Binding AddManualItemCommand}"
+                            Padding="14,6" Margin="8,0,0,0" Style="{StaticResource ExportButtonStyle}"
+                            BorderThickness="2">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="/DHBIMWATER.UI;component/Resources/Quantity/edit.png" Width="17" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="수정" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>
@@ -94,14 +102,20 @@
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Grid.Column="1" HorizontalAlignment="Right">
                     <TextBlock Text="Export to" Style="{StaticResource BoldTextBlockStyle}" VerticalAlignment="Center" Margin="0,0,10,0"/>
 
+                    <!--
                     <Button Content="JSON" Width="60"
                     Command="{Binding ExportJsonCommand}"
                     Style="{StaticResource ExportButtonStyle}"
                     Margin="0,0,6,0"/>
-                    <Button Content="Excel" Width="60"
-                    Command="{Binding ExportExcelCommand}"
-                    Style="{StaticResource ExportButtonStyle}"
-                    Margin="0,0,6,0"/>
+                    -->
+                    <Button Width="100" Command="{Binding AddManualItemCommand}"
+                            Padding="14,6" Margin="8,0,0,0" Style="{StaticResource ExportButtonStyle}"
+                            BorderThickness="2">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="/DHBIMWATER.UI;component/Resources/Quantity/excel.png" Width="19" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Excel" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>

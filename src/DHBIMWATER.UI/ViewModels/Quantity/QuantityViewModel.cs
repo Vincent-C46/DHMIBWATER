@@ -149,7 +149,6 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             SummaryItems = new ObservableCollection<QuantitySummaryItem>(result);
             OnPropertyChanged(nameof(SummaryItems));
         }
-
         private int GetWorkTypeOrder(string workType)
         {
             for (int i = 0; i < WorkTypeOrder.Count; i++)

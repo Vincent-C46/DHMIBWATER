@@ -4,6 +4,7 @@ using DHBIMWATER.Application.UseCases.AutoGenerator;
 using DHBIMWATER.UI.Base;
 using DHBIMWATER.UI.Commands;
 using System.Collections.ObjectModel;
+using System.Windows.Controls;
 using System.Windows.Input;
 
 namespace DHBIMWATER.UI.ViewModels.Modeling
@@ -34,9 +35,9 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
 
         // 종단제원
         private double _b1 = 1200.0;
-        private double _b3 = 5000.0;
+        private double _b3 = 7000;
         private double _b4 = 3000.0;
-        private double _b6 = 500.0;
+        private double _b6 = 700.0;
         private double _b7 = 3000.0;
         private double _h1 = 500.0;
         private double _h6 = 500.0;
@@ -58,11 +59,11 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private double _h5;
 
         // 평면제원
-        private double _b2;
+        private double _b2 = 3500.0;
         private double _b8;
         private bool _isRectangularOpening = true;
         private double _b5 = 1600.0;
-        private double _b9 = 4000.0;
+        private double _b9 = 4500.0;
         private double _l5;
         private double _b10 = 0.0;
 
@@ -89,11 +90,12 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 {
                     _selectedPumpingStationType = value;
                     OnPropertyChanged(nameof(SelectedPumpingStationType));
-                    OnPropertyChanged(nameof(T6Visibility));
                     OnPropertyChanged(nameof(ProfileImagePath));
                     OnPropertyChanged(nameof(T5Visibility));
-
+                    OnPropertyChanged(nameof(T6Visibility));
+                    OnPropertyChanged(nameof(B4Visibility));
                     OnPropertyChanged(nameof(EntranceTypes));
+                    UpdateTypeDependents();
                     if (value != "Type1" && _selectedEntranceType != "측면부")
                     {
                         _selectedEntranceType = "측면부";
@@ -118,9 +120,19 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                     OnPropertyChanged(nameof(SelectedEntranceType));
                     OnPropertyChanged(nameof(PlanImagePath));
                     OnPropertyChanged(nameof(T5Visibility));
+                    OnPropertyChanged(nameof(B9Visibility));
+                    UpdateTypeDependents();
                 }
             }
         }
+
+        // 가시성
+        public string B4Visibility => SelectedPumpingStationType == "Type1" ? "Visible" : "Collapsed";
+        public string T6Visibility => SelectedPumpingStationType == "Type1" ? "Visible" : "Collapsed";
+        public string B9Visibility => SelectedEntranceType == "측면부" ? "Collapsed" : "Visible";
+        public string T5Visibility => SelectedEntranceType == "측면부" ? "Collapsed" : "Visible";
+
+
         public bool IsRectangularOpening
         {
             get { return _isRectangularOpening; }
@@ -188,7 +200,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 {
                     _lwl = value;
                     UpdateWLDependents();
-                    UpdateB2Calculation();   // B2 재계산
                     OnPropertyChanged(nameof(LWL));
                 }
             }
@@ -202,7 +213,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 {
                     _hwl = value;
                     UpdateWLDependents();
-                    UpdateB2Calculation();   // B2 재계산
                     OnPropertyChanged(nameof(HWL));
                 }
             }
@@ -250,6 +260,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 }
             }
         }
+
         public double B6
         {
             get { return _b6; }
@@ -523,6 +534,8 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 }
             }
         }
+
+
         public double L5
         {
             get { return _l5; }
@@ -614,7 +627,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 }
             }
         }
-        public string T5Visibility => SelectedEntranceType == "측면부" ? "Collapsed" : "Visible" ;
 
         public double T6
         {
@@ -628,7 +640,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 }
             }
         }
-        public string T6Visibility => SelectedPumpingStationType == "Type1" ? "Visible" : "Collapsed";
 
         public double GB1
         {
@@ -732,14 +743,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             _ns = (int)Math.Floor((_h4 - _h1) / _hs);
             _h5 = H2 + _h3 + _h4;
 
-            // 평면제원
-            if (_h1 + H2 + _h3 + _t1 <= 5000)
-                _b2 = 3000.0;
-            else if ((5000 < _h1 + H2 + _h3 + _t1) && (_h1 + H2 + _h3 + _t1 <= 7000))
-                _b2 = 3500.0;
-            else
-                _b2 = 4000.0;
-
             _b8 = Math.Ceiling(3 * _d / 100) * 100;
 
             // 부재유형
@@ -757,8 +760,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
 
             _gb1 = 500;
             _gh1 = _t1 + 300;
-
-            OnPropertyChanged(nameof(B2));
             OnPropertyChanged(nameof(L2));
             OnPropertyChanged(nameof(L3));
             OnPropertyChanged(nameof(L4));
@@ -798,7 +799,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             NS = (int)Math.Floor((_h4 - _h1) / _hs);
             UpdateThetaDependents();   // L3 재계산
             UpdateH3Calculation();     // H3 재계산
-            UpdateB2Calculation();   // B2 재계산
         }
         private void UpdateH6Dependents()
         {
@@ -807,7 +807,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private void UpdateT1Dependents()
         {
             UpdateH3Calculation();
-            UpdateB2Calculation();
             GH1 = _t1 + 300;
         }
         private void UpdateHSDependents()
@@ -825,7 +824,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private void UpdateH3Dependents()
         {
             H5 = H2 + H3 + H4;
-            UpdateB2Calculation();
         }
         private void UpdateH4Dependents()
         {
@@ -864,14 +862,15 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         {
             L5 = _b7 + _t3 + _b6 + _b5 / 2 + _l4 - _b10 - _t4;
         }
-        private void UpdateB2Calculation()
+        private void UpdateTypeDependents()
         {
-            if ((H1 + H2 + H3 + T1) <= 5000)
-                B2 = 3000;
-            else if (5000 < (H1 + H2 + H3 + T1) && (H1 + H2 + H3 + T1) <= 7000)
-                B2 = 3500;
-            else
-                B2 = 4000;
+            B4 = SelectedPumpingStationType == "Type1" && SelectedEntranceType == "측면부" ? 4500
+               : SelectedPumpingStationType == "Type1" ? 3000
+               : 0;
+
+            PlanDefaultImagePath = SelectedPumpingStationType == "Type1" 
+                ? "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-1_평면제원-측면진입.png"
+                : "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-2&3_평면제원.png"; 
         }
         #endregion
     }
