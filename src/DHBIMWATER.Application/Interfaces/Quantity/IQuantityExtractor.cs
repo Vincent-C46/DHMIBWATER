@@ -9,8 +9,8 @@ namespace DHBIMWATER.Application.Interfaces.Quantity
 {
     public interface IQuantityExtractor
     {
-        IEnumerable<long> CollectElementIds();
         bool CanExtract(long elementId);
+        IEnumerable<long> CollectElementIds();
         IEnumerable<QuantityItem> Extract(long elementId);
     }
 }

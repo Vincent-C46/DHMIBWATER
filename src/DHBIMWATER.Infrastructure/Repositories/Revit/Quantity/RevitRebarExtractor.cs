@@ -68,7 +68,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 ["UW"]  = rebarSpec.UnitWeightKgPerM,
             };
 
-            const string rebarFormula = "L x N x UW / 1000";
+            const string rebarFormula = "L x N x UW x 0.001";
             string? rebarRendered = FormulaCalculator.Render(rebarFormula, varDict);
             double rebarValue = FormulaCalculator.Calculate(rebarFormula, varDict);
 

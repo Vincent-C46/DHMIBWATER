@@ -158,7 +158,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                 return 0;
             }
 
-            //profileWall.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(profileWallDefinition.ElementCode);
             profileWall.LookupParameter("DH_ElementCode")?.Set(profileWallDefinition.ElementCode);
             profileWall.LookupParameter("DH_Addin")?.Set("DHBIMWATER");
             profileWall.LookupParameter("DH_Part")?.Set(profileWallDefinition.Part);
@@ -173,4 +172,4 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
         }
         #endregion
     }
-}
+}27

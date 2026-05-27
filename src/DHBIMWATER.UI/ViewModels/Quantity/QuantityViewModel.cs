@@ -56,8 +56,17 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         }
         #endregion
 
+        #region Events
+        /// <summary>
+        /// 수동 입력 다이얼로그 열기 요청.
+        /// null = 새 항목 추가, non-null = 해당 항목 편집 (Edit 모드 추후 구현)
+        /// </summary>
+        public event EventHandler<QuantityItem?> ManualInputRequested = delegate { };
+        #endregion
+
         #region Commands
-        public ICommand ExtractCommand { get; }
+        public ICommand ExtractCommand       { get; }
+        public ICommand AddManualItemCommand { get; }
         #endregion
 
         #region Constructor
@@ -70,15 +79,27 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             QuantityItems = new ObservableCollection<QuantityItem>(items);
             UpdateSummary();
 
-            ExtractCommand = new RelayCommand(GetCalculateQuantity);
+            ExtractCommand       = new RelayCommand(GetCalculateQuantity);
+            AddManualItemCommand = new RelayCommand(_ => ManualInputRequested.Invoke(this, null));
         }
         #endregion
 
         #region Methods
+        /// <summary>
+        /// ManualQuantityView 확인 시 호출. 수동 항목 추가 후 집계 갱신.
+        /// </summary>
+        public void AddItem(QuantityItem item)
+        {
+            QuantityItems.Add(item);
+            UpdateSummary();
+        }
+
         private void GetCalculateQuantity(object? obj)
         {
+            // 수동 입력 항목은 재산출 후에도 유지
+            var manualItems = QuantityItems.Where(i => i.Status == QuantityStatus.Manual).ToList();
             var items = _calculateQuantityUseCase.Execute();
-            QuantityItems = new ObservableCollection<QuantityItem>(items);
+            QuantityItems = new ObservableCollection<QuantityItem>(items.Concat(manualItems));
             OnPropertyChanged(nameof(QuantityItems));
             UpdateSummary();
         }
@@ -92,7 +113,6 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             "비계",
             "방수",
         };
-
         private void UpdateSummary()
         {
             var result = new List<QuantitySummaryItem>();

@@ -65,7 +65,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var b = UC.FtToM(FamilyInstanceHelper.FindParameter(column, "b") ?? 0);
             var d = UC.FtToM(FamilyInstanceHelper.FindParameter(column, "d") ??
                              FamilyInstanceHelper.FindParameter(column, "h") ??
-                             0);
+                             b);
             var r = UC.FtToM(FamilyInstanceHelper.FindParameter(column, "r") ?? 0);
 
             string typeName = column.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).AsValueString() ?? string.Empty;

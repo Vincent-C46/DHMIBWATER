@@ -66,11 +66,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             else
                 materialName = (doc.GetElement(materialId) as Material).Name;
 
-            var solid = beam.get_Geometry(new Options())
-                            .OfType<Solid>()
-                            .FirstOrDefault(s => s.Volume > 0);
-
-            var a = UC.Ft3ToM3(solid.Volume);
+            var a = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(beam).Sum(s => s.Volume));
 
             var varDict = new Dictionary<string, double>
             {

@@ -5,11 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="clr-namespace:DHBIMWATER.UI.Controls"
         xmlns:vm="clr-namespace:DHBIMWATER.UI.ViewModels.Quantity"
+        xmlns:conv="clr-namespace:DHBIMWATER.UI.Converters"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance vm:QuantityViewModel, IsDesignTimeCreatable=False}"
         Title="DHBIM WATER - Quantity Calculator"
-        SizeToContent="WidthAndHeight"
-        MinWidth="600" MinHeight="400"
+        Width="980" Height="700"
+        MinWidth="700" MinHeight="450"
         MaxWidth="1500" MaxHeight="1000"
         WindowStartupLocation="CenterOwner"
         Background="#F4F7F9" 
@@ -31,6 +32,8 @@
             </CollectionViewSource>
             -->
             
+            <conv:GroupElementCountConverter x:Key="ElementCountConverter"/>
+
             <CollectionViewSource x:Key="SummaryItemsSource"
                               Source="{Binding SummaryItems}"/>
 
@@ -69,14 +72,24 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <Button Grid.Column="0" Width="120"
-                    Command="{Binding ExtractCommand}" Padding="14,6"  Style="{StaticResource PrimaryButtonStyle}">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xe72c;" FontFamily="Segoe MDL2 Assets"
-                               FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="수량 재산출" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <Button Width="120" Command="{Binding ExtractCommand}"
+                            Padding="14,6" Style="{StaticResource PrimaryButtonStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xe72c;" FontFamily="Segoe MDL2 Assets"
+                                       FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="수량 재산출" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Width="100" Command="{Binding AddManualItemCommand}"
+                            Padding="14,6" Margin="8,0,0,0" Style="{StaticResource ExportButtonStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xe710;" FontFamily="Segoe MDL2 Assets"
+                                       FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="항목 추가" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
 
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Grid.Column="1" HorizontalAlignment="Right">
                     <TextBlock Text="Export to" Style="{StaticResource BoldTextBlockStyle}" VerticalAlignment="Center" Margin="0,0,10,0"/>
@@ -115,8 +128,11 @@
                         <DataGrid ItemsSource="{Binding Source={StaticResource SummaryItemsSource}}"
                                   AutoGenerateColumns="False"
                                   IsReadOnly="True"
+                                  CanUserSortColumns="False"
                                   SelectedItem="{Binding SelectedSummaryItem}"
-                                  Style="{StaticResource QuantityDataGridStyle}">
+                                  Style="{StaticResource QuantityDataGridStyle}"
+                                  VirtualizingPanel.IsVirtualizingWhenGrouping="True"
+                                  VirtualizingPanel.VirtualizationMode="Recycling">
 
                             <DataGrid.RowStyle>
                                 <Style TargetType="DataGridRow">
@@ -143,9 +159,11 @@
                     <TabItem Header="부재별">
                         <DataGrid ItemsSource="{Binding Source={StaticResource GroupByMembers}}"
                                   SelectedItem="{Binding SelectedItem}"
-                                  Style="{StaticResource QuantityDataGridStyle}">
+                                  Style="{StaticResource QuantityDataGridStyle}"
+                                  VirtualizingPanel.IsVirtualizingWhenGrouping="True"
+                                  VirtualizingPanel.VirtualizationMode="Recycling">
 
-                            <!-- 1단 그룹 헤더: 카테고리 (진한 배경) -->
+                            <!-- 1단 그룹: 카테고리 (진한 배경, 클릭으로 접기/펼치기) -->
                             <DataGrid.GroupStyle>
                                 <GroupStyle>
                                     <GroupStyle.ContainerStyle>
@@ -154,22 +172,54 @@
                                                 <Setter.Value>
                                                     <ControlTemplate TargetType="GroupItem">
                                                         <StackPanel>
-                                                            <Border Background="#2C3E50" Padding="12,5">
-                                                                <StackPanel Orientation="Horizontal">
-                                                                    <TextBlock Text="{Binding Name}"
-                                                                               Foreground="White"
-                                                                               FontSize="12"
-                                                                               FontWeight="SemiBold"
-                                                                               VerticalAlignment="Center"/>
-                                                                    <TextBlock Text="{Binding ItemCount, StringFormat=' ({0})'}"
-                                                                               Foreground="#95A5A6"
-                                                                               FontSize="11"
-                                                                               VerticalAlignment="Bottom"
-                                                                               Margin="4,0,0,1"/>
-                                                                </StackPanel>
-                                                            </Border>
-                                                            <ItemsPresenter/>
+                                                            <ToggleButton x:Name="toggle1" IsChecked="True"
+                                                                          Padding="0" BorderThickness="0"
+                                                                          Focusable="False" Cursor="Hand">
+                                                                <ToggleButton.Template>
+                                                                    <ControlTemplate TargetType="ToggleButton">
+                                                                        <Border Background="#2C3E50" Padding="12,6">
+                                                                            <Grid>
+                                                                                <Grid.ColumnDefinitions>
+                                                                                    <ColumnDefinition Width="Auto"/>
+                                                                                    <ColumnDefinition Width="*"/>
+                                                                                </Grid.ColumnDefinitions>
+                                                                                <!-- 접기/펼치기 화살표 -->
+                                                                                <TextBlock x:Name="arrow"
+                                                                                           Grid.Column="0"
+                                                                                           Text="▾"
+                                                                                           Foreground="White"
+                                                                                           FontSize="11"
+                                                                                           VerticalAlignment="Center"
+                                                                                           Margin="0,0,8,0"/>
+                                                                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                                                                    <TextBlock Text="{Binding Name}"
+                                                                                               Foreground="White"
+                                                                                               FontSize="12"
+                                                                                               FontWeight="SemiBold"
+                                                                                               VerticalAlignment="Center"/>
+                                                                                    <TextBlock Text="{Binding ItemCount, StringFormat=' ({0})'}"
+                                                                                               Foreground="#95A5A6"
+                                                                                               FontSize="11"
+                                                                                               VerticalAlignment="Bottom"
+                                                                                               Margin="4,0,0,1"/>
+                                                                                </StackPanel>
+                                                                            </Grid>
+                                                                        </Border>
+                                                                        <ControlTemplate.Triggers>
+                                                                            <Trigger Property="IsChecked" Value="False">
+                                                                                <Setter TargetName="arrow" Property="Text" Value="▸"/>
+                                                                            </Trigger>
+                                                                        </ControlTemplate.Triggers>
+                                                                    </ControlTemplate>
+                                                                </ToggleButton.Template>
+                                                            </ToggleButton>
+                                                            <ItemsPresenter x:Name="items1"/>
                                                         </StackPanel>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger SourceName="toggle1" Property="IsChecked" Value="False">
+                                                                <Setter TargetName="items1" Property="Visibility" Value="Collapsed"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
                                                     </ControlTemplate>
                                                 </Setter.Value>
                                             </Setter>
@@ -177,7 +227,7 @@
                                     </GroupStyle.ContainerStyle>
                                 </GroupStyle>
 
-                                <!-- 2단 그룹 헤더: ElementCode (연한 배경, 들여쓰기) -->
+                                <!-- 2단 그룹: ElementCode (연한 배경, 들여쓰기, 클릭으로 접기/펼치기) -->
                                 <GroupStyle>
                                     <GroupStyle.ContainerStyle>
                                         <Style TargetType="GroupItem">
@@ -185,23 +235,55 @@
                                                 <Setter.Value>
                                                     <ControlTemplate TargetType="GroupItem">
                                                         <StackPanel>
-                                                            <Border Background="#E9ECEF" Padding="24,4">
-                                                                <StackPanel Orientation="Horizontal">
-                                                                    <TextBlock Text="{Binding Name}"
-                                                                               Foreground="#34495E"
-                                                                               FontSize="11"
-                                                                               FontWeight="Medium"
-                                                                               FontFamily="Consolas, Courier New"
-                                                                               VerticalAlignment="Center"/>
-                                                                    <TextBlock Text="{Binding ItemCount, StringFormat=' — {0}개 항목'}"
-                                                                               Foreground="#95A5A6"
-                                                                               FontSize="10"
-                                                                               VerticalAlignment="Bottom"
-                                                                               Margin="4,0,0,1"/>
-                                                                </StackPanel>
-                                                            </Border>
-                                                            <ItemsPresenter/>
+                                                            <ToggleButton x:Name="toggle2" IsChecked="True"
+                                                                          Padding="0" BorderThickness="0"
+                                                                          Focusable="False" Cursor="Hand">
+                                                                <ToggleButton.Template>
+                                                                    <ControlTemplate TargetType="ToggleButton">
+                                                                        <Border Background="#E9ECEF" Padding="24,5">
+                                                                            <Grid>
+                                                                                <Grid.ColumnDefinitions>
+                                                                                    <ColumnDefinition Width="Auto"/>
+                                                                                    <ColumnDefinition Width="*"/>
+                                                                                </Grid.ColumnDefinitions>
+                                                                                <!-- 접기/펼치기 화살표 -->
+                                                                                <TextBlock x:Name="arrow2"
+                                                                                           Grid.Column="0"
+                                                                                           Text="▾"
+                                                                                           Foreground="#34495E"
+                                                                                           FontSize="10"
+                                                                                           VerticalAlignment="Center"
+                                                                                           Margin="0,0,6,0"/>
+                                                                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                                                                    <TextBlock Text="{Binding Name}"
+                                                                                               Foreground="#34495E"
+                                                                                               FontSize="11"
+                                                                                               FontWeight="Medium"
+                                                                                               FontFamily="Consolas, Courier New"
+                                                                                               VerticalAlignment="Center"/>
+                                                                                    <TextBlock Text="{Binding Converter={StaticResource ElementCountConverter}, StringFormat=' — {0}개'}"
+                                                                                               Foreground="#95A5A6"
+                                                                                               FontSize="10"
+                                                                                               VerticalAlignment="Bottom"
+                                                                                               Margin="4,0,0,1"/>
+                                                                                </StackPanel>
+                                                                            </Grid>
+                                                                        </Border>
+                                                                        <ControlTemplate.Triggers>
+                                                                            <Trigger Property="IsChecked" Value="False">
+                                                                                <Setter TargetName="arrow2" Property="Text" Value="▸"/>
+                                                                            </Trigger>
+                                                                        </ControlTemplate.Triggers>
+                                                                    </ControlTemplate>
+                                                                </ToggleButton.Template>
+                                                            </ToggleButton>
+                                                            <ItemsPresenter x:Name="items2"/>
                                                         </StackPanel>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger SourceName="toggle2" Property="IsChecked" Value="False">
+                                                                <Setter TargetName="items2" Property="Visibility" Value="Collapsed"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
                                                     </ControlTemplate>
                                                 </Setter.Value>
                                             </Setter>
@@ -213,7 +295,7 @@
                             <!-- 카테고리·코드는 그룹 헤더로 이동했으므로 컬럼에서 제거 -->
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="공종"   Binding="{Binding WorkType}"                Width="Auto" MinWidth="60"/>
-                                <DataGridTextColumn Header="산출식" Binding="{Binding RenderedFormula}"         Width="1*"   MinWidth="80"/>
+                                <DataGridTextColumn Header="산출식" Binding="{Binding RenderedFormula}"         Width="Auto"   MinWidth="80"/>
                                 <DataGridTextColumn Header="값"     Binding="{Binding Value, StringFormat=F3}"  Width="Auto" MinWidth="60"/>
                                 <DataGridTextColumn Header="단위"   Binding="{Binding Unit}"                    Width="Auto" MinWidth="40"/>
                             </DataGrid.Columns>
@@ -224,14 +306,16 @@
                     <TabItem Header="상세 목록">
                         <DataGrid ItemsSource="{Binding QuantityItems}"
                                   SelectedItem="{Binding SelectedItem}"
-                                  Style="{StaticResource QuantityDataGridStyle}">
+                                  Style="{StaticResource QuantityDataGridStyle}"
+                                  VirtualizingPanel.IsVirtualizingWhenGrouping="True"
+                                  VirtualizingPanel.VirtualizationMode="Recycling">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="카테고리"  Binding="{Binding Category}"                Width="Auto" MinWidth="50"/>
                                 <DataGridTextColumn Header="ElementId" Binding="{Binding ElementId}"               Width="Auto" MinWidth="50"/>
                                 <DataGridTextColumn Header="코드"      Binding="{Binding ElementCode}"             Width="Auto" MinWidth="50"/>
                                 <DataGridTextColumn Header="공종"      Binding="{Binding WorkType}"                Width="Auto" MinWidth="50"/>
                                 <DataGridTextColumn Header="규격"      Binding="{Binding Specification}"           Width="Auto" MinWidth="50"/>
-                                <DataGridTextColumn Header="규격"      Binding="{Binding SubSpecification}"           Width="Auto" MinWidth="50"/>
+                                <DataGridTextColumn Header="규격2"      Binding="{Binding SubSpecification}"           Width="Auto" MinWidth="50"/>
                                 <DataGridTextColumn Header="산출식"    Binding="{Binding RenderedFormula}"         Width="1*"   MinWidth="50"/>
                                 <DataGridTextColumn Header="값"        Binding="{Binding Value, StringFormat=F3}"  Width="Auto" MinWidth="50"/>
                                 <DataGridTextColumn Header="단위"      Binding="{Binding Unit}"                    Width="Auto" MinWidth="50"/>
