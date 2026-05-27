@@ -66,7 +66,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             var concFormula = "A x Thk";
 
-            //var concFormula = "A * Thk";
             string? concRendered = FormulaCalculator.Render(concFormula, varDict);
             double concValue = FormulaCalculator.Calculate(concFormula, varDict);
             string workType = thickness < 0.15 || materialName.Contains("무근") ? "무근콘크리트" : "철근콘크리트";
