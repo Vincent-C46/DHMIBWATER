@@ -30,6 +30,9 @@ namespace DHBIMWATER.Application.Services
 
             return new List<LevelDefinition>
               {
+                  new LevelDefinition { Name = "LWL",  Elevation = d.LWL * 1000 },
+                  new LevelDefinition { Name = "HWL",  Elevation = d.HWL * 1000 },
+
                   new LevelDefinition { Name = FoundationPumpLevelName,  Elevation = d.LWL * 1000 - pr.H4 },
                   new LevelDefinition { Name = FoundationInletLevelName, Elevation = d.LWL * 1000 - pr.H1 },
                   new LevelDefinition { Name = ValveRoomLevelName,       Elevation = upperSlab - pr.H7 - d.D - pr.H6 },

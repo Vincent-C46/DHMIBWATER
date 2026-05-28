@@ -113,6 +113,8 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                             levelId = _levelCmdRepo.CreateLevel(lvl.Name, lvl.Elevation);
                         }
 
+                        if (lvl.Name.Contains("LWL") || lvl.Name.Contains("HWL")) continue;
+
                         // 구조도 작성
                         if (!existingEngineeringPlanNames.Contains(lvl.Name))
                         {

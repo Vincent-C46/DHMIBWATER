@@ -88,21 +88,21 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             string? formRendered = FormulaCalculator.Render(formFormula, varDict);
             double formValue = FormulaCalculator.Calculate(formFormula, varDict);
 
-            // 거푸집
-            var bottomFormItem = new QuantityItem
-            {
-                ElementId = elementId,
-                Category = floor.LookupParameter("DH_Category")?.AsString() ?? string.Empty,
-                ElementCode = floor.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
-                WorkType = "거푸집",
-                Specification = "합판 4회",
-                RawFormula = formFormula,
-                RenderedFormula = formRendered,
-                Value = formValue,
-                Unit = "m²"
-            };
+            //// 거푸집
+            //var bottomFormItem = new QuantityItem
+            //{
+            //    ElementId = elementId,
+            //    Category = floor.LookupParameter("DH_Category")?.AsString() ?? string.Empty,
+            //    ElementCode = floor.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
+            //    WorkType = "거푸집",
+            //    Specification = "합판 4회",
+            //    RawFormula = formFormula,
+            //    RenderedFormula = formRendered,
+            //    Value = formValue,
+            //    Unit = "m²"
+            //};
 
-            var listToAdd = new List<QuantityItem>() { concreteItem, bottomFormItem, };
+            var listToAdd = new List<QuantityItem>() { concreteItem, };
             quantityItems.AddRange(listToAdd);
 
             return quantityItems;

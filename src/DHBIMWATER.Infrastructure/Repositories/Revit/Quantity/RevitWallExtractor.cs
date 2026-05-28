@@ -82,36 +82,36 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 Unit = "m³"
             };
 
-            // 거푸집
-            var exteriorFormItem = new QuantityItem
-            {
-                ElementId = elementId,
-                Category = wall.LookupParameter("DH_Category")?.AsString() ?? string.Empty,
-                ElementCode = wall.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
-                WorkType ="거푸집",
-                Specification = "유로폼",
-                SubSpecification = "7m이상",
-                RawFormula = "A",
-                RenderedFormula = $"{area:F2}(A)",
-                Value = area,
-                Unit = "m²"
-            };
+            //// 거푸집
+            //var exteriorFormItem = new QuantityItem
+            //{
+            //    ElementId = elementId,
+            //    Category = wall.LookupParameter("DH_Category")?.AsString() ?? string.Empty,
+            //    ElementCode = wall.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
+            //    WorkType ="거푸집",
+            //    Specification = "유로폼",
+            //    SubSpecification = "7m이상",
+            //    RawFormula = "A",
+            //    RenderedFormula = $"{area:F2}(A)",
+            //    Value = area,
+            //    Unit = "m²"
+            //};
 
-            var interiorFormItem = new QuantityItem
-            {
-                ElementId = elementId,
-                Category = wall.LookupParameter("DH_Category")?.AsString() ?? string.Empty,
-                ElementCode = wall.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
-                WorkType = "거푸집",
-                Specification = "유로품",
-                SubSpecification = "0~7m",
-                RawFormula = "A",
-                RenderedFormula = $"{area:F2}(A)",
-                Value = area,
-                Unit = "m²"
-            };
+            //var interiorFormItem = new QuantityItem
+            //{
+            //    ElementId = elementId,
+            //    Category = wall.LookupParameter("DH_Category")?.AsString() ?? string.Empty,
+            //    ElementCode = wall.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
+            //    WorkType = "거푸집",
+            //    Specification = "유로품",
+            //    SubSpecification = "0~7m",
+            //    RawFormula = "A",
+            //    RenderedFormula = $"{area:F2}(A)",
+            //    Value = area,
+            //    Unit = "m²"
+            //};
 
-            var listToAdd = new List<QuantityItem>() { concreteItem, exteriorFormItem, interiorFormItem };
+            var listToAdd = new List<QuantityItem>() { concreteItem, };
             quantityItems.AddRange(listToAdd);
 
             return quantityItems;

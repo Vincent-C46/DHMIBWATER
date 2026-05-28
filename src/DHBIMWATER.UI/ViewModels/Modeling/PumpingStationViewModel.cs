@@ -16,13 +16,12 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private readonly CreatePumpingStationUseCase _createPumpingStationUseCase;
         private readonly IUsageLogger _usageLogger;
 
-        private string ProfileType1ImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-1_종단제원.png";
-        private string ProfileType2ImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-2_종단제원.png";
-        private string ProfileType3ImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-3_종단제원.png";
-
-        private string PlanLeftImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-1_평면제원-좌안진입.png";
-        private string PlanRightImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-1_평면제원-우안진입.png";
-        private string PlanDefaultImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-1_평면제원-측면진입.png";
+        private string _profileType1ImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-1_종단제원.png";
+        private string _profileType2ImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-2_종단제원.png";
+        private string _profileType3ImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-3_종단제원.png";
+        private string _planLeftImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-1_평면제원-좌안진입.png";
+        private string _planRightImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-1_평면제원-우안진입.png";
+        private string _planDefaultImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-1_평면제원-측면진입.png";
 
         // 설계조건
         private string _selectedPumpingStationType = "Type1";
@@ -96,11 +95,11 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                     OnPropertyChanged(nameof(B4Visibility));
                     OnPropertyChanged(nameof(EntranceTypes));
                     UpdateTypeDependents();
+                    OnPropertyChanged(nameof(PlanImagePath));
                     if (value != "Type1" && _selectedEntranceType != "측면부")
                     {
-                        _selectedEntranceType = "측면부";
+                        SelectedEntranceType = "측면부";
                         OnPropertyChanged(nameof(SelectedEntranceType));
-                        OnPropertyChanged(nameof(PlanImagePath));
                     }
                 }
             }
@@ -132,6 +131,86 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         public string B9Visibility => SelectedEntranceType == "측면부" ? "Collapsed" : "Visible";
         public string T5Visibility => SelectedEntranceType == "측면부" ? "Collapsed" : "Visible";
 
+
+        // 이미지 경로
+        public string PlanDefaultImagePath
+        {
+            get => _planDefaultImagePath;
+            set
+            {
+                if (_planDefaultImagePath != value)
+                {
+                    _planDefaultImagePath = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(PlanImagePath));
+                }
+            }
+        }
+        public string PlanLeftImagePath
+        {
+            get => _planLeftImagePath;
+            set
+            {
+                if (_planLeftImagePath != value)
+                {
+                    _planLeftImagePath = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(PlanImagePath));   // ← 계산 프로퍼티 갱신
+                }
+            }
+        }
+        public string PlanRightImagePath
+        {
+            get => _planRightImagePath;
+            set
+            {
+                if (_planRightImagePath != value)
+                {
+                    _planRightImagePath = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(PlanImagePath));   // ← 계산 프로퍼티 갱신
+                }
+            }
+        }
+        public string ProfileType1ImagePath
+        {
+            get => _profileType1ImagePath;
+            set
+            {
+                if (_profileType1ImagePath != value)
+                {
+                    _profileType1ImagePath = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(ProfileImagePath)); // ← 계산 프로퍼티 갱신
+                }
+            }
+        }
+        public string ProfileType2ImagePath
+        {
+            get => _profileType2ImagePath;
+            set
+            {
+                if (_profileType2ImagePath != value)
+                {
+                    _profileType2ImagePath = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(ProfileImagePath));
+                }
+            }
+        }
+        public string ProfileType3ImagePath
+        {
+            get => _profileType3ImagePath;
+            set
+            {
+                if (_profileType3ImagePath != value)
+                {
+                    _profileType3ImagePath = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(ProfileImagePath));
+                }
+            }
+        }
 
         public bool IsRectangularOpening
         {
