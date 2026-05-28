@@ -623,7 +623,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_l5 != value)
                 {
                     _l5 = value;
-                    UpdateL5Dependents();
                     OnPropertyChanged(nameof(L5));
                 }
             }
@@ -839,11 +838,13 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
 
             _gb1 = 500;
             _gh1 = _t1 + 300;
+
             OnPropertyChanged(nameof(L2));
             OnPropertyChanged(nameof(L3));
             OnPropertyChanged(nameof(L4));
             OnPropertyChanged(nameof(H3));
             OnPropertyChanged(nameof(H4));
+            OnPropertyChanged(nameof(H5));
             OnPropertyChanged(nameof(H7));
             OnPropertyChanged(nameof(T2));
             OnPropertyChanged(nameof(T4));
@@ -892,10 +893,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         {
             NS = (int)Math.Floor((_h4 - _h1) / _hs);
         }
-        private void UpdateL5Dependents()
-        {
-            L5 = _b7 + _t3 + _b6 + _b5 / 2 + _l4 - _b10;
-        }
         private void UpdateH3Calculation()
         {
             H3 = 1000 - _t1 + 100 - (H2 + _h4) % 100;
@@ -904,6 +901,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         {
             H5 = H2 + H3 + H4;
         }
+
         private void UpdateH4Dependents()
         {
             UpdateH3Calculation();
@@ -913,6 +911,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         {
             OnPropertyChanged(nameof(H2));
             UpdateH3Calculation();
+            H5 = H2 + H3 + H4;
         }
         //private void UpdateB2Dependents()
         //{

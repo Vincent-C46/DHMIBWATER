@@ -85,6 +85,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IOpeningCommandRepo, MockOpeningCommandRepo>();
         services.AddTransient<IDirectShapeCommandRepo, MockDirectShapeCommandRepo>();
         services.AddTransient<IViewCommandRepo, MockViewCommandRepo>();
+        services.AddTransient<ISetParameterRepo, MockSetParameterRepo>();
         #endregion
 
         #region Quantity 관련 등록
@@ -98,6 +99,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IFileDialogService, MockFileDialogService>();
         services.AddTransient<IDialogService, MockDialogService>();
         services.AddTransient<IGuideLineService, MockGuideLineService>();
+        services.AddSingleton<IUsageLogger, MockUsageLogger>();
         #endregion
 
         return services;

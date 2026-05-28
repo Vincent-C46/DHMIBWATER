@@ -192,8 +192,9 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
 
                     _dialogService.Info("Success", "펌프장 작성 완료");
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    _dialogService.Warn("Rollback", ex.Message);
                     _tx.Rollback();
                     throw;
                 }
