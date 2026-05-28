@@ -860,7 +860,6 @@ namespace DHBIMWATER.Application.Services
                         valveRoomWallDef2.IsFlipped = true;
                         linearWalls.Add(valveRoomWallDef2);
 
-
                         // 외벽2 - 동쪽 - W2
                         var outerWallDef2 = new LinearWallDefinition
                         {

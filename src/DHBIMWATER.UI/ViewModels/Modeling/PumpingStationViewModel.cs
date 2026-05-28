@@ -613,8 +613,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 }
             }
         }
-
-
         public double L5
         {
             get { return _l5; }
