@@ -1,9 +1,11 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using DHBIMWATER.Application.Interfaces;
+using DHBIMWATER.Application.Interfaces.Geometry;
 using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Core.Parameters;
 using DHBIMWATER.Core.Quantity;
+using System.Diagnostics;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
@@ -11,18 +13,22 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
     public class RevitWallExtractor : IQuantityExtractor
     {
         private readonly Func<Document?> _doc;
-        public RevitWallExtractor(Func<Document?> doc)
+        private readonly IIntersectingElementFinder _finder;
+
+
+        public RevitWallExtractor(Func<Document?> doc, IIntersectingElementFinder finder)
         {
             _doc = doc;
+            _finder = finder;
         }
 
         public IEnumerable<long> CollectElementIds()
-{
+        {
             var doc = _doc();
             if (doc == null) return Enumerable.Empty<long>();
 
             return new FilteredElementCollector(doc)
-            .OfClass(typeof(Wall))  
+            .OfClass(typeof(Wall))
             .WhereElementIsNotElementType()
             .Select(r => r.Id.Value);
         }
@@ -41,6 +47,11 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var doc = _doc();
             if (doc == null)
                 return Enumerable.Empty<QuantityItem>();
+
+            var intersectingIds = _finder.FindIntersecting(elementId);
+            foreach(var id in intersectingIds)
+                Debug.WriteLine($"{elementId}에 인접한 객체 Id: {id} / 카테고리: {doc.GetElement(new ElementId(id)).Category.Name}");
+            Debug.WriteLine($"======================");
 
             var wall = (Wall)doc.GetElement(new ElementId(elementId));
             var cs = wall.WallType.GetCompoundStructure();
@@ -82,6 +93,24 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 Unit = "m³"
             };
 
+            // 스페이서
+            var spacerFormula = "A x 2";
+            string? spacerRendered = FormulaCalculator.Render(spacerFormula, varDict);
+            double spacerValue = FormulaCalculator.Calculate(spacerFormula, varDict);
+
+            var spacerItem = new QuantityItem
+            {
+                ElementId = elementId,
+                Category = wall.LookupParameter("DH_Category")?.AsString() ?? string.Empty,
+                ElementCode = wall.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
+                WorkType = "스페이서",
+                Specification = "수직",
+                RawFormula = spacerFormula,
+                RenderedFormula = spacerRendered,
+                Value = spacerValue,
+                Unit = "m²"
+            };
+
             //// 거푸집
             //var exteriorFormItem = new QuantityItem
             //{
@@ -111,7 +140,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             //    Unit = "m²"
             //};
 
-            var listToAdd = new List<QuantityItem>() { concreteItem, };
+            var listToAdd = new List<QuantityItem>() { concreteItem, spacerItem, };
             quantityItems.AddRange(listToAdd);
 
             return quantityItems;

@@ -2,6 +2,7 @@
 using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Core.Quantity;
 using System.Data.Common;
+using System.Reflection.Metadata.Ecma335;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
@@ -64,19 +65,20 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 ["Thk"] = thickness,
             };
 
-            var concFormula = "A x Thk";
-
-            string? concRendered = FormulaCalculator.Render(concFormula, varDict);
-            double concValue = FormulaCalculator.Calculate(concFormula, varDict);
-            string workType = thickness < 0.15 || materialName.Contains("무근") ? "무근콘크리트" : "철근콘크리트";
 
             // 콘크리트
+
+            var concFormula = "A x Thk";
+            string? concRendered = FormulaCalculator.Render(concFormula, varDict);
+            double concValue = FormulaCalculator.Calculate(concFormula, varDict);
+            string concWorkType = thickness < 0.15 || materialName.Contains("무근") ? "무근콘크리트" : "철근콘크리트";
+
             var concreteItem = new QuantityItem
             {
                 ElementId = elementId,
                 Category = floor.LookupParameter("DH_Category")?.AsString() ?? string.Empty,
                 ElementCode = floor.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
-                WorkType = workType,
+                WorkType = concWorkType,
                 Specification = materialName,
                 RawFormula = concFormula,
                 RenderedFormula = concRendered,
@@ -84,10 +86,29 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 Unit = "m³"
             };
 
+
+            // 스페이서
+            var spacerFormula = "A";
+            string? spacerRendered = FormulaCalculator.Render(spacerFormula, varDict);
+            double spacerValue = FormulaCalculator.Calculate(spacerFormula, varDict);
+
+            var spacerItem = new QuantityItem
+            {
+                ElementId = elementId,
+                Category = floor.LookupParameter("DH_Category")?.AsString() ?? string.Empty,
+                ElementCode = floor.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
+                WorkType = "스페이서",
+                Specification = "수평",
+                RawFormula = spacerFormula,
+                RenderedFormula = spacerRendered,
+                Value = spacerValue,
+                Unit = "m²"
+            };
+            if (concWorkType == "무근콘크리트") quantityItems.Add(spacerItem);
+
             var formFormula = "A";
             string? formRendered = FormulaCalculator.Render(formFormula, varDict);
             double formValue = FormulaCalculator.Calculate(formFormula, varDict);
-
             //// 거푸집
             //var bottomFormItem = new QuantityItem
             //{

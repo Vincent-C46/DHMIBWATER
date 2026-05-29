@@ -104,14 +104,19 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             UpdateSummary();
         }
 
+        // 해당 단어 포함된 공종 순으로 Sorting
         private static readonly List<string> WorkTypeOrder = new()
         {
             "콘크리트",
             "거푸집",
-            "철근",
-            "동바리",
             "비계",
+            "동바리",
             "방수",
+            "면",
+            "스페이서",
+            "그레이팅",
+            "난간",
+            "철근",
         };
         private void UpdateSummary()
         {
@@ -145,7 +150,6 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
                     IsTotal = true,
                 });
             }
-
             SummaryItems = new ObservableCollection<QuantitySummaryItem>(result);
             OnPropertyChanged(nameof(SummaryItems));
         }
