@@ -50,8 +50,14 @@ namespace DHBIMWATER.Application.UseCases
         void SaveSheetDirection(string sheetId, string directionType);
         void HideSectionMarkersOnReservoirSectionViews();
         void HideCopiedSectionMarkersOnReservoirPlanViews();
+        void HideSectionMarkersOnPumpingStationSectionViews();
+        void HideCopiedSectionMarkersOnPumpingStationPlanViews();
+        void ApplyPumpingStationDimensions(string sheetId, string dimensionTypeName);
         void ApplyTagsToAllOnCurrentView();
         void ApplyReservoirTags(string sheetId);
+        void CreateOrUpdateWaterLevels(string hwl, string lwl);
+        (string hwl, string lwl) GetWaterLevels();
+        void HideNonWaterLevels();
 
     }
 }

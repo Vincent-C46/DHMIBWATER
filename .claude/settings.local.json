@@ -8,7 +8,13 @@
       "Bash(dotnet add package:*)",
       "Bash(dotnet build:*)",
       "Bash(if exist \"C:\\\\Program Files\\\\Autodesk\\\\Revit 2025\\\\RevitAPI.dll\" echo \"Found at C:\\\\Program Files\\\\Autodesk\\\\Revit 2025\\\\RevitAPI.dll\" else echo \"Not found at standard location\")",
-      "Bash(touch:*)"
+      "Bash(touch:*)",
+      "PowerShell(Get-ChildItem -Path \"D:\\\\99.스터디\\\\01.프로그래밍\\\\01.스터디\\\\250623_MS\\\\MS_BIM_Revit2\\\\MS_BIM_Revit4\" -Recurse -File | Where-Object {$_.Extension -in @\\('.cs', '.xaml', '.csproj'\\)} | Sort-Object FullName | Select-Object FullName)",
+      "Bash(ls \"D:\\\\99.스터디\\\\01.프로그래밍\\\\01.스터디\\\\250623_MS\\\\MS_BIM_Revit2\\\\Setup\\\\\")",
+      "Read(//d/99.스터디/01.프로그래밍/01.스터디/250623_MS/MS_BIM_Revit2/**)",
+      "PowerShell(Get-ChildItem -Path \"d:\\\\03.업무\\\\05.개발\\\\01.상하수도부\\\\DHBIMWATER\" -Recurse -Directory | Select-Object -First 20 | ForEach-Object { $_.FullName })",
+      "Bash(Get-ChildItem -Recurse -Filter \"*.csproj\")",
+      "Bash(Select-Object FullName)"
     ]
   }
 }
