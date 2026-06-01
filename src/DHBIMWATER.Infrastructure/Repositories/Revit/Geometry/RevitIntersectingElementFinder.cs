@@ -2,7 +2,9 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
 using DHBIMWATER.Application.Interfaces.Geometry;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
+using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
 {
@@ -17,7 +19,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
 
         // ElementIntersectsElementFilter는 볼륨 겹침만 감지하므로 면 접촉(face-to-face)은 누락됨
         // BoundingBox를 epsilon만큼 팽창시켜 면 접촉 요소도 포함
-        private const double Epsilon = 0.01; // feet 단위
+        private const double Epsilon = 0.01; // feet 단위 0.01ft = 약 3mm
 
         public IEnumerable<long> FindIntersecting(long referenceElementId)
         {
@@ -41,6 +43,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
             var refCategory = (BuiltInCategory)refElem.Category.Id.Value;
             var targetCategories = GetTargetCategories(refCategory);
 
+            // 1차 필터링: 확장된 BBox와 카테고리로 후보군 추출
             var candidates = new FilteredElementCollector(doc)
                                 .WhereElementIsNotElementType()
                                 .WherePasses(new ElementMulticategoryFilter(targetCategories))
@@ -48,6 +51,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
                                 .Where(e => e.Id.Value != referenceElementId)
                                 .ToList();
 
+            Debug.WriteLine($"ref Id: {refElem.Id.Value} / ref 카테고리: {refElem.Category.Name} / 체적: {refSolid.Volume}, Face Size: {refSolid.Faces.Size}");
             Debug.WriteLine($"candidates count: {candidates.Count}");
 
             foreach (var c in candidates)
@@ -56,6 +60,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
 
                 // 2단계: Solid 취득 여부
                 Debug.WriteLine($"  candidate {c.Id.Value} solid: {(cSolid == null ? "NULL" : "OK")}");
+                Debug.WriteLine($"  candidate 카테고리: {c.Category.Name} Volumne: {cSolid.Volume}");
 
                 if (cSolid == null) continue;
 
@@ -66,6 +71,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
 
                     // 3단계: Boolean 결과
                     Debug.WriteLine($"  intersection Volume={intersection?.Volume}, Faces={intersection?.Faces.Size}");
+                    Debug.WriteLine($"  ContactFaceArea= {GetContactFaceArea(refSolid, cSolid)}");
                 }
                 catch (Exception ex)
                 {
@@ -73,7 +79,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
                     Debug.WriteLine($"  Boolean 예외: {ex.Message}");
                 }
             }
-
 
             var result = candidates.Where(e => IsTouching(refSolid, e))
                              .Select(e => e.Id.Value)
@@ -106,7 +111,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
                 return false;
             }
         }
-
         private Solid? GetSolid(Element elem)
         {
             var solids = elem.get_Geometry(new Options { ComputeReferences = true })
@@ -132,7 +136,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
 
             return result;
         }
-
         private static readonly ICollection<BuiltInCategory> FallbackCategories = new[]
      {
             BuiltInCategory.OST_Walls,
@@ -174,5 +177,39 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
                 },
                 _ => FallbackCategories,
             };
+        // 맞닿는 면의 면적 산출
+        private static double GetContactFaceArea(Solid refSolid, Solid candidateSolid)
+        {
+            double totalArea = 0;
+
+            foreach (Face refFace in refSolid.Faces)
+            {
+                foreach (Face candidateFace in candidateSolid.Faces)
+                {
+                    var result = refFace.Intersect(candidateFace);
+                    //if (result == FaceIntersectionFaceResult.Intersecting) continue;
+
+                    // 두 Face의 Normal 벡터가 반대방향인지 확인
+                    var refNormal =  refFace.ComputeNormal(new UV(0.5, 0.5));   // 이미 단위벡터를 반환해서 별도의 Normalize는 불필요
+                    var candidateNormal = candidateFace.ComputeNormal(new UV(0.5, 0.5));
+                    if (refNormal.DotProduct(candidateNormal) > -0.99) continue;
+                    try
+                    {
+                        Debug.WriteLine("시도");
+
+                        var refArea = UC.Ft2ToM2(refFace.Area);
+                        var candidateArea = UC.Ft2ToM2(candidateFace.Area);
+                        totalArea += Math.Min(refArea, candidateArea);
+                    }
+                    catch (Exception ex)
+                    {
+                    }
+
+                }
+            }
+            Debug.WriteLine($"total Area: {totalArea}");
+
+            return totalArea;
+        }
     }
 }

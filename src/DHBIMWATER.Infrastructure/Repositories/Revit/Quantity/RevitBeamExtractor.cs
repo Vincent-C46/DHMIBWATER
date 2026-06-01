@@ -1,7 +1,10 @@
 ﻿using Autodesk.Revit.DB;
+using DHBIMWATER.Application.Interfaces.Geometry;
 using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Core.Quantity;
 using DHBIMWATER.Infrastructure.Helpers;
+using System.Diagnostics;
+using System.Reflection;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
 
@@ -10,10 +13,14 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
     public class RevitBeamExtractor : IQuantityExtractor
     {
         private readonly Func<Document?> _doc;
+        private readonly IIntersectingElementFinder _finder;
 
-        public RevitBeamExtractor(Func<Document?> doc)
+
+        public RevitBeamExtractor(Func<Document?> doc, IIntersectingElementFinder finder)
         {
             _doc = doc;
+            _finder = finder;
+
         }
 
         public bool CanExtract(long elementId)
@@ -43,7 +50,14 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             if (doc == null)
                 return Enumerable.Empty<QuantityItem>();
 
+            var intersectingIds = _finder.FindIntersecting(elementId);
+            foreach (var id in intersectingIds)
+                Debug.WriteLine($"{elementId}에 인접한 객체 Id: {id} / 카테고리: {doc.GetElement(new ElementId(id)).Category.Name}");
+            Debug.WriteLine($"======================");
+
             var beam = doc.GetElement(new ElementId(elementId)) as FamilyInstance;
+
+
 
             if (beam == null)
                 return Enumerable.Empty<QuantityItem>();
