@@ -10,5 +10,6 @@ namespace DHBIMWATER.Application.Interfaces
     {
         IEnumerable<string> GetExistingLevelNames();
         IEnumerable<string> GetExistingPlanNames();
+        IEnumerable<string> GetExistingSectionNames();
     }
 }

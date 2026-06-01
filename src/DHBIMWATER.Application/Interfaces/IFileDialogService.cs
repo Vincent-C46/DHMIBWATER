@@ -9,5 +9,6 @@ namespace DHBIMWATER.Application.Interfaces
     public interface IFileDialogService
     {
         string? OpenFile(string title, string filter);
+        string? SaveFile(string title, string filter, string defaultFileName = "");
     }
 }

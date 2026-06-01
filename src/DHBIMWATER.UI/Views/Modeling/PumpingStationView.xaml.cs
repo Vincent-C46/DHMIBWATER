@@ -25,7 +25,11 @@ namespace DHBIMWATER.UI.Views.Modeling
         {
             InitializeComponent();
             DataContext = pumpingStationViewModel;
-            //new WindowInteropHelper(this).Owner = revitHandle();
+            ContentRendered += (s, e) =>
+            {
+                SizeToContent = SizeToContent.Manual;
+                SizeToContent = SizeToContent.WidthAndHeight;
+            };
         }
     }
 }

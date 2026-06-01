@@ -7,10 +7,14 @@
 
   <ItemGroup>
     <PackageReference Include="ExcelDataReader" Version="3.8.0" />
+    <PackageReference Include="ExcelDataReader.DataSet" Version="3.8.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.1" />
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="DidasUsage">
+      <HintPath>..\DHBIMWATER.Revit\libs\DidasUsage\DidasUsage.dll</HintPath>
+    </Reference>
     <Reference Include="RevitAPI">
       <HintPath>C:\Program Files\Autodesk\Revit 2026\RevitAPI.dll</HintPath>
     </Reference>
