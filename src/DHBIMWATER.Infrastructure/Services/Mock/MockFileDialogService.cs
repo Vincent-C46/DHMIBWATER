@@ -15,5 +15,10 @@ namespace DHBIMWATER.Infrastructure.Services.Mock
 
             return dialog.ShowDialog() == true ? dialog.FileName : null;
         }
+
+        public string? SaveFile(string title, string filter, string defaultFileName = "")
+        {
+            return string.Empty;
+        }
     }
 }

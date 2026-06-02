@@ -26,10 +26,16 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                         
             var elementId = 0;
 
-            var beamTyoeSpec = new BeamTypeSpec(beamDef.Width, beamDef.Height, $"{beamDef.Width} x {beamDef.Height}");
-            int beamTypeId = _elementTypeCmdRepo.FindOrCreateBeamType(beamTyoeSpec);
+            var beamTypeSpec = new BeamTypeSpec(beamDef.Width, beamDef.Height, $"{beamDef.Width} x {beamDef.Height}");
+            int beamTypeId = _elementTypeCmdRepo.FindOrCreateBeamType(beamTypeSpec);
 
             var beamType = doc.GetElement(new ElementId((long)beamTypeId)) as FamilySymbol;
+
+            if (!beamType.IsActive)
+            {
+                beamType.Activate();
+                TaskDialog.Show("Info", $"Beam type '{beamType.Name}' activated. BeamRepo에서 활성화됨");
+            }
 
             var curve = Line.CreateBound(new XYZ(UC.MmToFt(beamDef.StartPoint.X), UC.MmToFt(beamDef.StartPoint.Y), UC.MmToFt(beamDef.StartPoint.Z)),
                                          new XYZ(UC.MmToFt(beamDef.EndPoint.X), UC.MmToFt(beamDef.EndPoint.Y), UC.MmToFt(beamDef.EndPoint.Z)));

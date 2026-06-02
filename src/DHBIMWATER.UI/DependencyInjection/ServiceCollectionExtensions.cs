@@ -25,6 +25,7 @@ public static class ServiceCollectionExtensions
 
         // Quantity
         services.AddTransient<QuantityView>();
+        services.AddTransient<ManualQuantityView>();
 
         // Utilities
         services.AddTransient<ExParamsView>();
@@ -41,6 +42,7 @@ public static class ServiceCollectionExtensions
 
         // Quantity
         services.AddTransient<QuantityViewModel>();
+        services.AddTransient<ManualQuantityViewModel>();
 
         // Utilities
         services.AddTransient<ExParamsViewModel>();

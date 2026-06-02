@@ -17,7 +17,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
         {
             _docProvider = docProvider ?? throw new ArgumentNullException(nameof(docProvider));
         }
-
         public IEnumerable<string> GetBeamTypeNames()
         {
             var doc = _docProvider();
@@ -61,7 +60,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                 return Enumerable.Empty<string>();
             }
         }
-
         public IEnumerable<string> GetColumnTypeNames()
         {
             var doc = _docProvider();
@@ -87,7 +85,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                 return Enumerable.Empty<string>();
             }
         }
-
         public IEnumerable<string> GetFoundationTypeNames()
         {
             var doc = _docProvider();
@@ -113,7 +110,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                 return Enumerable.Empty<string>();
             }
         }
-
         public IEnumerable<string> GetSlabTypeNames()
         {
             var doc = _docProvider();
@@ -138,7 +134,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                 return Enumerable.Empty<string>();
             }
         }
-
         public IEnumerable<string> GetWallTypeNames()
         {
             var doc = _docProvider();
