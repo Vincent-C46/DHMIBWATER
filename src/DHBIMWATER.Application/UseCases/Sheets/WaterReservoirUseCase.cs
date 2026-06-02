@@ -342,6 +342,10 @@ namespace DHBIMWATER.Application.UseCases.Sheets
             }
         }
 
+        public (string hwl, string lwl) GetWaterLevels() => _sheetUseCase.GetWaterLevels();
+
+        public void CreateOrUpdateWaterLevels(string hwl, string lwl) => _sheetUseCase.CreateOrUpdateWaterLevels(hwl, lwl);
+
         private static HashSet<string> BuildReservoirSheetNumbers(string startSheetNumber, int totalSheetCount)
         {
             var numbers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

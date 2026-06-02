@@ -505,7 +505,7 @@
                         Width="120" FontSize="15" Margin="5,0"
                         Background="#27AE60"
                         Style="{StaticResource PrimaryButtonStyle}"
-                        Command="{Binding WaterReservoirCommand}"/>
+                        Command="{Binding PumpingStationCommand}"/>
             </Grid>
         </Grid>
     </Grid>

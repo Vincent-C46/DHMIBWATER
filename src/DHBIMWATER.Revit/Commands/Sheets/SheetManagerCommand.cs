@@ -26,10 +26,11 @@ namespace DHBIMWATER.Revit.Commands.Sheets
             var gateway = new SheetGateway(doc, uidoc);
             var useCase = new SheetUseCase(gateway);
             var waterReservoirUseCase = new WaterReservoirUseCase(useCase);
+            var pumpingStationUseCase = new PumpingStationUseCase(useCase);
 
             IDialogService dialogService = new RevitDialogService();
 
-            var vm = new SheetManagerViewModel(useCase, waterReservoirUseCase, dialogService);
+            var vm = new SheetManagerViewModel(useCase, waterReservoirUseCase, pumpingStationUseCase, dialogService);
 
             var view = new SheetManagerView { DataContext = vm };
             new WindowInteropHelper(view).Owner = commandData.Application.MainWindowHandle;
@@ -45,7 +46,7 @@ namespace DHBIMWATER.Revit.Commands.Sheets
                     vm.RequestedCurrentViewDimensionSides,
                     vm.RequestedCurrentViewIncludeOverall);
 
-                var reopenedVm = new SheetManagerViewModel(useCase, waterReservoirUseCase, dialogService);
+                var reopenedVm = new SheetManagerViewModel(useCase, waterReservoirUseCase, pumpingStationUseCase, dialogService);
                 var reopenedView = new SheetManagerView { DataContext = reopenedVm };
                 new WindowInteropHelper(reopenedView).Owner = commandData.Application.MainWindowHandle;
                 reopenedView.ShowDialog();
@@ -55,7 +56,7 @@ namespace DHBIMWATER.Revit.Commands.Sheets
             {
                 useCase.ApplyTagsToSelectedOnCurrentView();
 
-                var reopenedVm = new SheetManagerViewModel(useCase, waterReservoirUseCase, dialogService);
+                var reopenedVm = new SheetManagerViewModel(useCase, waterReservoirUseCase, pumpingStationUseCase, dialogService);
                 var reopenedView = new SheetManagerView { DataContext = reopenedVm };
                 new WindowInteropHelper(reopenedView).Owner = commandData.Application.MainWindowHandle;
                 reopenedView.ShowDialog();
@@ -65,7 +66,7 @@ namespace DHBIMWATER.Revit.Commands.Sheets
             {
                 useCase.ApplyTagsToAllOnCurrentView();
 
-                var reopenedVm = new SheetManagerViewModel(useCase, waterReservoirUseCase, dialogService);
+                var reopenedVm = new SheetManagerViewModel(useCase, waterReservoirUseCase, pumpingStationUseCase, dialogService);
                 var reopenedView = new SheetManagerView { DataContext = reopenedVm };
                 new WindowInteropHelper(reopenedView).Owner = commandData.Application.MainWindowHandle;
                 reopenedView.ShowDialog();

@@ -99,6 +99,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             wall.LookupParameter("DH_ElementCode")?.Set(linearWallDefinition.ElementCode);
             wall.LookupParameter("DH_Part")?.Set(linearWallDefinition.Part);
             wall.LookupParameter("DH_Zone")?.Set(linearWallDefinition.Zone);
+            wall.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set("");
 
             //_dialog.Info("RevitWallCommandRepo", $"CreateWall - Revit Implementation\n 벽체 높이: {linearWallDefinition.Height}mm");
 
@@ -157,7 +158,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                 return 0;
             }
 
-            //profileWall.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(profileWallDefinition.ElementCode);
             profileWall.LookupParameter("DH_ElementCode")?.Set(profileWallDefinition.ElementCode);
             profileWall.LookupParameter("DH_Addin")?.Set("DHBIMWATER");
             profileWall.LookupParameter("DH_Part")?.Set(profileWallDefinition.Part);

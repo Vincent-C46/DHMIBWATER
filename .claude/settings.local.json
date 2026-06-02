@@ -8,8 +8,7 @@
       "Bash(dotnet add package:*)",
       "Bash(dotnet build:*)",
       "Bash(if exist \"C:\\\\Program Files\\\\Autodesk\\\\Revit 2025\\\\RevitAPI.dll\" echo \"Found at C:\\\\Program Files\\\\Autodesk\\\\Revit 2025\\\\RevitAPI.dll\" else echo \"Not found at standard location\")",
-      "Bash(touch:*)",
-      "Bash(git pull *)"
+      "Bash(touch:*)"
     ]
   }
 }

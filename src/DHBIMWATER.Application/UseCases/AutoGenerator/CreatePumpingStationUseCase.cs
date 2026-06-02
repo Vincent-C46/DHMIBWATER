@@ -18,6 +18,8 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
     {
         #region Fields
         private readonly ITransactionContext _tx;
+        private readonly IDialogService _dialogService;
+
         private readonly ILevelQueryRepo _levelQueryRepo;
         private readonly ILevelCommandRepo _levelCmdRepo;
         private readonly IWallCommandRepo _wallCmdRepo;
@@ -25,9 +27,10 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
         private readonly IBeamCommandRepo _beamCmdRepo;
         private readonly IDirectShapeCommandRepo _dsCmdRepo;
         private readonly IOpeningCommandRepo _openingCmdRepo;
-        private readonly IDialogService _dialogService;
         private readonly ISharedParameterRepository _sharedParameterRepo;
         private readonly IViewCommandRepo _viewCommandRepo;
+        private readonly ISetParameterRepo _setParameterRepo;
+
         private readonly IExcelReader _excelReader;
         #endregion
 
@@ -37,6 +40,8 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
 
         #region Constructor
         public CreatePumpingStationUseCase(ITransactionContext tx,
+                                           IDialogService dialogService,
+
                                            ILevelQueryRepo levelQueryRepo,
                                            ILevelCommandRepo levelCmdRepo,
                                            ISlabCommandRepo slabCmdRepo,
@@ -44,9 +49,9 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                                            IBeamCommandRepo beamCmdRepo,
                                            IDirectShapeCommandRepo dsCmdRepo,
                                            IOpeningCommandRepo openingCmdRepo,
-                                           IDialogService dialogService,
                                            ISharedParameterRepository sharedParameterRepo,
                                            IViewCommandRepo viewCommandRepo,
+                                           ISetParameterRepo setParameterRepo,
                                            IExcelReader excelReader)
         {
             _levelQueryRepo = levelQueryRepo;
@@ -59,6 +64,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
             _openingCmdRepo = openingCmdRepo;
             _sharedParameterRepo = sharedParameterRepo;
             _viewCommandRepo = viewCommandRepo;
+            _setParameterRepo = setParameterRepo;
             _excelReader = excelReader;
 
             _tx = tx;
@@ -106,6 +112,8 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                         {
                             levelId = _levelCmdRepo.CreateLevel(lvl.Name, lvl.Elevation);
                         }
+
+                        if (lvl.Name.Contains("LWL") || lvl.Name.Contains("HWL")) continue;
 
                         // 구조도 작성
                         if (!existingEngineeringPlanNames.Contains(lvl.Name))
@@ -175,13 +183,18 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                     }
                     #endregion
 
+                    #region 8. 타입 설명 추가
+                    _setParameterRepo.SetTypeParameter(dto);
+                    #endregion
+
                     // 트랜잭션 커밋
                     _tx.Commit();
 
                     _dialogService.Info("Success", "펌프장 작성 완료");
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    _dialogService.Warn("Rollback", ex.Message);
                     _tx.Rollback();
                     throw;
                 }
