@@ -50,7 +50,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 return Enumerable.Empty<QuantityItem>();
             
             var stair = doc.GetElement(new ElementId(elementId)) as Stairs;
-            var intersectingIds = _finder.FindIntersecting(elementId);
+            var intersectingAreas = _finder.FindContactAreas(elementId);
 
             var quantityItems = new List<QuantityItem>();
 

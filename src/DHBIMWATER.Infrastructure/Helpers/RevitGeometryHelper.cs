@@ -1,4 +1,6 @@
 using Autodesk.Revit.DB;
+using Autodesk.Revit.UI;
+using System.Diagnostics;
 
 namespace DHBIMWATER.Infrastructure.Helpers
 {
@@ -35,7 +37,31 @@ namespace DHBIMWATER.Infrastructure.Helpers
                         yield return s;
             }
         }
+        public static Solid? GetSolid(Element elem)
+        {
+            var solids = elem.get_Geometry(new Options { ComputeReferences = true })
+                                .OfType<Solid>()
+                                .Where(s => s.Volume > 1e-6)
+                                .ToList();
 
+            if (!solids.Any()) return null; // 솔리드가 하나도 없으면 null 반환
+            //Debug.WriteLine($"=================================");
+            //Debug.WriteLine($"솔리드 개수: {solids.Count}개 / Solid Face 개수 {solids.FirstOrDefault().Faces.Size}개");
+
+            if (solids.Count == 1) return solids.FirstOrDefault();  // 솔리드가 1개면 해당 솔리드 반환
+
+            var result = solids[0];
+
+            foreach (var solid in solids.Skip(1))
+            {
+                try
+                {
+                    result = BooleanOperationsUtils.ExecuteBooleanOperation(result, solid, BooleanOperationsType.Union);
+                }
+                catch { }
+            }
+            return result;
+        }
         // ─────────────────────────────────────────────
         // Face 추출
         // ─────────────────────────────────────────────

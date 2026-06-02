@@ -48,10 +48,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             if (doc == null)
                 return Enumerable.Empty<QuantityItem>();
 
-            var intersectingIds = _finder.FindIntersecting(elementId);
-            foreach(var id in intersectingIds)
-                Debug.WriteLine($"{elementId}에 인접한 객체 Id: {id} / 카테고리: {doc.GetElement(new ElementId(id)).Category.Name}");
-            Debug.WriteLine($"======================");
+            var intersectingIds = _finder.FindContactAreas(elementId);
+
+          
 
             var wall = (Wall)doc.GetElement(new ElementId(elementId));
             var cs = wall.WallType.GetCompoundStructure();

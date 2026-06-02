@@ -1,8 +1,7 @@
 using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
-using Autodesk.Revit.UI.Events;
 using DHBIMWATER.Application.Interfaces.Geometry;
-using System.ComponentModel.DataAnnotations;
+using DHBIMWATER.Core.Quantity;
+using DHBIMWATER.Infrastructure.Helpers;
 using System.Diagnostics;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
@@ -11,32 +10,29 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
     public class RevitIntersectingElementFinder : IIntersectingElementFinder
     {
         private readonly Func<Document?> _doc;
-
+        private const double Epsilon = 0.01; // feet 단위 0.01ft = 약 3mm
+        private const double SolidThk = 0.01;
         public RevitIntersectingElementFinder(Func<Document?> doc)
         {
             _doc = doc;
         }
 
-        // ElementIntersectsElementFilter는 볼륨 겹침만 감지하므로 면 접촉(face-to-face)은 누락됨
-        // BoundingBox를 epsilon만큼 팽창시켜 면 접촉 요소도 포함
-        private const double Epsilon = 0.01; // feet 단위 0.01ft = 약 3mm
-
-        public IEnumerable<long> FindIntersecting(long referenceElementId)
+        public IReadOnlyList<(FaceType, long, double)> FindContactAreas(long refElemId)
         {
             var doc = _doc();
-            if (doc == null) return Enumerable.Empty<long>();
+            if (doc == null) return new List<(FaceType, long, double)>();
 
-            var refElem = doc.GetElement(new ElementId(referenceElementId));
-            if (refElem == null) return Enumerable.Empty<long>();
-            Debug.WriteLine($"RefElemId: {refElem.Id.Value} / 카테고리: {refElem.Category.Name}");
+            var refElem = doc.GetElement(new ElementId(refElemId));
+            if (refElem == null) return new List<(FaceType, long, double)>();
+
+            //Debug.WriteLine($"RefElemId: {refElem.Id.Value} / 카테고리: {refElem.Category.Name}");
 
             // 기준 객체 Solid
-            var refSolid = GetSolid(refElem);
-
-            if (refSolid == null) return Enumerable.Empty<long>();
+            var refSolid = RevitGeometryHelper.GetSolid(refElem);
+            if (refSolid == null) return new List<(FaceType, long, double)>();
 
             var bbox = refElem.get_BoundingBox(null);
-            if (bbox == null) return Enumerable.Empty<long>();
+            if (bbox == null) return new List<(FaceType, long, double)>();
 
             var expandedMin = new XYZ(bbox.Min.X - Epsilon, bbox.Min.Y - Epsilon, bbox.Min.Z - Epsilon);
             var expandedMax = new XYZ(bbox.Max.X + Epsilon, bbox.Max.Y + Epsilon, bbox.Max.Z + Epsilon);
@@ -50,33 +46,67 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
                                 .WhereElementIsNotElementType()
                                 .WherePasses(new ElementMulticategoryFilter(targetCategories))
                                 .WherePasses(new BoundingBoxIntersectsFilter(outline))
-                                .Where(e => e.Id.Value != referenceElementId)
+                                .Where(e => e.Id.Value != refElemId)
                                 .ToList();
 
-            foreach (var c in candidates)
+            var contacts = new List<(FaceType, long, double)>();
+
+            foreach (var candidate in candidates)
             {
+                var candidateSolid = RevitGeometryHelper.GetSolid(candidate);
 
-                Debug.WriteLine($"CandidateElemId: {c.Id.Value} / 카테고리: {c.Category.Name}");
+                //Debug.WriteLine($"refElem({refElem.Id.Value}) solids: {RevitGeometryHelper.GetSolids(refElem).Count()}");
+                //Debug.WriteLine($"candidate({candidate.Id.Value}) solids: {RevitGeometryHelper.GetSolids(candidate).Count()}");
+                //Debug.WriteLine($"--- candidate({candidate.Id.Value}) Faces.Count: {candidateSolid.Faces.Size}");
 
-                var cSolid = GetSolid(c);
-                var contactArea = GetContactFaceArea(refSolid, cSolid);
+                if (candidateSolid == null) continue;
 
-                Debug.WriteLine($"Contact Area: {contactArea}");
+                Debug.WriteLine($"--- candidate Id: ({candidate.Id.Value})");
 
-                // 2단계: Solid 취득 여부
-                //Debug.WriteLine($"  candidate {c.Id.Value} solid: {(cSolid == null ? "NULL" : "OK")}");
-                //Debug.WriteLine($"  candidate 카테고리: {c.Category.Name} Volumne: {cSolid.Volume}");
 
-                if (cSolid == null) continue;
+                foreach (Face refFace in refSolid.Faces)
+                {
+                    if (refFace is not PlanarFace planarRef) continue;
+                    //var refNormal = refFace.ComputeNormal(new UV(0.5, 0.5));
+                    var refNormal = planarRef.FaceNormal;
+                    var refOrigin = planarRef.Origin;
 
+                    foreach (Face candidateFace in candidateSolid.Faces)
+                    {
+                        if (candidateFace is not PlanarFace planarCand) continue;
+                        //var candidateNormal = candidateFace.ComputeNormal(new UV(0.5, 0.5));
+                        var candidateNormal = planarCand.FaceNormal;
+                        var candidateOrigin = planarCand.Origin;
+                        Debug.WriteLine($"--- candidate FaceNormal: ({candidateNormal.X}, {candidateNormal.Y}, {candidateNormal.Z}) / candidate FaceArea: {Math.Round(UC.Ft2ToM2(candidateFace.Area), 3)} m2");
+
+                        // 반대 Normal 인 면만 처리
+                        if (refNormal.DotProduct(candidateNormal) > -0.9) continue; // 두 벡터 내적이 -1 일때 방향 반대. 예외 건너뛰기
+
+                        // 두 면이 같은 평면 위에 있는지 확인
+                        var originDiff = candidateOrigin - refOrigin;
+                        var distance = Math.Abs(originDiff.DotProduct(refNormal));
+                        if (distance > 0.01) continue;
+
+                        try
+                        {
+                            var thinSolid = CreateExtrusionSolid(candidateFace, SolidThk);
+                            var intersectingSolid = BooleanOperationsUtils.ExecuteBooleanOperation(refSolid, thinSolid, BooleanOperationsType.Intersect);
+                            //Debug.WriteLine($"Intersecting 체적: {intersectingSolid.Volume}");
+
+                            if (intersectingSolid == null || intersectingSolid.Volume < 1e-10) continue;
+                            var area = Math.Round(UC.Ft2ToM2(intersectingSolid.Volume / SolidThk), 3);  // 겹치는 면적
+                            var faceType = RevitFaceClassifier.Classify(refElem, refNormal);            // refFaceType
+
+                            contacts.Add((faceType, candidate.Id.Value, area));
+                            //Debug.WriteLine($"접촉 감지 [{faceType}]: elementId={refElemId} area={area}m²");
+                        }
+                        catch { continue; }
+                    }
+                }
                 try
                 {
                     var intersection = BooleanOperationsUtils.ExecuteBooleanOperation(
-                        refSolid, cSolid, BooleanOperationsType.Intersect);
-
-                    //// 3단계: Boolean 결과
-                    //Debug.WriteLine($"  intersection Volume={intersection?.Volume}, Faces={intersection?.Faces.Size}");
-                    //Debug.WriteLine($"  ContactFaceArea= {GetContactFaceArea(refSolid, cSolid)}");
+                        refSolid, candidateSolid, BooleanOperationsType.Intersect);
                 }
                 catch (Exception ex)
                 {
@@ -85,68 +115,83 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
                 }
             }
 
-            //var result = candidates.Where(e => IsTouching(refSolid, e))
-            //                 .Select(e => e.Id.Value)
-            //                 .ToList();
-
-            //Debug.WriteLine($"result: {result[0]}");
-
-            var result = new List<long>();
-            return result;
+            return contacts;
         }
 
-        //private bool IsTouching(Solid refSolid, Element candidate)
+
+        //public IEnumerable<long> FindIntersecting(long referenceElementId)
         //{
-        //    var candidateSolid = GetSolid(candidate);
-        //    if (candidateSolid == null) return false;
+        //    var doc = _doc();
+        //    if (doc == null) return Enumerable.Empty<long>();
 
-        //    try
+        //    var refElem = doc.GetElement(new ElementId(referenceElementId));
+        //    if (refElem == null) return Enumerable.Empty<long>();
+        //    Debug.WriteLine($"RefElemId: {refElem.Id.Value} / 카테고리: {refElem.Category.Name}");
+
+        //    // 기준 객체 Solid
+        //    var refSolid = RevitGeometryHelper.GetSolid(refElem);
+
+        //    if (refSolid == null) return Enumerable.Empty<long>();
+
+        //    var bbox = refElem.get_BoundingBox(null);
+        //    if (bbox == null) return Enumerable.Empty<long>();
+
+        //    var expandedMin = new XYZ(bbox.Min.X - Epsilon, bbox.Min.Y - Epsilon, bbox.Min.Z - Epsilon);
+        //    var expandedMax = new XYZ(bbox.Max.X + Epsilon, bbox.Max.Y + Epsilon, bbox.Max.Z + Epsilon);
+        //    var outline = new Outline(expandedMin, expandedMax);
+
+        //    var refCategory = (BuiltInCategory)refElem.Category.Id.Value;
+        //    var targetCategories = GetTargetCategories(refCategory);
+
+        //    // 1차 필터링: 확장된 BBox와 카테고리로 후보군 추출
+        //    var candidates = new FilteredElementCollector(doc)
+        //                        .WhereElementIsNotElementType()
+        //                        .WherePasses(new ElementMulticategoryFilter(targetCategories))
+        //                        .WherePasses(new BoundingBoxIntersectsFilter(outline))
+        //                        .Where(e => e.Id.Value != referenceElementId)
+        //                        .ToList();
+
+        //    foreach (var c in candidates)
         //    {
-        //        var intersection = BooleanOperationsUtils.ExecuteBooleanOperation(
-        //            refSolid,
-        //            candidateSolid,
-        //            BooleanOperationsType.Intersect);
 
-        //        if (intersection == null) return false;
+        //        Debug.WriteLine($"CandidateElemId: {c.Id.Value} / 카테고리: {c.Category.Name}");
 
-        //        return intersection.Volume > 1e-6
-        //            || intersection.Faces.Size > 0;
+        //        var cSolid = RevitGeometryHelper.GetSolid(c);
+        //        var contactArea = GetContactFaceArea(refSolid, cSolid);
+
+        //        Debug.WriteLine($"Contact Area: {contactArea}");
+
+        //        // 2단계: Solid 취득 여부
+        //        //Debug.WriteLine($"  candidate {c.Id.Value} solid: {(cSolid == null ? "NULL" : "OK")}");
+        //        //Debug.WriteLine($"  candidate 카테고리: {c.Category.Name} Volumne: {cSolid.Volume}");
+
+        //        if (cSolid == null) continue;
+
+        //        try
+        //        {
+        //            var intersection = BooleanOperationsUtils.ExecuteBooleanOperation(
+        //                refSolid, cSolid, BooleanOperationsType.Intersect);
+
+        //            //// 3단계: Boolean 결과
+        //            //Debug.WriteLine($"  intersection Volume={intersection?.Volume}, Faces={intersection?.Faces.Size}");
+        //            //Debug.WriteLine($"  ContactFaceArea= {GetContactFaceArea(refSolid, cSolid)}");
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            // 3단계: 예외 발생 여부
+        //            Debug.WriteLine($"  Boolean 예외: {ex.Message}");
+        //        }
         //    }
-        //    catch
-        //    {
-        //        return false;
-        //    }
+
+        //    //var result = candidates.Where(e => IsTouching(refSolid, e))
+        //    //                 .Select(e => e.Id.Value)
+        //    //                 .ToList();
+
+        //    //Debug.WriteLine($"result: {result[0]}");
+
+        //    var result = new List<long>();
+        //    return result;
         //}
-        private Solid? GetSolid(Element elem)
-        {
-            var solids = elem.get_Geometry(new Options { ComputeReferences = true })
-                                .OfType<Solid>()
-                                .Where(s => s.Volume > 1e-6)
-                                .ToList();
-
-            if (!solids.Any()) return null; // 솔리드가 하나도 없으면 null 반환
-            Debug.WriteLine($"=================================");
-            Debug.WriteLine($"솔리드 개수: {solids.Count}개 / Solid Face 개수 {solids.FirstOrDefault().Faces.Size}개");
-
-            if (solids.Count == 1) return solids.FirstOrDefault();  // 솔리드가 1개면 해당 솔리드 반환
-
-            var result = solids[0];
-
-
-            foreach (var solid in solids)
-            {
-                try
-                {
-                    result = BooleanOperationsUtils.ExecuteBooleanOperation(result, solid, BooleanOperationsType.Union);
-                }
-                catch (Exception ex)
-                {
-                    TaskDialog.Show("Error", $"{ex.Message}\n솔리드 Merge 실패. ElementId: {elem.Id.Value}");
-                }
-            }
-
-            return result;
-        }
         private static readonly ICollection<BuiltInCategory> FallbackCategories = new[]
      {
             BuiltInCategory.OST_Walls,
@@ -188,64 +233,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
                 },
                 _ => FallbackCategories,
             };
-        private static double GetContactFaceArea(Solid refSolid, Solid candidateSolid)
-        {
-            double totalArea = 0;
-            double thickness = 0.01;
-
-            foreach (Face refFace in refSolid.Faces)
-            {
-                var refNormal = refFace.ComputeNormal(new UV(0.5, 0.5));
-
-                foreach (Face candidateFace in candidateSolid.Faces)
-                {
-                    // 반대 Normal 인 면만 처리
-                    var candidateNormal = candidateFace.ComputeNormal(new UV(0.5, 0.5));
-                    if (refNormal.DotProduct(candidateNormal) > -0.9) continue;
-
-                    // FaceIntersectionFaceResult로 실제 겹치는지 확인
-                    var result = refFace.Intersect(candidateFace);
-                    if (result != FaceIntersectionFaceResult.Intersecting) continue;
-                    try
-                    {
-                        var thinSolid = CreateExtrusionSolid(candidateFace, thickness);
-                        var intersectingSolid = BooleanOperationsUtils.ExecuteBooleanOperation(refSolid, thinSolid, BooleanOperationsType.Intersect);
-                        Debug.WriteLine($"Intersecting 체적: {intersectingSolid.Volume}");
-
-                        if (intersectingSolid == null || intersectingSolid.Volume < 1e-10) continue;
-                        totalArea += UC.Ft2ToM2(intersectingSolid.Volume / thickness);
-                    }
-                    catch { continue; }
-                }
-
-                //if (refFace is not PlanarFace planarRef) continue;  // 평평한 면이 아니면 건너뛰기
-
-                //foreach (Face candidateFace in candidateSolid.Faces)
-                //{
-                //    var result = refFace.Intersect(candidateFace);
-                //    //if (result == FaceIntersectionFaceResult.Intersecting) continue;
-
-                //    refFace.GetEdges
-
-                //    // 두 Face의 Normal 벡터가 반대방향인지 확인
-                //    var candidateNormal = candidateFace.ComputeNormal(new UV(0.5, 0.5));
-                //    if (refNormal.DotProduct(candidateNormal) > -0.99) continue;
-
-                //    try
-                //    {
-
-                //        var refArea = UC.Ft2ToM2(refFace.Area);
-                //        var candidateArea = UC.Ft2ToM2(candidateFace.Area);
-                //        totalArea += Math.Min(refArea, candidateArea);
-                //    }
-                //    catch
-                //    {
-                //    }
-                //}
-            }
-            Debug.WriteLine($"접촉면적: {totalArea}");
-            return totalArea;
-        }
 
         private static Solid CreateExtrusionSolid(Face face, double thickness)
         {

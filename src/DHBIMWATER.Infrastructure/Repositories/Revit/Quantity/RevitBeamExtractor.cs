@@ -3,6 +3,7 @@ using DHBIMWATER.Application.Interfaces.Geometry;
 using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Core.Quantity;
 using DHBIMWATER.Infrastructure.Helpers;
+using DHBIMWATER.Infrastructure.Repositories.Revit.Geometry;
 using System.Diagnostics;
 using System.Reflection;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
@@ -14,12 +15,13 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
     {
         private readonly Func<Document?> _doc;
         private readonly IIntersectingElementFinder _finder;
+        private readonly IFaceClassifier _classifier;
 
-
-        public RevitBeamExtractor(Func<Document?> doc, IIntersectingElementFinder finder)
+        public RevitBeamExtractor(Func<Document?> doc, IIntersectingElementFinder finder, IFaceClassifier classifier)
         {
-            _doc = doc;
-            _finder = finder;
+            _doc        = doc;
+            _finder     = finder;
+            _classifier = classifier;
         }
 
         public bool CanExtract(long elementId)
@@ -49,10 +51,23 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 return Enumerable.Empty<QuantityItem>();
 
             var beam = doc.GetElement(new ElementId(elementId)) as FamilyInstance;
-            var intersectingIds = _finder.FindIntersecting(elementId);
-
             if (beam == null)
                 return Enumerable.Empty<QuantityItem>();
+
+            var grossAreas = _classifier.GetFaceAreas(elementId);
+            var deductions = _finder.FindContactAreas(elementId);
+
+            foreach (var key in grossAreas.Keys)
+            {
+                Debug.WriteLine($"Ref: {key.ToString()}");
+            }
+
+            foreach (var deduction in deductions)
+            {
+                Debug.WriteLine($"Deduction - FaceType: {deduction.FaceType.ToString()} / NeighborId: {deduction.NeighborId} / Area: {deduction.Area} m2");
+            }
+
+            //double NetArea(FaceType t) => Math.Max(0, grossAreas.GetValueOrDefault(t) - deductions.GetValueOrDefault(t));
 
             var quantityItems = new List<QuantityItem>();
 
