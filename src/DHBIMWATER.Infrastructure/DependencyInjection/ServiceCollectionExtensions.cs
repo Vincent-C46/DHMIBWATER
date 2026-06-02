@@ -1,10 +1,12 @@
 using DHBIMWATER.Application.Interfaces;
+using DHBIMWATER.Application.Interfaces.Geometry;
 using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Core.Parameters;
 using DHBIMWATER.Infrastructure.Repositories.DB;
 using DHBIMWATER.Infrastructure.Repositories.Mock;
 using DHBIMWATER.Infrastructure.Repositories.Mock.Quantity;
 using DHBIMWATER.Infrastructure.Repositories.Revit;
+using DHBIMWATER.Infrastructure.Repositories.Revit.Geometry;
 using DHBIMWATER.Infrastructure.Repositories.Revit.Quantity;
 using DHBIMWATER.Infrastructure.Services.Didas;
 using DHBIMWATER.Infrastructure.Services.Mock;
@@ -38,6 +40,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IDirectShapeCommandRepo, RevitDirectShapeCommandRepo>();
         services.AddTransient<IViewCommandRepo, RevitViewCommandRepo>();
         services.AddTransient<ISetParameterRepo, RevitSetParameterRepo>();
+
+        services.AddTransient<IIntersectingElementFinder, RevitIntersectingElementFinder>();
         #endregion
 
         #region Quantity 관련
@@ -85,6 +89,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IOpeningCommandRepo, MockOpeningCommandRepo>();
         services.AddTransient<IDirectShapeCommandRepo, MockDirectShapeCommandRepo>();
         services.AddTransient<IViewCommandRepo, MockViewCommandRepo>();
+        services.AddTransient<ISetParameterRepo, MockSetParameterRepo>();
         #endregion
 
         #region Quantity 관련 등록
@@ -98,6 +103,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IFileDialogService, MockFileDialogService>();
         services.AddTransient<IDialogService, MockDialogService>();
         services.AddTransient<IGuideLineService, MockGuideLineService>();
+        services.AddSingleton<IUsageLogger, MockUsageLogger>();
         #endregion
 
         return services;

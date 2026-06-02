@@ -30,6 +30,9 @@ namespace DHBIMWATER.Application.Services
 
             return new List<LevelDefinition>
               {
+                  new LevelDefinition { Name = "LWL",  Elevation = d.LWL * 1000 },
+                  new LevelDefinition { Name = "HWL",  Elevation = d.HWL * 1000 },
+
                   new LevelDefinition { Name = FoundationPumpLevelName,  Elevation = d.LWL * 1000 - pr.H4 },
                   new LevelDefinition { Name = FoundationInletLevelName, Elevation = d.LWL * 1000 - pr.H1 },
                   new LevelDefinition { Name = ValveRoomLevelName,       Elevation = upperSlab - pr.H7 - d.D - pr.H6 },
@@ -856,7 +859,6 @@ namespace DHBIMWATER.Application.Services
                         valveRoomWallDef2.EndPoint = new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3 + pr.T4 / 2, totalWidth - pr.T4, 0);
                         valveRoomWallDef2.IsFlipped = true;
                         linearWalls.Add(valveRoomWallDef2);
-
 
                         // 외벽2 - 동쪽 - W2
                         var outerWallDef2 = new LinearWallDefinition

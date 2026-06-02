@@ -16,13 +16,12 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private readonly CreatePumpingStationUseCase _createPumpingStationUseCase;
         private readonly IUsageLogger _usageLogger;
 
-        private string ProfileType1ImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-1_종단제원.png";
-        private string ProfileType2ImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-2_종단제원.png";
-        private string ProfileType3ImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-3_종단제원.png";
-
-        private string PlanLeftImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-1_평면제원-좌안진입.png";
-        private string PlanRightImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-1_평면제원-우안진입.png";
-        private string PlanDefaultImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-1_평면제원-측면진입.png";
+        private string _profileType1ImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-1_종단제원.png";
+        private string _profileType2ImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-2_종단제원.png";
+        private string _profileType3ImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-3_종단제원.png";
+        private string _planLeftImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-1_평면제원-좌안진입.png";
+        private string _planRightImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-1_평면제원-우안진입.png";
+        private string _planDefaultImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-1_평면제원-측면진입.png";
 
         // 설계조건
         private string _selectedPumpingStationType = "Type1";
@@ -96,11 +95,11 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                     OnPropertyChanged(nameof(B4Visibility));
                     OnPropertyChanged(nameof(EntranceTypes));
                     UpdateTypeDependents();
+                    OnPropertyChanged(nameof(PlanImagePath));
                     if (value != "Type1" && _selectedEntranceType != "측면부")
                     {
-                        _selectedEntranceType = "측면부";
+                        SelectedEntranceType = "측면부";
                         OnPropertyChanged(nameof(SelectedEntranceType));
-                        OnPropertyChanged(nameof(PlanImagePath));
                     }
                 }
             }
@@ -132,6 +131,86 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         public string B9Visibility => SelectedEntranceType == "측면부" ? "Collapsed" : "Visible";
         public string T5Visibility => SelectedEntranceType == "측면부" ? "Collapsed" : "Visible";
 
+
+        // 이미지 경로
+        public string PlanDefaultImagePath
+        {
+            get => _planDefaultImagePath;
+            set
+            {
+                if (_planDefaultImagePath != value)
+                {
+                    _planDefaultImagePath = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(PlanImagePath));
+                }
+            }
+        }
+        public string PlanLeftImagePath
+        {
+            get => _planLeftImagePath;
+            set
+            {
+                if (_planLeftImagePath != value)
+                {
+                    _planLeftImagePath = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(PlanImagePath));   // ← 계산 프로퍼티 갱신
+                }
+            }
+        }
+        public string PlanRightImagePath
+        {
+            get => _planRightImagePath;
+            set
+            {
+                if (_planRightImagePath != value)
+                {
+                    _planRightImagePath = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(PlanImagePath));   // ← 계산 프로퍼티 갱신
+                }
+            }
+        }
+        public string ProfileType1ImagePath
+        {
+            get => _profileType1ImagePath;
+            set
+            {
+                if (_profileType1ImagePath != value)
+                {
+                    _profileType1ImagePath = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(ProfileImagePath)); // ← 계산 프로퍼티 갱신
+                }
+            }
+        }
+        public string ProfileType2ImagePath
+        {
+            get => _profileType2ImagePath;
+            set
+            {
+                if (_profileType2ImagePath != value)
+                {
+                    _profileType2ImagePath = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(ProfileImagePath));
+                }
+            }
+        }
+        public string ProfileType3ImagePath
+        {
+            get => _profileType3ImagePath;
+            set
+            {
+                if (_profileType3ImagePath != value)
+                {
+                    _profileType3ImagePath = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(ProfileImagePath));
+                }
+            }
+        }
 
         public bool IsRectangularOpening
         {
@@ -534,8 +613,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 }
             }
         }
-
-
         public double L5
         {
             get { return _l5; }
@@ -544,7 +621,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_l5 != value)
                 {
                     _l5 = value;
-                    UpdateL5Dependents();
                     OnPropertyChanged(nameof(L5));
                 }
             }
@@ -760,11 +836,13 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
 
             _gb1 = 500;
             _gh1 = _t1 + 300;
+
             OnPropertyChanged(nameof(L2));
             OnPropertyChanged(nameof(L3));
             OnPropertyChanged(nameof(L4));
             OnPropertyChanged(nameof(H3));
             OnPropertyChanged(nameof(H4));
+            OnPropertyChanged(nameof(H5));
             OnPropertyChanged(nameof(H7));
             OnPropertyChanged(nameof(T2));
             OnPropertyChanged(nameof(T4));
@@ -813,10 +891,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         {
             NS = (int)Math.Floor((_h4 - _h1) / _hs);
         }
-        private void UpdateL5Dependents()
-        {
-            L5 = _b7 + _t3 + _b6 + _b5 / 2 + _l4 - _b10;
-        }
         private void UpdateH3Calculation()
         {
             H3 = 1000 - _t1 + 100 - (H2 + _h4) % 100;
@@ -825,6 +899,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         {
             H5 = H2 + H3 + H4;
         }
+
         private void UpdateH4Dependents()
         {
             UpdateH3Calculation();
@@ -834,6 +909,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         {
             OnPropertyChanged(nameof(H2));
             UpdateH3Calculation();
+            H5 = H2 + H3 + H4;
         }
         //private void UpdateB2Dependents()
         //{

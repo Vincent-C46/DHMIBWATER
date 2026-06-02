@@ -47,7 +47,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             var railing = doc.GetElement(new ElementId(elementId)) as Railing;
 
-            Debug.WriteLine($"railID: {railing.Id.ToString()}");
+            //Debug.WriteLine($"railID: {railing.Id.ToString()}");
 
             var dependentIds = railing.GetDependentElements(null);// 필터없음
             bool isSloped = false;
@@ -64,7 +64,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
                     foreach (CurveArray curveArr in curveArrArray)
                     {
-                        Debug.WriteLine($"Size: {curveArr.Size}");
+                        //Debug.WriteLine($"Size: {curveArr.Size}");
 
                         for (int i = 0; i < curveArr.Size; i++)
                         {

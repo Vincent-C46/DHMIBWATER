@@ -27,7 +27,7 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         private string _preview = string.Empty;
         #endregion
 
-        // ── Properties ────────────────────────────────────────────────────────
+        #region Properties
         public List<string> UnitOptions { get; } = ["EA", "m", "m²", "m³", "공m³", "ton"];
 
         public string WorkType
@@ -49,7 +49,6 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             get => _rawFormula;
             set { SetProperty(ref _rawFormula, value); SyncVariables(); UpdatePreview(); }
         }
-
         public string Category
         {
             get => _category;
@@ -70,7 +69,6 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             get => _subSpecification;
             set => SetProperty(ref _subSpecification, value);
         }
-
         // ── Variables ─────────────────────────────────────────────────────────
         public ObservableCollection<VariableInput> VariableInputs { get; } = [];
         public bool HasVariables => VariableInputs.Any();
@@ -90,10 +88,12 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         // ── Result / Close ────────────────────────────────────────────────────
         public QuantityItem? ResultItem { get; private set; }
         public event Action<bool>? CloseRequested;
+        #endregion
 
-        // ── Commands ──────────────────────────────────────────────────────────
+        #region Commands
         public ICommand ConfirmCommand { get; }
         public ICommand CancelCommand { get; }
+        #endregion
 
         // ── Regex ─────────────────────────────────────────────────────────────
         private static readonly Regex _varRegex =
@@ -101,13 +101,14 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         private static readonly HashSet<string> _keywords =
             new(StringComparer.OrdinalIgnoreCase) { "x", "PI" };
 
-        // ── Constructor ───────────────────────────────────────────────────────
+        #region Constructor
         public ManualQuantityViewModel(QuantityInputMode mode = QuantityInputMode.New)
         {
             Mode = mode;
             ConfirmCommand = new RelayCommand(_ => OnConfirm(), _ => CanConfirm());
             CancelCommand  = new RelayCommand(_ => CloseRequested?.Invoke(false));
         }
+        #endregion
 
         // ── Variable sync ─────────────────────────────────────────────────────
         private void SyncVariables()
@@ -151,8 +152,6 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             if (e.PropertyName == nameof(VariableInput.Value))
                 UpdatePreview();
         }
-
-        // ── Preview ───────────────────────────────────────────────────────────
         private void UpdatePreview()
         {
             if (string.IsNullOrWhiteSpace(RawFormula) || !VariableInputs.Any())
@@ -173,7 +172,6 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             }
         }
 
-        // ── Confirm ───────────────────────────────────────────────────────────
         private bool CanConfirm()
             => !string.IsNullOrWhiteSpace(WorkType)
             && !string.IsNullOrWhiteSpace(RawFormula)
