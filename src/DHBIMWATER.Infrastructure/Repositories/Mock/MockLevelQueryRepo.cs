@@ -17,9 +17,5 @@ namespace DHBIMWATER.Infrastructure.Repositories.Mock
         {
             return new List<string> { "Plan A", "Plan B", "Plan C" };
         }
-        public IEnumerable<string> GetExistingSectionNames()
-        {
-            return new List<string> { "Section A", "Section B", "Section C" };
-        }
     }
 }

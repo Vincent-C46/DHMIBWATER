@@ -3,7 +3,6 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Infrastructure.Services.Revit.Families;
-using DHBIMWATER.Infrastructure.Services.Revit;
 using DHBIMWATER.Infrastructure.Services.Revit.Parameter;
 using DHBIMWATER.UI.ViewModels.Documentation.Families;
 using DHBIMWATER.UI.Views.Documentation.Families;

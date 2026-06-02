@@ -11,7 +11,9 @@
                      Height="800" Width="1400"
                      WindowStartupLocation="CenterScreen"
                      WindowStyle="ThreeDBorderWindow">
-    <Grid>
+   
+
+                    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
@@ -24,14 +26,6 @@
                        BorderThickness="1">
             <fluent:RibbonTabItem Header="DHBIMWATER">
                 <fluent:RibbonGroupBox Header="모델링">
-                    <fluent:Button Header="배수지&#x0a;모델링"
-                                   FontWeight="Normal"
-                                   Command="{Binding OpenWaterTankViewCommand}"
-                                   LargeIcon="pack://application:,,,/DHBIMWATER.UI;component/Resources/Icons/water-tap.png"/>
-                    <fluent:Button Header="펌프장&#x0a;모델링"
-                                   FontWeight="Normal"
-                                   Command="{Binding OpenPumpingStationViewCommand}"
-                                   LargeIcon="pack://application:,,,/DHBIMWATER.UI;component/Resources/Icons/pump.png"/>
                     <fluent:Button Header="모델링1"
                                    FontWeight="Normal"
                                    Command="{Binding OpenModeling1ViewCommand}"
@@ -40,18 +34,22 @@
                                    FontWeight="Normal"
                                    LargeIcon="pack://application:,,,/DHBIMWATER.UI;component/Resources/Icons/revit.png"
                                    Command="{Binding OpenGuideLineViewCommand}"/>
+                    <fluent:Button Header="배수지&#x0a;모델링"
+                                   FontWeight="Normal"
+                                   Command="{Binding OpenWaterTankViewCommand}"
+                                   LargeIcon="pack://application:,,,/DHBIMWATER.UI;component/Resources/Icons/water-tap.png"/>
+                    <fluent:Button Header="펌프장&#x0a;모델링"
+                                   FontWeight="Normal"
+                                   Command="{Binding OpenPumpingStationViewCommand}"
+                                   LargeIcon="pack://application:,,,/DHBIMWATER.UI;component/Resources/Icons/pump.png"/>
                 </fluent:RibbonGroupBox>
                 
                 <fluent:RibbonGroupBox Header="수량산출">
-                    
-                    <fluent:Button Header="수량산출"
-                                   FontWeight="Normal"
-                                   LargeIcon="pack://application:,,,/DHBIMWATER.UI;component/Resources/Icons/Quantity.png"
-                                   Command="{Binding OpenQuantityViewCommand}"/>
-                    
                     <fluent:Button Header="수량산출1"
                                    FontWeight="Normal"/>
-                    <fluent:Button Header="수량산출2"   
+                    <fluent:Button Header="수량산출2"
+                                   FontWeight="Normal"/>
+                    <fluent:Button Header="수량산출3"   
                                    FontWeight="Normal"/>
                 </fluent:RibbonGroupBox>
                 

@@ -131,12 +131,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             newType.LookupParameter("b")?.Set(UC.MmToFt(spec.Width));
             newType.LookupParameter("h")?.Set(UC.MmToFt(spec.Height));
 
-            if (!newType.IsActive)
-            {
-                newType.Activate();
-                doc.Regenerate();
-            }
-
             return (int)newType.Id.Value;
         }
     }

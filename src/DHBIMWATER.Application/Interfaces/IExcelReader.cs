@@ -4,7 +4,6 @@ namespace DHBIMWATER.Application.Interfaces
 {
     public interface IExcelReader
     {
-        IReadOnlyDictionary<string, List<string[]>> Read(string filePath);
-        List<string[]> Read(string filePath, string sheetName);
+        IEnumerable<PumpExcelDto> Read(string filePath, string sheetName);
     }
 }

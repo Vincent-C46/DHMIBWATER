@@ -28,7 +28,6 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
         public bool RequestedCurrentViewIncludeOverall { get; private set; }
         public bool RequestedCurrentViewSelectedObjects { get; private set; }
         public bool RequestedCurrentViewSelectedAnnotates { get; private set; }
-        public bool RequestedCurrentViewAllAnnotates { get; private set; }
 
 
 
@@ -78,7 +77,6 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
             public string DrawingScale { get; set; }
             public string DrawingNumber { get; set; }
             public string ViewDirectionType { get; set; }
-            public bool DuplicateView { get; set; } = true;
 
         }
 
@@ -163,8 +161,7 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
             {
                 Id = Guid.NewGuid().ToString(), // 임시 ID
                 SheetNumber = vm.SheetNumber,
-                SheetName = vm.SheetName,
-                SheetSubtitle = vm.SheetSubtitle
+                SheetName = vm.SheetName
             };
             row.NameChanged += OnSheetNameChanged;
             row.DirectionChanged += OnSheetDirectionChanged;
@@ -176,8 +173,7 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
                 SheetId = row.Id,
                 SheetNumber = row.SheetNumber,
                 SheetName = row.SheetName,
-                TitleBlockId = vm.SelectedTitleBlock.Id,
-                DrawingMember = vm.SheetSubtitle
+                TitleBlockId = vm.SelectedTitleBlock.Id
             });
         }
 
@@ -191,10 +187,6 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
 
             var selected = vm.SelectedView;
             if (selected == null) return;
-
-            var duplicateView = _dialogService.Confirm(
-                "뷰 복제",
-                $"선택한 뷰를 복제하여 시트에 추가할까요?\n\n복제하면 '{selected.ViewName}_시트' 형태의 새 뷰가 생성됩니다.\n복제하지 않으면 원본 뷰가 그대로 시트에 배치됩니다.");
 
             row.Views.Add(new SheetViewRow
             {
@@ -215,8 +207,7 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
                 DrawingTitle = row.SheetName,
                 DrawingMember = string.Empty,
                 DrawingScale = selected.Scale > 0 ? $"1:{selected.Scale}" : string.Empty,
-                DrawingNumber = row.SheetNumber,
-                DuplicateView = duplicateView
+                DrawingNumber = row.SheetNumber
             });
 
             QueueArrange(row);
@@ -415,16 +406,8 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
                 {
                     case SheetActionType.Create:
                         var created = _useCase.CreateSheet(p.TitleBlockId, p.SheetNumber, p.SheetName);
-                        if (created == null)
-                        {
-                            _dialogService.Warn("시트 생성 실패", $"도면 번호 '{p.SheetNumber}'이(가) 이미 존재하거나 시트를 생성할 수 없습니다.");
-                            var failedId = p.SheetId;
-                            var failedRow = Sheets.FirstOrDefault(s => s.Id == failedId);
-                            if (failedRow != null) Sheets.Remove(failedRow);
-                            _pending.RemoveAll(x => x.SheetId == failedId);
-                            return;
-                        }
-                        if (!string.IsNullOrWhiteSpace(created.Id) &&
+                        if (created != null &&
+                            !string.IsNullOrWhiteSpace(created.Id) &&
                             !string.IsNullOrWhiteSpace(p.SheetId))
                         {
                             tempToRealSheetId[p.SheetId] = created.Id;
@@ -450,7 +433,7 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
                         break;
 
                     case SheetActionType.AddView:
-                        var placedViewId = _useCase.AddViewToSheet(ResolveSheetId(p.SheetId), p.ViewId, duplicate: p.DuplicateView);
+                        var placedViewId = _useCase.AddViewToSheet(ResolveSheetId(p.SheetId), p.ViewId);
 
                         if (!string.IsNullOrWhiteSpace(placedViewId))
                         {
@@ -524,7 +507,7 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
                 _useCase.UpdateSheetParameters(
                     realSheetId,
                     row.SheetName,
-                    row.SheetSubtitle ?? string.Empty,
+                    string.Empty,
                     drawingScale,
                     row.SheetNumber);
             }
@@ -636,8 +619,6 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
                     NameChanged?.Invoke(this);
                 }
             }
-
-            public string SheetSubtitle { get; set; }
             public class SheetViewRow : ViewModelBase
             {
                 private string _viewId;
@@ -722,8 +703,8 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
                 return;
             }
 
-            RequestedCurrentViewAllAnnotates = true;
-            DialogResult = false;
+
+            _dialogService.Info("Annotate", "현재 뷰 전체 태그 기능은 다음 단계에서 연결합니다.");
         }
 
     }

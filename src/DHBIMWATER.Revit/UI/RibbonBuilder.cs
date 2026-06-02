@@ -22,8 +22,7 @@ namespace DHBIMWATER.Revit.UI
             // 리본 모듈 리스트 - 패널 생성 및 버튼 추가 담당
             List<IRibbonModule> modules = new List<IRibbonModule>()
             {
-                new ModelingRibbonModule(),
-                new QuantityRibbonModule(),
+                new ModelingRibbonModule(), 
                 new DocumentationRibbonModule(),
                 new UtilityRibbonModule()
             };
@@ -31,7 +30,7 @@ namespace DHBIMWATER.Revit.UI
             // 각 모듈별로 빌드 호출
             foreach (IRibbonModule module in modules)
             {
-                module.Build(app, tabName);
+                module.Build(app, tabName);                
             }
         }        
     }

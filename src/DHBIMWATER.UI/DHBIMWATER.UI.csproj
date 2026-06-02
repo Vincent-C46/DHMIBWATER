@@ -1,28 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<ItemGroup>
-	  <Compile Remove="ViewModels\Drafting\**" />
-	  <Compile Remove="ViewModels\Quantification\**" />
-	  <Compile Remove="Views\Drafting\**" />
-	  <Compile Remove="Views\Quantification\**" />
-	  <EmbeddedResource Remove="ViewModels\Drafting\**" />
-	  <EmbeddedResource Remove="ViewModels\Quantification\**" />
-	  <EmbeddedResource Remove="Views\Drafting\**" />
-	  <EmbeddedResource Remove="Views\Quantification\**" />
-	  <None Remove="ViewModels\Drafting\**" />
-	  <None Remove="ViewModels\Quantification\**" />
-	  <None Remove="Views\Drafting\**" />
-	  <None Remove="Views\Quantification\**" />
-	  <Page Remove="ViewModels\Drafting\**" />
-	  <Page Remove="ViewModels\Quantification\**" />
-	  <Page Remove="Views\Drafting\**" />
-	  <Page Remove="Views\Quantification\**" />
-	</ItemGroup>
-
-	<ItemGroup>
 	  <None Remove="Resources\Icons\Export.png" />
 	  <None Remove="Resources\Icons\pump.png" />
-	  <None Remove="Resources\Icons\Quantity.png" />
 	  <None Remove="Resources\Icons\revit.png" />
 	  <None Remove="Resources\Icons\Sheet.png" />
 	  <None Remove="Resources\Icons\Trash.png" />
@@ -44,40 +24,13 @@
 	  <None Remove="Resources\Images\2-2.밸브실.png" />
 	  <None Remove="Resources\Images\3-1.부재선택.png" />
 	  <None Remove="Resources\Images\3-2.부재선택.png" />
-	  <None Remove="Resources\PumpStationImages\1-1.종단제원.png" />
 	  <None Remove="Resources\PumpStationImages\1-1.펌프장_평면제원.png" />
-	  <None Remove="Resources\PumpStationImages\2-1.평면제원_좌안부_배경제거.png" />
-	  <None Remove="Resources\PumpStationImages\2-2.평면제원_우안부.png" />
-	  <None Remove="Resources\PumpStationImages\2-3.평면제원_측면부.png" />
-	  <None Remove="Resources\PumpStationImages\TYPE-1_종단제원.png" />
-	  <None Remove="Resources\PumpStationImages\TYPE-1_평면제원-우안진입.png" />
-	  <None Remove="Resources\PumpStationImages\TYPE-1_평면제원-좌안진입.png" />
-	  <None Remove="Resources\PumpStationImages\TYPE-1_평면제원-측면진입.png" />
-	  <None Remove="Resources\PumpStationImages\TYPE-2&amp;3_평면제원.png" />
-	  <None Remove="Resources\PumpStationImages\TYPE-2_종단제원.png" />
-	  <None Remove="Resources\PumpStationImages\TYPE-3_종단제원.png" />
-	  <None Remove="Resources\Quantity\add.png" />
-	  <None Remove="Resources\Quantity\edit.png" />
-	  <None Remove="Resources\Quantity\excel.png" />
-	  <None Remove="Resources\Quantity\refresh-arrow_white.png" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Resource Include="Resources\PumpStationImages\TYPE-2_종단제원.png">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Resource>
-	  <Resource Include="Resources\PumpStationImages\TYPE-3_종단제원.png">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Resource>
 	</ItemGroup>
 
 	<ItemGroup>
 	  <Resource Include="Resources\Icons\Export.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	    <Generator>새 버전이면 복사</Generator>
-	  </Resource>
-	  <Resource Include="Resources\Icons\Quantity.png">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Resource>
 	  <Resource Include="Resources\Icons\Sheet.png">
 	    <Generator>새 버전이면 복사</Generator>
@@ -103,9 +56,6 @@
 	  <Resource Include="Resources\Icons\ViewPlus.png">
 	    <Generator>새 버전이면 복사</Generator>
 	  </Resource>
-	  <Resource Include="Resources\PumpStationImages\1-1.종단제원.png">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Resource>
 	  <Resource Include="Resources\PumpStationImages\1-1.펌프장_평면제원.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Resource>
@@ -126,8 +76,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Folder Include="ViewModels\Drafting\" />
 		<Folder Include="ViewModels\Utilities\" />
+		<Folder Include="ViewModels\Quantification\" />
+		<Folder Include="Views\Drafting\" />
 		<Folder Include="Views\Utilities\" />
+		<Folder Include="Views\Quantification\" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -156,42 +110,6 @@
 		<Resource Include="Resources\Images\2-2.밸브실.png" />
 		<Resource Include="Resources\Images\3-1.부재선택.png" />
 		<Resource Include="Resources\Images\3-2.부재선택.png" />
-		<Resource Include="Resources\PumpStationImages\2-1.평면제원_좌안부_배경제거.png">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Resource>
-		<Resource Include="Resources\PumpStationImages\2-2.평면제원_우안부.png">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Resource>
-		<Resource Include="Resources\PumpStationImages\2-3.평면제원_측면부.png">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Resource>
-		<Resource Include="Resources\PumpStationImages\TYPE-1_종단제원.png">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Resource>
-		<Resource Include="Resources\PumpStationImages\TYPE-1_평면제원-우안진입.png">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Resource>
-		<Resource Include="Resources\PumpStationImages\TYPE-1_평면제원-좌안진입.png">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Resource>
-		<Resource Include="Resources\PumpStationImages\TYPE-1_평면제원-측면진입.png">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Resource>
-		<Resource Include="Resources\PumpStationImages\TYPE-2&amp;3_평면제원.png">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Resource>
-		<Resource Include="Resources\Quantity\add.png">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Resource>
-		<Resource Include="Resources\Quantity\edit.png">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Resource>
-		<Resource Include="Resources\Quantity\excel.png">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Resource>
-		<Resource Include="Resources\Quantity\refresh-arrow_white.png">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Resource>
 	</ItemGroup>
 
 	<ItemGroup>

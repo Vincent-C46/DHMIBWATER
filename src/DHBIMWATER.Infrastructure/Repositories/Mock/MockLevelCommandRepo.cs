@@ -21,9 +21,5 @@ namespace DHBIMWATER.Infrastructure.Repositories.Mock
             MessageBox.Show($"MockLevelCommandRepo - UpdateLevel\nLevel Name: {levelName} \nNew Elevation: {elevation}m");
             return 0;
         }
-        public void CreatePlan(int levelId)
-        {
-            MessageBox.Show($"MockLevelCommandRepo - CreatePlan\nLevel Id: {levelId}");
-        }
     }
 }

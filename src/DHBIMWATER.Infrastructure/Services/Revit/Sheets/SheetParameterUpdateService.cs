@@ -23,7 +23,7 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
                 tx.Start();
 
                 SetIfExists(sheet, "01.도면 제목", drawingTitle);
-                SetIfExists(sheet, "02.도면 부제", drawingMember);
+                SetIfExists(sheet, "02.도면 부재", drawingMember);
                 SetIfExists(sheet, "03.도면 축척", drawingScale);
                 SetIfExists(sheet, "04.도면 번호", drawingNumber);
 
@@ -34,10 +34,10 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
 
                 foreach (var tb in titleBlocks)
                 {
-                    SetIfExists(tb, "01.도면 제목", drawingTitle);
-                    SetIfExists(tb, "02.도면 부제", drawingMember);
-                    SetIfExists(tb, "03.도면 축척", drawingScale);
-                    SetIfExists(tb, "04.도면 번호", drawingNumber);
+                    SetIfExists(tb, "01. 도면 제목", drawingTitle);
+                    SetIfExists(tb, "02. 도면 부재", drawingMember);
+                    SetIfExists(tb, "03. 도면 축척", drawingScale);
+                    SetIfExists(tb, "04. 도면 번호", drawingNumber);
                 }
                 tx.Commit();
             }

@@ -10,6 +10,5 @@ namespace DHBIMWATER.Application.Interfaces
     {
         int CreateLevel(string levelName, double elevation);
         int UpdateLevel(string levelName, double elevation);
-        void CreatePlan(int levelId);
     }
 }

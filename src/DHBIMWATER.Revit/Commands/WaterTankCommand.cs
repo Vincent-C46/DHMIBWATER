@@ -2,6 +2,7 @@
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using DHBIMWATER.Revit.DependencyInjection;
+using DHBIMWATER.UI.Views.GuideLine;
 using DHBIMWATER.UI.Views.Modeling;
 
 namespace DHBIMWATER.Revit.Commands

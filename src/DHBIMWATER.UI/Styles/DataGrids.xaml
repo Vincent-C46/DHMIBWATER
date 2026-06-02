@@ -42,84 +42,12 @@
         </Setter>
     </Style>
 
-    <Style x:Key="QuantityDataGridStyle" TargetType="DataGrid">
-        <Setter Property="FontSize" Value="13"/>
-        <Setter Property="RowHeight" Value="35"/>
-        <Setter Property="Background" Value="{StaticResource WhiteBrush}"/>
-        <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="FontWeight" Value="Medium"/>
-        <Setter Property="RowBackground" Value="{StaticResource WhiteBrush}"/>
-        <Setter Property="AlternatingRowBackground" Value="{StaticResource AlternatingRowBrush}"/>
-        <Setter Property="GridLinesVisibility" Value="Horizontal"/>
-        <Setter Property="HeadersVisibility" Value="Column"/>
-        <Setter Property="AutoGenerateColumns" Value="False"/>
-        <Setter Property="IsReadOnly" Value="True"/>
-        <Setter Property="CanUserAddRows" Value="False"/>
-        <Setter Property="CanUserReorderColumns" Value="True"/>
-        <Setter Property="CanUserSortColumns" Value="True"/>
-        <Setter Property="CanUserResizeColumns" Value="True"/>
-        <Setter Property="ColumnWidth" Value="Auto"/>
-        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto"/>
-        <Setter Property="SelectionMode" Value="Single"/>
-        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto"/>
-        <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
-        <Setter Property="ColumnHeaderStyle" Value="{StaticResource PrimaryDataGridHeaderStyle}"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="DataGrid">
-                    <Border BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            Background="{TemplateBinding Background}">
-                        <ScrollViewer x:Name="DG_ScrollViewer" Focusable="false">
-                            <ScrollViewer.Template>
-                                <ControlTemplate TargetType="ScrollViewer">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="*"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
-                                        <DataGridColumnHeadersPresenter x:Name="PART_ColumnHeadersPresenter"
-                                            Grid.Column="0" Grid.Row="0"/>
-                                        <ScrollContentPresenter x:Name="PART_ScrollContentPresenter"
-                                            Grid.Column="0" Grid.Row="1"
-                                            CanContentScroll="{TemplateBinding CanContentScroll}"/>
-                                        <ScrollBar x:Name="PART_VerticalScrollBar"
-                                            Grid.Column="1" Grid.Row="1" Orientation="Vertical"
-                                            Value="{TemplateBinding VerticalOffset}"
-                                            Maximum="{TemplateBinding ScrollableHeight}"
-                                            ViewportSize="{TemplateBinding ViewportHeight}"
-                                            Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"/>
-                                        <ScrollBar x:Name="PART_HorizontalScrollBar"
-                                            Grid.Column="0" Grid.Row="2" Orientation="Horizontal"
-                                            Value="{TemplateBinding HorizontalOffset}"
-                                            Maximum="{TemplateBinding ScrollableWidth}"
-                                            ViewportSize="{TemplateBinding ViewportWidth}"
-                                            Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"/>
-                                    </Grid>
-                                </ControlTemplate>
-                            </ScrollViewer.Template>
-                            <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
-                        </ScrollViewer>
-                    </Border>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-
     <Style TargetType="DataGridCell">
         <Setter Property="Padding" Value="12,8"/>
-        <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="DataGridCell">
-                    <Border Padding="{TemplateBinding Padding}"
-                        Background="{TemplateBinding Background}"
-                        SnapsToDevicePixels="True">
+                    <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
                         <ContentPresenter VerticalAlignment="Center"/>
                     </Border>
                 </ControlTemplate>
@@ -133,5 +61,4 @@
         </Style.Triggers>
     </Style>
 
-    
 </ResourceDictionary>

@@ -61,16 +61,6 @@ namespace DHBIMWATER.Revit.Commands.Sheets
                 reopenedView.ShowDialog();
             }
 
-            if (vm.RequestedCurrentViewAllAnnotates)
-            {
-                useCase.ApplyTagsToAllOnCurrentView();
-
-                var reopenedVm = new SheetManagerViewModel(useCase, waterReservoirUseCase, dialogService);
-                var reopenedView = new SheetManagerView { DataContext = reopenedVm };
-                new WindowInteropHelper(reopenedView).Owner = commandData.Application.MainWindowHandle;
-                reopenedView.ShowDialog();
-            }
-
             return Result.Succeeded;
         }
     }

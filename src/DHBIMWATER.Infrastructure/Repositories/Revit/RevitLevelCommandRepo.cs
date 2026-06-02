@@ -48,7 +48,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             return (int)level.Id.Value;
         }
 
-        public void CreatePlan(int levelId)
+        public void CreatePlan()
         {
             var doc = _doc();
             if (doc == null) return;
@@ -58,7 +58,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                                             .Cast<ViewFamilyType>()
                                             .FirstOrDefault(vft => vft.ViewFamily == ViewFamily.StructuralPlan);
 
-            ViewPlan.Create(doc, structViewType.Id, new ElementId((long)levelId));
+
         }
     }
 }

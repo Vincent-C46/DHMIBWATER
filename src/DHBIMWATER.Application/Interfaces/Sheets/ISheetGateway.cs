@@ -19,7 +19,7 @@ namespace DHBIMWATER.Application.Interfaces.Sheets
         void DeleteSheet(string sheetId);
         SheetInfoDto CopySheet(string sheetId);
         void RenameSheet(string sheetId, string newName);
-        string AddViewToSheet(string sheetId, string viewId, string suffix = "_시트", string targetViewName = null, bool duplicate = true);
+        string AddViewToSheet(string sheetId, string viewId, string suffix = "_시트", string targetViewName = null);
         void ReplaceViewOnSheet(string sheetId, string oldViewId, string newViewId);
         void RemoveView(string sheetId, string viewId);
         void UpdateViewScale(string viewId, int scale);

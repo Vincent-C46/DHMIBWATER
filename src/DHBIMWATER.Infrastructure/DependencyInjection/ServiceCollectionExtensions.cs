@@ -1,14 +1,7 @@
 using DHBIMWATER.Application.Interfaces;
-using DHBIMWATER.Application.Interfaces.Geometry;
-using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Core.Parameters;
-using DHBIMWATER.Infrastructure.Repositories.DB;
 using DHBIMWATER.Infrastructure.Repositories.Mock;
-using DHBIMWATER.Infrastructure.Repositories.Mock.Quantity;
 using DHBIMWATER.Infrastructure.Repositories.Revit;
-using DHBIMWATER.Infrastructure.Repositories.Revit.Geometry;
-using DHBIMWATER.Infrastructure.Repositories.Revit.Quantity;
-using DHBIMWATER.Infrastructure.Services.Didas;
 using DHBIMWATER.Infrastructure.Services.Mock;
 using DHBIMWATER.Infrastructure.Services.Revit;
 using DHBIMWATER.Infrastructure.Services.Revit.Parameter;
@@ -28,7 +21,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IGenericModelRepository, RevitGenericModelRepository>();
         services.AddTransient<ITransactionContext, RevitTransactionContext>();
 
-        #region Element 관련
+        #region Element 관련 Repository 등록
         services.AddTransient<ILevelQueryRepo, RevitLevelQueryRepo>();
         services.AddTransient<ILevelCommandRepo, RevitLevelCommandRepo>();
         services.AddTransient<IElementTypeQueryRepo, RevitElementTypeQueryRepo>();
@@ -38,32 +31,15 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ISlabCommandRepo, RevitSlabCommandRepo>();
         services.AddTransient<IOpeningCommandRepo, RevitOpeningCommandRepo>();
         services.AddTransient<IDirectShapeCommandRepo, RevitDirectShapeCommandRepo>();
-        services.AddTransient<IViewCommandRepo, RevitViewCommandRepo>();
-        services.AddTransient<ISetParameterRepo, RevitSetParameterRepo>();
-
-        services.AddTransient<IIntersectingElementFinder, RevitIntersectingElementFinder>();
         #endregion
 
-        #region Quantity 관련
-        services.AddTransient<IQuantityExtractor, RevitBeamExtractor>();
-        services.AddTransient<IQuantityExtractor, RevitColumnExtractor>();
-        services.AddTransient<IQuantityExtractor, RevitFloorExtractor>();
-        services.AddTransient<IQuantityExtractor, RevitFoundationExtractor>();
-        services.AddTransient<IQuantityExtractor, RevitGenericModelExtractor>();
-        services.AddTransient<IQuantityExtractor, RevitRebarExtractor>();
-        services.AddTransient<IQuantityExtractor, RevitStairsExtractor>();
-        services.AddTransient<IQuantityExtractor, RevitWallExtractor>();
-        services.AddTransient<IQuantityExtractor, RevitRailingExtractor>();
-        #endregion
-
+        services.AddTransient<IExcelReader, RevitExcelPumpReader>();
         services.AddTransient<ISharedParameterRepository, RevitSharedParameterRepository>();
-        services.AddTransient<IExcelReader, ExcelReader>();
 
         #region Service 등록
         services.AddTransient<IFileDialogService, RevitFileDialogService>();
         services.AddTransient<IDialogService, RevitDialogService>();
         services.AddTransient<IGuideLineService, RevitGuideLineService>();
-        services.AddSingleton<IUsageLogger, DidasUsageService>();   // Didas 로그 연계
         #endregion
 
         return services;
@@ -88,22 +64,15 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ISlabCommandRepo, MockSlabCommandRepo>();
         services.AddTransient<IOpeningCommandRepo, MockOpeningCommandRepo>();
         services.AddTransient<IDirectShapeCommandRepo, MockDirectShapeCommandRepo>();
-        services.AddTransient<IViewCommandRepo, MockViewCommandRepo>();
-        services.AddTransient<ISetParameterRepo, MockSetParameterRepo>();
         #endregion
 
-        #region Quantity 관련 등록
-        services.AddTransient<IQuantityExtractor, MockWallExtractor>();
-        #endregion
-
+        services.AddTransient<IExcelReader, MockExcelPumpReader>();
         services.AddTransient<ISharedParameterRepository, MockSharedParameterRepository>();
-        services.AddTransient<IExcelReader, ExcelReader>();
 
         #region Service 등록
         services.AddTransient<IFileDialogService, MockFileDialogService>();
         services.AddTransient<IDialogService, MockDialogService>();
         services.AddTransient<IGuideLineService, MockGuideLineService>();
-        services.AddSingleton<IUsageLogger, MockUsageLogger>();
         #endregion
 
         return services;
