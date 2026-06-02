@@ -203,6 +203,22 @@ namespace DHBIMWATER.Application.UseCases.Sheets
         {
             _gateway.HideCopiedSectionMarkersOnReservoirPlanViews();
         }
+
+        public void HideSectionMarkersOnPumpingStationSectionViews()
+        {
+            _gateway.HideSectionMarkersOnPumpingStationSectionViews();
+        }
+
+        public void HideCopiedSectionMarkersOnPumpingStationPlanViews()
+        {
+            _gateway.HideCopiedSectionMarkersOnPumpingStationPlanViews();
+        }
+
+        public void ApplyPumpingStationDimensions(string sheetId, string dimensionTypeName)
+        {
+            _gateway.ApplyPumpingStationDimensions(sheetId, dimensionTypeName);
+        }
+
         public void ApplyTagsToAllOnCurrentView()
         {
             _gateway.ApplyTagsToAllOnCurrentView();
@@ -210,6 +226,20 @@ namespace DHBIMWATER.Application.UseCases.Sheets
         public void ApplyReservoirTags(string sheetId)
         {
             _gateway.ApplyReservoirTags(sheetId);
+        }
+        public void CreateOrUpdateWaterLevels(string hwl, string lwl)
+        {
+            _gateway.CreateOrUpdateWaterLevels(hwl, lwl);
+        }
+
+        public (string hwl, string lwl) GetWaterLevels()
+        {
+            return _gateway.GetWaterLevels();
+        }
+
+        public void HideNonWaterLevels()
+        {
+            _gateway.HideNonWaterLevels();
         }
     }
 }

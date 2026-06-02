@@ -200,6 +200,105 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
 
             tx.Commit();
         }
+        public void HideSectionMarkersOnPumpingStationSectionViews()
+        {
+            var targetViews = new FilteredElementCollector(_doc)
+                .OfClass(typeof(View))
+                .Cast<View>()
+                .Where(v =>
+                    !v.IsTemplate &&
+                    v is ViewSection &&
+                    v.Name.Contains("_시트", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (targetViews.Count == 0)
+                return;
+
+            var targetBics = new HashSet<BuiltInCategory>
+            {
+                BuiltInCategory.OST_SectionHeads,
+                BuiltInCategory.OST_Sections,
+                BuiltInCategory.OST_Viewers
+            };
+
+            using var tx = new Transaction(_doc, "Hide Section Markers On Pumping Station Section Views");
+            tx.Start();
+
+            foreach (var view in targetViews)
+            {
+                var hideIds = new FilteredElementCollector(_doc, view.Id)
+                    .WhereElementIsNotElementType()
+                    .Where(e => e.Category != null &&
+                                targetBics.Contains((BuiltInCategory)e.Category.Id.Value) &&
+                                e.CanBeHidden(view))
+                    .Select(e => e.Id)
+                    .ToList();
+
+                if (hideIds.Count > 0)
+                    view.HideElements(hideIds);
+            }
+
+            tx.Commit();
+        }
+
+        public void HideCopiedSectionMarkersOnPumpingStationPlanViews()
+        {
+            var targetViewNamePrefixes = new[]
+            {
+                "상부슬래브_시트",
+                "기초(유입부)_시트"
+            };
+
+            var targetViews = new FilteredElementCollector(_doc)
+                .OfClass(typeof(View))
+                .Cast<View>()
+                .Where(v =>
+                    !v.IsTemplate &&
+                    v is ViewPlan &&
+                    targetViewNamePrefixes.Any(prefix =>
+                        v.Name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+
+            if (targetViews.Count == 0)
+                return;
+
+            using var tx = new Transaction(_doc, "Hide Copied Section Markers On Pumping Station Plan Views");
+            tx.Start();
+
+            foreach (var targetView in targetViews)
+            {
+                var hideIds = new List<ElementId>();
+
+                var elements = new FilteredElementCollector(_doc, targetView.Id)
+                    .WhereElementIsNotElementType()
+                    .ToElements();
+
+                foreach (var element in elements)
+                {
+                    if (element?.Category == null)
+                        continue;
+
+                    var bic = (BuiltInCategory)element.Category.Id.Value;
+
+                    if (bic != BuiltInCategory.OST_Viewers &&
+                        bic != BuiltInCategory.OST_Sections &&
+                        bic != BuiltInCategory.OST_SectionHeads)
+                        continue;
+
+                    if (!element.CanBeHidden(targetView))
+                        continue;
+
+                    if (IsCopiedSectionMarkerElement(element))
+                        hideIds.Add(element.Id);
+                }
+
+                if (hideIds.Count > 0)
+                    targetView.HideElements(hideIds);
+            }
+
+            tx.Commit();
+        }
+
         private bool IsCopiedSectionMarkerElement(Element element)
         {
             if (ContainsCopiedSectionName(element.Name))
