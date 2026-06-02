@@ -1,6 +1,7 @@
 ﻿using Autodesk.Revit.DB;
 using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Core.Quantity;
+using DHBIMWATER.Infrastructure.Helpers;
 using System.Data.Common;
 using System.Reflection.Metadata.Ecma335;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
@@ -70,7 +71,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             var concFormula = "A x Thk";
             string? concRendered = FormulaCalculator.Render(concFormula, varDict);
-            double concValue = FormulaCalculator.Calculate(concFormula, varDict);
+            //double concValue = FormulaCalculator.Calculate(concFormula, varDict);
+            double concValue = RevitGeometryHelper.GetSolids(floor).Sum(s => s.Volume);
+
             string concWorkType = thickness < 0.15 || materialName.Contains("무근") ? "무근콘크리트" : "철근콘크리트";
 
             var concreteItem = new QuantityItem

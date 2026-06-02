@@ -59,9 +59,7 @@ namespace DHBIMWATER.Application.UseCases.QuantityCalculator
                         var item = quantityItems.FirstOrDefault(r => r.WorkType.Contains("콘크리트"));
                         //_dialogService.Info("Info",$"공종: {item.WorkType}\n규격: {item.Specification}\n산출식: {item.Formula}\n값: {item.Value}");
                     }
-
-                
-                    
+                                        
                     //Debug.WriteLine($"{}");
 
                     return quantityItems;

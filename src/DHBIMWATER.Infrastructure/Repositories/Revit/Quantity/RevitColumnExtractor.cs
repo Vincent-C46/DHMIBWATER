@@ -80,8 +80,10 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             };
 
             string concFormula = isCircular ? "R^2 x L" : "B x D x L";
-            string? columnRendered = FormulaCalculator.Render(concFormula, varDict);
-            double columnValue = FormulaCalculator.Calculate(concFormula, varDict);
+            string? concRendered = FormulaCalculator.Render(concFormula, varDict);
+            //double columnValue = FormulaCalculator.Calculate(concFormula, varDict);
+            double concValue = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(column).Sum(s => s.Volume));
+
 
             // 철근콘크리트
             var concreteItem = new QuantityItem
@@ -92,8 +94,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 WorkType = "철근콘크리트",
                 Specification = materialName,
                 RawFormula = concFormula,
-                RenderedFormula = columnRendered ?? string.Empty,
-                Value = columnValue,
+                RenderedFormula = concRendered ?? string.Empty,
+                Value = concValue,
                 Unit = "m³"
             };
 

@@ -20,7 +20,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
         {
             _doc = doc;
             _finder = finder;
-
         }
 
         public bool CanExtract(long elementId)
@@ -32,7 +31,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             return elem is FamilyInstance fi && fi.Category.Id.Value == (int)BuiltInCategory.OST_StructuralFraming;
         }
-
         public IEnumerable<long> CollectElementIds()
         {
             var doc = _doc();
@@ -50,14 +48,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             if (doc == null)
                 return Enumerable.Empty<QuantityItem>();
 
-            var intersectingIds = _finder.FindIntersecting(elementId);
-            foreach (var id in intersectingIds)
-                Debug.WriteLine($"{elementId}에 인접한 객체 Id: {id} / 카테고리: {doc.GetElement(new ElementId(id)).Category.Name}");
-            Debug.WriteLine($"======================");
-
             var beam = doc.GetElement(new ElementId(elementId)) as FamilyInstance;
-
-
+            var intersectingIds = _finder.FindIntersecting(elementId);
 
             if (beam == null)
                 return Enumerable.Empty<QuantityItem>();
@@ -80,18 +72,17 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             else
                 materialName = (doc.GetElement(materialId) as Material).Name;
 
-            var a = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(beam).Sum(s => s.Volume));
-
             var varDict = new Dictionary<string, double>
             {
-                ["L"] = length,
                 ["B"] = b,
                 ["H"] = h,
+                ["L"] = length,
             };
 
             const string concFormula = "B x H x L";
             string? concRendered = FormulaCalculator.Render(concFormula, varDict);
-            double concValue = FormulaCalculator.Calculate(concFormula, varDict);
+            //double concValue = FormulaCalculator.Calculate(concFormula, varDict);
+            double concValue = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(beam).Sum(s => s.Volume));
 
             // 철근콘크리트
             var concreteItem = new QuantityItem
