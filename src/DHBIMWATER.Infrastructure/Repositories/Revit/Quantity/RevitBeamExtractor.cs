@@ -5,6 +5,7 @@ using DHBIMWATER.Core.Quantity;
 using DHBIMWATER.Infrastructure.Helpers;
 using DHBIMWATER.Infrastructure.Repositories.Revit.Geometry;
 using System.Diagnostics;
+using System.DirectoryServices;
 using System.Reflection;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
@@ -50,8 +51,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 return Enumerable.Empty<QuantityItem>();
 
             var beam = doc.GetElement(new ElementId(elementId)) as FamilyInstance;
-            if (beam == null)
-                return Enumerable.Empty<QuantityItem>();
+            if (beam == null) return Enumerable.Empty<QuantityItem>();
 
             var refFaceDict = _classifier.GetFaceAreas(elementId);
             var contatctAreaList = _finder.FindContactAreas(elementId);
@@ -101,7 +101,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             double totalLength = 0;
             var parallelEdgeLengths = new List<double>();
             var allEndFaceAreas = new List<double>();
-
             double sectionArea = 0;
             double avgArea = 0;
 
@@ -146,17 +145,17 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                     }
                 }
 
-                // 이 SplitSolid의 평균 단면적 계산 (양쪽 End면의 평균)
-                if (endFaceAreasInSolid.Count >= 2)
+                // SplitSolid 평균 단면적 계산
+                if (endFaceAreasInSolid.Count >= 1)
                 {
                     var avgAreaInSolid = endFaceAreasInSolid.Average();
                     solidCrossSectionAreas.Add(avgAreaInSolid);
 
                     var maxDiff = endFaceAreasInSolid.Max() - endFaceAreasInSolid.Min();
-                    
+
                     if (maxDiff / avgAreaInSolid > 0.05)
                     {
-                        Debug.WriteLine($"    ⚠️ 변단면: 차이 {maxDiff / avgAreaInSolid * 100:F1}%");
+                        Debug.WriteLine($"⚠️ 변단면: 차이 {maxDiff / avgAreaInSolid * 100:F1}%");
                     }
                 }
             }
@@ -169,27 +168,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 avgArea = solidCrossSectionAreas.Average();
                 Debug.WriteLine($"=== 최종 평균 단면적: {UC.Ft2ToM2(avgArea):F3}m² (SplitSolid {solidCrossSectionAreas.Count}개) ===");
             }
-            
-            // 유효 단면적 계산 (SplitSolid의 End면 기반)
-            //double effectiveCrossSectionArea = b * h; // 기본값
-
-            if (allEndFaceAreas.Any())
-            {
-                //effectiveCrossSectionArea = UC.Ft2ToM2(allEndFaceAreas.Average());
-                var maxDiff = allEndFaceAreas.Max() - allEndFaceAreas.Min();
-                avgArea = allEndFaceAreas.Average();
-
-                Debug.WriteLine($"=== 단면적 계산: End면 개수 = {allEndFaceAreas.Count} ===");
-                Debug.WriteLine($"  평균 단면적: {UC.Ft2ToM2(avgArea):F3}m²");
-
-                // 변단면 체크 (차이가 5% 이상이면 경고)
-                if (maxDiff / avgArea > 0.05)
-                {
-                    Debug.WriteLine($"  ⚠️ 변단면 감지: 면적 차이 {UC.Ft2ToM2(maxDiff):F3}m² ({maxDiff / avgArea * 100:F1}%)");
-                }
-            }
-
-            sectionArea = avgArea;
 
             string materialName = string.Empty;
             var materialId = beam.get_Parameter(BuiltInParameter.STRUCTURAL_MATERIAL_PARAM)?.AsElementId()
@@ -202,21 +180,15 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             var varDict = new Dictionary<string, double>
             {
-                ["A"] = sectionArea,
+                ["A"] = UC.Ft2ToM2(avgArea),
                 ["L"] = effectiveLength,
             };
 
             // 콘크리트 체적 계산 (실제 Solid Volume 사용)
             double concValue = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(beam).Sum(s => s.Volume));
 
-            // 이론값과 실제값 비교를 위한 참고 공식
             const string concFormula = "A x L";
             string concRendered = FormulaCalculator.Render(concFormula, varDict);
-
-            //if (effectiveHeight < h)
-            //{
-            //    concRendered += $" [슬래브 두께 {(h - effectiveHeight):F3}m 공제]";
-            //}
 
             // 철근콘크리트
             var concreteItem = new QuantityItem

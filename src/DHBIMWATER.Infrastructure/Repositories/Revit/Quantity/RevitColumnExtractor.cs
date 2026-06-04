@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Structure;
+using DHBIMWATER.Application.Interfaces.Geometry;
 using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Core.Quantity;
 using DHBIMWATER.Core.Structures;
@@ -11,9 +12,13 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
     public class RevitColumnExtractor : IQuantityExtractor
     {
         private readonly Func<Document?> _doc;
-        public RevitColumnExtractor(Func<Document?> doc)
+        private readonly IIntersectingElementFinder _finder;
+        private readonly IFaceClassifier _classifier;
+        public RevitColumnExtractor(Func<Document?> doc, IIntersectingElementFinder finder, IFaceClassifier classifier)
         {
             _doc = doc;
+            _finder = finder;
+            _classifier = classifier;
         }
 
         public bool CanExtract(long elementId)
@@ -25,7 +30,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             return elem is FamilyInstance fi && fi.Category.Id.Value == (int)BuiltInCategory.OST_StructuralColumns;
         }
-
         public IEnumerable<long> CollectElementIds()
         {
             var doc = _doc();
@@ -40,15 +44,19 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
         public IEnumerable<QuantityItem> Extract(long elementId)
         {
             var doc = _doc();
-            if (doc == null)
-                return Enumerable.Empty<QuantityItem>();
+            if (doc == null) return Enumerable.Empty<QuantityItem>();
 
             var column = doc.GetElement(new ElementId(elementId)) as FamilyInstance;
-
-            if (column == null)
-                return Enumerable.Empty<QuantityItem>();
+            if (column == null) return Enumerable.Empty<QuantityItem>();
 
             var quantityItems = new List<QuantityItem>();
+
+            var refFaceDict = _classifier.GetFaceAreas(elementId);
+            var contatctAreaList = _finder.FindContactAreas(elementId);
+            // FaceType별 공제 면적 그룹화
+            var deductionByFaceType = contatctAreaList
+                .GroupBy(d => d.FaceType)
+                .ToDictionary(g => g.Key, g => g.ToList());
 
             string materialName = string.Empty;
             var materialId = column.get_Parameter(BuiltInParameter.STRUCTURAL_MATERIAL_PARAM)?.AsElementId()

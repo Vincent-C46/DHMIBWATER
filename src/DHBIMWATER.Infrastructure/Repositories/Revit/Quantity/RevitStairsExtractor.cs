@@ -46,14 +46,13 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
         public IEnumerable<QuantityItem> Extract(long elementId)
         {
             var doc = _doc();
-            if (doc == null)
-                return Enumerable.Empty<QuantityItem>();
+            if (doc == null) return Enumerable.Empty<QuantityItem>();
             
             var stair = doc.GetElement(new ElementId(elementId)) as Stairs;
+            if (stair == null) return Enumerable.Empty<QuantityItem>();
+
             var intersectingAreas = _finder.FindContactAreas(elementId);
-
             var quantityItems = new List<QuantityItem>();
-
 
             Debug.WriteLine($"{stair.Id.Value}");
 

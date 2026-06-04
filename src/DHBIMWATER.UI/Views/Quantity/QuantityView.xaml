@@ -85,8 +85,15 @@
                             BorderThickness="2">
                         <StackPanel Orientation="Horizontal">
                             <Image Source="/DHBIMWATER.UI;component/Resources/Quantity/add.png" Width="18" Margin="0,0,6,0" VerticalAlignment="Center"/>
-
                             <TextBlock Text="추가" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Width="80" Command="{Binding AddManualItemCommand}"
+                            Padding="14,6" Margin="8,0,0,0" Style="{StaticResource ExportButtonStyle}"
+                            BorderThickness="2">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="/DHBIMWATER.UI;component/Resources/Quantity/copy.png" Width="17" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="복사" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                     <Button Width="80" Command="{Binding AddManualItemCommand}"

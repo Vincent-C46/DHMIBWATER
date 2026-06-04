@@ -55,8 +55,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             var grossArea = _classifier.GetFaceAreas(elementId);
 
-
-
             // 객체 추출값
             var area = UC.Ft2ToM2(wall.get_Parameter(BuiltInParameter.HOST_AREA_COMPUTED).AsDouble());
             double thickness = UC.FtToM(cs.GetLayers()
