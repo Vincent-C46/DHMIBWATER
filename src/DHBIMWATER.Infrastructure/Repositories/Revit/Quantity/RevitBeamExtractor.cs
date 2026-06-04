@@ -43,7 +43,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                         .WhereElementIsNotElementType()
                         .Select(r => r.Id.Value);
         }
-
         public IEnumerable<QuantityItem> Extract(long elementId)
         {
             var doc = _doc();
@@ -94,79 +93,103 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var h = UC.FtToM(FamilyInstanceHelper.FindParameter(beam, "h") ?? FamilyInstanceHelper.FindParameter(beam, "d") ?? FamilyInstanceHelper.FindParameter(beam, "높이") ?? FamilyInstanceHelper.FindParameter(beam, "Height") ?? 0);
             string typeName = beam.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).AsValueString() ?? string.Empty;
 
-            // 실제 유효 길이 계산 (Solid Edge 기반)
+            // 실제 유효 길이 계산 (SplitSolid의 Edge 기반)
             double effectiveLength = length;
-            
             var lc = beam.Location as LocationCurve;
             var beamDirection = (lc.Curve.GetEndPoint(1) - lc.Curve.GetEndPoint(0)).Normalize();
-            var solids = RevitGeometryHelper.GetSolids(beam).ToList();
+            var solid = RevitGeometryHelper.GetSolid(beam);
+            double totalLength = 0;
+            var parallelEdgeLengths = new List<double>();
+            var allEndFaceAreas = new List<double>();
 
-            if (solids.Any())
+            double sectionArea = 0;
+            double avgArea = 0;
+
+            // Split Solid 순회
+            IList<Solid> splitSolids = SolidUtils.SplitVolumes(solid);
+            var solidCrossSectionAreas = new List<double>(); // SplitSolid별 단면적 저장
+            
+            foreach (var splitSolid in splitSolids)
             {
-                double totalLength = 0;
+                double maxEdgeLength = 0;
+                int parallelEdgeCnt = 0;
+                var endFaceAreasInSolid = new List<double>(); // 이 SplitSolid의 End면들
 
-                foreach (var solid in solids)
+                // Split Solid 길이 추출
+                foreach (Edge edge in splitSolid.Edges)
                 {
-                    var parallelEdgeLengths = new List<double>();
-                    // Solid의 모든 Edge 검사
-                    foreach (Edge edge in solid.Edges)
+                    var curve = edge.AsCurve();
+                    if (curve is Line line)
                     {
-                        var curve = edge.AsCurve();
-                        if (curve is Line line)
-                        {
-                            var edgeDirection = (line.GetEndPoint(1) - line.GetEndPoint(0)).Normalize();
-                            var dotProduct = Math.Abs(edgeDirection.DotProduct(beamDirection));
+                        var edgeDir = (line.GetEndPoint(1) - line.GetEndPoint(0)).Normalize();
+                        var dotProduct = Math.Abs(edgeDir.DotProduct(beamDirection));
 
-                            // 보 방향과 평행한 Edge 찾기 (내적이 1에 가까운)
-                            if (dotProduct > 0.99)
-                            {
-                                parallelEdgeLengths.Add(line.Length);
-                                Debug.WriteLine($"  평행 Edge 발견: {UC.FtToM(line.Length):F3}m (dotProduct={dotProduct:F3})");
-                            }
+                        if (dotProduct > 0.99)
+                        {
+                            parallelEdgeCnt++;
+                            maxEdgeLength = Math.Max(maxEdgeLength, line.Length);
                         }
                     }
+                }
+                parallelEdgeLengths.Add(maxEdgeLength);
 
-                    // 서로 다른 길이만 추출 (중복 제거)
-                    var distinctLengths = parallelEdgeLengths
-                        .Select(l => Math.Round(l, 6)) // 부동소수점 오차 처리
-                        .Distinct()
-                        .ToList();
+                // Split Solid별 단면적 추출 (beam Dir과 동일한 방향 Face)
+                foreach (Face face in splitSolid.Faces)
+                {
+                    var faceNormal = face.ComputeNormal(new UV(0.5, 0.5));
+                    var dotProduct = Math.Abs(beamDirection.DotProduct(faceNormal));
 
-                    var sumLength = distinctLengths.Sum();
+                    // 보 방향과 평행한 면 (End면)
+                    if (dotProduct > 0.99)
+                    {
+                        endFaceAreasInSolid.Add(face.Area);
+                    }
+                }
+
+                // 이 SplitSolid의 평균 단면적 계산 (양쪽 End면의 평균)
+                if (endFaceAreasInSolid.Count >= 2)
+                {
+                    var avgAreaInSolid = endFaceAreasInSolid.Average();
+                    solidCrossSectionAreas.Add(avgAreaInSolid);
+
+                    var maxDiff = endFaceAreasInSolid.Max() - endFaceAreasInSolid.Min();
                     
-                    Debug.WriteLine($"Solid Volume={UC.Ft3ToM3(solid.Volume):F3}m³, 평행Edge수={parallelEdgeLengths.Count}, 고유길이수={distinctLengths.Count}, 합계={UC.FtToM(sumLength):F3}m");
-                    totalLength += sumLength;
-                }
-
-                Debug.WriteLine($"총 유효 길이: {UC.FtToM(totalLength):F3}m");
-
-                if (totalLength > 0)
-                {
-                    effectiveLength = UC.FtToM(totalLength);
-                }
-            }
-
-
-            // 슬래브에 의한 유효 높이 공제 계산
-            double effectiveHeight = h;
-            var topDeductions = deductionByFaceType.GetValueOrDefault(FaceType.Top, new List<(FaceType, long, double)>());
-            if (topDeductions.Any())
-            {
-                // Top면에서 슬래브를 찾아 두께 공제
-                foreach (var (_, neighborId, _) in topDeductions)
-                {
-                    var neighbor = doc.GetElement(new ElementId(neighborId));
-                    if (neighbor?.Category?.Id.Value == (int)BuiltInCategory.OST_Floors)
+                    if (maxDiff / avgAreaInSolid > 0.05)
                     {
-                        var floorThickness = neighbor.get_Parameter(BuiltInParameter.FLOOR_ATTR_THICKNESS_PARAM)?.AsDouble() ?? 0;
-                        if (floorThickness > 0)
-                        {
-                            effectiveHeight = Math.Max(0, h - UC.FtToM(floorThickness));
-                            break; // 첫 번째 슬래브만 적용
-                        }
+                        Debug.WriteLine($"    ⚠️ 변단면: 차이 {maxDiff / avgAreaInSolid * 100:F1}%");
                     }
                 }
             }
+            totalLength = parallelEdgeLengths.Sum();
+            if (totalLength > 0) effectiveLength = UC.FtToM(totalLength);
+            
+            // 모든 SplitSolid 단면적의 평균
+            if (solidCrossSectionAreas.Any())
+            {
+                avgArea = solidCrossSectionAreas.Average();
+                Debug.WriteLine($"=== 최종 평균 단면적: {UC.Ft2ToM2(avgArea):F3}m² (SplitSolid {solidCrossSectionAreas.Count}개) ===");
+            }
+            
+            // 유효 단면적 계산 (SplitSolid의 End면 기반)
+            //double effectiveCrossSectionArea = b * h; // 기본값
+
+            if (allEndFaceAreas.Any())
+            {
+                //effectiveCrossSectionArea = UC.Ft2ToM2(allEndFaceAreas.Average());
+                var maxDiff = allEndFaceAreas.Max() - allEndFaceAreas.Min();
+                avgArea = allEndFaceAreas.Average();
+
+                Debug.WriteLine($"=== 단면적 계산: End면 개수 = {allEndFaceAreas.Count} ===");
+                Debug.WriteLine($"  평균 단면적: {UC.Ft2ToM2(avgArea):F3}m²");
+
+                // 변단면 체크 (차이가 5% 이상이면 경고)
+                if (maxDiff / avgArea > 0.05)
+                {
+                    Debug.WriteLine($"  ⚠️ 변단면 감지: 면적 차이 {UC.Ft2ToM2(maxDiff):F3}m² ({maxDiff / avgArea * 100:F1}%)");
+                }
+            }
+
+            sectionArea = avgArea;
 
             string materialName = string.Empty;
             var materialId = beam.get_Parameter(BuiltInParameter.STRUCTURAL_MATERIAL_PARAM)?.AsElementId()
@@ -179,8 +202,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             var varDict = new Dictionary<string, double>
             {
-                ["B"] = b,
-                ["H"] = effectiveHeight,
+                ["A"] = sectionArea,
                 ["L"] = effectiveLength,
             };
 
@@ -188,14 +210,13 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             double concValue = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(beam).Sum(s => s.Volume));
 
             // 이론값과 실제값 비교를 위한 참고 공식
-            double theoreticalVolume = b * effectiveHeight * effectiveLength;
-            const string concFormula = "Solid Volume (기둥/슬래브 등에 의한 공제 포함)";
-            string concRendered = $"{concValue:F3} m³ (B={b:F3} × H_eff={effectiveHeight:F3} × L_eff={effectiveLength:F3} 기준 이론값: {theoreticalVolume:F3} m³)";
+            const string concFormula = "A x L";
+            string concRendered = FormulaCalculator.Render(concFormula, varDict);
 
-            if (effectiveHeight < h)
-            {
-                concRendered += $" [슬래브 두께 {(h - effectiveHeight):F3}m 공제]";
-            }
+            //if (effectiveHeight < h)
+            //{
+            //    concRendered += $" [슬래브 두께 {(h - effectiveHeight):F3}m 공제]";
+            //}
 
             // 철근콘크리트
             var concreteItem = new QuantityItem
