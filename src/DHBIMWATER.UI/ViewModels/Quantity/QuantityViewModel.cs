@@ -28,8 +28,12 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             set
             {
                 if (_selectedItem != value)
+                {
                     _selectedItem = value;
-                OnPropertyChanged();
+                    OnPropertyChanged();
+                    // Command CanExecute 재평가
+                    CommandManager.InvalidateRequerySuggested();
+                }
             }
         }
 
@@ -58,15 +62,21 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
 
         #region Events
         /// <summary>
-        /// 수동 입력 다이얼로그 열기 요청.
-        /// null = 새 항목 추가, non-null = 해당 항목 편집 (Edit 모드 추후 구현)
+        /// 수동 입력 다이얼로그 열기 요청
         /// </summary>
         public event EventHandler<QuantityItem?> ManualInputRequested = delegate { };
+        
+        /// <summary>
+        /// 항목 수정 요청 (기존 항목, 원본 인덱스 전달)
+        /// </summary>
+        public event EventHandler<(QuantityItem item, int index)> EditItemRequested = delegate { };
         #endregion
 
         #region Commands
         public ICommand ExtractCommand       { get; }
         public ICommand AddManualItemCommand { get; }
+        public ICommand CopyItemCommand      { get; }
+        public ICommand EditItemCommand      { get; }
         #endregion
 
         #region Constructor
@@ -81,6 +91,8 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
 
             ExtractCommand       = new RelayCommand(GetCalculateQuantity);
             AddManualItemCommand = new RelayCommand(_ => ManualInputRequested.Invoke(this, null));
+            CopyItemCommand      = new RelayCommand(_ => OnCopyItem(), _ => SelectedItem != null);
+            EditItemCommand      = new RelayCommand(_ => OnEditItem(), _ => SelectedItem != null);
         }
         #endregion
 
@@ -94,6 +106,44 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             UpdateSummary();
         }
 
+        /// <summary>
+        /// 항목 수정 후 기존 항목 Replace
+        /// </summary>
+        public void ReplaceItem(int index, QuantityItem newItem)
+        {
+            if (index >= 0 && index < QuantityItems.Count)
+            {
+                QuantityItems[index] = newItem;
+                OnPropertyChanged(nameof(QuantityItems));
+                UpdateSummary();
+            }
+        }
+
+        private void OnCopyItem()
+        {
+            if (SelectedItem == null) return;
+            
+            // 선택된 아이템을 복사해서 Manual 상태로 추가
+            var copiedItem = SelectedItem with 
+            { 
+                Status = QuantityStatus.Manual 
+            };
+            
+            QuantityItems.Add(copiedItem);
+            UpdateSummary();
+        }
+
+        private void OnEditItem()
+        {
+            if (SelectedItem == null) return;
+            
+            var index = QuantityItems.IndexOf(SelectedItem);
+            if (index >= 0)
+            {
+                EditItemRequested.Invoke(this, (SelectedItem, index));
+            }
+        }
+        
         private void GetCalculateQuantity(object? obj)
         {
             // 수동 입력 항목은 재산출 후에도 유지

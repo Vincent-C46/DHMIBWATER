@@ -26,6 +26,12 @@
                         <Trigger Property="IsPressed" Value="True">
                             <Setter Property="Opacity" Value="0.8"/>
                         </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Background" Value="#95A5A6"/>
+                            <Setter Property="Foreground" Value="#E9ECEF"/>
+                            <Setter Property="Cursor" Value="Arrow"/>
+                            <Setter Property="Opacity" Value="0.5"/>
+                        </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
@@ -69,6 +75,22 @@
                             <Setter TargetName="Border"
                                 Property="Opacity"
                                 Value="0.85"/>
+                        </Trigger>
+
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Border"
+                                Property="Background"
+                                Value="#F8FAFC"/>
+                            <Setter TargetName="Border"
+                                Property="BorderBrush"
+                                Value="#E9ECEF"/>
+                            <Setter Property="Foreground"
+                                Value="#95A5A6"/>
+                            <Setter Property="Cursor"
+                                Value="Arrow"/>
+                            <Setter TargetName="Border"
+                                Property="Opacity"
+                                Value="0.6"/>
                         </Trigger>
 
                     </ControlTemplate.Triggers>
