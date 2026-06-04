@@ -25,7 +25,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
             var refElem = doc.GetElement(new ElementId(refElemId));
             if (refElem == null) return new List<(FaceType, long, double)>();
 
-            //Debug.WriteLine($"RefElemId: {refElem.Id.Value} / 카테고리: {refElem.Category.Name}");
+            Debug.WriteLine($"RefElemId: {refElem.Id.Value} / 카테고리: {refElem.Category.Name}");
 
             // 기준 객체 Solid
             var refSolid = RevitGeometryHelper.GetSolid(refElem);
@@ -55,32 +55,23 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
             {
                 var candidateSolid = RevitGeometryHelper.GetSolid(candidate);
 
-                //Debug.WriteLine($"refElem({refElem.Id.Value}) solids: {RevitGeometryHelper.GetSolids(refElem).Count()}");
-                //Debug.WriteLine($"candidate({candidate.Id.Value}) solids: {RevitGeometryHelper.GetSolids(candidate).Count()}");
-                //Debug.WriteLine($"--- candidate({candidate.Id.Value}) Faces.Count: {candidateSolid.Faces.Size}");
-
                 if (candidateSolid == null) continue;
-
-                Debug.WriteLine($"--- candidate Id: ({candidate.Id.Value})");
-
 
                 foreach (Face refFace in refSolid.Faces)
                 {
                     if (refFace is not PlanarFace planarRef) continue;
-                    //var refNormal = refFace.ComputeNormal(new UV(0.5, 0.5));
                     var refNormal = planarRef.FaceNormal;
                     var refOrigin = planarRef.Origin;
+                    var refFaceType = RevitFaceClassifier.Classify(refElem, refNormal);
 
                     foreach (Face candidateFace in candidateSolid.Faces)
                     {
                         if (candidateFace is not PlanarFace planarCand) continue;
-                        //var candidateNormal = candidateFace.ComputeNormal(new UV(0.5, 0.5));
                         var candidateNormal = planarCand.FaceNormal;
                         var candidateOrigin = planarCand.Origin;
-                        Debug.WriteLine($"--- candidate FaceNormal: ({candidateNormal.X}, {candidateNormal.Y}, {candidateNormal.Z}) / candidate FaceArea: {Math.Round(UC.Ft2ToM2(candidateFace.Area), 3)} m2");
 
                         // 반대 Normal 인 면만 처리
-                        if (refNormal.DotProduct(candidateNormal) > -0.9) continue; // 두 벡터 내적이 -1 일때 방향 반대. 예외 건너뛰기
+                        if (refNormal.DotProduct(candidateNormal) > -0.9) continue;
 
                         // 두 면이 같은 평면 위에 있는지 확인
                         var originDiff = candidateOrigin - refOrigin;
@@ -89,30 +80,19 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
 
                         try
                         {
-                            var thinSolid = CreateExtrusionSolid(candidateFace, SolidThk);
-                            var intersectingSolid = BooleanOperationsUtils.ExecuteBooleanOperation(refSolid, thinSolid, BooleanOperationsType.Intersect);
-                            //Debug.WriteLine($"Intersecting 체적: {intersectingSolid.Volume}");
+                            var thinSolid = CreateExtrusionSolid(refFace, SolidThk);
+                            var intersectingSolid = BooleanOperationsUtils.ExecuteBooleanOperation(candidateSolid, thinSolid, BooleanOperationsType.Intersect);
 
                             if (intersectingSolid == null || intersectingSolid.Volume < 1e-10) continue;
-                            var area = Math.Round(UC.Ft2ToM2(intersectingSolid.Volume / SolidThk), 3);  // 겹치는 면적
-                            var faceType = RevitFaceClassifier.Classify(refElem, refNormal);            // refFaceType
+                            var area = Math.Round(UC.Ft2ToM2(intersectingSolid.Volume / SolidThk), 3);
+                            var faceType = RevitFaceClassifier.Classify(refElem, refNormal);
 
                             contacts.Add((faceType, candidate.Id.Value, area));
-                            //Debug.WriteLine($"접촉 감지 [{faceType}]: elementId={refElemId} area={area}m²");
                         }
                         catch { continue; }
                     }
                 }
-                try
-                {
-                    var intersection = BooleanOperationsUtils.ExecuteBooleanOperation(
-                        refSolid, candidateSolid, BooleanOperationsType.Intersect);
-                }
-                catch (Exception ex)
-                {
-                    // 3단계: 예외 발생 여부
-                    Debug.WriteLine($"  Boolean 예외: {ex.Message}");
-                }
+
             }
 
             return contacts;

@@ -57,17 +57,33 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var grossAreas = _classifier.GetFaceAreas(elementId);
             var deductions = _finder.FindContactAreas(elementId);
 
-            foreach (var key in grossAreas.Keys)
+            // FaceType별 공제 면적 그룹화
+            var deductionByFaceType = deductions
+                .GroupBy(d => d.FaceType)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            // 순 면적 계산
+            double GetNetArea(FaceType faceType)
             {
-                Debug.WriteLine($"Ref: {key.ToString()}");
+                var gross = grossAreas.GetValueOrDefault(faceType, 0);
+                var deductTotal = deductionByFaceType.GetValueOrDefault(faceType, new List<(FaceType, long, double)>())
+                                                     .Sum(d => d.Item3);
+                return Math.Max(0, gross - deductTotal);
             }
 
-            foreach (var deduction in deductions)
+            // 공제 상세 문자열 생성 (Formula용)
+            string GetDeductionFormula(FaceType faceType)
             {
-                Debug.WriteLine($"Deduction - FaceType: {deduction.FaceType.ToString()} / NeighborId: {deduction.NeighborId} / Area: {deduction.Area} m2");
+                var gross = grossAreas.GetValueOrDefault(faceType, 0);
+                if (!deductionByFaceType.ContainsKey(faceType) || gross == 0) 
+                    return $"{gross:F3}";
+                
+                var deductParts = deductionByFaceType[faceType]
+                    .Select(d => $"{d.Item3:F3} (Id:{d.Item2})")
+                    .ToList();
+                
+                return $"{gross:F3} - " + string.Join(" - ", deductParts);
             }
-
-            //double NetArea(FaceType t) => Math.Max(0, grossAreas.GetValueOrDefault(t) - deductions.GetValueOrDefault(t));
 
             var quantityItems = new List<QuantityItem>();
 
@@ -107,15 +123,40 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 ElementCode = beam.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
                 WorkType = "철근콘크리트",
                 Specification = materialName,
-                //SubSpecification = $"{a:F3} m³",
                 RawFormula = concFormula,
                 RenderedFormula = concRendered,
                 Value = concValue,
                 Unit = "m³"
             };
 
-            var listToAdd = new List<QuantityItem>() { concreteItem, };
-            quantityItems.AddRange(listToAdd);
+            quantityItems.Add(concreteItem);
+
+            // 거푸집 - 각 FaceType별로 항목 생성
+            var formworkFaces = new[] { FaceType.Bottom, FaceType.Left, FaceType.Right, FaceType.End };
+            
+            foreach (var faceType in formworkFaces)
+            {
+                var grossArea = grossAreas.GetValueOrDefault(faceType, 0);
+                if (grossArea < 0.001) continue; // 면적이 없으면 skip
+
+                var netArea = GetNetArea(faceType);
+                var formula = GetDeductionFormula(faceType);
+
+                var formworkItem = new QuantityItem
+                {
+                    ElementId = elementId,
+                    Category = beam.Category.Name ?? string.Empty,
+                    ElementCode = beam.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
+                    WorkType = "거푸집",
+                    Specification = $"{faceType}면",
+                    RawFormula = formula,
+                    RenderedFormula = formula,
+                    Value = netArea,
+                    Unit = "m²"
+                };
+
+                quantityItems.Add(formworkItem);
+            }
 
             return quantityItems;
         }
