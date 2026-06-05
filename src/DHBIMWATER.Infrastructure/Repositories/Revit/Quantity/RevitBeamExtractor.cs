@@ -74,6 +74,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             string GetDeductionFormula(FaceType faceType)
             {
                 var gross = refFaceDict.GetValueOrDefault(faceType, 0);
+
                 if (!deductionByFaceType.ContainsKey(faceType) || gross == 0)
                     return $"{gross:F3}";
 
@@ -216,6 +217,12 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
                 var netArea = GetNetArea(faceType);
                 var formula = GetDeductionFormula(faceType);
+                var spec = faceType switch
+                {
+                    FaceType.Bottom => "합판4회",
+                    FaceType.Left => "유로폼",
+                    FaceType.Right => "유로폼",
+                };
 
                 var formworkItem = new QuantityItem
                 {
@@ -223,7 +230,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                     Category = beam.Category.Name ?? string.Empty,
                     ElementCode = beam.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
                     WorkType = "거푸집",
-                    Specification = $"{faceType}면",
+                    Specification = spec,
                     RawFormula = formula,
                     RenderedFormula = formula,
                     Value = netArea,
