@@ -132,7 +132,7 @@
                             Padding="14,6" Margin="8,0,0,0" Style="{StaticResource ExportButtonStyle}"
                             BorderThickness="2">
                         <StackPanel Orientation="Horizontal">
-                            <Image Source="/DHBIMWATER.UI;component/Resources/Quantity/excel.png" Width="19" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <Image Source="/DHBIMWATER.UI;component/Resources/Quantity/excel.png" Width="22" Margin="0,0,6,0" VerticalAlignment="Center"/>
                             <TextBlock Text="Excel" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>

@@ -60,9 +60,13 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             get => _selectedTabIndex;
             set
             {
-                if (_selectedTabIndex != value)
-                    _selectedTabIndex = value;
+                if (_selectedTabIndex == value) return;
+                _selectedTabIndex = value;
                 OnPropertyChanged();
+                SelectedItem = null;
+                GroupSummaries = new ObservableCollection<GroupSummaryItem>();
+                _currentSelectedItems.Clear();
+                CommandManager.InvalidateRequerySuggested();
             }
         }
         #endregion
