@@ -26,9 +26,52 @@ namespace DHBIMWATER.Application.UseCases.QuantityCalculator
             IEnumerable<QuantitySummaryItem> summaryItems,
             IEnumerable<QuantityItem> quantityItems)
         {
-            _excelExporter.CreateSheet("수량집계표");
-            _excelExporter.CreateSheet("상세항목");
+            WriteSummarySheet(summaryItems);
+            WriteDetailSheet(quantityItems);
             _excelExporter.Save(filePath);
+        }
+
+        private void WriteSummarySheet(IEnumerable<QuantitySummaryItem> summaryItems)
+        {
+            _excelExporter.CreateSheet("수량집계표");
+            _excelExporter.WriteHeader(["공종", "규격", "규격2", "단위", "수량"]);
+
+            foreach (var item in summaryItems)
+            {
+                var row = new[] { item.WorkType, item.Specification, item.SubSpecification, item.Unit, item.Value.ToString("F3") };
+                if (item.IsTotal)
+                {
+                    _excelExporter.WriteTotalRow(row);
+                    _excelExporter.WriteEmptyRow();
+                }
+                else
+                {
+                    _excelExporter.WriteRow(row);
+                }
+            }
+        }
+
+        private void WriteDetailSheet(IEnumerable<QuantityItem> quantityItems)
+        {
+            _excelExporter.CreateSheet("상세항목");
+            _excelExporter.WriteHeader(["카테고리", "부재번호", "부재코드", "공종", "규격", "규격2", "산식", "수량", "단위", "상태"]);
+
+            foreach (var item in quantityItems)
+            {
+                _excelExporter.WriteRow(
+                [
+                    item.Category,
+                    item.ElementId.ToString(),
+                    item.ElementCode,
+                    item.WorkType,
+                    item.Specification,
+                    item.SubSpecification,
+                    item.RenderedFormula,
+                    item.Value.ToString("F3"),
+                    item.Unit,
+                    item.Status.ToString()
+                ]);
+            }
         }
         #endregion
     }
