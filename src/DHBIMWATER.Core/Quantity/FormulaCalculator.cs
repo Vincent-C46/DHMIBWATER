@@ -42,7 +42,7 @@ namespace DHBIMWATER.Core.Quantity
             foreach (var (key, value) in varDict)
             {
                 var formatted = value == Math.Floor(value)
-                    ? ((int)value).ToString()        // 정수면 그대로
+                    ? ((long)value).ToString()       // 정수면 그대로
                     : value.ToString("F2");          // 소수면 F2
 
                 result = Regex.Replace(result, $@"\b{key}\b", $"{formatted}({key})");

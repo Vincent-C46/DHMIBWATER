@@ -3,6 +3,7 @@ using DHBIMWATER.Application.Interfaces.Quantity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -55,7 +56,11 @@ namespace DHBIMWATER.Infrastructure.Services.Excel
         public void Save(string filePath)
         {
             foreach (var sheet in _workbook.Worksheets)
-                sheet.Columns().AdjustToContents();
+                foreach (var col in sheet.ColumnsUsed())
+                {
+                    col.AdjustToContents();
+                    col.Width += 7;           // 열에 자동 맞춤 인식 못함. 여유분 추가 (문자 너비 단위. 6이면 6글자 폭만큼 여유분)
+                }
             _workbook.SaveAs(filePath);
         }
         public void WriteEmptyRow()

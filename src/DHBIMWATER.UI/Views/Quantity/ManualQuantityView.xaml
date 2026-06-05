@@ -146,7 +146,9 @@
                                                        Foreground="#888780"
                                                        VerticalAlignment="Center"/>
                                             <TextBox Grid.Column="1"
-                                                     Text="{Binding Value, UpdateSourceTrigger=PropertyChanged, StringFormat=F2}"
+                                                     Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
+                                                     GotFocus="VariableTextBox_GotFocus"
+                                                     PreviewTextInput="VariableTextBox_PreviewTextInput"
                                                      BorderThickness="0"
                                                      Background="Transparent"
                                                      FontSize="12"

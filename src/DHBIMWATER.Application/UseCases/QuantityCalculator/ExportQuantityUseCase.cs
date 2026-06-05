@@ -64,7 +64,7 @@ namespace DHBIMWATER.Application.UseCases.QuantityCalculator
         private void WriteDetailSheet(IEnumerable<QuantityItem> quantityItems)
         {
             _excelExporter.CreateSheet("상세항목");
-            _excelExporter.WriteHeader(["카테고리", "부재번호", "부재코드", "공종", "규격", "규격2", "산출식", "수량", "단위", "상태"]);
+            _excelExporter.WriteHeader(["카테고리", "Element Id", "Element Code", "공종", "규격", "규격2", "산출식", "수량", "단위", "상태"]);
 
             foreach (var item in quantityItems)
             {
