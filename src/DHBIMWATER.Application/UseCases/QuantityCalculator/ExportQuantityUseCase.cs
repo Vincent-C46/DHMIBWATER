@@ -1,4 +1,5 @@
-﻿using DHBIMWATER.Application.Interfaces.Quantity;
+﻿using DHBIMWATER.Application.Interfaces;
+using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Core.Quantity;
 
 namespace DHBIMWATER.Application.UseCases.QuantityCalculator
@@ -7,16 +8,19 @@ namespace DHBIMWATER.Application.UseCases.QuantityCalculator
     {
         #region Fields
         private readonly IExcelExporter _excelExporter;
+        private readonly IDialogService _dialogService;
         #endregion
 
         #region Properties
-
         #endregion
 
         #region Constructor
-        public ExportQuantityUseCase(IExcelExporter excelExporter)
+        public ExportQuantityUseCase(
+            IExcelExporter excelExporter,
+            IDialogService dialogService)
         {
             _excelExporter = excelExporter;
+            _dialogService = dialogService;
         }
         #endregion
 
@@ -26,11 +30,18 @@ namespace DHBIMWATER.Application.UseCases.QuantityCalculator
             IEnumerable<QuantitySummaryItem> summaryItems,
             IEnumerable<QuantityItem> quantityItems)
         {
-            WriteSummarySheet(summaryItems);
-            WriteDetailSheet(quantityItems);
-            _excelExporter.Save(filePath);
+            try
+            {
+                WriteSummarySheet(summaryItems);
+                WriteDetailSheet(quantityItems);
+                _excelExporter.Save(filePath);
+                _dialogService.Info("Success", "수량을 성공적으로 내보냈습니다");
+            }
+            catch(Exception ex)
+            {
+                _dialogService.Warn("Error", $"수량을 내보내는 중 오류가 발생했습니다.\n\n{ex.Message}");
+            }
         }
-
         private void WriteSummarySheet(IEnumerable<QuantitySummaryItem> summaryItems)
         {
             _excelExporter.CreateSheet("수량집계표");
@@ -42,7 +53,7 @@ namespace DHBIMWATER.Application.UseCases.QuantityCalculator
                 if (item.IsTotal)
                 {
                     _excelExporter.WriteTotalRow(row);
-                    _excelExporter.WriteEmptyRow();
+                    //_excelExporter.WriteEmptyRow();
                 }
                 else
                 {
@@ -50,11 +61,10 @@ namespace DHBIMWATER.Application.UseCases.QuantityCalculator
                 }
             }
         }
-
         private void WriteDetailSheet(IEnumerable<QuantityItem> quantityItems)
         {
             _excelExporter.CreateSheet("상세항목");
-            _excelExporter.WriteHeader(["카테고리", "부재번호", "부재코드", "공종", "규격", "규격2", "산식", "수량", "단위", "상태"]);
+            _excelExporter.WriteHeader(["카테고리", "부재번호", "부재코드", "공종", "규격", "규격2", "산출식", "수량", "단위", "상태"]);
 
             foreach (var item in quantityItems)
             {

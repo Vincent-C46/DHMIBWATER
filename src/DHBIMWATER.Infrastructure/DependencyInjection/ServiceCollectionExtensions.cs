@@ -42,6 +42,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IDirectShapeCommandRepo, RevitDirectShapeCommandRepo>();
         services.AddTransient<IViewCommandRepo, RevitViewCommandRepo>();
         services.AddTransient<ISetParameterRepo, RevitSetParameterRepo>();
+        services.AddTransient<ISharedParameterRepository, RevitSharedParameterRepository>();
 
         services.AddTransient<IIntersectingElementFinder, RevitIntersectingElementFinder>();
         #endregion
@@ -59,10 +60,10 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IFaceClassifier, RevitFaceClassifier>();
         services.AddTransient<IExcelExporter, ClosedXmlExcelWriter>();
 
+        services.AddTransient<IExcelReader, ExcelReader>();
         #endregion
 
-        services.AddTransient<ISharedParameterRepository, RevitSharedParameterRepository>();
-        services.AddTransient<IExcelReader, ExcelReader>();
+
 
         #region Service 등록
         services.AddTransient<IFileDialogService, WpfFileDialogService>();
@@ -94,17 +95,17 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IOpeningCommandRepo, MockOpeningCommandRepo>();
         services.AddTransient<IDirectShapeCommandRepo, MockDirectShapeCommandRepo>();
         services.AddTransient<IViewCommandRepo, MockViewCommandRepo>();
+
         services.AddTransient<ISetParameterRepo, MockSetParameterRepo>();
+        services.AddTransient<ISharedParameterRepository, MockSharedParameterRepository>();
         #endregion
 
-        #region Quantity 관련 등록
+        #region Quantity 관련
         services.AddTransient<IQuantityExtractor, MockWallExtractor>();
         services.AddTransient<IExcelExporter, ClosedXmlExcelWriter>();
-
+        services.AddTransient<IExcelReader, ExcelReader>();
         #endregion
 
-        services.AddTransient<ISharedParameterRepository, MockSharedParameterRepository>();
-        services.AddTransient<IExcelReader, ExcelReader>();
 
         #region Service 등록
         services.AddTransient<IFileDialogService, WpfFileDialogService>();

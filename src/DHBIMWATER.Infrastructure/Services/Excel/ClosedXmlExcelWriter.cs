@@ -54,6 +54,8 @@ namespace DHBIMWATER.Infrastructure.Services.Excel
         }
         public void Save(string filePath)
         {
+            foreach (var sheet in _workbook.Worksheets)
+                sheet.Columns().AdjustToContents();
             _workbook.SaveAs(filePath);
         }
         public void WriteEmptyRow()
