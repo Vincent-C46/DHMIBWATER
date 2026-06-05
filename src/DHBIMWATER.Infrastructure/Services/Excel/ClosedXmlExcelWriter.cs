@@ -32,6 +32,7 @@ namespace DHBIMWATER.Infrastructure.Services.Excel
 
             var range = CurrentSheet.Range(_currentRow, 1, _currentRow, cols.Count);
             range.Style.Font.Bold = true;
+            range.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
             range.Style.Fill.BackgroundColor = XLColor.LightGray;
             _currentRow++;
         }

@@ -167,7 +167,9 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             }
             try
             {
-                var dict     = VariableInputs.ToDictionary(v => v.Name, v => v.Value);
+                var dict     = VariableInputs
+                    .GroupBy(v => v.Name)
+                    .ToDictionary(g => g.Key, g => g.First().Value);
                 var rendered = FormulaCalculator.Render(RawFormula, dict);
                 var value    = FormulaCalculator.Calculate(RawFormula, dict);
                 Preview = $"{rendered}  =  {value:F3} {Unit}";
@@ -187,7 +189,9 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         {
             try
             {
-                var dict = VariableInputs.ToDictionary(v => v.Name, v => v.Value);
+                var dict = VariableInputs
+                    .GroupBy(v => v.Name)
+                    .ToDictionary(g => g.Key, g => g.First().Value);
                 ResultItem = new QuantityItem
                 {
                     ElementId        = _originalElementId, // Edit 모드면 원본 ID 유지
