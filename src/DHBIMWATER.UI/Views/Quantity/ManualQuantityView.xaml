@@ -240,108 +240,6 @@
                         </Grid>
                     </StackPanel>
                 </Border>
-
-                <!-- Edit 모드 전용 - 면 차감 섹션 -->
-                <Border Visibility="{Binding IsEditMode, Converter={StaticResource BoolToVisibility}}"
-                        BorderBrush="#E2E8F0"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Padding="12"
-                        Margin="0,0,0,12">
-                    <StackPanel>
-                        <Grid Margin="0,0,0,10">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0"
-                                       Text="면 차감"
-                                       FontSize="10" FontWeight="Medium"
-                                       Foreground="#888780"
-                                       VerticalAlignment="Center"/>
-                            <Button Grid.Column="1"
-                                    Content="면 선택"
-                                    Command="{Binding SelectFaceCommand}"
-                                    Style="{StaticResource PrimaryButtonStyle}"
-                                    Padding="10,5"
-                                    FontSize="11"/>
-                        </Grid>
-
-                        <!-- 차감 목록 -->
-                        <ItemsControl ItemsSource="{Binding Deductions}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid Margin="0,0,0,4">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0"
-                                                   Text="{Binding Description}"
-                                                   FontSize="11"
-                                                   VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="1"
-                                                   FontSize="11"
-                                                   Foreground="#E24B4A"
-                                                   VerticalAlignment="Center"
-                                                   Margin="0,0,8,0">
-                                            <Run Text="-"/>
-                                            <Run Text="{Binding Area, StringFormat=F3}"/>
-                                            <Run Text=" m²"/>
-                                        </TextBlock>
-                                        <Button Grid.Column="2"
-                                                Content="✕"
-                                                Command="{Binding DataContext.RemoveDeductionCommand,
-                                                          RelativeSource={RelativeSource AncestorType=Window}}"
-                                                CommandParameter="{Binding}"
-                                                FontSize="11"
-                                                Background="Transparent"
-                                                BorderThickness="0"
-                                                Foreground="#888780"
-                                                Cursor="Hand"/>
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-
-                        <!-- 차감 합계 -->
-                        <Separator Background="#E2E8F0" Margin="0,6"/>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0"
-                                       Text="원본"
-                                       FontSize="11"
-                                       Foreground="#888780"/>
-                            <TextBlock Grid.Column="1"
-                                       FontSize="11"
-                                       Foreground="#888780">
-                                <Run Text="{Binding BaseValue, StringFormat=F3, Mode=OneWay}"/>
-                                <Run Text=" m²"/>
-                            </TextBlock>
-                        </Grid>
-                        <Grid Margin="0,4,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0"
-                                       Text="최종"
-                                       FontSize="12" FontWeight="Medium"/>
-                            <TextBlock Grid.Column="1"
-                                       FontSize="12" FontWeight="Medium"
-                                       Foreground="#0C447C">
-                                <Run Text="{Binding FinalValue, StringFormat=F3, Mode=OneWay}"/>
-                                <Run Text=" "/>
-                                <Run Text="{Binding Unit, Mode=OneWay}"/>
-                            </TextBlock>
-                        </Grid>
-                    </StackPanel>
-                </Border>
-
             </StackPanel>
         </ScrollViewer>
 
@@ -359,6 +257,7 @@
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
                     <Button Content="취소"
                             Command="{Binding CancelCommand}"
+                            Style="{StaticResource CancelButtonStyle}"
                             Padding="16,8"
                             Margin="0,0,8,0"
                             FontSize="12"/>

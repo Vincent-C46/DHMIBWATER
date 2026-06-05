@@ -25,12 +25,11 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         private string _specification = string.Empty;
         private string _subSpecification = string.Empty;
         private string _preview = string.Empty;
-        private long _originalElementId = -1; // Edit 모드에서 원본 ElementId 유지
+        private long _originalElementId = -1; // Edit 모드에서는 원본 ElementId 유지
         #endregion
 
         #region Properties
         public List<string> UnitOptions { get; } = ["EA", "m", "m²", "m³", "공m³", "ton"];
-
         public string WorkType
         {
             get => _workType;
@@ -41,7 +40,6 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             get => _unit;
             set { SetProperty(ref _unit, value); UpdatePreview(); }
         }
-
         /// <summary>
         /// 산출식 — 변경 시 변수목록 자동 동기화 + 미리보기 갱신
         /// </summary>

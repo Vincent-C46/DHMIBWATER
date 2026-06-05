@@ -58,6 +58,7 @@
 	  <None Remove="Resources\PumpStationImages\TYPE-3_종단제원.png" />
 	  <None Remove="Resources\Quantity\add.png" />
 	  <None Remove="Resources\Quantity\copy.png" />
+	  <None Remove="Resources\Quantity\delete.png" />
 	  <None Remove="Resources\Quantity\edit.png" />
 	  <None Remove="Resources\Quantity\excel.png" />
 	  <None Remove="Resources\Quantity\refresh-arrow_white.png" />
@@ -185,6 +186,9 @@
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Resource>
 		<Resource Include="Resources\Quantity\copy.png">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Resources\Quantity\delete.png">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Resource>
 		<Resource Include="Resources\Quantity\edit.png">

@@ -1,5 +1,10 @@
+using DHBIMWATER.Core.Quantity;
 using DHBIMWATER.UI.ViewModels.Quantity;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace DHBIMWATER.UI.Views.Quantity
 {
@@ -31,6 +36,30 @@ namespace DHBIMWATER.UI.Views.Quantity
                 if (dialog.ShowDialog() == true && dialogVm.ResultItem is not null)
                     vm.ReplaceItem(index, dialogVm.ResultItem);
             };
+        }
+
+        private void OnItemsSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (DataContext is not QuantityViewModel vm) return;
+            if (sender is not DataGrid dataGrid) return;
+
+            var selected = dataGrid.SelectedItems
+                .OfType<QuantityItem>()
+                .ToList();
+
+            vm.UpdateSelectedItems(selected);
+        }
+
+        private void OnDataGridPreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Delete) return;
+            if (DataContext is not QuantityViewModel vm) return;
+
+            if (vm.DeleteItemCommand.CanExecute(null))
+            {
+                vm.DeleteItemCommand.Execute(null);
+                e.Handled = true;
+            }
         }
     }
 }

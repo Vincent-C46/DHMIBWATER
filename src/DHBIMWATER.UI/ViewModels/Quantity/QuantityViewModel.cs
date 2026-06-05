@@ -12,12 +12,19 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
     {
         #region Fields
         private IDialogService _dialogService;
+        private IFileDialogService _fileDialogService;
         private readonly CalculateQuantityUseCase _calculateQuantityUseCase;
+        private List<QuantityItem> _currentSelectedItems = new();
         public ObservableCollection<QuantitySummaryItem> SummaryItems { get; set; }
+        private ObservableCollection<GroupSummaryItem> _groupSummaries = new();
+        public ObservableCollection<GroupSummaryItem> GroupSummaries
+        {
+            get => _groupSummaries;
+            private set { _groupSummaries = value; OnPropertyChanged(); }
+        }
         private QuantityItem? _selectedItem;
         private QuantitySummaryItem? _selectedSummaryItem;
         private int _selectedTabIndex;
-
         #endregion
 
         #region Properties
@@ -36,7 +43,6 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
                 }
             }
         }
-
         public QuantitySummaryItem? SelectedSummaryItem
         {
             get => _selectedSummaryItem;
@@ -47,7 +53,6 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
                 OnPropertyChanged();
             }
         }
-
         public int SelectedTabIndex
         {
             get => _selectedTabIndex;
@@ -65,7 +70,6 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         /// 수동 입력 다이얼로그 열기 요청
         /// </summary>
         public event EventHandler<QuantityItem?> ManualInputRequested = delegate { };
-        
         /// <summary>
         /// 항목 수정 요청 (기존 항목, 원본 인덱스 전달)
         /// </summary>
@@ -77,22 +81,27 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         public ICommand AddManualItemCommand { get; }
         public ICommand CopyItemCommand      { get; }
         public ICommand EditItemCommand      { get; }
+        public ICommand DeleteItemCommand { get; }
+        public ICommand ExportToExcelCommand { get; }
         #endregion
 
         #region Constructor
-        public QuantityViewModel(CalculateQuantityUseCase useCase, IDialogService dialogService)
+        public QuantityViewModel(CalculateQuantityUseCase useCase, IDialogService dialogService, IFileDialogService fileDialogService)
         {
             _calculateQuantityUseCase = useCase;
             _dialogService = dialogService;
+            _fileDialogService = fileDialogService; 
 
             var items = _calculateQuantityUseCase.Execute();
             QuantityItems = new ObservableCollection<QuantityItem>(items);
             UpdateSummary();
 
             ExtractCommand       = new RelayCommand(GetCalculateQuantity);
+            ExportToExcelCommand = new RelayCommand(_ => ManualInputRequested.Invoke(this, null));
             AddManualItemCommand = new RelayCommand(_ => ManualInputRequested.Invoke(this, null));
-            CopyItemCommand      = new RelayCommand(_ => OnCopyItem(), _ => SelectedItem != null);
-            EditItemCommand      = new RelayCommand(_ => OnEditItem(), _ => SelectedItem != null);
+            CopyItemCommand      = new RelayCommand(_ => OnCopyItem(),   _ => SelectedItem != null);
+            EditItemCommand      = new RelayCommand(_ => OnEditItem(),   _ => SelectedItem != null);
+            DeleteItemCommand    = new RelayCommand(_ => OnDeleteItem(), _ => _currentSelectedItems.Count > 0);
         }
         #endregion
 
@@ -105,7 +114,51 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             QuantityItems.Add(item);
             UpdateSummary();
         }
+        /// <summary>
+        /// DataGrid 다중 선택 변경 시 그룹 집계 갱신
+        /// </summary>
+        public void UpdateSelectedItems(IList<QuantityItem> items)
+        {
+            _currentSelectedItems = items.ToList();
 
+            if (!items.Any())
+            {
+                GroupSummaries = new ObservableCollection<GroupSummaryItem>();
+                CommandManager.InvalidateRequerySuggested();
+                return;
+            }
+            var rows = new List<GroupSummaryItem>();
+            var categories = items.Select(i => i.Category).Distinct().ToList();
+            rows.Add(new GroupSummaryItem
+            {
+                Name         = "카테고리",
+                ValueDisplay = categories.Count == 1 ? categories[0] : "다양함",
+                Unit         = string.Empty
+            });
+
+            var workTypeRows = items
+                .GroupBy(i => new { i.WorkType, i.Specification, i.SubSpecification, i.Unit })
+                .Select(g => new GroupSummaryItem
+                {
+                    Name         = g.Key.WorkType,
+                    Spec         = FormatSpec(g.Key.Specification, g.Key.SubSpecification),
+                    ValueDisplay = g.Sum(i => i.Value).ToString("F1"),
+                    Unit         = g.Key.Unit
+                });
+
+            rows.AddRange(workTypeRows);
+            GroupSummaries = new ObservableCollection<GroupSummaryItem>(rows);
+            CommandManager.InvalidateRequerySuggested();
+        }
+        private static string FormatSpec(string spec, string subSpec)
+        {
+            var hasSpec    = !string.IsNullOrWhiteSpace(spec);
+            var hasSubSpec = !string.IsNullOrWhiteSpace(subSpec);
+            if (!hasSpec && !hasSubSpec) return string.Empty;
+            if (!hasSubSpec) return spec;
+            if (!hasSpec)    return subSpec;
+            return $"{spec} / {subSpec}";
+        }
         /// <summary>
         /// 항목 수정 후 기존 항목 Replace
         /// </summary>
@@ -118,7 +171,6 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
                 UpdateSummary();
             }
         }
-
         private void OnCopyItem()
         {
             if (SelectedItem == null) return;
@@ -132,18 +184,24 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             QuantityItems.Add(copiedItem);
             UpdateSummary();
         }
-
         private void OnEditItem()
         {
             if (SelectedItem == null) return;
-            
+
             var index = QuantityItems.IndexOf(SelectedItem);
             if (index >= 0)
             {
                 EditItemRequested.Invoke(this, (SelectedItem, index));
             }
         }
-        
+        private void OnDeleteItem()
+        {
+            if (_currentSelectedItems.Count == 0) return;
+            foreach (var item in _currentSelectedItems)
+                QuantityItems.Remove(item);
+            _currentSelectedItems.Clear();
+            UpdateSummary();
+        }
         private void GetCalculateQuantity(object? obj)
         {
             // 수동 입력 항목은 재산출 후에도 유지
@@ -153,7 +211,6 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             OnPropertyChanged(nameof(QuantityItems));
             UpdateSummary();
         }
-
         // 해당 단어 포함된 공종 순으로 Sorting
         private static readonly List<string> WorkTypeOrder = new()
         {

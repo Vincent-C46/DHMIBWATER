@@ -1,15 +1,15 @@
 using DHBIMWATER.Application.Interfaces;
 using Microsoft.Win32;
 
-namespace DHBIMWATER.Infrastructure.Services.Revit
+namespace DHBIMWATER.Infrastructure.Services.Common
 {
-    public class RevitFileDialogService : IFileDialogService
+    public class WpfFileDialogService : IFileDialogService
     {
         public string? OpenFile(string title, string filter)
         {
             var dialog = new OpenFileDialog
             {
-                Title = title,
+                Title  = title,
                 Filter = filter
             };
             return dialog.ShowDialog() == true ? dialog.FileName : null;
@@ -19,8 +19,8 @@ namespace DHBIMWATER.Infrastructure.Services.Revit
         {
             var dialog = new SaveFileDialog
             {
-                Title = title,
-                Filter = filter,
+                Title    = title,
+                Filter   = filter,
                 FileName = defaultFileName
             };
             return dialog.ShowDialog() == true ? dialog.FileName : null;

@@ -10,6 +10,7 @@ using DHBIMWATER.Infrastructure.Repositories.Revit.Geometry;
 using DHBIMWATER.Infrastructure.Repositories.Revit.Quantity;
 using DHBIMWATER.Infrastructure.Services.Didas;
 using DHBIMWATER.Infrastructure.Services.Mock;
+using DHBIMWATER.Infrastructure.Services.Common;
 using DHBIMWATER.Infrastructure.Services.Revit;
 using DHBIMWATER.Infrastructure.Services.Revit.Parameter;
 using DHBIMWATER.Infrastructure.Transactions;
@@ -61,7 +62,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IExcelReader, ExcelReader>();
 
         #region Service 등록
-        services.AddTransient<IFileDialogService, RevitFileDialogService>();
+        services.AddTransient<IFileDialogService, WpfFileDialogService>();
         services.AddTransient<IDialogService, RevitDialogService>();
         services.AddTransient<IGuideLineService, RevitGuideLineService>();
         services.AddSingleton<IUsageLogger, DidasUsageService>();   // Didas 로그 연계
@@ -101,7 +102,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IExcelReader, ExcelReader>();
 
         #region Service 등록
-        services.AddTransient<IFileDialogService, MockFileDialogService>();
+        services.AddTransient<IFileDialogService, WpfFileDialogService>();
         services.AddTransient<IDialogService, MockDialogService>();
         services.AddTransient<IGuideLineService, MockGuideLineService>();
         services.AddSingleton<IUsageLogger, MockUsageLogger>();

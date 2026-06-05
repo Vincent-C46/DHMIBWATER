@@ -51,6 +51,10 @@
         <WindowChrome CaptionHeight="0" CornerRadius="15" GlassFrameThickness="1" UseAeroCaptionButtons="False"/>
     </WindowChrome.WindowChrome>
 
+    <Window.InputBindings>
+        <KeyBinding Command="{Binding DeleteItemCommand}" Key="Delete"/>
+    </Window.InputBindings>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -88,6 +92,14 @@
                             <TextBlock Text="추가" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
+                    <Button Width="80" Command="{Binding DeleteItemCommand}"
+                            Padding="14,6" Margin="8,0,0,0" Style="{StaticResource ExportButtonStyle}"
+                            BorderThickness="2">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="/DHBIMWATER.UI;component/Resources/Quantity/delete.png" Width="18" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="삭제" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
                     <Button Width="80" Command="{Binding CopyItemCommand}"
                             Padding="14,6" Margin="8,0,0,0" Style="{StaticResource ExportButtonStyle}"
                             BorderThickness="2">
@@ -104,6 +116,7 @@
                             <TextBlock Text="수정" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
+
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Grid.Column="1" HorizontalAlignment="Right">
@@ -180,6 +193,9 @@
                     <TabItem Header="부재별">
                         <DataGrid ItemsSource="{Binding Source={StaticResource GroupByMembers}}"
                                   SelectedItem="{Binding SelectedItem}"
+                                  SelectionMode="Extended"
+                                  SelectionChanged="OnItemsSelectionChanged"
+                                  PreviewKeyDown="OnDataGridPreviewKeyDown"
                                   Style="{StaticResource QuantityDataGridStyle}"
                                   VirtualizingPanel.IsVirtualizingWhenGrouping="True"
                                   VirtualizingPanel.VirtualizationMode="Recycling">
@@ -327,6 +343,9 @@
                     <TabItem Header="상세 목록">
                         <DataGrid ItemsSource="{Binding QuantityItems}"
                                   SelectedItem="{Binding SelectedItem}"
+                                  SelectionMode="Extended"
+                                  SelectionChanged="OnItemsSelectionChanged"
+                                  PreviewKeyDown="OnDataGridPreviewKeyDown"
                                   Style="{StaticResource QuantityDataGridStyle}"
                                   VirtualizingPanel.IsVirtualizingWhenGrouping="True"
                                   VirtualizingPanel.VirtualizationMode="Recycling">
@@ -440,16 +459,26 @@
                                 <DataTemplate>
                                     <Border BorderBrush="#E2E8F0"
                                         BorderThickness="0,0,0,1"
-                                        Padding="14,6">
+                                        Padding="14,5">
                                         <Grid>
-                                            <TextBlock Text="{Binding Name}"
-                                                   FontSize="11"
-                                                   HorizontalAlignment="Left"
-                                                   VerticalAlignment="Center"/>
+                                            <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}" FontSize="11"/>
+                                                <TextBlock Text="{Binding Spec}" FontSize="10" Foreground="#888780">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Spec}" Value="">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </StackPanel>
                                             <StackPanel Orientation="Horizontal"
                                                     HorizontalAlignment="Right"
                                                     VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Total, StringFormat=F1}"
+                                                <TextBlock Text="{Binding ValueDisplay}"
                                                        FontSize="11" FontWeight="Medium"/>
                                                 <TextBlock Text="{Binding Unit}"
                                                        FontSize="10" Foreground="#888780"

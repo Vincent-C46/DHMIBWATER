@@ -4,8 +4,11 @@ namespace DHBIMWATER.Application.Interfaces.Quantity
 {
     public interface IExcelExporter
     {
-        void ExportQuantity(string filePath, 
-                            IEnumerable<QuantitySummaryItem> summaryItems, 
-                            IEnumerable<QuantityItem> quantityItems);
+        void CreateSheet(string sheetName);
+        void WriteHeader(IEnumerable<string> columns);
+        void WriteRow(IEnumerable<string> values);
+        void WriteTotalRow(IEnumerable<string> values);
+        void WriteEmptyRow();
+        void Save(string filePath);
     }
 }
