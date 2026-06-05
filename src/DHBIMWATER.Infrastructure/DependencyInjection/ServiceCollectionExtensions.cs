@@ -8,9 +8,10 @@ using DHBIMWATER.Infrastructure.Repositories.Mock.Quantity;
 using DHBIMWATER.Infrastructure.Repositories.Revit;
 using DHBIMWATER.Infrastructure.Repositories.Revit.Geometry;
 using DHBIMWATER.Infrastructure.Repositories.Revit.Quantity;
-using DHBIMWATER.Infrastructure.Services.Didas;
-using DHBIMWATER.Infrastructure.Services.Mock;
 using DHBIMWATER.Infrastructure.Services.Common;
+using DHBIMWATER.Infrastructure.Services.Didas;
+using DHBIMWATER.Infrastructure.Services.Excel;
+using DHBIMWATER.Infrastructure.Services.Mock;
 using DHBIMWATER.Infrastructure.Services.Revit;
 using DHBIMWATER.Infrastructure.Services.Revit.Parameter;
 using DHBIMWATER.Infrastructure.Transactions;
@@ -56,6 +57,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IQuantityExtractor, RevitWallExtractor>();
         services.AddTransient<IQuantityExtractor, RevitRailingExtractor>();
         services.AddTransient<IFaceClassifier, RevitFaceClassifier>();
+        services.AddTransient<IExcelExporter, ClosedXmlExcelWriter>();
+
         #endregion
 
         services.AddTransient<ISharedParameterRepository, RevitSharedParameterRepository>();
@@ -96,6 +99,8 @@ public static class ServiceCollectionExtensions
 
         #region Quantity 관련 등록
         services.AddTransient<IQuantityExtractor, MockWallExtractor>();
+        services.AddTransient<IExcelExporter, ClosedXmlExcelWriter>();
+
         #endregion
 
         services.AddTransient<ISharedParameterRepository, MockSharedParameterRepository>();

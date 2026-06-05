@@ -14,6 +14,8 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         private IDialogService _dialogService;
         private IFileDialogService _fileDialogService;
         private readonly CalculateQuantityUseCase _calculateQuantityUseCase;
+        private readonly ExportQuantityUseCase _exportQuantityUseCase;
+
         private List<QuantityItem> _currentSelectedItems = new();
         public ObservableCollection<QuantitySummaryItem> SummaryItems { get; set; }
         private ObservableCollection<GroupSummaryItem> _groupSummaries = new();
@@ -86,18 +88,23 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         #endregion
 
         #region Constructor
-        public QuantityViewModel(CalculateQuantityUseCase useCase, IDialogService dialogService, IFileDialogService fileDialogService)
+        public QuantityViewModel(
+            CalculateQuantityUseCase calculateQuantityUseCase,
+            ExportQuantityUseCase exportQuantityUseCase,
+            IDialogService dialogService,
+            IFileDialogService fileDialogService)
         {
-            _calculateQuantityUseCase = useCase;
+            _calculateQuantityUseCase = calculateQuantityUseCase;
             _dialogService = dialogService;
             _fileDialogService = fileDialogService; 
+            _exportQuantityUseCase = exportQuantityUseCase;
 
             var items = _calculateQuantityUseCase.Execute();
             QuantityItems = new ObservableCollection<QuantityItem>(items);
             UpdateSummary();
 
             ExtractCommand       = new RelayCommand(GetCalculateQuantity);
-            ExportToExcelCommand = new RelayCommand(_ => ManualInputRequested.Invoke(this, null));
+            ExportToExcelCommand = new RelayCommand(_ => OnExportToExcel());
             AddManualItemCommand = new RelayCommand(_ => ManualInputRequested.Invoke(this, null));
             CopyItemCommand      = new RelayCommand(_ => OnCopyItem(),   _ => SelectedItem != null);
             EditItemCommand      = new RelayCommand(_ => OnEditItem(),   _ => SelectedItem != null);
@@ -268,6 +275,12 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
                     return i;
             }
             return int.MaxValue;
+        }
+        private void OnExportToExcel()
+        {
+            var filePath = _fileDialogService.SaveFile("Export to Excel","Excel Files|*.xlsx", $"QuantityItems" );
+            if (string.IsNullOrEmpty(filePath)) return;
+            _exportQuantityUseCase.Execute(filePath, SummaryItems, QuantityItems);
         }
         #endregion
     }

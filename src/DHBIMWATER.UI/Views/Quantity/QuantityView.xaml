@@ -128,7 +128,7 @@
                     Style="{StaticResource ExportButtonStyle}"
                     Margin="0,0,6,0"/>
                     -->
-                    <Button Width="100" Command="{Binding AddManualItemCommand}"
+                    <Button Width="100" Command="{Binding ExportToExcelCommand}"
                             Padding="14,6" Margin="8,0,0,0" Style="{StaticResource ExportButtonStyle}"
                             BorderThickness="2">
                         <StackPanel Orientation="Horizontal">

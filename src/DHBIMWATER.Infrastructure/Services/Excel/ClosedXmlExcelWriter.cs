@@ -38,7 +38,7 @@ namespace DHBIMWATER.Infrastructure.Services.Excel
 
         public void Save(string filePath)
         {
-            throw new NotImplementedException();
+            _workbook.SaveAs(filePath);
         }
 
         public void WriteEmptyRow()
