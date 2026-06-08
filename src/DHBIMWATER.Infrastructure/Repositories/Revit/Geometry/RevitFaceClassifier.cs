@@ -35,19 +35,19 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
         internal static FaceType Classify(Element elem, XYZ normal) =>
             (BuiltInCategory)elem.Category.Id.Value switch
             {
-                BuiltInCategory.OST_StructuralFraming                            => ClassifyBeam(elem, normal),
-                BuiltInCategory.OST_Walls                                        => ClassifyWall(elem, normal),
+                BuiltInCategory.OST_StructuralFraming => ClassifyBeam(elem, normal),
+                BuiltInCategory.OST_Walls => ClassifyWall(elem, normal),
                 BuiltInCategory.OST_Floors or BuiltInCategory.OST_StructuralFoundation => ClassifyFloor(normal),
-                BuiltInCategory.OST_StructuralColumns                            => ClassifyColumn(normal),
+                BuiltInCategory.OST_StructuralColumns => ClassifyColumn(normal),
                 _ => FaceType.Side,
             };
 
         private static FaceType ClassifyBeam(Element elem, XYZ normal)
         {
             if (normal.Z < -0.9) return FaceType.Bottom;
-            if (normal.Z > 0.9)  return FaceType.Top;
+            if (normal.Z > 0.9) return FaceType.Top;
 
-            if (elem.Location is not LocationCurve lc) return FaceType.Side;
+            if (elem.Location is not LocationCurve lc) return FaceType.Side;    // Beam에서 LC가 추출안되는 일이 있을지?
             var dir = (lc.Curve.GetEndPoint(1) - lc.Curve.GetEndPoint(0)).Normalize();
             if (Math.Abs(normal.DotProduct(dir)) > 0.9) return FaceType.End;
 
@@ -57,7 +57,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
 
         private static FaceType ClassifyWall(Element elem, XYZ normal)
         {
-            if (normal.Z > 0.9)  return FaceType.Top;
+            if (normal.Z > 0.9) return FaceType.Top;
             if (normal.Z < -0.9) return FaceType.Bottom;
             if (elem is not Wall wall) return FaceType.Side;
 
@@ -68,14 +68,14 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
 
         private static FaceType ClassifyFloor(XYZ normal)
         {
-            if (normal.Z > 0.9)  return FaceType.Top;
+            if (normal.Z > 0.9) return FaceType.Top;
             if (normal.Z < -0.9) return FaceType.Bottom;
             return FaceType.Side;
         }
 
         private static FaceType ClassifyColumn(XYZ normal)
         {
-            if (normal.Z > 0.9)  return FaceType.Top;
+            if (normal.Z > 0.9) return FaceType.Top;
             if (normal.Z < -0.9) return FaceType.Bottom;
             return FaceType.Side;
         }

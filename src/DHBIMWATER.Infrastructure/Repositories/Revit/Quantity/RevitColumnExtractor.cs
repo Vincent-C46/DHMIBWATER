@@ -52,11 +52,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var quantityItems = new List<QuantityItem>();
 
             var refFaceDict = _classifier.GetFaceAreas(elementId);
-            var contatctAreaList = _finder.FindContactAreas(elementId);
-            // FaceType별 공제 면적 그룹화
-            var deductionByFaceType = contatctAreaList
-                .GroupBy(d => d.FaceType)
-                .ToDictionary(g => g.Key, g => g.ToList());
+            var deductionByFaceType = QuantityExtractorHelper.GroupDeductions(_finder.FindContactAreas(elementId));
 
             string materialName = string.Empty;
             var materialId = column.get_Parameter(BuiltInParameter.STRUCTURAL_MATERIAL_PARAM)?.AsElementId()

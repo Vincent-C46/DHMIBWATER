@@ -92,12 +92,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
                         catch { continue; }
                     }
                 }
-
             }
-
             return contacts;
         }
-
 
         //public IEnumerable<long> FindIntersecting(long referenceElementId)
         //{
@@ -213,7 +210,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
                 },
                 _ => FallbackCategories,
             };
-
         private static Solid CreateExtrusionSolid(Face face, double thickness)
         {
             var curveLoops = face.GetEdgesAsCurveLoops().FirstOrDefault();

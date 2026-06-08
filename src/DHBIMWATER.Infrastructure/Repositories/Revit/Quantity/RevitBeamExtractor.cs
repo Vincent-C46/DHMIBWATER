@@ -5,8 +5,6 @@ using DHBIMWATER.Core.Quantity;
 using DHBIMWATER.Infrastructure.Helpers;
 using DHBIMWATER.Infrastructure.Repositories.Revit.Geometry;
 using System.Diagnostics;
-using System.DirectoryServices;
-using System.Reflection;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
 
@@ -54,36 +52,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             if (beam == null) return Enumerable.Empty<QuantityItem>();
 
             var refFaceDict = _classifier.GetFaceAreas(elementId);
-            var contatctAreaList = _finder.FindContactAreas(elementId);
-
-            // FaceType별 공제 면적 그룹화
-            var deductionByFaceType = contatctAreaList
-                .GroupBy(d => d.FaceType)
-                .ToDictionary(g => g.Key, g => g.ToList());
-
-            // 순 면적 계산
-            double GetNetArea(FaceType faceType)
-            {
-                var faceArea = refFaceDict.GetValueOrDefault(faceType, 0);
-                var deductTotal = deductionByFaceType.GetValueOrDefault(faceType, new List<(FaceType, long, double)>())
-                                                     .Sum(d => d.Item3);
-                return Math.Max(0, faceArea - deductTotal);
-            }
-
-            // 공제 상세 문자열 생성 (Formula용)
-            string GetDeductionFormula(FaceType faceType)
-            {
-                var gross = refFaceDict.GetValueOrDefault(faceType, 0);
-
-                if (!deductionByFaceType.ContainsKey(faceType) || gross == 0)
-                    return $"{gross:F3}";
-
-                var deductParts = deductionByFaceType[faceType]
-                    .Select(d => $"{d.Item3:F3} (Id_{d.Item2})")
-                    .ToList();
-
-                return $"{gross:F3} - " + string.Join(" - ", deductParts);
-            }
+            var deductionByFaceType = QuantityExtractorHelper.GroupDeductions(_finder.FindContactAreas(elementId));
 
             var quantityItems = new List<QuantityItem>();
 
@@ -215,13 +184,15 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 var grossArea = refFaceDict.GetValueOrDefault(faceType, 0);
                 if (grossArea < 0.001) continue; // 면적이 없으면 skip
 
-                var netArea = GetNetArea(faceType);
-                var formula = GetDeductionFormula(faceType);
+                var netArea = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, faceType);
+                var formula = QuantityExtractorHelper.GetDeductionFormula(refFaceDict, deductionByFaceType, faceType);
                 var spec = faceType switch
                 {
                     FaceType.Bottom => "합판4회",
                     FaceType.Left => "유로폼",
                     FaceType.Right => "유로폼",
+                    FaceType.End => "유로폼",
+                    _ => throw new ArgumentOutOfRangeException(),
                 };
 
                 var formworkItem = new QuantityItem

@@ -90,7 +90,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             const string concFormula = "B x D x H";
             string? concRendered = FormulaCalculator.Render(concFormula, varDict);
             //double concValue = FormulaCalculator.Calculate(concFormula, varDict);
-            double concValue = RevitGeometryHelper.GetSolids(fnd).Sum(s => s.Volume);
+            double concValue = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(fnd).Sum(s => s.Volume));
             string workType = materialName.Contains("무근") || h < 0.15 ? "무근콘크리트" : "철근콘크리트";
 
             // 철근콘크리트

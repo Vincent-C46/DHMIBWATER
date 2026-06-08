@@ -332,6 +332,8 @@
                             <!-- 카테고리·코드는 그룹 헤더로 이동했으므로 컬럼에서 제거 -->
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="공종"   Binding="{Binding WorkType}"                Width="Auto" MinWidth="60"/>
+                                <DataGridTextColumn Header="규격1"   Binding="{Binding Specification}"                Width="Auto" MinWidth="60"/>
+                                <DataGridTextColumn Header="규격2"   Binding="{Binding SubSpecification}"                Width="Auto" MinWidth="60"/>
                                 <DataGridTextColumn Header="산출식" Binding="{Binding RenderedFormula}"         Width="Auto"   MinWidth="80"/>
                                 <DataGridTextColumn Header="값"     Binding="{Binding Value, StringFormat=F3}"  Width="Auto" MinWidth="60"/>
                                 <DataGridTextColumn Header="단위"   Binding="{Binding Unit}"                    Width="Auto" MinWidth="40"/>
@@ -354,7 +356,7 @@
                                 <DataGridTextColumn Header="ElementId" Binding="{Binding ElementId}"               Width="Auto" MinWidth="50"/>
                                 <DataGridTextColumn Header="코드"      Binding="{Binding ElementCode}"             Width="Auto" MinWidth="50"/>
                                 <DataGridTextColumn Header="공종"      Binding="{Binding WorkType}"                Width="Auto" MinWidth="50"/>
-                                <DataGridTextColumn Header="규격"      Binding="{Binding Specification}"           Width="Auto" MinWidth="50"/>
+                                <DataGridTextColumn Header="규격1"      Binding="{Binding Specification}"           Width="Auto" MinWidth="50"/>
                                 <DataGridTextColumn Header="규격2"      Binding="{Binding SubSpecification}"           Width="Auto" MinWidth="50"/>
                                 <DataGridTextColumn Header="산출식"    Binding="{Binding RenderedFormula}"         Width="1*"   MinWidth="50"/>
                                 <DataGridTextColumn Header="값"        Binding="{Binding Value, StringFormat=F3}"  Width="Auto" MinWidth="50"/>

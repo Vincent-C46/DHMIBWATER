@@ -9,7 +9,7 @@ namespace DHBIMWATER.Revit.UI.Modules
 {
     internal class UtilityRibbonModule : IRibbonModule
     {
-        public void Build(UIControlledApplication app, string ribbonTabName)
+        public IEnumerable<RibbonItem> Build(UIControlledApplication app, string ribbonTabName)
         {
             //기존 페널 작성 //
            RibbonPanel panel = app.CreateRibbonPanel(ribbonTabName, "Utility");
@@ -30,10 +30,12 @@ namespace DHBIMWATER.Revit.UI.Modules
             //btn3.LargeImage = RibbonButtonImages.GetIcon("modeling.png");
             //btn4.LargeImage = RibbonButtonImages.GetIcon("modeling.png");
 
-            panel.AddItem(btn1);
+     
             //panel.AddItem(btn2);
             //panel.AddItem(btn3);
             //panel.AddItem(btn4);
+
+            return [panel.AddItem(btn1)];
         }       
     }
 }
