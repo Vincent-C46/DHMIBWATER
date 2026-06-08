@@ -1,7 +1,5 @@
-﻿using System.Windows.Forms;
-using Autodesk.Revit.UI;
-using DHBIMWATER.Infrastructure.Logging;
-using DHBIMWATER.Revit.UI.Helper;
+﻿using Autodesk.Revit.UI;
+using DidasUsage;
 using DHBIMWATER.Revit.UI.Modules;
 
 namespace DHBIMWATER.Revit.UI
@@ -11,6 +9,7 @@ namespace DHBIMWATER.Revit.UI
 
         internal static void CreateRibbonPanel(UIControlledApplication app)
         {
+            bool isUserValid = DidasUsageTracker.TryGetUserInfo(out _, out _);
             //DHBIMWATER 리본 패널 생성//
             string tabName = "DHBIMWATER";
             app.CreateRibbonTab(tabName);
@@ -32,7 +31,10 @@ namespace DHBIMWATER.Revit.UI
             // 각 모듈별로 빌드 호출
             foreach (IRibbonModule module in modules)
             {
-                module.Build(app, tabName);
+                var items = module.Build(app, tabName);
+                if (!isUserValid)
+                    foreach (var item in items)
+                        item.Enabled = false;
             }
         }        
     }
