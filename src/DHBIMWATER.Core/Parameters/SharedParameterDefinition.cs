@@ -78,6 +78,8 @@ namespace DHBIMWATER.Core.Parameters
         StructuralFoundation,   // OST_StructuralFoundation
         ProjectInformation,     // OST_ProjectInformation
         Stairs,                 // OST_Stairs
+
+        Views,                  // OST_Views
     }
     public record SharedParameterDefinition
     {

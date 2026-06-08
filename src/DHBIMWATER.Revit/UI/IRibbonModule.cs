@@ -4,6 +4,6 @@ namespace DHBIMWATER.Revit.UI
 {
     internal interface IRibbonModule
     {
-        void Build(UIControlledApplication app, string ribbonTabName);
+        IEnumerable<RibbonItem> Build(UIControlledApplication app, string ribbonTabName);
     }
 }

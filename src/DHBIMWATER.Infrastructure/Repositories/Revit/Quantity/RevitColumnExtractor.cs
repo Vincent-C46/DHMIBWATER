@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Structure;
+using DHBIMWATER.Application.Interfaces.Geometry;
 using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Core.Quantity;
 using DHBIMWATER.Core.Structures;
@@ -11,9 +12,13 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
     public class RevitColumnExtractor : IQuantityExtractor
     {
         private readonly Func<Document?> _doc;
-        public RevitColumnExtractor(Func<Document?> doc)
+        private readonly IIntersectingElementFinder _finder;
+        private readonly IFaceClassifier _classifier;
+        public RevitColumnExtractor(Func<Document?> doc, IIntersectingElementFinder finder, IFaceClassifier classifier)
         {
             _doc = doc;
+            _finder = finder;
+            _classifier = classifier;
         }
 
         public bool CanExtract(long elementId)
@@ -25,7 +30,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             return elem is FamilyInstance fi && fi.Category.Id.Value == (int)BuiltInCategory.OST_StructuralColumns;
         }
-
         public IEnumerable<long> CollectElementIds()
         {
             var doc = _doc();
@@ -40,15 +44,15 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
         public IEnumerable<QuantityItem> Extract(long elementId)
         {
             var doc = _doc();
-            if (doc == null)
-                return Enumerable.Empty<QuantityItem>();
+            if (doc == null) return Enumerable.Empty<QuantityItem>();
 
             var column = doc.GetElement(new ElementId(elementId)) as FamilyInstance;
-
-            if (column == null)
-                return Enumerable.Empty<QuantityItem>();
+            if (column == null) return Enumerable.Empty<QuantityItem>();
 
             var quantityItems = new List<QuantityItem>();
+
+            var refFaceDict = _classifier.GetFaceAreas(elementId);
+            var deductionByFaceType = QuantityExtractorHelper.GroupDeductions(_finder.FindContactAreas(elementId));
 
             string materialName = string.Empty;
             var materialId = column.get_Parameter(BuiltInParameter.STRUCTURAL_MATERIAL_PARAM)?.AsElementId()
@@ -80,8 +84,10 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             };
 
             string concFormula = isCircular ? "R^2 x L" : "B x D x L";
-            string? columnRendered = FormulaCalculator.Render(concFormula, varDict);
-            double columnValue = FormulaCalculator.Calculate(concFormula, varDict);
+            string? concRendered = FormulaCalculator.Render(concFormula, varDict);
+            //double columnValue = FormulaCalculator.Calculate(concFormula, varDict);
+            double concValue = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(column).Sum(s => s.Volume));
+
 
             // 철근콘크리트
             var concreteItem = new QuantityItem
@@ -92,8 +98,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 WorkType = "철근콘크리트",
                 Specification = materialName,
                 RawFormula = concFormula,
-                RenderedFormula = columnRendered ?? string.Empty,
-                Value = columnValue,
+                RenderedFormula = concRendered ?? string.Empty,
+                Value = concValue,
                 Unit = "m³"
             };
 

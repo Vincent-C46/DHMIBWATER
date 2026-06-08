@@ -8,7 +8,9 @@ using DHBIMWATER.Infrastructure.Repositories.Mock.Quantity;
 using DHBIMWATER.Infrastructure.Repositories.Revit;
 using DHBIMWATER.Infrastructure.Repositories.Revit.Geometry;
 using DHBIMWATER.Infrastructure.Repositories.Revit.Quantity;
+using DHBIMWATER.Infrastructure.Services.Common;
 using DHBIMWATER.Infrastructure.Services.Didas;
+using DHBIMWATER.Infrastructure.Services.Excel;
 using DHBIMWATER.Infrastructure.Services.Mock;
 using DHBIMWATER.Infrastructure.Services.Revit;
 using DHBIMWATER.Infrastructure.Services.Revit.Parameter;
@@ -40,6 +42,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IDirectShapeCommandRepo, RevitDirectShapeCommandRepo>();
         services.AddTransient<IViewCommandRepo, RevitViewCommandRepo>();
         services.AddTransient<ISetParameterRepo, RevitSetParameterRepo>();
+        services.AddTransient<ISharedParameterRepository, RevitSharedParameterRepository>();
 
         services.AddTransient<IIntersectingElementFinder, RevitIntersectingElementFinder>();
         #endregion
@@ -54,13 +57,16 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IQuantityExtractor, RevitStairsExtractor>();
         services.AddTransient<IQuantityExtractor, RevitWallExtractor>();
         services.AddTransient<IQuantityExtractor, RevitRailingExtractor>();
+        services.AddTransient<IFaceClassifier, RevitFaceClassifier>();
+        services.AddTransient<IExcelExporter, ClosedXmlExcelWriter>();
+
+        services.AddTransient<IExcelReader, ExcelReader>();
         #endregion
 
-        services.AddTransient<ISharedParameterRepository, RevitSharedParameterRepository>();
-        services.AddTransient<IExcelReader, ExcelReader>();
+
 
         #region Service 등록
-        services.AddTransient<IFileDialogService, RevitFileDialogService>();
+        services.AddTransient<IFileDialogService, WpfFileDialogService>();
         services.AddTransient<IDialogService, RevitDialogService>();
         services.AddTransient<IGuideLineService, RevitGuideLineService>();
         services.AddSingleton<IUsageLogger, DidasUsageService>();   // Didas 로그 연계
@@ -89,18 +95,20 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IOpeningCommandRepo, MockOpeningCommandRepo>();
         services.AddTransient<IDirectShapeCommandRepo, MockDirectShapeCommandRepo>();
         services.AddTransient<IViewCommandRepo, MockViewCommandRepo>();
+
         services.AddTransient<ISetParameterRepo, MockSetParameterRepo>();
-        #endregion
-
-        #region Quantity 관련 등록
-        services.AddTransient<IQuantityExtractor, MockWallExtractor>();
-        #endregion
-
         services.AddTransient<ISharedParameterRepository, MockSharedParameterRepository>();
+        #endregion
+
+        #region Quantity 관련
+        services.AddTransient<IQuantityExtractor, MockWallExtractor>();
+        services.AddTransient<IExcelExporter, ClosedXmlExcelWriter>();
         services.AddTransient<IExcelReader, ExcelReader>();
+        #endregion
+
 
         #region Service 등록
-        services.AddTransient<IFileDialogService, MockFileDialogService>();
+        services.AddTransient<IFileDialogService, WpfFileDialogService>();
         services.AddTransient<IDialogService, MockDialogService>();
         services.AddTransient<IGuideLineService, MockGuideLineService>();
         services.AddSingleton<IUsageLogger, MockUsageLogger>();

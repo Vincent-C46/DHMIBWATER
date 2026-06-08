@@ -51,6 +51,10 @@
         <WindowChrome CaptionHeight="0" CornerRadius="15" GlassFrameThickness="1" UseAeroCaptionButtons="False"/>
     </WindowChrome.WindowChrome>
 
+    <Window.InputBindings>
+        <KeyBinding Command="{Binding DeleteItemCommand}" Key="Delete"/>
+    </Window.InputBindings>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -85,11 +89,26 @@
                             BorderThickness="2">
                         <StackPanel Orientation="Horizontal">
                             <Image Source="/DHBIMWATER.UI;component/Resources/Quantity/add.png" Width="18" Margin="0,0,6,0" VerticalAlignment="Center"/>
-
                             <TextBlock Text="추가" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-                    <Button Width="80" Command="{Binding AddManualItemCommand}"
+                    <Button Width="80" Command="{Binding DeleteItemCommand}"
+                            Padding="14,6" Margin="8,0,0,0" Style="{StaticResource ExportButtonStyle}"
+                            BorderThickness="2">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="/DHBIMWATER.UI;component/Resources/Quantity/delete.png" Width="18" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="삭제" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Width="80" Command="{Binding CopyItemCommand}"
+                            Padding="14,6" Margin="8,0,0,0" Style="{StaticResource ExportButtonStyle}"
+                            BorderThickness="2">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="/DHBIMWATER.UI;component/Resources/Quantity/copy.png" Width="17" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="복사" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Width="80" Command="{Binding EditItemCommand}"
                             Padding="14,6" Margin="8,0,0,0" Style="{StaticResource ExportButtonStyle}"
                             BorderThickness="2">
                         <StackPanel Orientation="Horizontal">
@@ -97,6 +116,7 @@
                             <TextBlock Text="수정" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
+
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Grid.Column="1" HorizontalAlignment="Right">
@@ -108,11 +128,11 @@
                     Style="{StaticResource ExportButtonStyle}"
                     Margin="0,0,6,0"/>
                     -->
-                    <Button Width="100" Command="{Binding AddManualItemCommand}"
+                    <Button Width="100" Command="{Binding ExportToExcelCommand}"
                             Padding="14,6" Margin="8,0,0,0" Style="{StaticResource ExportButtonStyle}"
                             BorderThickness="2">
                         <StackPanel Orientation="Horizontal">
-                            <Image Source="/DHBIMWATER.UI;component/Resources/Quantity/excel.png" Width="19" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <Image Source="/DHBIMWATER.UI;component/Resources/Quantity/excel.png" Width="22" Margin="0,0,6,0" VerticalAlignment="Center"/>
                             <TextBlock Text="Excel" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
@@ -173,6 +193,9 @@
                     <TabItem Header="부재별">
                         <DataGrid ItemsSource="{Binding Source={StaticResource GroupByMembers}}"
                                   SelectedItem="{Binding SelectedItem}"
+                                  SelectionMode="Extended"
+                                  SelectionChanged="OnItemsSelectionChanged"
+                                  PreviewKeyDown="OnDataGridPreviewKeyDown"
                                   Style="{StaticResource QuantityDataGridStyle}"
                                   VirtualizingPanel.IsVirtualizingWhenGrouping="True"
                                   VirtualizingPanel.VirtualizationMode="Recycling">
@@ -309,6 +332,8 @@
                             <!-- 카테고리·코드는 그룹 헤더로 이동했으므로 컬럼에서 제거 -->
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="공종"   Binding="{Binding WorkType}"                Width="Auto" MinWidth="60"/>
+                                <DataGridTextColumn Header="규격1"   Binding="{Binding Specification}"                Width="Auto" MinWidth="60"/>
+                                <DataGridTextColumn Header="규격2"   Binding="{Binding SubSpecification}"                Width="Auto" MinWidth="60"/>
                                 <DataGridTextColumn Header="산출식" Binding="{Binding RenderedFormula}"         Width="Auto"   MinWidth="80"/>
                                 <DataGridTextColumn Header="값"     Binding="{Binding Value, StringFormat=F3}"  Width="Auto" MinWidth="60"/>
                                 <DataGridTextColumn Header="단위"   Binding="{Binding Unit}"                    Width="Auto" MinWidth="40"/>
@@ -320,6 +345,9 @@
                     <TabItem Header="상세 목록">
                         <DataGrid ItemsSource="{Binding QuantityItems}"
                                   SelectedItem="{Binding SelectedItem}"
+                                  SelectionMode="Extended"
+                                  SelectionChanged="OnItemsSelectionChanged"
+                                  PreviewKeyDown="OnDataGridPreviewKeyDown"
                                   Style="{StaticResource QuantityDataGridStyle}"
                                   VirtualizingPanel.IsVirtualizingWhenGrouping="True"
                                   VirtualizingPanel.VirtualizationMode="Recycling">
@@ -328,7 +356,7 @@
                                 <DataGridTextColumn Header="ElementId" Binding="{Binding ElementId}"               Width="Auto" MinWidth="50"/>
                                 <DataGridTextColumn Header="코드"      Binding="{Binding ElementCode}"             Width="Auto" MinWidth="50"/>
                                 <DataGridTextColumn Header="공종"      Binding="{Binding WorkType}"                Width="Auto" MinWidth="50"/>
-                                <DataGridTextColumn Header="규격"      Binding="{Binding Specification}"           Width="Auto" MinWidth="50"/>
+                                <DataGridTextColumn Header="규격1"      Binding="{Binding Specification}"           Width="Auto" MinWidth="50"/>
                                 <DataGridTextColumn Header="규격2"      Binding="{Binding SubSpecification}"           Width="Auto" MinWidth="50"/>
                                 <DataGridTextColumn Header="산출식"    Binding="{Binding RenderedFormula}"         Width="1*"   MinWidth="50"/>
                                 <DataGridTextColumn Header="값"        Binding="{Binding Value, StringFormat=F3}"  Width="Auto" MinWidth="50"/>
@@ -433,16 +461,26 @@
                                 <DataTemplate>
                                     <Border BorderBrush="#E2E8F0"
                                         BorderThickness="0,0,0,1"
-                                        Padding="14,6">
+                                        Padding="14,5">
                                         <Grid>
-                                            <TextBlock Text="{Binding Name}"
-                                                   FontSize="11"
-                                                   HorizontalAlignment="Left"
-                                                   VerticalAlignment="Center"/>
+                                            <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}" FontSize="11"/>
+                                                <TextBlock Text="{Binding Spec}" FontSize="10" Foreground="#888780">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Spec}" Value="">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </StackPanel>
                                             <StackPanel Orientation="Horizontal"
                                                     HorizontalAlignment="Right"
                                                     VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Total, StringFormat=F1}"
+                                                <TextBlock Text="{Binding ValueDisplay}"
                                                        FontSize="11" FontWeight="Medium"/>
                                                 <TextBlock Text="{Binding Unit}"
                                                        FontSize="10" Foreground="#888780"

@@ -6,6 +6,7 @@ using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Core.Parameters;
 using DHBIMWATER.Core.Quantity;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
@@ -14,23 +15,13 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
     {
         private readonly Func<Document?> _doc;
         private readonly IIntersectingElementFinder _finder;
+        private readonly IFaceClassifier _classifier;
 
-
-        public RevitWallExtractor(Func<Document?> doc, IIntersectingElementFinder finder)
+        public RevitWallExtractor(Func<Document?> doc, IIntersectingElementFinder finder, IFaceClassifier classifier)
         {
             _doc = doc;
             _finder = finder;
-        }
-
-        public IEnumerable<long> CollectElementIds()
-        {
-            var doc = _doc();
-            if (doc == null) return Enumerable.Empty<long>();
-
-            return new FilteredElementCollector(doc)
-            .OfClass(typeof(Wall))
-            .WhereElementIsNotElementType()
-            .Select(r => r.Id.Value);
+            _classifier = classifier;
         }
         public bool CanExtract(long elementId)
         {
@@ -41,20 +32,28 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             return elem is Wall;
         }
+        public IEnumerable<long> CollectElementIds()
+        {
+            var doc = _doc();
+            if (doc == null) return Enumerable.Empty<long>();
 
+            return new FilteredElementCollector(doc)
+            .OfClass(typeof(Wall))
+            .WhereElementIsNotElementType()
+            .Select(r => r.Id.Value);
+        }
         public IEnumerable<QuantityItem> Extract(long elementId)
         {
             var doc = _doc();
             if (doc == null)
                 return Enumerable.Empty<QuantityItem>();
 
-            var intersectingIds = _finder.FindIntersecting(elementId);
-            foreach(var id in intersectingIds)
-                Debug.WriteLine($"{elementId}에 인접한 객체 Id: {id} / 카테고리: {doc.GetElement(new ElementId(id)).Category.Name}");
-            Debug.WriteLine($"======================");
-
             var wall = (Wall)doc.GetElement(new ElementId(elementId));
+            if (wall == null) return Enumerable.Empty<QuantityItem>();
+
             var cs = wall.WallType.GetCompoundStructure();
+
+            var grossArea = _classifier.GetFaceAreas(elementId);
 
             // 객체 추출값
             var area = UC.Ft2ToM2(wall.get_Parameter(BuiltInParameter.HOST_AREA_COMPUTED).AsDouble());

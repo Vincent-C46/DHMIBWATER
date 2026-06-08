@@ -1,6 +1,9 @@
 ﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.UI;
+using DHBIMWATER.Application.Interfaces.Geometry;
 using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Core.Quantity;
+using DHBIMWATER.Infrastructure.Helpers;
 using System.Data.Common;
 using System.Reflection.Metadata.Ecma335;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
@@ -10,9 +13,14 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
     public class RevitFloorExtractor : IQuantityExtractor
     {
         private readonly Func<Document?> _doc;
-        public RevitFloorExtractor(Func<Document?> doc)
+        private readonly IIntersectingElementFinder _finder;
+        private readonly IFaceClassifier _classifier;
+
+        public RevitFloorExtractor(Func<Document?> doc, IIntersectingElementFinder finder, IFaceClassifier classifier)
         {
             _doc = doc;
+            _finder = finder;
+            _classifier = classifier;
         }
 
         public bool CanExtract(long elementId)
@@ -25,7 +33,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             return elem is Floor;
         }
-
         public IEnumerable<long> CollectElementIds()
         {
             var doc = _doc();
@@ -36,7 +43,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             .WhereElementIsNotElementType()
             .Select(r => r.Id.Value);
         }
-
         public IEnumerable<QuantityItem> Extract(long elementId)
         {
             var doc = _doc();
@@ -47,6 +53,11 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var cs = floor.FloorType.GetCompoundStructure();
 
             var quantityItems = new List<QuantityItem>();
+            IReadOnlyDictionary<FaceType, double> refFaceDict = _classifier.GetFaceAreas(elementId);
+
+
+
+            //TaskDialog.Show("success", $"{refFaceDict.Keys.FirstOrDefault().ToString()}");
 
             // 객체 추출값
             var area = UC.Ft2ToM2(floor.get_Parameter(BuiltInParameter.HOST_AREA_COMPUTED).AsDouble());
@@ -59,6 +70,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var material = doc.GetElement(structureLayer?.MaterialId) as Material;
             var materialName = material?.Name ?? string.Empty;
 
+
             var varDict = new Dictionary<string, double>
             {
                 ["A"] = area,
@@ -67,10 +79,11 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
 
             // 콘크리트
-
             var concFormula = "A x Thk";
             string? concRendered = FormulaCalculator.Render(concFormula, varDict);
-            double concValue = FormulaCalculator.Calculate(concFormula, varDict);
+            //double concValue = FormulaCalculator.Calculate(concFormula, varDict);
+            double concValue = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(floor).Sum(s => s.Volume));
+
             string concWorkType = thickness < 0.15 || materialName.Contains("무근") ? "무근콘크리트" : "철근콘크리트";
 
             var concreteItem = new QuantityItem

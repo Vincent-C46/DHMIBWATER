@@ -56,8 +56,11 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                                     { "W3",             new Guid("e8fced45-637e-42bd-b9a9-e29f319e9f39") },
                                     { "H",              new Guid("10337573-871a-40b7-8a3d-4dc3637e9349") },
                                     { "ETC",            new Guid("5ef1d2b7-8766-482f-a81c-22fdcba1e72a") },
-                                    //{ "DH_RowNum",      new Guid("98122773-6f3c-49dc-a817-5bfb065d94a1") },
-                                    //{ "DH_ColNum",      new Guid("a207e5bc-87dd-4062-973f-149777f98762") },
+                                    // 뷰 관리용
+                                    { "DH_뷰 카테고리",  new Guid("D65D0DD9-6E59-419C-B8A1-613C9C8E89CA") },
+                                    { "DH_뷰 타입",      new Guid("D1A2EC3E-16A2-4E42-AC1B-7897E1DC43BA") },
+                                    //{ "DH_RowNum",    new Guid("98122773-6f3c-49dc-a817-5bfb065d94a1") },
+                                    //{ "DH_ColNum",    new Guid("a207e5bc-87dd-4062-973f-149777f98762") },
                                 };
 
             try

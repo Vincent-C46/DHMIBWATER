@@ -26,12 +26,49 @@
                         <Trigger Property="IsPressed" Value="True">
                             <Setter Property="Opacity" Value="0.8"/>
                         </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Background" Value="#95A5A6"/>
+                            <Setter Property="Foreground" Value="#E9ECEF"/>
+                            <Setter Property="Cursor" Value="Arrow"/>
+                            <Setter Property="Opacity" Value="0.5"/>
+                        </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>
-
+    <Style x:Key="CancelButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource Brush.Gray.300}"/>
+        <Setter Property="Foreground" Value="Black"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Padding" Value="15,8"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}" 
+                        CornerRadius="8" 
+                        SnapsToDevicePixels="True">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="{StaticResource PrimaryHoverBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter Property="Opacity" Value="0.8"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Background" Value="#95A5A6"/>
+                            <Setter Property="Foreground" Value="#E9ECEF"/>
+                            <Setter Property="Cursor" Value="Arrow"/>
+                            <Setter Property="Opacity" Value="0.5"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
     <Style x:Key="ExportButtonStyle" TargetType="Button">
         <Setter Property="Foreground" Value="#27500A"/>
         <Setter Property="Background" Value="White"/>
@@ -69,6 +106,22 @@
                             <Setter TargetName="Border"
                                 Property="Opacity"
                                 Value="0.85"/>
+                        </Trigger>
+
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Border"
+                                Property="Background"
+                                Value="#F8FAFC"/>
+                            <Setter TargetName="Border"
+                                Property="BorderBrush"
+                                Value="#E9ECEF"/>
+                            <Setter Property="Foreground"
+                                Value="#95A5A6"/>
+                            <Setter Property="Cursor"
+                                Value="Arrow"/>
+                            <Setter TargetName="Border"
+                                Property="Opacity"
+                                Value="0.6"/>
                         </Trigger>
 
                     </ControlTemplate.Triggers>

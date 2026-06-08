@@ -1,9 +1,9 @@
-using System.Collections.Generic;
+using DHBIMWATER.Core.Quantity;
 
 namespace DHBIMWATER.Application.Interfaces.Geometry
 {
     public interface IIntersectingElementFinder
     {
-        IEnumerable<long> FindIntersecting(long referenceElementId);
+        IReadOnlyList<(FaceType FaceType, long NeighborId, double Area)> FindContactAreas(long referenceElementId);
     }
 }

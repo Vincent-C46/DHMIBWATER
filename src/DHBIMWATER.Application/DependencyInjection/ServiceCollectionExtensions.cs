@@ -14,6 +14,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<CreateReservoirUseCase>();
         services.AddTransient<CreatePumpingStationUseCase>();
         services.AddTransient<CalculateQuantityUseCase>();
+        services.AddTransient<ExportQuantityUseCase>();
 
         return services;
     }

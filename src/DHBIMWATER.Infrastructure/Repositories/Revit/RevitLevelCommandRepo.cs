@@ -58,7 +58,10 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                                             .Cast<ViewFamilyType>()
                                             .FirstOrDefault(vft => vft.ViewFamily == ViewFamily.StructuralPlan);
 
-            ViewPlan.Create(doc, structViewType.Id, new ElementId((long)levelId));
+            var viewPlan = ViewPlan.Create(doc, structViewType.Id, new ElementId((long)levelId));
+
+            viewPlan.LookupParameter("DH_뷰 카테고리")?.Set("모델링");
+            viewPlan.LookupParameter("DH_뷰 타입")?.Set("평면도");
         }
     }
 }

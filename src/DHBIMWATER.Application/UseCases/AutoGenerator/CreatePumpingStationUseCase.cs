@@ -314,7 +314,26 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                                                              ParameterCategory.Stairs,},
             };
 
-            var addList = new List<SharedParameterDefinition>() { def1, def2, def3, def4, def5, def6, def7, def8, };
+            var def9 = new SharedParameterDefinition()
+            {
+                Name = "DH_뷰 카테고리",
+                SpecType = ParameterSpecType.Text,
+                GroupType = ParameterGroupType.IdentityData,
+                BindingType = ParameterBindingType.Instance,
+                Categories = new List<ParameterCategory>() { ParameterCategory.Views,},
+            };
+
+            var def10 = new SharedParameterDefinition()
+            {
+                Name = "DH_뷰 타입",
+                SpecType = ParameterSpecType.Text,
+                GroupType = ParameterGroupType.IdentityData,
+                BindingType = ParameterBindingType.Instance,
+                Categories = new List<ParameterCategory>() { ParameterCategory.Views, },
+
+            };
+
+            var addList = new List<SharedParameterDefinition>() { def1, def2, def3, def4, def5, def6, def7, def8, def9, def10, };
             defs.AddRange(addList);
 
             return defs;
