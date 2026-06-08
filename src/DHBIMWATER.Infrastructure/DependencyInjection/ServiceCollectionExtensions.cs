@@ -57,6 +57,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IQuantityExtractor, RevitStairsExtractor>();
         services.AddTransient<IQuantityExtractor, RevitWallExtractor>();
         services.AddTransient<IQuantityExtractor, RevitRailingExtractor>();
+        services.AddTransient<IQuantityExtractor, RevitDirectShapeExtractor>();
         services.AddTransient<IFaceClassifier, RevitFaceClassifier>();
         services.AddTransient<IExcelExporter, ClosedXmlExcelWriter>();
 
