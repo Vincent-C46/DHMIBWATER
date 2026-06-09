@@ -112,10 +112,10 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
                     var maxDiff = endFaceAreasInSolid.Max() - endFaceAreasInSolid.Min();
 
-                    if (maxDiff / avgAreaInSolid > 0.05)
-                    {
-                        Debug.WriteLine($"⚠️ 변단면: 차이 {maxDiff / avgAreaInSolid * 100:F1}%");
-                    }
+                    //if (maxDiff / avgAreaInSolid > 0.05)
+                    //{
+                    //    Debug.WriteLine($"⚠️ 변단면: 차이 {maxDiff / avgAreaInSolid * 100:F1}%");
+                    //}
                 }
             }
             totalLength = parallelEdgeLengths.Sum();

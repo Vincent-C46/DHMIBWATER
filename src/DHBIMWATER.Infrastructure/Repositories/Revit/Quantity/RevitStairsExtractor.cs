@@ -54,7 +54,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var intersectingAreas = _finder.FindContactAreas(elementId);
             var quantityItems = new List<QuantityItem>();
 
-            Debug.WriteLine($"{stair.Id.Value}");
+            //Debug.WriteLine($"{stair.Id.Value}");
 
             //string materialName = string.Empty;
             //var materialId = stair.get_Parameter(BuiltInParameter.STRUCTURAL_MATERIAL_PARAM)?.AsElementId()

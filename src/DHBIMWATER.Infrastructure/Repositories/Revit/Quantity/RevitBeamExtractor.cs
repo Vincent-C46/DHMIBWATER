@@ -124,10 +124,10 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
                     var maxDiff = endFaceAreasInSolid.Max() - endFaceAreasInSolid.Min();
 
-                    if (maxDiff / avgAreaInSolid > 0.05)
-                    {
-                        Debug.WriteLine($"⚠️ 변단면: 차이 {maxDiff / avgAreaInSolid * 100:F1}%");
-                    }
+                    //if (maxDiff / avgAreaInSolid > 0.05)
+                    //{
+                    //    Debug.WriteLine($"⚠️ 변단면: 차이 {maxDiff / avgAreaInSolid * 100:F1}%");
+                    //}
                 }
             }
             totalLength = parallelEdgeLengths.Sum();
@@ -137,7 +137,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             if (solidCrossSectionAreas.Any())
             {
                 avgArea = solidCrossSectionAreas.Average();
-                Debug.WriteLine($"=== 최종 평균 단면적: {UC.Ft2ToM2(avgArea):F3}m² (SplitSolid {solidCrossSectionAreas.Count}개) ===");
+                //Debug.WriteLine($"=== 최종 평균 단면적: {UC.Ft2ToM2(avgArea):F3}m² (SplitSolid {solidCrossSectionAreas.Count}개) ===");
             }
 
 
@@ -230,7 +230,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
                 if (formworkItem.Value > 1e-6) quantityItems.Add(formworkItem);
             }
-
             return quantityItems;
         }
     }

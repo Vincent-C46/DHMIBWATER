@@ -50,7 +50,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                     }
                     catch (Exception ex)
                     {
-                        Debug.WriteLine($"Union 실패: {ex.Message}");
+                        //Debug.WriteLine($"Union 실패: {ex.Message}");
                         // 실패한 솔리드는 별도 DirectShape로 생성
                         var failedDs = DirectShape.CreateElement(
                             doc, new ElementId(BuiltInCategory.OST_Floors));

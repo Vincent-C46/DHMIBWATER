@@ -25,10 +25,13 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
             var refElem = doc.GetElement(new ElementId(refElemId));
             if (refElem == null) return new List<(FaceType, long, double)>();
 
-            Debug.WriteLine($"RefElemId: {refElem.Id.Value} / 카테고리: {refElem.Category.Name}");
+            //Debug.WriteLine($"RefElemId: {refElem.Id.Value} / 카테고리: {refElem.Category.Name}");
 
-            // 기준 객체 Solid
-            var refSolids = RevitGeometryHelper.GetSolids(refElem).ToList();
+            // 기준 객체 Solid (multi-body solid를 개별 solid로 분리)
+            var refSolids = RevitGeometryHelper.GetSolids(refElem)
+                .SelectMany(s => { try { return SolidUtils.SplitVolumes(s); } catch { return [s]; } })
+                .Where(s => s.Volume > 1e-9)
+                .ToList();
             if (!refSolids.Any()) return new List<(FaceType, long, double)>();
 
             var bbox = refElem.get_BoundingBox(null);
@@ -53,45 +56,46 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
 
             foreach (var candidate in candidates)
             {
-                var candidateSolids = RevitGeometryHelper.GetSolids(candidate).ToList();
+                var candidateSolids = RevitGeometryHelper.GetSolids(candidate)
+                    .SelectMany(s => { try { return SolidUtils.SplitVolumes(s); } catch { return [s]; } })
+                    .Where(s => s.Volume > 1e-9)
+                    .ToList();
                 if (!candidateSolids.Any()) continue;
+
                 foreach (var refSolid in refSolids)
-                    foreach (Face refFace in refSolid.Faces)
+                foreach (Face refFace in refSolid.Faces)
+                {
+                    if (refFace is not PlanarFace planarRef) continue;
+                    var refNormal = planarRef.FaceNormal;
+                    var refOrigin = planarRef.Origin;
+
+                    foreach (var candidateSolid in candidateSolids)
+                    foreach (Face candidateFace in candidateSolid.Faces)
                     {
-                        if (refFace is not PlanarFace planarRef) continue;
-                        var refNormal = planarRef.FaceNormal;
-                        var refOrigin = planarRef.Origin;
+                        if (candidateFace is not PlanarFace planarCand) continue;
+                        var candidateNormal = planarCand.FaceNormal;
+                        var candidateOrigin = planarCand.Origin;
 
-                        foreach (var candidateSolid in candidateSolids)
-                            foreach (Face candidateFace in candidateSolid.Faces)
-                            {
-                                if (candidateFace is not PlanarFace planarCand) continue;
-                                var candidateNormal = planarCand.FaceNormal;
-                                var candidateOrigin = planarCand.Origin;
+                        if (refNormal.DotProduct(candidateNormal) > -0.9) continue;
 
-                                // 반대 Normal 인 면만 처리
-                                if (refNormal.DotProduct(candidateNormal) > -0.9) continue;
+                        var originDiff = candidateOrigin - refOrigin;
+                        var distance = Math.Abs(originDiff.DotProduct(refNormal));
+                        if (distance > 0.01) continue;
 
-                                // 두 면이 같은 평면 위에 있는지 확인
-                                var originDiff = candidateOrigin - refOrigin;
-                                var distance = Math.Abs(originDiff.DotProduct(refNormal));
-                                if (distance > 0.01) continue;
+                        try
+                        {
+                            var thinSolid = CreateExtrusionSolid(refFace, SolidThk);
+                            var intersectingSolid = BooleanOperationsUtils.ExecuteBooleanOperation(candidateSolid, thinSolid, BooleanOperationsType.Intersect);
 
-                                try
-                                {
-                                    var thinSolid = CreateExtrusionSolid(refFace, SolidThk);
-                                    var intersectingSolid = BooleanOperationsUtils.ExecuteBooleanOperation(candidateSolid, thinSolid, BooleanOperationsType.Intersect);
+                            if (intersectingSolid == null || intersectingSolid.Volume < 1e-10) continue;
+                            var area = Math.Round(UC.Ft2ToM2(intersectingSolid.Volume / SolidThk), 3);
+                            var faceType = RevitFaceClassifier.Classify(refElem, refNormal);
 
-                                    if (intersectingSolid == null || intersectingSolid.Volume < 1e-10) continue;
-                                    var area = Math.Round(UC.Ft2ToM2(intersectingSolid.Volume / SolidThk), 3);
-                                    var faceType = RevitFaceClassifier.Classify(refElem, refNormal);
-
-
-                                    contacts.Add((faceType, candidate.Id.Value, area));
-                                }
-                                catch { continue; }
-                            }
+                            contacts.Add((faceType, candidate.Id.Value, area));
+                        }
+                        catch { continue; }
                     }
+                }
             }
 
             return contacts;
