@@ -2,6 +2,7 @@ using DHBIMWATER.Core.Quantity;
 using DHBIMWATER.UI.Base;
 using DHBIMWATER.UI.Commands;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Windows.Input;
 
@@ -169,7 +170,7 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             {
                 var dict     = VariableInputs
                     .GroupBy(v => v.Name)
-                    .ToDictionary(g => g.Key, g => g.First().Value);
+                    .ToDictionary(g => g.Key, g => double.TryParse(g.First().Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var d) ? d : 0.0);
                 var rendered = FormulaCalculator.Render(RawFormula, dict);
                 var value    = FormulaCalculator.Calculate(RawFormula, dict);
                 Preview = $"{rendered}  =  {value:F3} {Unit}";
@@ -191,7 +192,7 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             {
                 var dict = VariableInputs
                     .GroupBy(v => v.Name)
-                    .ToDictionary(g => g.Key, g => g.First().Value);
+                    .ToDictionary(g => g.Key, g => double.TryParse(g.First().Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var d) ? d : 0.0);
                 ResultItem = new QuantityItem
                 {
                     ElementId        = _originalElementId, // Edit 모드면 원본 ID 유지
@@ -241,7 +242,7 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             {
                 if (variableValues.TryGetValue(varInput.Name, out var value))
                 {
-                    varInput.Value = value;
+                    varInput.Value = value.ToString(CultureInfo.InvariantCulture);
                 }
             }
             
@@ -289,7 +290,7 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
     public class VariableInput : ViewModelBase
     {
         private string _name  = string.Empty;
-        private double _value;
+        private string _value = "0";
         private string _unit  = string.Empty;
 
         public string Name
@@ -297,7 +298,7 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             get => _name;
             set => SetProperty(ref _name, value);
         }
-        public double Value
+        public string Value
         {
             get => _value;
             set => SetProperty(ref _value, value);

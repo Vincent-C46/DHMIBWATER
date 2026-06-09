@@ -165,21 +165,21 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                     #endregion
 
                     #region 7. 뷰 작성                    
-                    var existingSectionViewNames  = _levelQueryRepo.GetExistingSectionNames();
+                    var existingSectionViewNames = _levelQueryRepo.GetExistingSectionNames();
                     var sectionViewDefs = PumpingStationGeometryCalculator.CalculateSectionViews(dto);
 
                     foreach (var viewDef in sectionViewDefs)
                     {
-        
-                            try
-                            {
-                                _viewCommandRepo.CreateSectionView(viewDef);
-                            }
-                            catch (Exception ex)
-                            {
-                                _dialogService.Warn("Error", $"Failed to create section view '{viewDef.Name}': {ex.Message}");
-                            }
-                        
+
+                        try
+                        {
+                            _viewCommandRepo.CreateSectionView(viewDef);
+                        }
+                        catch (Exception ex)
+                        {
+                            _dialogService.Warn("Error", $"Failed to create section view '{viewDef.Name}': {ex.Message}");
+                        }
+
                     }
                     #endregion
 
@@ -234,7 +234,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                                                              ParameterCategory.Stairs,},
                 UserModifiable = false,
             };
-            
+
             var def3 = new SharedParameterDefinition()
             {
                 Name = "DH_Class",
@@ -297,7 +297,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                 SpecType = ParameterSpecType.Text,
                 GroupType = ParameterGroupType.Data,
                 BindingType = ParameterBindingType.Instance,
-                Categories = new List<ParameterCategory>() { ParameterCategory.GenericModel,},
+                Categories = new List<ParameterCategory>() { ParameterCategory.GenericModel, },
             };
 
             var def8 = new SharedParameterDefinition()
@@ -313,17 +313,24 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                                                              ParameterCategory.Walls,
                                                              ParameterCategory.Stairs,},
             };
-
             var def9 = new SharedParameterDefinition()
+            {
+                Name = "DH_IsExterior",
+                SpecType = ParameterSpecType.YesNo,
+                GroupType = ParameterGroupType.Data,
+                BindingType = ParameterBindingType.Instance,
+                Categories = new List<ParameterCategory>() { ParameterCategory.Walls, },
+            };
+            var def10 = new SharedParameterDefinition()
             {
                 Name = "DH_뷰 카테고리",
                 SpecType = ParameterSpecType.Text,
                 GroupType = ParameterGroupType.IdentityData,
                 BindingType = ParameterBindingType.Instance,
-                Categories = new List<ParameterCategory>() { ParameterCategory.Views,},
+                Categories = new List<ParameterCategory>() { ParameterCategory.Views, },
             };
 
-            var def10 = new SharedParameterDefinition()
+            var def11 = new SharedParameterDefinition()
             {
                 Name = "DH_뷰 타입",
                 SpecType = ParameterSpecType.Text,
@@ -333,7 +340,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
 
             };
 
-            var addList = new List<SharedParameterDefinition>() { def1, def2, def3, def4, def5, def6, def7, def8, def9, def10, };
+            var addList = new List<SharedParameterDefinition>() { def1, def2, def3, def4, def5, def6, def7, def8, def9, def10, def11, };
             defs.AddRange(addList);
 
             return defs;

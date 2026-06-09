@@ -1,19 +1,10 @@
-﻿using Accessibility;
-using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
-using DHBIMWATER.Application.DTOs.Revit.Reservoir;
+﻿using Autodesk.Revit.DB;
 using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Core.Geometry;
 using DHBIMWATER.Core.Structures;
-using DHBIMWATER.Infrastructure.Services.Revit;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 using GC = DHBIMWATER.Infrastructure.Converters.RevitGeometryConverter;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
+using Wall = Autodesk.Revit.DB.Wall;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Revit
 {
@@ -99,6 +90,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             wall.LookupParameter("DH_ElementCode")?.Set(linearWallDefinition.ElementCode);
             wall.LookupParameter("DH_Part")?.Set(linearWallDefinition.Part);
             wall.LookupParameter("DH_Zone")?.Set(linearWallDefinition.Zone);
+            wall.LookupParameter("DH_IsExterior")?.Set(0);
             wall.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set("");
 
             //_dialog.Info("RevitWallCommandRepo", $"CreateWall - Revit Implementation\n 벽체 높이: {linearWallDefinition.Height}mm");
@@ -162,6 +154,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             profileWall.LookupParameter("DH_Addin")?.Set("DHBIMWATER");
             profileWall.LookupParameter("DH_Part")?.Set(profileWallDefinition.Part);
             profileWall.LookupParameter("DH_Zone")?.Set(profileWallDefinition.Zone);
+            profileWall.LookupParameter("DH_IsExterior")?.Set(0);
 
             if (profileWallDefinition.IsFlipped) profileWall.Flip();
 

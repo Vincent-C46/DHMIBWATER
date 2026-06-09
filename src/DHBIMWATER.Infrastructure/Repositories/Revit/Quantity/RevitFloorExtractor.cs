@@ -22,7 +22,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             _finder = finder;
             _classifier = classifier;
         }
-
         public bool CanExtract(long elementId)
         {
             var doc = _doc();
@@ -46,28 +45,26 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
         public IEnumerable<QuantityItem> Extract(long elementId)
         {
             var doc = _doc();
-            if (doc == null)
-                return Enumerable.Empty<QuantityItem>();
+            if (doc == null) return Enumerable.Empty<QuantityItem>();
 
             var floor = (Floor)doc.GetElement(new ElementId(elementId));
-            var cs = floor.FloorType.GetCompoundStructure();
+            if (floor == null) return Enumerable.Empty<QuantityItem>();
 
             var quantityItems = new List<QuantityItem>();
-            IReadOnlyDictionary<FaceType, double> refFaceDict = _classifier.GetFaceAreas(elementId);
-
-            //TaskDialog.Show("success", $"{refFaceDict.Keys.FirstOrDefault().ToString()}");
+            var refFaceDict = _classifier.GetFaceAreas(elementId);
+            var deductionByFaceType = QuantityExtractorHelper.GroupDeductions(_finder.FindContactAreas(elementId));
 
             // 객체 추출값
+            var cs = floor.FloorType.GetCompoundStructure();
             var area = UC.Ft2ToM2(floor.get_Parameter(BuiltInParameter.HOST_AREA_COMPUTED).AsDouble());
             double thickness = UC.FtToM(cs.GetLayers()
                                           .Where(l => l.Function == MaterialFunctionAssignment.Structure)
                                           .Sum(l => l.Width));
-
             var structureLayer = cs.GetLayers().FirstOrDefault(l => l.Function == MaterialFunctionAssignment.Structure);
 
+            // 재료
             var material = doc.GetElement(structureLayer?.MaterialId) as Material;
             var materialName = material?.Name ?? string.Empty;
-
 
             var varDict = new Dictionary<string, double>
             {
@@ -75,14 +72,15 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 ["Thk"] = thickness,
             };
 
-
             // 콘크리트
+            string plainConcreteName = "무근콘크리트";
+            string reinforcedConcreteName = "철근콘크리트";
+
             var concFormula = "A x Thk";
             string? concRendered = FormulaCalculator.Render(concFormula, varDict);
             //double concValue = FormulaCalculator.Calculate(concFormula, varDict);
-            double concValue = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(floor).Sum(s => s.Volume));
-
-            string concWorkType = thickness < 0.15 || materialName.Contains("무근") ? "무근콘크리트" : "철근콘크리트";
+            double concValue = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(floor).Sum(s => s.Volume)); // 실제값은 Solid 체적으로 대체
+            string concWorkType = (thickness < 0.15 || materialName.Contains("무근")) ? plainConcreteName : reinforcedConcreteName;
 
             var concreteItem = new QuantityItem
             {
@@ -96,7 +94,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 Value = concValue,
                 Unit = "m³"
             };
-
 
             // 스페이서
             var spacerFormula = "A";
@@ -115,24 +112,45 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 Value = spacerValue,
                 Unit = "m²"
             };
-            if (concWorkType == "무근콘크리트") quantityItems.Add(spacerItem);
+            if (concWorkType != plainConcreteName) quantityItems.Add(spacerItem);
 
-            var formFormula = "A";
-            string? formRendered = FormulaCalculator.Render(formFormula, varDict);
-            double formValue = FormulaCalculator.Calculate(formFormula, varDict);
-            //// 거푸집
-            //var bottomFormItem = new QuantityItem
-            //{
-            //    ElementId = elementId,
-            //    Category = floor.LookupParameter("DH_Category")?.AsString() ?? string.Empty,
-            //    ElementCode = floor.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
-            //    WorkType = "거푸집",
-            //    Specification = "합판 4회",
-            //    RawFormula = formFormula,
-            //    RenderedFormula = formRendered,
-            //    Value = formValue,
-            //    Unit = "m²"
-            //};
+            //var formFormula = "A";
+            //string? formRendered = FormulaCalculator.Render(formFormula, varDict);
+            //double formValue = FormulaCalculator.Calculate(formFormula, varDict);
+
+            // 거푸집 - 각 FaceType별로 항목 생성
+            var formworkFaces = new[] { FaceType.Bottom, FaceType.Side };
+
+            foreach (var faceType in formworkFaces)
+            {
+                var grossArea = refFaceDict.GetValueOrDefault(faceType, 0);
+                if (grossArea < 0.001) continue; // 면적이 없으면 skip
+
+                var netArea = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, faceType);
+                var formFormula = QuantityExtractorHelper.GetDeductionFormula(refFaceDict, deductionByFaceType, faceType);
+
+                var spec = faceType switch
+                {
+                    FaceType.Bottom => "슬래브하부",
+                    FaceType.Side => "슬래브옆면",
+                    _ => throw new ArgumentOutOfRangeException(),
+                };
+
+                var formworkItem = new QuantityItem
+                {
+                    ElementId = elementId,
+                    Category = floor.Category.Name ?? string.Empty,
+                    ElementCode = floor.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
+                    WorkType = "거푸집",
+                    Specification = spec,
+                    RawFormula = formFormula,
+                    RenderedFormula = formFormula,
+                    Value = netArea,
+                    Unit = "m²"
+                };
+
+                if (formworkItem.Value > 1e-6) quantityItems.Add(formworkItem);
+            }
 
             var listToAdd = new List<QuantityItem>() { concreteItem, };
             quantityItems.AddRange(listToAdd);

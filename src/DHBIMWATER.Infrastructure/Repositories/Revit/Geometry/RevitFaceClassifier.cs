@@ -49,7 +49,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
 
             if (elem.Location is not LocationCurve lc) return FaceType.Side;    // Beam에서 LC가 추출안되는 일이 있을지?
             var dir = (lc.Curve.GetEndPoint(1) - lc.Curve.GetEndPoint(0)).Normalize();
-            if (Math.Abs(normal.DotProduct(dir)) > 0.9) return FaceType.End;
+            if (Math.Abs(normal.DotProduct(dir)) > 0.9) return FaceType.End;    // 진행방향과 거의 평행한 경우는 End로 분류
 
             var right = dir.CrossProduct(XYZ.BasisZ).Normalize();
             return normal.DotProduct(right) >= 0 ? FaceType.Right : FaceType.Left;

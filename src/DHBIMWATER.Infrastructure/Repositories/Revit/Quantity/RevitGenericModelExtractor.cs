@@ -62,12 +62,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var generic = doc.GetElement(new ElementId(elementId)) as FamilyInstance;
             var quantityItems = new List<QuantityItem>();
 
-            // 솔리드
-            var solid = RevitGeometryHelper.GetSolid(generic);
-            // Split Solid 순회
-            // 콘크리트 체적 계산 (실제 Solid Volume 사용)
-            double concValue = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(generic).Sum(s=>s.Volume));
-
+            double concValue = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(generic).Sum(s => s.Volume));
+            
             var varDict = new Dictionary<string, double>
             {
                 ["V"] = concValue,
@@ -98,6 +94,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 Value = 1,
                 Unit = "EA"
             };
+            if (concValue > 1e-6)  quantityItems.Add(numItem);
 
             // 철근콘크리트
             const string concFormula = "V";
@@ -116,7 +113,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 Unit = "m³"
             };
 
-            quantityItems.AddRange([numItem, concreteItem]);
+            if (concreteItem.Value > 1e-6) quantityItems.Add(concreteItem);
 
             return quantityItems;
         }

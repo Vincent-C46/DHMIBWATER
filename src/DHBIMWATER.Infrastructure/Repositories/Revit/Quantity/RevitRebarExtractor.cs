@@ -52,6 +52,28 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             int count = rebar.get_Parameter(BuiltInParameter.REBAR_ELEM_QUANTITY_OF_BARS).AsInteger();
             string typeName = rebar.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).AsValueString() ?? string.Empty;
             long hostId = rebar.GetHostId().Value;
+            var totalLength = length;
+
+            Parameter spliceNumParam = rebar.Parameters
+                .Cast<Parameter>()
+                .FirstOrDefault(p =>
+                {
+                    string name = p.Definition?.Name ?? "";
+                    return name.Contains("이음") && name.Contains("개수");
+                });
+
+            Parameter spliceLenParam = rebar.Parameters
+                .Cast<Parameter>()
+                .FirstOrDefault(p =>
+                {
+                    string name = p.Definition?.Name ?? "";
+                    return name.Contains("이음") && name.Contains("길이");
+                });
+
+            int spliceNum = spliceNumParam?.AsInteger() ?? 0;
+            double spliceLen = UC.FtToM(spliceLenParam?.AsDouble() ?? 0);
+
+            totalLength = length + spliceNum * spliceLen;
 
             var rebarDict = RebarDatabase.KSD3504.All;  // KS D 3504 철근 규격
             var key = rebarDict.Keys.FirstOrDefault(k => typeName.Contains(k));
@@ -63,9 +85,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             var varDict = new Dictionary<string, double>
             {
-                ["L"] = length,
+                ["L"] = totalLength,
                 ["N"] = count,
-                ["UW"]  = rebarSpec.UnitWeightKgPerM,
+                ["UW"] = rebarSpec.UnitWeightKgPerM,
             };
 
             const string rebarFormula = "L x N x UW x 0.001";

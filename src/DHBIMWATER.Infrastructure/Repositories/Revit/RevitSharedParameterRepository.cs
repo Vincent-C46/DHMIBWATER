@@ -47,6 +47,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                                     { "DH_Category",    new Guid("7e539f5b-80e4-4dd9-a7e1-ac070dbcaa24") },
                                     { "DH_Zone",        new Guid("b60a47f3-3ede-45db-8491-b8f70de329a4") },
                                     { "DH_Part",        new Guid("47c74ae0-3fc8-4a06-9c4e-80713b564b0c") },
+                                    { "DH_IsExterior",  new Guid("98DE7493-0B2B-4C17-85D6-6ABA0CBF8B54") },
                                     // 형상 치수 정보
                                     { "L1",             new Guid("24ef3fdc-96cb-4e32-bb49-c8ecacd92a58") },
                                     { "W1",             new Guid("a6f6385b-2364-4288-a239-813d49e4a572") },

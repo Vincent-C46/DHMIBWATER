@@ -1,4 +1,5 @@
 ﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.UI;
 using DHBIMWATER.Application.Interfaces.Geometry;
 using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Core.Quantity;
@@ -45,39 +46,34 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
         public IEnumerable<QuantityItem> Extract(long elementId)
         {
             var doc = _doc();
-            if (doc == null)
-                return Enumerable.Empty<QuantityItem>();
+            if (doc == null) return Enumerable.Empty<QuantityItem>();
 
             var beam = doc.GetElement(new ElementId(elementId)) as FamilyInstance;
             if (beam == null) return Enumerable.Empty<QuantityItem>();
 
+            var quantityItems = new List<QuantityItem>();
             var refFaceDict = _classifier.GetFaceAreas(elementId);
             var deductionByFaceType = QuantityExtractorHelper.GroupDeductions(_finder.FindContactAreas(elementId));
 
-            var quantityItems = new List<QuantityItem>();
-
             // 객체 추출값
             var length = UC.FtToM(beam.get_Parameter(BuiltInParameter.INSTANCE_LENGTH_PARAM)?.AsDouble() ?? 0);
-
             var b = UC.FtToM(FamilyInstanceHelper.FindParameter(beam, "b") ?? FamilyInstanceHelper.FindParameter(beam, "width") ?? FamilyInstanceHelper.FindParameter(beam, "폭") ?? 0);
             var h = UC.FtToM(FamilyInstanceHelper.FindParameter(beam, "h") ?? FamilyInstanceHelper.FindParameter(beam, "d") ?? FamilyInstanceHelper.FindParameter(beam, "높이") ?? FamilyInstanceHelper.FindParameter(beam, "Height") ?? 0);
             string typeName = beam.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).AsValueString() ?? string.Empty;
+            var effectiveH = h; // 초기값
 
             // 실제 유효 길이 계산 (SplitSolid의 Edge 기반)
-            double effectiveLength = length;
+            double effectiveLength = length;    // 초기값 설정
             var lc = beam.Location as LocationCurve;
             var beamDirection = (lc.Curve.GetEndPoint(1) - lc.Curve.GetEndPoint(0)).Normalize();
-            var solid = RevitGeometryHelper.GetSolid(beam);
             double totalLength = 0;
             var parallelEdgeLengths = new List<double>();
-            var allEndFaceAreas = new List<double>();
-            double sectionArea = 0;
             double avgArea = 0;
 
             // Split Solid 순회
-            IList<Solid> splitSolids = SolidUtils.SplitVolumes(solid);
             var solidCrossSectionAreas = new List<double>(); // SplitSolid별 단면적 저장
-            
+            var splitSolids = RevitGeometryHelper.GetSolids(beam).SelectMany(SolidUtils.SplitVolumes).ToList();
+
             foreach (var splitSolid in splitSolids)
             {
                 double maxEdgeLength = 0;
@@ -97,6 +93,11 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                         {
                             parallelEdgeCnt++;
                             maxEdgeLength = Math.Max(maxEdgeLength, line.Length);
+                        }
+
+                        if (dotProduct < 0.01 && Math.Abs(edgeDir.Z) > 0.1)
+                        {
+                            effectiveH = UC.FtToM(line.Length);   // 수직 Edge는 높이 후보
                         }
                     }
                 }
@@ -131,13 +132,14 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             }
             totalLength = parallelEdgeLengths.Sum();
             if (totalLength > 0) effectiveLength = UC.FtToM(totalLength);
-            
+
             // 모든 SplitSolid 단면적의 평균
             if (solidCrossSectionAreas.Any())
             {
                 avgArea = solidCrossSectionAreas.Average();
                 Debug.WriteLine($"=== 최종 평균 단면적: {UC.Ft2ToM2(avgArea):F3}m² (SplitSolid {solidCrossSectionAreas.Count}개) ===");
             }
+
 
             string materialName = string.Empty;
             var materialId = beam.get_Parameter(BuiltInParameter.STRUCTURAL_MATERIAL_PARAM)?.AsElementId()
@@ -148,16 +150,33 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             else
                 materialName = (doc.GetElement(materialId) as Material).Name;
 
-            var varDict = new Dictionary<string, double>
+            // b, h 추출 성공 여부에 따라 공식 분기
+            bool hasDimensions = b > 0 && effectiveH > 0;
+            string concFormula;
+            Dictionary<string, double> varDict;
+
+            if (hasDimensions)
             {
-                ["A"] = UC.Ft2ToM2(avgArea),
-                ["L"] = effectiveLength,
-            };
+                concFormula = "B x D x L";
+                varDict = new Dictionary<string, double>
+                {
+                    ["B"] = b,
+                    ["D"] = effectiveH,
+                    ["L"] = effectiveLength,
+                };
+            }
+            else
+            {
+                concFormula = "A x L";
+                varDict = new Dictionary<string, double>
+                {
+                    ["A"] = UC.Ft2ToM2(avgArea),
+                    ["L"] = effectiveLength,
+                };
+            }
 
-            // 콘크리트 체적 계산 (실제 Solid Volume 사용)
+            // 콘크리트 체적 계산 (실제 Solid Volume 추출)
             double concValue = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(beam).Sum(s => s.Volume));
-
-            const string concFormula = "A x L";
             string concRendered = FormulaCalculator.Render(concFormula, varDict);
 
             // 철근콘크리트
@@ -185,13 +204,14 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 if (grossArea < 0.001) continue; // 면적이 없으면 skip
 
                 var netArea = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, faceType);
-                var formula = QuantityExtractorHelper.GetDeductionFormula(refFaceDict, deductionByFaceType, faceType);
+                var formFormula = QuantityExtractorHelper.GetDeductionFormula(refFaceDict, deductionByFaceType, faceType);
+
                 var spec = faceType switch
                 {
                     FaceType.Bottom => "합판4회",
-                    FaceType.Left => "유로폼",
-                    FaceType.Right => "유로폼",
-                    FaceType.End => "유로폼",
+                    FaceType.Left => "합판3회",
+                    FaceType.Right => "합판3회",
+                    FaceType.End => "합판3회",
                     _ => throw new ArgumentOutOfRangeException(),
                 };
 
@@ -202,13 +222,13 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                     ElementCode = beam.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
                     WorkType = "거푸집",
                     Specification = spec,
-                    RawFormula = formula,
-                    RenderedFormula = formula,
+                    RawFormula = formFormula,
+                    RenderedFormula = formFormula,
                     Value = netArea,
                     Unit = "m²"
                 };
 
-                quantityItems.Add(formworkItem);
+                if (formworkItem.Value > 1e-6) quantityItems.Add(formworkItem);
             }
 
             return quantityItems;

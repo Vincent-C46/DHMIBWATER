@@ -4,7 +4,7 @@ namespace DHBIMWATER.Infrastructure.Helpers
 {
     internal static class QuantityExtractorHelper
     {
-        public static Dictionary<FaceType, List<(FaceType FaceType, long NeighborId, double Area)>> GroupDeductions(
+        public static IReadOnlyDictionary<FaceType, List<(FaceType FaceType, long NeighborId, double Area)>> GroupDeductions(
             IReadOnlyList<(FaceType FaceType, long NeighborId, double Area)> contactAreas)
             => contactAreas
                 .GroupBy(d => d.FaceType)
@@ -24,7 +24,7 @@ namespace DHBIMWATER.Infrastructure.Helpers
 
         public static string GetDeductionFormula(
             IReadOnlyDictionary<FaceType, double> faceDict,
-            Dictionary<FaceType, List<(FaceType FaceType, long NeighborId, double Area)>> deductions,
+            IReadOnlyDictionary<FaceType, List<(FaceType FaceType, long NeighborId, double Area)>> deductions,
             FaceType faceType)
         {
             var gross = faceDict.GetValueOrDefault(faceType, 0);

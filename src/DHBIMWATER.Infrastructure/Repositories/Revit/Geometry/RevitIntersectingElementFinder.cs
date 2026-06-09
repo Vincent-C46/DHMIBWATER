@@ -28,8 +28,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
             Debug.WriteLine($"RefElemId: {refElem.Id.Value} / 카테고리: {refElem.Category.Name}");
 
             // 기준 객체 Solid
-            var refSolid = RevitGeometryHelper.GetSolid(refElem);
-            if (refSolid == null) return new List<(FaceType, long, double)>();
+            var refSolids = RevitGeometryHelper.GetSolids(refElem).ToList();
+            if (!refSolids.Any()) return new List<(FaceType, long, double)>();
 
             var bbox = refElem.get_BoundingBox(null);
             if (bbox == null) return new List<(FaceType, long, double)>();
@@ -53,17 +53,20 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
 
             foreach (var candidate in candidates)
             {
-                var candidateSolid = RevitGeometryHelper.GetSolid(candidate);
+                var candidateSolids = RevitGeometryHelper.GetSolids(candidate)
+                    .GroupBy(s => { var c = s.ComputeCentroid(); return (Math.Round(c.X, 3), Math.Round(c.Y, 3), Math.Round(c.Z, 3)); })
+                    .Select(g => g.First())
+                    .ToList();
+                if (!candidateSolids.Any()) continue;
 
-                if (candidateSolid == null) continue;
-
+                foreach (var refSolid in refSolids)
                 foreach (Face refFace in refSolid.Faces)
                 {
                     if (refFace is not PlanarFace planarRef) continue;
                     var refNormal = planarRef.FaceNormal;
                     var refOrigin = planarRef.Origin;
-                    var refFaceType = RevitFaceClassifier.Classify(refElem, refNormal);
 
+                    foreach (var candidateSolid in candidateSolids)
                     foreach (Face candidateFace in candidateSolid.Faces)
                     {
                         if (candidateFace is not PlanarFace planarCand) continue;
@@ -191,6 +194,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
                 BuiltInCategory.OST_Floors => new[]
                 {
                     BuiltInCategory.OST_Walls,
+                    BuiltInCategory.OST_Floors,
                     BuiltInCategory.OST_StructuralColumns,
                     BuiltInCategory.OST_StructuralFraming,
                     BuiltInCategory.OST_StructuralFoundation,
@@ -207,6 +211,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
                     BuiltInCategory.OST_Walls,
                     BuiltInCategory.OST_Floors,
                     BuiltInCategory.OST_StructuralColumns,
+                    BuiltInCategory.OST_StructuralFraming,
                 },
                 _ => FallbackCategories,
             };
