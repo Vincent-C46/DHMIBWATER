@@ -112,6 +112,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 Value = spacerValue,
                 Unit = "m²"
             };
+
+            // 무근콘크리트가 아니면 스페이서 산출
             if (concWorkType != plainConcreteName) quantityItems.Add(spacerItem);
 
             //var formFormula = "A";

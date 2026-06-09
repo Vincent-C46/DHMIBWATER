@@ -149,6 +149,7 @@
                                                      Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
                                                      GotFocus="VariableTextBox_GotFocus"
                                                      PreviewTextInput="VariableTextBox_PreviewTextInput"
+                                                     LostFocus="VariableTextBox_LostFocus"
                                                      BorderThickness="0"
                                                      Background="Transparent"
                                                      FontSize="12"

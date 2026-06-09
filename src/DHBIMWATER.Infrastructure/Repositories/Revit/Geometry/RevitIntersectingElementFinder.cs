@@ -53,49 +53,47 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
 
             foreach (var candidate in candidates)
             {
-                var candidateSolids = RevitGeometryHelper.GetSolids(candidate)
-                    .GroupBy(s => { var c = s.ComputeCentroid(); return (Math.Round(c.X, 3), Math.Round(c.Y, 3), Math.Round(c.Z, 3)); })
-                    .Select(g => g.First())
-                    .ToList();
+                var candidateSolids = RevitGeometryHelper.GetSolids(candidate).ToList();
                 if (!candidateSolids.Any()) continue;
-
                 foreach (var refSolid in refSolids)
-                foreach (Face refFace in refSolid.Faces)
-                {
-                    if (refFace is not PlanarFace planarRef) continue;
-                    var refNormal = planarRef.FaceNormal;
-                    var refOrigin = planarRef.Origin;
-
-                    foreach (var candidateSolid in candidateSolids)
-                    foreach (Face candidateFace in candidateSolid.Faces)
+                    foreach (Face refFace in refSolid.Faces)
                     {
-                        if (candidateFace is not PlanarFace planarCand) continue;
-                        var candidateNormal = planarCand.FaceNormal;
-                        var candidateOrigin = planarCand.Origin;
+                        if (refFace is not PlanarFace planarRef) continue;
+                        var refNormal = planarRef.FaceNormal;
+                        var refOrigin = planarRef.Origin;
 
-                        // 반대 Normal 인 면만 처리
-                        if (refNormal.DotProduct(candidateNormal) > -0.9) continue;
+                        foreach (var candidateSolid in candidateSolids)
+                            foreach (Face candidateFace in candidateSolid.Faces)
+                            {
+                                if (candidateFace is not PlanarFace planarCand) continue;
+                                var candidateNormal = planarCand.FaceNormal;
+                                var candidateOrigin = planarCand.Origin;
 
-                        // 두 면이 같은 평면 위에 있는지 확인
-                        var originDiff = candidateOrigin - refOrigin;
-                        var distance = Math.Abs(originDiff.DotProduct(refNormal));
-                        if (distance > 0.01) continue;
+                                // 반대 Normal 인 면만 처리
+                                if (refNormal.DotProduct(candidateNormal) > -0.9) continue;
 
-                        try
-                        {
-                            var thinSolid = CreateExtrusionSolid(refFace, SolidThk);
-                            var intersectingSolid = BooleanOperationsUtils.ExecuteBooleanOperation(candidateSolid, thinSolid, BooleanOperationsType.Intersect);
+                                // 두 면이 같은 평면 위에 있는지 확인
+                                var originDiff = candidateOrigin - refOrigin;
+                                var distance = Math.Abs(originDiff.DotProduct(refNormal));
+                                if (distance > 0.01) continue;
 
-                            if (intersectingSolid == null || intersectingSolid.Volume < 1e-10) continue;
-                            var area = Math.Round(UC.Ft2ToM2(intersectingSolid.Volume / SolidThk), 3);
-                            var faceType = RevitFaceClassifier.Classify(refElem, refNormal);
+                                try
+                                {
+                                    var thinSolid = CreateExtrusionSolid(refFace, SolidThk);
+                                    var intersectingSolid = BooleanOperationsUtils.ExecuteBooleanOperation(candidateSolid, thinSolid, BooleanOperationsType.Intersect);
 
-                            contacts.Add((faceType, candidate.Id.Value, area));
-                        }
-                        catch { continue; }
+                                    if (intersectingSolid == null || intersectingSolid.Volume < 1e-10) continue;
+                                    var area = Math.Round(UC.Ft2ToM2(intersectingSolid.Volume / SolidThk), 3);
+                                    var faceType = RevitFaceClassifier.Classify(refElem, refNormal);
+
+
+                                    contacts.Add((faceType, candidate.Id.Value, area));
+                                }
+                                catch { continue; }
+                            }
                     }
-                }
             }
+
             return contacts;
         }
 

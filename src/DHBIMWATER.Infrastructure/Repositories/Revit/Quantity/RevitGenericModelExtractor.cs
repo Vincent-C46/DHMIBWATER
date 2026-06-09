@@ -67,6 +67,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var varDict = new Dictionary<string, double>
             {
                 ["V"] = concValue,
+                ["EA"] = 1,
             };
 
 
@@ -84,11 +85,16 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var placementType = generic.Symbol.Family.FamilyPlacementType;
 
             // 개수 산출
+            const string numFormula = "EA";
+            string numRendered = FormulaCalculator.Render(numFormula, varDict);
+
             var numItem = new QuantityItem
             {
                 ElementId = elementId,
                 Category = generic.LookupParameter("DH_Category")?.AsString() ?? string.Empty,
                 ElementCode = generic.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
+                RawFormula = numFormula,
+                RenderedFormula = numRendered,
                 WorkType = typeName,
                 Specification = materialName,
                 Value = 1,
