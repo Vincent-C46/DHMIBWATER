@@ -73,5 +73,58 @@ namespace DHBIMWATER.Infrastructure.Helpers
                 .Where(f => f.FaceNormal.Z < 0)
                 .OrderBy(f => f.Origin.Z)
                 .FirstOrDefault();
+
+        // ─────────────────────────────────────────────
+        // 중앙 단면적 추출
+        // ─────────────────────────────────────────────
+
+        // Solid의 중앙을 direction 법선으로 자른 단면적(ft²)을 반환.
+        // 끝면이 다른 요소에 의해 잘려있어도 중앙부 단면을 정확하게 추출함.
+        public static double GetMidSectionArea(Solid solid, XYZ direction)
+        {
+            const double slabThk = 0.01; // feet
+
+            try
+            {
+                var projections = solid.Edges.Cast<Edge>()
+                    .SelectMany(e => new[] { e.AsCurve().GetEndPoint(0), e.AsCurve().GetEndPoint(1) })
+                    .Select(v => v.DotProduct(direction))
+                    .ToList();
+                double midProj = (projections.Min() + projections.Max()) / 2;
+
+                var refPt = solid.Edges.Cast<Edge>().First().AsCurve().GetEndPoint(0);
+                var center = refPt + direction * (midProj - refPt.DotProduct(direction));
+
+                var perp1 = direction.CrossProduct(XYZ.BasisZ);
+                if (perp1.GetLength() < 1e-6)
+                    perp1 = direction.CrossProduct(XYZ.BasisX);
+                perp1 = perp1.Normalize();
+                var perp2 = direction.CrossProduct(perp1).Normalize();
+
+                double half = 10.0; // feet
+                var p1 = center + perp1 * half + perp2 * half;
+                var p2 = center - perp1 * half + perp2 * half;
+                var p3 = center - perp1 * half - perp2 * half;
+                var p4 = center + perp1 * half - perp2 * half;
+
+                var loop = CurveLoop.Create(new List<Curve>
+                {
+                    Line.CreateBound(p1, p2),
+                    Line.CreateBound(p2, p3),
+                    Line.CreateBound(p3, p4),
+                    Line.CreateBound(p4, p1),
+                });
+
+                var slab = GeometryCreationUtilities.CreateExtrusionGeometry(
+                    new[] { loop }, direction, slabThk);
+
+                var intersection = BooleanOperationsUtils.ExecuteBooleanOperation(
+                    solid, slab, BooleanOperationsType.Intersect);
+
+                if (intersection == null || intersection.Volume < 1e-10) return 0;
+                return intersection.Volume / slabThk;
+            }
+            catch { return 0; }
+        }
     }
 }

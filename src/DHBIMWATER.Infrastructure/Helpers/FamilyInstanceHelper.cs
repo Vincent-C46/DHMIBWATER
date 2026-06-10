@@ -33,10 +33,35 @@ namespace DHBIMWATER.Infrastructure.Helpers
             if (instanceParam != null && instanceParam != ElementId.InvalidElementId)
                 return instanceParam;
 
-            return element.Document
+            var typeParam = element.Document
                 .GetElement(element.GetTypeId())
                 ?.get_Parameter(BuiltInParameter.STRUCTURAL_MATERIAL_PARAM)
                 ?.AsElementId();
+            if (typeParam != null && typeParam != ElementId.InvalidElementId)
+                return typeParam;
+
+            // 사용자 정의 재료 파라미터 탐색: 참조 요소가 Material인 첫 번째 파라미터
+            return element.Parameters
+                .Cast<Parameter>()
+                .Where(p => p.StorageType == StorageType.ElementId)
+                .Select(p => p.AsElementId())
+                .FirstOrDefault(id => id != null
+                                   && id != ElementId.InvalidElementId
+                                   && element.Document.GetElement(id) is Material);
+        }
+        public static StructuralAssetClass? GetStructuralAssetClass(Element element)
+        {
+            var materialId = GetMaterialId(element);
+            if (materialId == null) return null;
+
+            var material = element.Document.GetElement(materialId) as Material;
+            if (material == null) return null;
+
+            var assetId = material.StructuralAssetId;
+            if (assetId == null || assetId == ElementId.InvalidElementId) return null;
+
+            var pse = element.Document.GetElement(assetId) as PropertySetElement;
+            return pse?.GetStructuralAsset()?.StructuralAssetClass;
         }
     }
 }

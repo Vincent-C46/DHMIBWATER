@@ -1,5 +1,6 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Structure;
+using Autodesk.Revit.DB.Visual;
 using DHBIMWATER.Application.Interfaces.Geometry;
 using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Core.Quantity;
@@ -55,109 +56,81 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             // 객체 추출값
             var length = UC.FtToM(column.get_Parameter(BuiltInParameter.INSTANCE_LENGTH_PARAM)?.AsDouble() ?? 0);
-            double effectiveLength = length;    // 초기값
-            double totalLength = 0;
-            var parallelEdgeLengths = new List<double>();
-            var allEndFaceAreas = new List<double>();
-
-            // Split Solid 순회
-            var splitSolids = RevitGeometryHelper.GetSolids(column).SelectMany(SolidUtils.SplitVolumes).ToList();
-            var solidCrossSectionAreas = new List<double>(); // SplitSolid별 단면적 저장
 
             var dc = column.GetSweptProfile().GetDrivingCurve();
             var columnDirection = (dc.GetEndPoint(1) - dc.GetEndPoint(0)).Normalize();
 
-            foreach (var splitSolid in splitSolids)
-            {
-                double maxEdgeLength = 0;
-                int parallelEdgeCnt = 0;
-                var endFaceAreasInSolid = new List<double>(); // 이 SplitSolid의 End면들
+            var splitSolids = RevitGeometryHelper.GetSolids(column)
+                .SelectMany(s => { try { return SolidUtils.SplitVolumes(s); } catch { return [s]; } })
+                .Where(s => s.Volume > 1e-9)
+                .ToList();
 
-                // Split Solid 길이 추출
-                foreach (Edge edge in splitSolid.Edges)
-                {
-                    var curve = edge.AsCurve();
-                    if (curve is Line line)
-                    {
-                        var edgeDir = (line.GetEndPoint(1) - line.GetEndPoint(0)).Normalize();
-                        var dotProduct = Math.Abs(edgeDir.DotProduct(columnDirection));
-
-                        if (dotProduct > 0.99)
-                        {
-                            parallelEdgeCnt++;
-                            maxEdgeLength = Math.Max(maxEdgeLength, line.Length);
-                        }
-                    }
-                }
-                parallelEdgeLengths.Add(maxEdgeLength);
-
-                // Split Solid별 단면적 추출 (기둥 Dir과 동일한 방향 Face)
-                foreach (Face face in splitSolid.Faces)
-                {
-                    var faceNormal = face.ComputeNormal(new UV(0.5, 0.5));
-                    var dotProduct = Math.Abs(columnDirection.DotProduct(faceNormal));
-
-                    // 기둥 방향과 평행한 면 (End면)
-                    if (dotProduct > 0.99)
-                    {
-                        endFaceAreasInSolid.Add(face.Area);
-                    }
-                }
-
-                // SplitSolid 평균 단면적 계산
-                if (endFaceAreasInSolid.Count >= 1)
-                {
-                    var avgAreaInSolid = endFaceAreasInSolid.Average();
-                    solidCrossSectionAreas.Add(avgAreaInSolid);
-
-                    var maxDiff = endFaceAreasInSolid.Max() - endFaceAreasInSolid.Min();
-
-                    //if (maxDiff / avgAreaInSolid > 0.05)
-                    //{
-                    //    Debug.WriteLine($"⚠️ 변단면: 차이 {maxDiff / avgAreaInSolid * 100:F1}%");
-                    //}
-                }
-            }
-            totalLength = parallelEdgeLengths.Sum();
+            // 유효 길이: 각 SplitSolid에서 기둥 방향 최장 Edge 합산
+            double effectiveLength = length;
+            double totalLength = splitSolids
+                .Select(solid => solid.Edges.Cast<Edge>()
+                    .Select(e => e.AsCurve()).OfType<Line>()
+                    .Where(l => Math.Abs(((l.GetEndPoint(1) - l.GetEndPoint(0)).Normalize()).DotProduct(columnDirection)) > 0.99)
+                    .Select(l => l.Length)
+                    .DefaultIfEmpty(0).Max())
+                .Sum();
             if (totalLength > 0) effectiveLength = UC.FtToM(totalLength);
 
-            double avgArea = solidCrossSectionAreas.Any() ? solidCrossSectionAreas.Average() : 0;
+            // 단면적: 첫 SplitSolid 중앙을 columnDirection 법선으로 자른 단면
+            double actualCrossSection = 0;
+            var firstSolid = splitSolids.FirstOrDefault();
+            if (firstSolid != null)
+                actualCrossSection = UC.Ft2ToM2(RevitGeometryHelper.GetMidSectionArea(firstSolid, columnDirection));
 
             var refFaceDict = _classifier.GetFaceAreas(elementId);
             var deductionByFaceType = QuantityExtractorHelper.GroupDeductions(_finder.FindContactAreas(elementId));
 
             string materialName = string.Empty;
-            var materialId = column.get_Parameter(BuiltInParameter.STRUCTURAL_MATERIAL_PARAM)?.AsElementId()
-                                ?? column.Document.GetElement(column.GetTypeId()).get_Parameter(BuiltInParameter.STRUCTURAL_MATERIAL_PARAM)?.AsElementId();
+            var materialId = FamilyInstanceHelper.GetMaterialId(column);
 
             if (materialId == null || materialId == ElementId.InvalidElementId)
                 materialName = string.Empty;
             else
                 materialName = (doc.GetElement(materialId) as Material).Name;
 
+            var materialClass = FamilyInstanceHelper.GetStructuralAssetClass(column);
+            var workType = materialClass switch
+            {
+                StructuralAssetClass.Concrete => "철근콘크리트",
+                StructuralAssetClass.Metal => "강재",
+                StructuralAssetClass.Generic => "기타",
+                _ => "미분류"
+            };
 
             // 객체 추출값
             var b = UC.FtToM(FamilyInstanceHelper.FindParameter(column, "b") ?? 0);
             var d = UC.FtToM(FamilyInstanceHelper.FindParameter(column, "d") ??
                              FamilyInstanceHelper.FindParameter(column, "h") ??
+                             FamilyInstanceHelper.FindParameter(column, "b") ??
                              b);
             var r = UC.FtToM(FamilyInstanceHelper.FindParameter(column, "r") ??
-                             FamilyInstanceHelper.FindParameter(column, "d") / 2  ?? 
+                             FamilyInstanceHelper.FindParameter(column, "d") / 2 ??
                              FamilyInstanceHelper.FindParameter(column, "b") / 2 ??
                              0);
 
             string typeName = column.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).AsValueString() ?? string.Empty;
             string familyName = column.Symbol.FamilyName;
-            bool isCircular = typeName.Contains("원형", StringComparison.OrdinalIgnoreCase) || 
+            bool isCircular = typeName.Contains("원형", StringComparison.OrdinalIgnoreCase) ||
                               typeName.Contains("circular", StringComparison.OrdinalIgnoreCase) ||
                               familyName.Contains("원형", StringComparison.OrdinalIgnoreCase) ||
                               familyName.Contains("circular", StringComparison.OrdinalIgnoreCase);
 
-            // 추출된 매개변수 유효성에 따라 공식 분기
+            // 매개변수 계산값이 실제 단면적 A와 5% 이내 일치할 때만 매개변수 공식 사용
+            const double tolerance = 0.05;
             string concFormula;
             Dictionary<string, double> varDict;
 
-            if (isCircular && (r > 0))
+            bool circularMatches = isCircular && r > 0 && actualCrossSection > 0
+                && Math.Abs(Math.PI * r * r - actualCrossSection) / actualCrossSection < tolerance;
+            bool rectMatches = !isCircular && b > 0 && d > 0 && actualCrossSection > 0
+                && Math.Abs(b * d - actualCrossSection) / actualCrossSection < tolerance;
+
+            if (circularMatches)
             {
                 concFormula = "PI x R^2 x L";
                 varDict = new Dictionary<string, double>
@@ -166,7 +139,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                     ["L"] = effectiveLength,
                 };
             }
-            else if (!isCircular && b > 0 && d > 0)
+            else if (rectMatches)
             {
                 concFormula = "B x D x L";
                 varDict = new Dictionary<string, double>
@@ -181,32 +154,101 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 concFormula = "A x L";
                 varDict = new Dictionary<string, double>
                 {
-                    ["A"] = UC.Ft2ToM2(avgArea),
+                    ["A"] = actualCrossSection,
                     ["L"] = effectiveLength,
                 };
             }
 
-            string? concRendered = FormulaCalculator.Render(concFormula, varDict);
-            double concValue = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(column).Sum(s => s.Volume));
+            double volumeM3 = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(column).Sum(s => s.Volume));
 
-
-            // 철근콘크리트
-            var concreteItem = new QuantityItem
+            switch (workType)
             {
-                ElementId = elementId,
-                Category = column.Category.Name ?? string.Empty,
-                ElementCode = column.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
-                WorkType = "철근콘크리트",
-                Specification = materialName,
-                RawFormula = concFormula,
-                RenderedFormula = concRendered ?? string.Empty,
-                Value = concValue,
-                Unit = "m³"
-            };
-            var listToAdd = new List<QuantityItem>() { concreteItem, };
-            quantityItems.AddRange(listToAdd);
+                case "철근콘크리트":
+                    var concreteItem = new QuantityItem
+                    {
+                        ElementId = elementId,
+                        Category = column.Category.Name ?? string.Empty,
+                        ElementCode = column.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
+                        WorkType = workType,
+                        Specification = materialName,
+                        RawFormula = concFormula,
+                        RenderedFormula = FormulaCalculator.Render(concFormula, varDict) ?? string.Empty,
+                        Value = volumeM3,
+                        Unit = "m³"
+                    };
+                    quantityItems.Add(concreteItem);
+
+                    var formworkFaces = new[] { FaceType.Side, };
+                    foreach (var faceType in formworkFaces)
+                    {
+                        var grossArea = refFaceDict.GetValueOrDefault(faceType, 0);
+                        if (grossArea < 0.001) continue; // 면적이 없으면 skip
+
+                        var deducts = deductionByFaceType.TryGetValue(faceType, out var dl) ? dl : null;
+                        var netArea = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, faceType);
+                        var rawFormula = QuantityExtractorHelper.GetDeductionRawFormula(refFaceDict, deductionByFaceType, faceType);
+                        var renderedFormula = QuantityExtractorHelper.GetDeductionRenderedFormula(refFaceDict, deductionByFaceType, faceType);
+
+                        var spec = faceType switch
+                        {
+                            FaceType.Side => "합판3회",      // 추후 세팅값으로 연동
+                            _ => throw new ArgumentOutOfRangeException(),
+                        };
+
+                        var formworkItem = new QuantityItem
+                        {
+                            ElementId = elementId,
+                            Category = column.Category.Name ?? string.Empty,
+                            ElementCode = column.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
+                            WorkType = "거푸집",
+                            Specification = spec,
+                            RawFormula = rawFormula,
+                            RenderedFormula = renderedFormula,
+                            Value = netArea,
+                            Unit = "m²",
+                            GrossValue = deducts != null ? grossArea : null,
+                            Deductions = deducts,
+                        };
+
+                        if (formworkItem.Value > 1e-6) quantityItems.Add(formworkItem);
+                    }
+                    break;
+
+                case "강재":
+                    var steelFormula = concFormula + " x UW";
+                    var steelVarDict = new Dictionary<string, double>(varDict) { ["UW"] = 7.850 };
+                    quantityItems.Add(new QuantityItem
+                    {
+                        ElementId = elementId,
+                        Category = column.Category.Name ?? string.Empty,
+                        ElementCode = column.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
+                        WorkType = workType,
+                        Specification = materialName,
+                        RawFormula = steelFormula,
+                        RenderedFormula = FormulaCalculator.Render(steelFormula, steelVarDict) ?? string.Empty,
+                        Value = volumeM3 * 7.850,
+                        Unit = "ton"
+                    });
+                    break;
+
+                default:
+                    quantityItems.Add(new QuantityItem
+                    {
+                        ElementId = elementId,
+                        Category = column.Category.Name ?? string.Empty,
+                        ElementCode = column.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
+                        WorkType = workType,
+                        Specification = materialName,
+                        RawFormula = concFormula,
+                        RenderedFormula = FormulaCalculator.Render(concFormula, varDict) ?? string.Empty,
+                        Value = volumeM3,
+                        Unit = "m³"
+                    });
+                    break;
+            }
 
             return quantityItems;
         }
+
     }
 }

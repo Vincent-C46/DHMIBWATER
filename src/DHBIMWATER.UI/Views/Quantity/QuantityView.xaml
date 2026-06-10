@@ -419,7 +419,7 @@
                                 <StackPanel Orientation="Horizontal" Height = "22">
                                     <TextBlock Width="90" Text="값" FontSize="11" Foreground="#888780" VerticalAlignment="Center"/>
                                     <TextBlock Width="150" Style="{StaticResource BodyTextBlockStyle}" FontSize="11" FontWeight="Medium" HorizontalAlignment="Left" VerticalAlignment="Center">
-                                    <Run Text="{Binding SelectedItem.Value, StringFormat=F2}"/>
+                                    <Run Text="{Binding SelectedItem.Value, StringFormat=F3}"/>
                                     <Run Text=" "/>
                                     <Run Text="{Binding SelectedItem.Unit}" Foreground="#888780"/>
                                     </TextBlock>
@@ -469,7 +469,7 @@
                                                     <TextBlock.Style>
                                                         <Style TargetType="TextBlock">
                                                             <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding Spec}" Value="">
+                                                                <DataTrigger Binding="{Binding Spec, StringFormat=F3}" Value="">
                                                                     <Setter Property="Visibility" Value="Collapsed"/>
                                                                 </DataTrigger>
                                                             </Style.Triggers>

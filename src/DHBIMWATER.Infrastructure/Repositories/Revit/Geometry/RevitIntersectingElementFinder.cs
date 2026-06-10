@@ -215,6 +215,13 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
                     BuiltInCategory.OST_StructuralColumns,
                     BuiltInCategory.OST_StructuralFraming,
                 },
+                BuiltInCategory.OST_Stairs => new[]
+{
+                    BuiltInCategory.OST_Walls,
+                    BuiltInCategory.OST_Floors,
+                    BuiltInCategory.OST_StructuralColumns,
+                    BuiltInCategory.OST_StructuralFraming,
+                },
                 _ => FallbackCategories,
             };
         private static Solid CreateExtrusionSolid(Face face, double thickness)

@@ -56,14 +56,12 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             //Debug.WriteLine($"{stair.Id.Value}");
 
-            //string materialName = string.Empty;
-            //var materialId = stair.get_Parameter(BuiltInParameter.STRUCTURAL_MATERIAL_PARAM)?.AsElementId()
-            //                    ?? stair.Document.GetElement(stair.GetTypeId()).get_Parameter(BuiltInParameter.STRUCTURAL_MATERIAL_PARAM)?.AsElementId();
-
-            //if (materialId == null || materialId == ElementId.InvalidElementId)
-            //    materialName = string.Empty;
-            //else
-            //    materialName = (doc.GetElement(materialId) as Material).Name;
+            string materialName = string.Empty;
+            var materialId = FamilyInstanceHelper.GetMaterialId(stair);
+            if (materialId == null || materialId == ElementId.InvalidElementId)
+                materialName = string.Empty;
+            else
+                materialName = (doc.GetElement(materialId) as Material).Name;
 
             var varDict = new Dictionary<string, double>
             {
@@ -81,7 +79,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 Category = stair.Category.Name ?? "계단",
                 ElementCode = stair.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
                 WorkType = "철근콘크리트",
-                Specification = "materialName",
+                Specification = materialName,
                 RawFormula = concFormula,
                 RenderedFormula = concRendered ?? string.Empty,
                 Value = concValue,

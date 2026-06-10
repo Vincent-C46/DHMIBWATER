@@ -109,7 +109,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 ElementId = elementId,
                 Category = generic.Category.Name ?? string.Empty,
                 ElementCode = generic.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
-                WorkType = "철근콘크리트",
+                WorkType = "무근콘크리트",
                 Specification = materialName,
                 RawFormula = concFormula,
                 RenderedFormula = concRendered,

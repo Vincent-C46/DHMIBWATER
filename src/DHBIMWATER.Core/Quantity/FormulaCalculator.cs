@@ -43,7 +43,7 @@ namespace DHBIMWATER.Core.Quantity
             {
                 var formatted = value == Math.Floor(value)
                     ? ((long)value).ToString()       // 정수면 그대로
-                    : value.ToString("F2");          // 소수면 F2
+                    : value.ToString("0.###");          // 소수면 F3
 
                 result = Regex.Replace(result, $@"\b{key}\b", $"{formatted}({key})");
             }
