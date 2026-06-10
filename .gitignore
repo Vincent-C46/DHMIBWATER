@@ -60,3 +60,7 @@ Desktop.ini
 *.tmp
 *.temp
 *.log
+
+# Claude 문서 (개인)
+Claude.md
+docs/ai/
