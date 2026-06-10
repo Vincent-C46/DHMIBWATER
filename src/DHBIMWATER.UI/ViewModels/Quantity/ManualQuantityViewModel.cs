@@ -262,7 +262,7 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             // 패턴: 숫자(변수명) 형태 추출
             // 변수명: 영문자로 시작, 영문자/숫자/언더바 조합 가능
             // 예: 0.5(A), 10.0(L_1), 123.45(Width_Max)
-            var regex = new Regex(@"([\d.]+)\s*\(([A-Za-z][A-Za-z0-9_]*)\)", RegexOptions.Compiled);
+            var regex = new Regex(@"([\d.]+)\s*\(([A-Za-z][A-Za-z0-9_]*)(?:[^)]*)\)", RegexOptions.Compiled);
             var matches = regex.Matches(rendered);
             
             foreach (Match match in matches)

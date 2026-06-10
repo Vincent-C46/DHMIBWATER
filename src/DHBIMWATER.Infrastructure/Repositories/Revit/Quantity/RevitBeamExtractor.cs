@@ -203,8 +203,10 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 var grossArea = refFaceDict.GetValueOrDefault(faceType, 0);
                 if (grossArea < 0.001) continue; // 면적이 없으면 skip
 
+                var deducts = deductionByFaceType.TryGetValue(faceType, out var dl) ? dl : null;
                 var netArea = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, faceType);
-                var formFormula = QuantityExtractorHelper.GetDeductionFormula(refFaceDict, deductionByFaceType, faceType);
+                var rawFormula = QuantityExtractorHelper.GetDeductionRawFormula(refFaceDict, deductionByFaceType, faceType);
+                var renderedFormula = QuantityExtractorHelper.GetDeductionRenderedFormula(refFaceDict, deductionByFaceType, faceType);
 
                 var spec = faceType switch
                 {
@@ -222,10 +224,12 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                     ElementCode = beam.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
                     WorkType = "거푸집",
                     Specification = spec,
-                    RawFormula = formFormula,
-                    RenderedFormula = formFormula,
+                    RawFormula = rawFormula,
+                    RenderedFormula = renderedFormula,
                     Value = netArea,
-                    Unit = "m²"
+                    Unit = "m²",
+                    GrossValue = deducts != null ? grossArea : null,
+                    Deductions = deducts,
                 };
 
                 if (formworkItem.Value > 1e-6) quantityItems.Add(formworkItem);

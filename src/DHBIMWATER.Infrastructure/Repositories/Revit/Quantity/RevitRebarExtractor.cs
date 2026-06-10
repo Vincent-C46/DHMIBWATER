@@ -106,7 +106,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 RawFormula = rebarFormula,
                 RenderedFormula = rebarRendered,
                 Value = rebarValue,
-                Unit = "t"
+                Unit = "ton"
             };
 
             var listToAdd = new List<QuantityItem>() { rebarItem, };

@@ -71,8 +71,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             };
 
             string materialName = string.Empty;
-            var materialId = generic.get_Parameter(BuiltInParameter.STRUCTURAL_MATERIAL_PARAM)?.AsElementId() ??
-                             generic.Document.GetElement(generic.GetTypeId()).get_Parameter(BuiltInParameter.STRUCTURAL_MATERIAL_PARAM)?.AsElementId();
+            var materialId = FamilyInstanceHelper.GetMaterialId(generic);
 
             if (materialId == null || materialId == ElementId.InvalidElementId)
                 materialName = string.Empty;

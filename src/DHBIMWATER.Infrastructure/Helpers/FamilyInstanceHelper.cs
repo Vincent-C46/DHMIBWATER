@@ -22,5 +22,21 @@ namespace DHBIMWATER.Infrastructure.Helpers
 
             return param?.AsDouble();
         }
+
+
+        public static ElementId? GetMaterialId(Element element)
+        {
+            var instanceParam = element
+                .get_Parameter(BuiltInParameter.STRUCTURAL_MATERIAL_PARAM)
+                ?.AsElementId();
+
+            if (instanceParam != null && instanceParam != ElementId.InvalidElementId)
+                return instanceParam;
+
+            return element.Document
+                .GetElement(element.GetTypeId())
+                ?.get_Parameter(BuiltInParameter.STRUCTURAL_MATERIAL_PARAM)
+                ?.AsElementId();
+        }
     }
 }

@@ -1327,7 +1327,7 @@ namespace DHBIMWATER.Application.Services
 
                     ElementCode = "G1",
                     Zone = "",
-                    Part = "상부 거더",
+                    Part = "GIRDER",
                 };
                 var beamDef2 = new BeamDefinition()
                 {
@@ -1338,7 +1338,7 @@ namespace DHBIMWATER.Application.Services
                     LevelName = UpperSlabLevelName,
                     ElementCode = "G1",
                     Zone = "",
-                    Part = "상부 거더",
+                    Part = "GIRDER",
                 };
                 var beamDef3 = new BeamDefinition()
                 {
@@ -1350,7 +1350,7 @@ namespace DHBIMWATER.Application.Services
 
                     ElementCode = "G1",
                     Zone = "",
-                    Part = "상부 거더",
+                    Part = "GIRDER",
                 };
 
                 beamDefs.Add(beamDef1);

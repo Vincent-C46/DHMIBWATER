@@ -17,13 +17,13 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
             _doc = doc;
         }
 
-        public IReadOnlyList<(FaceType, long, double)> FindContactAreas(long refElemId)
+        public IReadOnlyList<FaceDeduction> FindContactAreas(long refElemId)
         {
             var doc = _doc();
-            if (doc == null) return new List<(FaceType, long, double)>();
+            if (doc == null) return new List<FaceDeduction>();
 
             var refElem = doc.GetElement(new ElementId(refElemId));
-            if (refElem == null) return new List<(FaceType, long, double)>();
+            if (refElem == null) return new List<FaceDeduction>();
 
             //Debug.WriteLine($"RefElemId: {refElem.Id.Value} / 카테고리: {refElem.Category.Name}");
 
@@ -32,10 +32,10 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
                 .SelectMany(s => { try { return SolidUtils.SplitVolumes(s); } catch { return [s]; } })
                 .Where(s => s.Volume > 1e-9)
                 .ToList();
-            if (!refSolids.Any()) return new List<(FaceType, long, double)>();
+            if (!refSolids.Any()) return new List<FaceDeduction>();
 
             var bbox = refElem.get_BoundingBox(null);
-            if (bbox == null) return new List<(FaceType, long, double)>();
+            if (bbox == null) return new List<FaceDeduction>();
 
             var expandedMin = new XYZ(bbox.Min.X - Epsilon, bbox.Min.Y - Epsilon, bbox.Min.Z - Epsilon);
             var expandedMax = new XYZ(bbox.Max.X + Epsilon, bbox.Max.Y + Epsilon, bbox.Max.Z + Epsilon);
@@ -52,7 +52,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
                                 .Where(e => e.Id.Value != refElemId)
                                 .ToList();
 
-            var contacts = new List<(FaceType, long, double)>();
+            var contacts = new List<FaceDeduction>();
 
             foreach (var candidate in candidates)
             {
@@ -91,7 +91,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
                             var area = Math.Round(UC.Ft2ToM2(intersectingSolid.Volume / SolidThk), 3);
                             var faceType = RevitFaceClassifier.Classify(refElem, refNormal);
 
-                            contacts.Add((faceType, candidate.Id.Value, area));
+                            contacts.Add(new FaceDeduction(faceType, candidate.Id.Value, area));
                         }
                         catch { continue; }
                     }

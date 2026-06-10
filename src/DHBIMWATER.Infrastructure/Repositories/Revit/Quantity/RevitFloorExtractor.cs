@@ -121,20 +121,27 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             //double formValue = FormulaCalculator.Calculate(formFormula, varDict);
 
             // 거푸집 - 각 FaceType별로 항목 생성
-            var formworkFaces = new[] { FaceType.Bottom, FaceType.Side };
+            bool isPlain = concWorkType == plainConcreteName;   // 무근 콘크리트 여부
+            var formworkFaces = isPlain
+                ? new[] { FaceType.Side }
+                : new[] { FaceType.Bottom, FaceType.Side };
 
             foreach (var faceType in formworkFaces)
             {
                 var grossArea = refFaceDict.GetValueOrDefault(faceType, 0);
-                if (grossArea < 0.001) continue; // 면적이 없으면 skip
+                if (grossArea < 0.001) continue;
 
+                var deducts = deductionByFaceType.TryGetValue(faceType, out var dl) ? dl : null;
                 var netArea = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, faceType);
-                var formFormula = QuantityExtractorHelper.GetDeductionFormula(refFaceDict, deductionByFaceType, faceType);
+                var rawFormula = QuantityExtractorHelper.GetDeductionRawFormula(refFaceDict, deductionByFaceType, faceType);
+                var renderedFormula = QuantityExtractorHelper.GetDeductionRenderedFormula(refFaceDict, deductionByFaceType, faceType);
 
-                var spec = faceType switch
+                var spec = (isPlain, faceType) switch
                 {
-                    FaceType.Bottom => "슬래브하부",
-                    FaceType.Side => "슬래브옆면",
+                    (true,  FaceType.Side)   => "합판6회",
+                    // 무근콘크리트 하부 거푸집 산출 필요 없음 (확실?)
+                    (false, FaceType.Bottom) => "합판4회",
+                    (false, FaceType.Side)   => "합판3회",
                     _ => throw new ArgumentOutOfRangeException(),
                 };
 
@@ -145,10 +152,12 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                     ElementCode = floor.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
                     WorkType = "거푸집",
                     Specification = spec,
-                    RawFormula = formFormula,
-                    RenderedFormula = formFormula,
+                    RawFormula = rawFormula,
+                    RenderedFormula = renderedFormula,
                     Value = netArea,
-                    Unit = "m²"
+                    Unit = "m²",
+                    GrossValue = deducts != null ? grossArea : null,
+                    Deductions = deducts,
                 };
 
                 if (formworkItem.Value > 1e-6) quantityItems.Add(formworkItem);
