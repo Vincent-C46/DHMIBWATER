@@ -39,6 +39,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
                 BuiltInCategory.OST_Walls => ClassifyWall(elem, normal),
                 BuiltInCategory.OST_Floors or BuiltInCategory.OST_StructuralFoundation => ClassifyFloor(normal),
                 BuiltInCategory.OST_StructuralColumns => ClassifyColumn(normal),
+                BuiltInCategory.OST_Stairs => ClassifyStairs(normal),
                 _ => FaceType.Side,
             };
 
@@ -47,9 +48,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
             if (normal.Z < -0.9) return FaceType.Bottom;
             if (normal.Z > 0.9) return FaceType.Top;
 
-            if (elem.Location is not LocationCurve lc) return FaceType.Side;    // Beam¿¡¼­ LC°¡ ÃßÃâ¾ÈµÇ´Â ÀÏÀÌ ÀÖÀ»Áö?
+            if (elem.Location is not LocationCurve lc) return FaceType.Side;    // Beamï¿½ï¿½ï¿½ï¿½ LCï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ÈµÇ´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½?
             var dir = (lc.Curve.GetEndPoint(1) - lc.Curve.GetEndPoint(0)).Normalize();
-            if (Math.Abs(normal.DotProduct(dir)) > 0.9) return FaceType.End;    // ÁøÇà¹æÇâ°ú °ÅÀÇ ÆòÇàÇÑ °æ¿ì´Â End·Î ºÐ·ù
+            if (Math.Abs(normal.DotProduct(dir)) > 0.9) return FaceType.End;    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Endï¿½ï¿½ ï¿½Ð·ï¿½
 
             var right = dir.CrossProduct(XYZ.BasisZ).Normalize();
             return normal.DotProduct(right) >= 0 ? FaceType.Right : FaceType.Left;
@@ -72,11 +73,17 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
             if (normal.Z < -0.9) return FaceType.Bottom;
             return FaceType.Side;
         }
-
         private static FaceType ClassifyColumn(XYZ normal)
         {
             if (normal.Z > 0.9) return FaceType.Top;
             if (normal.Z < -0.9) return FaceType.Bottom;
+            return FaceType.Side;
+        }
+
+        private static FaceType ClassifyStairs(XYZ normal)
+        {
+            if (normal.Z < -0.1) return FaceType.Bottom;
+            if (normal.Z > 0.9) return FaceType.Top;
             return FaceType.Side;
         }
     }

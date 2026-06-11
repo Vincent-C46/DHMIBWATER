@@ -41,7 +41,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 FamilyPlacementType.OneLevelBased => (fi.get_Parameter(BuiltInParameter.HOST_VOLUME_COMPUTED)?.AsDouble() ?? 0) > 0,
             };
         }
-
         public IEnumerable<long> CollectElementIds()
         {
             var doc = _doc();
@@ -52,7 +51,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             .WhereElementIsNotElementType()
             .Select(r => r.Id.Value);
         }
-
         public IEnumerable<QuantityItem> Extract(long elementId)
         {
             var doc = _doc();

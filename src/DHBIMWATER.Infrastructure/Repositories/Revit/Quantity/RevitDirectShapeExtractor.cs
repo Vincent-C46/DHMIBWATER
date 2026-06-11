@@ -56,10 +56,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var quantityItems = new List<QuantityItem>();
 
             IReadOnlyDictionary<FaceType, double> refFaceDict = _classifier.GetFaceAreas(elementId);
-
-            //var solid = RevitGeometryHelper.GetSolid(ds);
             var volume = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(ds).Sum(s => s.Volume));
-            //TaskDialog.Show("success", $"{refFaceDict.Keys.FirstOrDefault().ToString()}");
 
             var varDict = new Dictionary<string, double>
             {
