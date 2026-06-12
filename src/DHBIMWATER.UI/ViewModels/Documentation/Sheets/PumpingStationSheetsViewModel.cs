@@ -94,12 +94,25 @@ namespace DHBIMWATER.UI.ViewModels.Documentation.Sheets
 
         private void PlaceAnnotates()
         {
-            _dialogService.Info("펌프장", "개발 예정입니다.");
+            var tagFamilies = _useCase.GetAvailableTagFamilies();
+            var vm = new AnnotateSelectViewModel(tagFamilies);
+            var dialog = new AnnotateSelectView(vm);
+            if (dialog.ShowDialog() != true) return;
+
+            _useCase.ApplyPumpingStationAnnotations();
+            _useCase.ApplyDHTags(vm.SelectedTagFamilyIds);
+            _refreshSheets?.Invoke();
+            _dialogService.Info("펌프장 주석 배치", "시트에 주석을 배치하였습니다.");
         }
 
         private void CreateSheets()
         {
-            var result = _useCase.CreatePumpingStationSheets();
+            var titleBlocks = _useCase.GetTitleBlocks();
+            var selectVm = new SheetsSelectViewModel(titleBlocks);
+            var selectDialog = new SheetsSelectView(selectVm);
+            if (selectDialog.ShowDialog() != true) return;
+
+            var result = _useCase.CreatePumpingStationSheets(selectVm.SelectedTitleBlock?.Id);
 
             if (result.CreatedCount == 0 && result.HasDuplicates)
             {
@@ -110,7 +123,7 @@ namespace DHBIMWATER.UI.ViewModels.Documentation.Sheets
 
             if (result.CreatedCount == 0)
             {
-                _dialogService.Warn("시트 생성 실패", "A1 도곽을 찾을 수 없거나 생성할 단면 뷰가 없습니다.");
+                _dialogService.Warn("시트 생성 실패", "도곽을 찾을 수 없거나 생성할 단면 뷰가 없습니다.");
                 return;
             }
 

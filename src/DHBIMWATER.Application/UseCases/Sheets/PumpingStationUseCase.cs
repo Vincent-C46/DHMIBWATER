@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using DHBIMWATER.Application.DTOs.Revit;
 using DHBIMWATER.Application.DTOs.Revit.Sheets;
 
 namespace DHBIMWATER.Application.UseCases.Sheets
@@ -19,15 +20,11 @@ namespace DHBIMWATER.Application.UseCases.Sheets
             _sheetUseCase = sheetUseCase;
         }
 
-        public PumpingStationCreateResult CreatePumpingStationSheets()
+        public PumpingStationCreateResult CreatePumpingStationSheets(string titleBlockId)
         {
             var result = new PumpingStationCreateResult();
 
-            var titleBlocks = _sheetUseCase.GetTitleBlocks();
-            var a1TitleBlock = titleBlocks.FirstOrDefault(tb =>
-                tb.DisplayName != null && tb.DisplayName.Contains("A1"));
-
-            if (a1TitleBlock == null)
+            if (string.IsNullOrWhiteSpace(titleBlockId))
                 return result;
 
             var allViews = _sheetUseCase.GetViews();
@@ -44,7 +41,7 @@ namespace DHBIMWATER.Application.UseCases.Sheets
             foreach (var planName in PlanViewNames)
             {
                 var sheetNum = sheetIndex.ToString("D3");
-                var created = _sheetUseCase.CreateSheet(a1TitleBlock.Id, sheetNum, planName);
+                var created = _sheetUseCase.CreateSheet(titleBlockId, sheetNum, planName);
                 if (created != null)
                     result.CreatedCount++;
                 else
@@ -56,7 +53,7 @@ namespace DHBIMWATER.Application.UseCases.Sheets
             {
                 var sheetNum = sheetIndex.ToString("D3");
                 var sheetName = $"단면 {sectionView.ViewName}";
-                var created = _sheetUseCase.CreateSheet(a1TitleBlock.Id, sheetNum, sheetName);
+                var created = _sheetUseCase.CreateSheet(titleBlockId, sheetNum, sheetName);
                 if (created != null)
                     result.CreatedCount++;
                 else
@@ -178,5 +175,19 @@ namespace DHBIMWATER.Application.UseCases.Sheets
         {
             return _sheetUseCase.GetWaterLevels();
         }
+
+        public void ApplyPumpingStationAnnotations()
+        {
+            _sheetUseCase.ApplyPumpingStationAnnotations();
+        }
+
+        public void ApplyDHTags(IList<string> selectedFamilyIds)
+        {
+            _sheetUseCase.ApplyDHTags(selectedFamilyIds);
+        }
+
+        public IList<TagFamilyDto> GetAvailableTagFamilies() => _sheetUseCase.GetAvailableTagFamilies();
+
+        public IList<TitleBlockDto> GetTitleBlocks() => _sheetUseCase.GetTitleBlocks();
     }
 }

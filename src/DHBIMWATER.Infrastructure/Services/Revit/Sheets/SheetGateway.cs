@@ -43,6 +43,8 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
         private readonly TagService _tag;
         private readonly PumpingStationDimensionService _pumpingStationDimension;
         private readonly WaterLevelService _waterLevel;
+        private readonly PumpingStationAnnotationService _pumpingStationAnnotation;
+        private readonly TagPlacementService _dhTagPlacement;
         public SheetGateway(Document doc, UIDocument uidoc)
         {
             _sheetDirection = new SheetDirectionStorageService(doc);
@@ -76,6 +78,8 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             _tag = new TagService(doc);
             _pumpingStationDimension = new PumpingStationDimensionService(doc, uidoc);
             _waterLevel = new WaterLevelService(doc);
+            _pumpingStationAnnotation = new PumpingStationAnnotationService(doc);
+            _dhTagPlacement = new TagPlacementService(doc);
         }
 
         public IList<SheetInfoDto> GetSheets() => _query.GetSheets();
@@ -199,9 +203,9 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
         {
             _viewportMove.UpdateReservoirTitleLayout(sheetId, viewId, alignRightBottom);
         }
-        public void ApplyTagsToSelectedOnCurrentView(IList<string> elementIds)
+        public void ApplyDHTagsToSelectedOnCurrentView(IList<string> elementIds, IList<string> selectedFamilyIds)
         {
-            _tag.ApplyTagsToSelectedOnCurrentView(elementIds);
+            _dhTagPlacement.ApplyToCurrentView(selectedFamilyIds, elementIds);
         }
         public void SaveSheetDirection(string sheetId, string directionType)
         {
@@ -233,9 +237,9 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             _pumpingStationDimension.ApplyToSheet(sheetId, dimensionTypeName);
         }
 
-        public void ApplyTagsToAllOnCurrentView()
+        public void ApplyDHTagsToAllOnCurrentView(IList<string> selectedFamilyIds)
         {
-            _tag.ApplyTagsToAllOnCurrentView();
+            _dhTagPlacement.ApplyToCurrentView(selectedFamilyIds, null);
         }
         public void ApplyReservoirTags(string sheetId)
         {
@@ -254,6 +258,21 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
         public void HideNonWaterLevels()
         {
             _waterLevel.HideNonWaterLevels();
+        }
+
+        public void ApplyPumpingStationAnnotations()
+        {
+            _pumpingStationAnnotation.Apply();
+        }
+
+        public void ApplyDHTags(IList<string> selectedFamilyIds)
+        {
+            _dhTagPlacement.Apply(selectedFamilyIds);
+        }
+
+        public IList<TagFamilyDto> GetAvailableTagFamilies()
+        {
+            return _dhTagPlacement.GetAvailableTagFamilies();
         }
     }
 }

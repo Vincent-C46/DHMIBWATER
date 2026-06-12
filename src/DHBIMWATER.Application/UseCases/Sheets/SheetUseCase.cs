@@ -181,13 +181,13 @@ namespace DHBIMWATER.Application.UseCases.Sheets
         {
             _gateway.UpdateReservoirViewportTitleLayout(sheetId, viewId, alignRightBottom);
         }
-        public void ApplyTagsToSelectedOnCurrentView()
+        public void ApplyTagsToSelectedOnCurrentView(IList<string> selectedFamilyIds)
         {
             var pickedIds = _gateway.PickDimensionTargetIds();
             if (pickedIds == null || pickedIds.Count == 0)
                 return;
 
-            _gateway.ApplyTagsToSelectedOnCurrentView(pickedIds);
+            _gateway.ApplyDHTagsToSelectedOnCurrentView(pickedIds, selectedFamilyIds);
         }
         public void SaveSheetDirection(string sheetId, string directionType)
         {
@@ -219,9 +219,9 @@ namespace DHBIMWATER.Application.UseCases.Sheets
             _gateway.ApplyPumpingStationDimensions(sheetId, dimensionTypeName);
         }
 
-        public void ApplyTagsToAllOnCurrentView()
+        public void ApplyTagsToAllOnCurrentView(IList<string> selectedFamilyIds)
         {
-            _gateway.ApplyTagsToAllOnCurrentView();
+            _gateway.ApplyDHTagsToAllOnCurrentView(selectedFamilyIds);
         }
         public void ApplyReservoirTags(string sheetId)
         {
@@ -240,6 +240,21 @@ namespace DHBIMWATER.Application.UseCases.Sheets
         public void HideNonWaterLevels()
         {
             _gateway.HideNonWaterLevels();
+        }
+
+        public void ApplyPumpingStationAnnotations()
+        {
+            _gateway.ApplyPumpingStationAnnotations();
+        }
+
+        public void ApplyDHTags(IList<string> selectedFamilyIds)
+        {
+            _gateway.ApplyDHTags(selectedFamilyIds);
+        }
+
+        public IList<TagFamilyDto> GetAvailableTagFamilies()
+        {
+            return _gateway.GetAvailableTagFamilies();
         }
     }
 }

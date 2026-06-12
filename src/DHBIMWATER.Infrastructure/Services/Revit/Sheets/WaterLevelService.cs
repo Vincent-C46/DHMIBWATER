@@ -91,16 +91,29 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
                 if (curves.Count == 0) return;
                 if (curves[0] is not Line line) return;
 
-                var p0 = line.GetEndPoint(0);
-                var p1 = line.GetEndPoint(1);
-                var rightDir = view.RightDirection;
+                var p0       = line.GetEndPoint(0);
+                var p1       = line.GetEndPoint(1);
+                var rightDir = view.RightDirection.Normalize();
 
-                XYZ rightPt = p1.DotProduct(rightDir) >= p0.DotProduct(rightDir) ? p1 : p0;
+                // 크롭 박스 중앙 R 위치 계산 → 머리기호를 뷰 중앙에 배치
+                var    cb         = view.CropBox;
+                var    t          = cb.Transform;
+                double cropMinR   = t.OfPoint(new XYZ(cb.Min.X, 0, 0)).DotProduct(rightDir);
+                double cropMaxR   = t.OfPoint(new XYZ(cb.Max.X, 0, 0)).DotProduct(rightDir);
+                double centerR    = (cropMinR + cropMaxR) * 0.5;
 
-                double stub = 0.5 / 0.3048; // 500mm
-                XYZ newStart = rightPt - rightDir.Multiply(stub);
+                // 기존 라인 위의 centerR 위치 보간
+                double r0     = p0.DotProduct(rightDir);
+                double r1     = p1.DotProduct(rightDir);
+                double tParam = Math.Abs(r1 - r0) > 1e-6
+                    ? Math.Clamp((centerR - r0) / (r1 - r0), 0.05, 0.95)
+                    : 0.5;
+                XYZ headPt  = p0 + (p1 - p0).Multiply(tParam);
 
-                level.SetCurveInView(DatumExtentType.ViewSpecific, view, Line.CreateBound(newStart, rightPt));
+                double stub   = 0.001 / 0.3048; // 1mm — 머리기호만
+                XYZ startPt   = headPt - rightDir.Multiply(stub);
+
+                level.SetCurveInView(DatumExtentType.ViewSpecific, view, Line.CreateBound(startPt, headPt));
             }
             catch { }
         }

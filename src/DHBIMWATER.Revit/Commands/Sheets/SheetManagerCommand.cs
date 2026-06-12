@@ -54,7 +54,7 @@ namespace DHBIMWATER.Revit.Commands.Sheets
 
             if (vm.RequestedCurrentViewSelectedAnnotates)
             {
-                useCase.ApplyTagsToSelectedOnCurrentView();
+                useCase.ApplyTagsToSelectedOnCurrentView(vm.RequestedAnnotateTagFamilyIds);
 
                 var reopenedVm = new SheetManagerViewModel(useCase, waterReservoirUseCase, pumpingStationUseCase, dialogService);
                 var reopenedView = new SheetManagerView { DataContext = reopenedVm };
@@ -64,7 +64,7 @@ namespace DHBIMWATER.Revit.Commands.Sheets
 
             if (vm.RequestedCurrentViewAllAnnotates)
             {
-                useCase.ApplyTagsToAllOnCurrentView();
+                useCase.ApplyTagsToAllOnCurrentView(vm.RequestedAnnotateTagFamilyIds);
 
                 var reopenedVm = new SheetManagerViewModel(useCase, waterReservoirUseCase, pumpingStationUseCase, dialogService);
                 var reopenedView = new SheetManagerView { DataContext = reopenedVm };
