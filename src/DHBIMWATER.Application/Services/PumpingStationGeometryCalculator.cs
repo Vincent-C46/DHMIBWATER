@@ -61,7 +61,7 @@ namespace DHBIMWATER.Application.Services
             };
             var valveSlabDef = new SlabDefinition
             {
-                Thickness = d.SelectedPumpingStationType == "Type2" ? pr.T3 : pr.T5Prime,
+                Thickness = d.SelectedPumpingStationType == "Type2" ? pr.T5Prime : pr.T3,
                 ElevationZ = upperSlabDef.ElevationZ - (pr.H7 + d.D + pr.H6),
                 LevelName = ValveRoomLevelName,
                 ElementCode = "MS1",
@@ -833,8 +833,8 @@ namespace DHBIMWATER.Application.Services
                         var valveRoomWallDef = new LinearWallDefinition
                         {
                             Thickness = pr.T3,
-                            Height = pr.T3 + pr.H6 + d.D + pr.H7 - pr.T1,
-                            BaseOffset = -pr.T3,
+                            Height = pr.T5Prime + pr.H6 + d.D + pr.H7 - pr.T1,
+                            BaseOffset = -pr.T5Prime,
                             LevelName = ValveRoomLevelName,
                             ElementCode = "W4",
                             Zone = "밸브실",
@@ -849,7 +849,7 @@ namespace DHBIMWATER.Application.Services
                         var valveRoomWallDef2 = new LinearWallDefinition
                         {
                             Thickness = pr.T4,
-                            Height = pr.H5 + pr.T1 - pr.H7 - d.D - pr.H6 - pr.T3,
+                            Height = pr.H5 + pr.T1 - pr.H7 - d.D - pr.H6 - pr.T5Prime,
                             BaseOffset = 0,
                             LevelName = FoundationPumpLevelName,
                             ElementCode = "W4-1",
