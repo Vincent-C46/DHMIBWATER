@@ -46,18 +46,20 @@ namespace DHBIMWATER.Application.UseCases
         void ActivateView(string viewId);
         void UpdateViewportTitleLayout(string sheetId, string viewId, double offsetX, double offsetY, double lineLength);
         void UpdateReservoirViewportTitleLayout(string sheetId, string viewId, bool alignRightBottom);
-        void ApplyTagsToSelectedOnCurrentView();
+        void ApplyTagsToSelectedOnCurrentView(IList<string> selectedFamilyIds);
         void SaveSheetDirection(string sheetId, string directionType);
         void HideSectionMarkersOnReservoirSectionViews();
         void HideCopiedSectionMarkersOnReservoirPlanViews();
         void HideSectionMarkersOnPumpingStationSectionViews();
         void HideCopiedSectionMarkersOnPumpingStationPlanViews();
         void ApplyPumpingStationDimensions(string sheetId, string dimensionTypeName);
-        void ApplyTagsToAllOnCurrentView();
+        void ApplyTagsToAllOnCurrentView(IList<string> selectedFamilyIds);
         void ApplyReservoirTags(string sheetId);
         void CreateOrUpdateWaterLevels(string hwl, string lwl);
         (string hwl, string lwl) GetWaterLevels();
         void HideNonWaterLevels();
-
+        void ApplyPumpingStationAnnotations();
+        void ApplyDHTags(IList<string> selectedFamilyIds);
+        IList<TagFamilyDto> GetAvailableTagFamilies();
     }
 }

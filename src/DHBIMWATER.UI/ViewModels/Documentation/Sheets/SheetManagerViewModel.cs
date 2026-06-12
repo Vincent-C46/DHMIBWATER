@@ -30,6 +30,7 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
         public bool RequestedCurrentViewSelectedObjects { get; private set; }
         public bool RequestedCurrentViewSelectedAnnotates { get; private set; }
         public bool RequestedCurrentViewAllAnnotates { get; private set; }
+        public IList<string> RequestedAnnotateTagFamilyIds { get; private set; }
 
 
 
@@ -543,6 +544,8 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
             RequestedCurrentViewSelectedObjects = false;
             RequestedCurrentViewDimensionTypeName = null;
             RequestedCurrentViewSelectedAnnotates = false;
+            RequestedCurrentViewAllAnnotates = false;
+            RequestedAnnotateTagFamilyIds = null;
 
 
         }
@@ -743,6 +746,15 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
 
             if (dlg.ShowDialog() != true)
                 return;
+
+            var tagFamilies = _useCase.GetAvailableTagFamilies();
+            var selectVm = new AnnotateSelectViewModel(tagFamilies);
+            var selectDlg = new AnnotateSelectView(selectVm);
+
+            if (selectDlg.ShowDialog() != true)
+                return;
+
+            RequestedAnnotateTagFamilyIds = selectVm.SelectedTagFamilyIds;
 
             if (vm.IsSelectedObjectsMode)
             {

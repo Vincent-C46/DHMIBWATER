@@ -1,17 +1,22 @@
 using System.Collections.Generic;
+using DHBIMWATER.Application.DTOs.Revit;
 using DHBIMWATER.Application.DTOs.Revit.Sheets;
 
 namespace DHBIMWATER.Application.UseCases.Sheets
 {
     public interface IPumpingStationUseCase
     {
-        PumpingStationCreateResult CreatePumpingStationSheets();
+        PumpingStationCreateResult CreatePumpingStationSheets(string titleBlockId);
         PumpingStationPlaceViewsResult PlacePumpingStationViews();
         int DeletePumpingStationSheets();
         void PlacePumpingStationDimensions(string dimensionTypeName);
         IList<DimensionTypeDto> GetDimensionTypes();
         void CreateOrUpdateWaterLevels(string hwl, string lwl);
         (string hwl, string lwl) GetWaterLevels();
+        void ApplyPumpingStationAnnotations();
+        void ApplyDHTags(IList<string> selectedFamilyIds);
+        IList<TagFamilyDto> GetAvailableTagFamilies();
+        IList<TitleBlockDto> GetTitleBlocks();
     }
 
     public class PumpingStationCreateResult
