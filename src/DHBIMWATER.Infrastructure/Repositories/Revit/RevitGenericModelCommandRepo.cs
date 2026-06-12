@@ -48,9 +48,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
 
             if (!symbol.IsActive) symbol.Activate();
 
-            var origin = new XYZ(UC.MToFt(def.Origin.X),
-                                 UC.MToFt(def.Origin.Y),
-                                 UC.MToFt(def.Origin.Z));
+            var origin = new XYZ(UC.MmToFt(def.Origin.X),
+                                 UC.MmToFt(def.Origin.Y),
+                                 UC.MmToFt(def.Origin.Z));
 
             FamilyInstance instance = doc.Create.NewFamilyInstance(
                 origin, symbol, level, StructuralType.Footing);
@@ -60,7 +60,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             if (def.Rotation != 0.0)
             {
                 var axis = Line.CreateBound(origin, origin + XYZ.BasisZ);
-                ElementTransformUtils.RotateElement(doc, instance.Id, axis, UC.DegToRad(def.Rotation));
+                ElementTransformUtils.RotateElement(doc, instance.Id, axis, UC.DegToRad(def.Rotation)); // CCW
             }
 
             instance.LookupParameter("DH_Addin")?.Set("DHBIMWATER");
@@ -78,9 +78,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                     case string s: param.Set(s); break;
                     case double d: param.Set(UC.MmToFt(d)); break;
                     case int i:    param.Set(i); break;
+                    default: break;
                 }
             }
-
             return (int)instance.Id.Value;
         }
     }

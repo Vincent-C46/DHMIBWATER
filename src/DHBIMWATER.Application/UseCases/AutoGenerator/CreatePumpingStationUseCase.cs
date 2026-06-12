@@ -162,11 +162,10 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                         _openingCmdRepo.CreateWallOpening(openingDef);
                     #endregion
 
-                    #region 6. 일반 모델 배치
+                    #region 6. 펌프받침 배치
                     foreach (var def in PumpingStationGeometryCalculator.CalculateGenericModels(dto))
                         _genericModelCmdRepo.PlaceInstance(def);
                     #endregion
-
 
                     #region 7. 결합
                     // 보 작성 메서드 내부에서 상부 슬래브와 결합 (임시 조치)

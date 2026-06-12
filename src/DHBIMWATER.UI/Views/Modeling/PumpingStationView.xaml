@@ -554,7 +554,21 @@ Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
              Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                                     <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="30"/>
                                                 </StackPanel>
+                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,15" Visibility="{Binding HB1Visibility}">
+                                                    <TextBlock Text="HB1:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="밸브실 하부 헌치 폭" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                    <TextBox Style="{StaticResource ReservoirTextBoxStyle}"
+Text="{Binding HB1}" Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
+                                                    <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="50"/>
+                                                </StackPanel>
 
+                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,15" Visibility="{Binding HH1Visibility}">
+                                                    <TextBlock Text="HH1:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="밸브실 하부 헌치 높이" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                    <TextBox Style="{StaticResource ReservoirTextBoxStyle}"
+Text="{Binding HH1}" Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
+                                                    <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="50"/>
+                                                </StackPanel>
                                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                                     <TextBlock Text="HS:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                     <TextBlock Text="계단 높이" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
@@ -563,6 +577,8 @@ Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
              Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                                     <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="30"/>
                                                 </StackPanel>
+
+                           
 
                                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                                     <TextBlock Text="L1:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
@@ -658,6 +674,16 @@ Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
              Text="{Binding T4}" Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                                     <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="50"/>
                                                 </StackPanel>
+
+                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,15" Visibility="{Binding T5PrimeVisibility}">
+                                                    <TextBlock Text="T5':" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="밸브실 슬래브 두께" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                    <TextBox Style="{StaticResource ReservoirTextBoxStyle}"
+             Text="{Binding T5Prime}" Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
+                                                    <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="50"/>
+                                                </StackPanel>
+
+
 
                                             </StackPanel>
                                         </Expander>

@@ -2,6 +2,7 @@
 using DHBIMWATER.Core.Geometry;
 using DHBIMWATER.Core.Structures;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.Arm;
 
@@ -60,7 +61,7 @@ namespace DHBIMWATER.Application.Services
             };
             var valveSlabDef = new SlabDefinition
             {
-                Thickness = d.SelectedPumpingStationType == "Type2" ? pr.T3 : pr.T3,
+                Thickness = d.SelectedPumpingStationType == "Type2" ? pr.T3 : pr.T5Prime,
                 ElevationZ = upperSlabDef.ElevationZ - (pr.H7 + d.D + pr.H6),
                 LevelName = ValveRoomLevelName,
                 ElementCode = "MS1",
@@ -1796,23 +1797,45 @@ namespace DHBIMWATER.Application.Services
 
             var defs = new List<GenericModelPlacementDefinition>();
 
-            var pedestal = new GenericModelPlacementDefinition
+            double rec_d = 400;
+            double rec_B = pr.B5 + rec_d;
+            double rec_L = pr.B5 + rec_d;
+            double rec_T = 100;
+
+            double circ_d = 400;
+            double circ_R = pr.B5 / 2 + rec_d;
+            double circ_T = 100;
+
+            var recDict = new Dictionary<string, object>
             {
-                SymbolName = pr.IsRectangularOpening ? "기초 콘크리트_사각형" : "기초 콘크리트_원형",
-                Origin = new Point3D(0,0,0),
-                LevelName = "상부슬래브",
-                Rotation = 45,
-                ElementCode = "PED1",
-                Part = "콘크리트기초",
-                Zone = "펌프장",
-
-                //Parameters = new Dictionary<string, object>
-                //{
-                //    { "D", " "}
-                //}
+                { "B", rec_B },
+                { "L", rec_L },
+                { "T", rec_T },
+                { "d", rec_d },
             };
+            var circDict = new Dictionary<string, object>
+            {
+                { "R", circ_R },
+                { "T", circ_T },
+                { "d", circ_d },
+            };
+            for (int i = 0; i < d.N; i++)
+            {
+                var pedestal = new GenericModelPlacementDefinition
+                {
+                    SymbolName = pr.IsRectangularOpening ? "기초 콘크리트_사각형" : "기초 콘크리트_원형",
+                    Origin = new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2, pl.B8 / 2 + (pl.B8 + pl.T5) * i, 0),
+                    LevelName = "상부슬래브",
+                    Rotation = -90, // 기본적으로 회전방향은 ccw.
+                    ElementCode = "PED1",
+                    Part = "콘크리트기초",
+                    Zone = "펌프장",
 
-            defs.Add(pedestal);
+                    Parameters = pr.IsRectangularOpening ? recDict : circDict,
+                };
+
+                defs.Add(pedestal);
+            }
             return defs;
         }
 
