@@ -64,7 +64,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 _ => "미분류"
             };
 
-            if (workType != "철근콘크리트") return quantityItems;
+            //if (workType != "철근콘크리트") return quantityItems;
 
             // 콘크리트 수량
             double volumeM3 = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(stair).Sum(s => s.Volume));

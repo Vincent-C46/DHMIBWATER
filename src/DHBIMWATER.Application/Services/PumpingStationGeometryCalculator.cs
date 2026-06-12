@@ -939,8 +939,8 @@ namespace DHBIMWATER.Application.Services
                             Zone = "밸브실",
                             Part = "밸브실 하부벽",
                         };
-                        valveRoomWallDef2.StartPoint = new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3  + pr.T4 / 2, 0, 0);
-                        valveRoomWallDef2.EndPoint = new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3  + pr.T4 / 2, totalWidth - pr.T4 * 2, 0);
+                        valveRoomWallDef2.StartPoint = new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3 + pr.T4 / 2, 0, 0);
+                        valveRoomWallDef2.EndPoint = new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3 + pr.T4 / 2, totalWidth - pr.T4 * 2, 0);
                         valveRoomWallDef2.IsFlipped = true;
                         linearWalls.Add(valveRoomWallDef2);
 
@@ -985,8 +985,8 @@ namespace DHBIMWATER.Application.Services
                     Thickness = pl.T5,
                     LevelName = FoundationPumpLevelName,
                     ElementCode = "W3",
-                    Zone = "",
-                    Part = ""
+                    Zone = "펌프장",
+                    Part = "펌프장 내벽"
                 };
                 innerProfileWallDef.Points = new List<Point3D>() {
                             new Point3D(0, -pl.T5/2 + (pl.B8 + pl.T5)*(i+1), d.LWL * 1000 - pr.H1),
@@ -1009,8 +1009,8 @@ namespace DHBIMWATER.Application.Services
                         Thickness = pr.T4,
                         LevelName = FoundationPumpLevelName,
                         ElementCode = "W1-1",
-                        Zone = "",
-                        Part = ""
+                        Zone = "펌프장",
+                        Part = "펌프장 외벽"
                     };
                     l_outerProfileWallDef1.Points = new List<Point3D>() {
                             new Point3D(0, -pr.T4/2, d.LWL * 1000 - pr.H1),
@@ -1030,8 +1030,8 @@ namespace DHBIMWATER.Application.Services
                             Thickness = pr.T4,
                             LevelName = FoundationPumpLevelName,
                             ElementCode = "W1",
-                            Zone = "",
-                            Part = ""
+                            Zone = "펌프장",
+                            Part = "펌프장 외벽"
                         };
                         l_outerProfileWallDef2.Points = new List<Point3D>() {
                             new Point3D(0, pl.B8 * d.N + pl.T5 * (d.N-1) + pr.T4/2, d.LWL * 1000 - pr.H1),
@@ -1052,8 +1052,8 @@ namespace DHBIMWATER.Application.Services
                             Thickness = pr.T4,
                             LevelName = FoundationPumpLevelName,
                             ElementCode = "W1-4",
-                            Zone = "",
-                            Part = ""
+                            Zone = "펌프장",
+                            Part = "펌프장 외벽"
                         };
                         l_outerProfileWallDef2.Points = new List<Point3D>() {
                             new Point3D(0, pl.B8 * d.N + pl.T5 * (d.N-1) + pr.T4/2, d.LWL * 1000 - pr.H1),
@@ -1074,8 +1074,8 @@ namespace DHBIMWATER.Application.Services
                             Thickness = pr.T4,
                             LevelName = FoundationPumpLevelName,
                             ElementCode = "W1",
-                            Zone = "",
-                            Part = ""
+                            Zone = "펌프장",
+                            Part = "펌프장 외벽"
                         };
                         l_outerProfileWallDef2.Points = new List<Point3D>() {
                             new Point3D(0, pl.B8 * d.N + pl.T5 * (d.N-1) + pr.T4/2, d.LWL * 1000 - pr.H1),
@@ -1095,8 +1095,8 @@ namespace DHBIMWATER.Application.Services
                         Thickness = pr.T4,
                         LevelName = FoundationPumpLevelName,
                         ElementCode = "W1-1",
-                        Zone = "",
-                        Part = ""
+                        Zone = "펌프장",
+                        Part = "펌프장 외벽"
                     };
                     r_outerProfileWallDef1.Points = new List<Point3D>() {
                             new Point3D(0, totalWidth - pr.T4 - pr.T4/2, d.LWL * 1000 - pr.H1),
@@ -1117,8 +1117,8 @@ namespace DHBIMWATER.Application.Services
                             Thickness = pr.T4,
                             LevelName = FoundationPumpLevelName,
                             ElementCode = "W1",
-                            Zone = "",
-                            Part = ""
+                            Zone = "펌프장",
+                            Part = "펌프장 외벽"
                         };
                         r_outerProfileWallDef2.Points = new List<Point3D>() {
                             new Point3D(0, -pr.T4/2, d.LWL * 1000 - pr.H1),
@@ -1139,8 +1139,8 @@ namespace DHBIMWATER.Application.Services
                             Thickness = pr.T4,
                             LevelName = FoundationPumpLevelName,
                             ElementCode = "W1-4",
-                            Zone = "",
-                            Part = ""
+                            Zone = "펌프장",
+                            Part = "펌프장 외벽"
                         };
                         r_outerProfileWallDef2.Points = new List<Point3D>() {
                             new Point3D(0, - pr.T4/2, d.LWL * 1000 - pr.H1),
@@ -1161,8 +1161,8 @@ namespace DHBIMWATER.Application.Services
                             Thickness = pr.T4,
                             LevelName = FoundationPumpLevelName,
                             ElementCode = "W1",
-                            Zone = "",
-                            Part = ""
+                            Zone = "펌프장",
+                            Part = "펌프장 외벽"
                         };
                         r_outerProfileWallDef2.Points = new List<Point3D>() {
                             new Point3D(0, -pr.T4/2, d.LWL * 1000 - pr.H1),
@@ -1185,8 +1185,8 @@ namespace DHBIMWATER.Application.Services
                             Thickness = pr.T4,
                             LevelName = FoundationPumpLevelName,
                             ElementCode = "W1",
-                            Zone = "",
-                            Part = ""
+                            Zone = "펌프장",
+                            Part = "펌프장 외벽"
                         };
                         s_outerProfileWallDef2.Points = new List<Point3D>() {
                             new Point3D(0, pl.B8 * d.N + pl.T5 * (d.N-1) + pr.T4/2, d.LWL * 1000 - pr.H1),
@@ -1204,8 +1204,8 @@ namespace DHBIMWATER.Application.Services
                             Thickness = pr.T4,
                             LevelName = FoundationPumpLevelName,
                             ElementCode = "W1",
-                            Zone = "",
-                            Part = ""
+                            Zone = "펌프장",
+                            Part = "펌프장 외벽"
                         };
                         s_outerProfileWallDef3.Points = new List<Point3D>() {
                             new Point3D(0, - pr.T4/2, d.LWL * 1000 - pr.H1),
@@ -1226,8 +1226,8 @@ namespace DHBIMWATER.Application.Services
                             Thickness = pr.T4,
                             LevelName = FoundationPumpLevelName,
                             ElementCode = "W1",
-                            Zone = "",
-                            Part = ""
+                            Zone = "펌프장",
+                            Part = "펌프장 외벽"
                         };
                         s_outerProfileWallDef2.Points = new List<Point3D>() {
                             new Point3D(0, pl.B8 * d.N + pl.T5 * (d.N-1) + pr.T4/2, d.LWL * 1000 - pr.H1),
@@ -1245,8 +1245,8 @@ namespace DHBIMWATER.Application.Services
                             Thickness = pr.T4,
                             LevelName = FoundationPumpLevelName,
                             ElementCode = "W1",
-                            Zone = "",
-                            Part = ""
+                            Zone = "펌프장",
+                            Part = "펌프장 외벽"
                         };
                         s_outerProfileWallDef3.Points = new List<Point3D>() {
                             new Point3D(0, - pr.T4/2, d.LWL * 1000 - pr.H1),
@@ -1267,8 +1267,8 @@ namespace DHBIMWATER.Application.Services
                             Thickness = pr.T4,
                             LevelName = FoundationPumpLevelName,
                             ElementCode = "W1",
-                            Zone = "",
-                            Part = ""
+                            Zone = "펌프장",
+                            Part = "펌프장 외벽"
                         };
                         s_outerProfileWallDef2.Points = new List<Point3D>() {
                             new Point3D(0, pl.B8 * d.N + pl.T5 * (d.N-1) + pr.T4/2, d.LWL * 1000 - pr.H1),
@@ -1286,8 +1286,8 @@ namespace DHBIMWATER.Application.Services
                             Thickness = pr.T4,
                             LevelName = FoundationPumpLevelName,
                             ElementCode = "W1",
-                            Zone = "",
-                            Part = ""
+                            Zone = "펌프장",
+                            Part = "펌프장 외벽"
                         };
                         s_outerProfileWallDef3.Points = new List<Point3D>() {
                             new Point3D(0, - pr.T4/2, d.LWL * 1000 - pr.H1),
@@ -1621,6 +1621,7 @@ namespace DHBIMWATER.Application.Services
                         LevelName = UpperSlabLevelName,
                         Name = "",
                         HostElementCode = "S1",
+                        Part = "OPEN",
                     };
                     openings.Add(pumpOpening);
                 }
@@ -1635,6 +1636,8 @@ namespace DHBIMWATER.Application.Services
                     LevelName = UpperSlabLevelName,
                     Name = "",
                     HostElementCode = "S1",
+                    Part = "OPEN",
+
                 };
                 openings.Add(screenOpening);
             }
@@ -1678,6 +1681,8 @@ namespace DHBIMWATER.Application.Services
                         LevelName = UpperSlabLevelName,
                         Name = "",
                         HostElementCode = "S1",
+                        Part = "OPEN",
+
                     };
                     openings.Add(pumpOpening);
                 }
@@ -1706,7 +1711,8 @@ namespace DHBIMWATER.Application.Services
                 LevelName = FoundationPumpLevelName,
                 Name = "",
                 HostElementCode = "W3",
-                OffsetZ = 0
+                OffsetZ = 0,
+                Part = "OPEN",
             };
             openings.Add(innerWallOpening);
 
@@ -1720,7 +1726,8 @@ namespace DHBIMWATER.Application.Services
                 LevelName = FoundationPumpLevelName,
                 Name = "",
                 HostElementCode = "W5",
-                OffsetZ = 0
+                OffsetZ = 0,
+                Part = "OPEN",
             };
             openings.Add(partitionWall);
 
@@ -1750,7 +1757,9 @@ namespace DHBIMWATER.Application.Services
                     LevelName = ValveRoomLevelName,
                     Name = "",
                     HostElementCode = "W2",
-                    OffsetZ = pr.H6
+                    OffsetZ = pr.H6,
+                    Part = "OPEN",
+
                 };
                 openings.Add(wallOpening);
             }
@@ -1766,12 +1775,47 @@ namespace DHBIMWATER.Application.Services
                     LevelName = ValveRoomLevelName,
                     Name = "",
                     HostElementCode = "W4",
-                    OffsetZ = pr.H6
+                    OffsetZ = pr.H6,
+                    Part = "OPEN",
+
                 };
                 openings.Add(wallOpening);
             }
             return openings;
         }
+        // 일반모델 배치
+        public static IReadOnlyList<GenericModelPlacementDefinition> CalculateGenericModels(PumpCreationRequestDto dto)
+        {
+            var d = dto.DesignConditionDto;
+            var pr = dto.ProfileSpecDto;
+            var pl = dto.PlanSpecDto;
+            //var ts = dto.TypeSelectionDto;
+            var totalLength = pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
+            var totalWidth = pr.T4 * 2 + (pl.B8 * d.N) + (pl.T5 * (d.N - 1));
+            var x2 = totalLength - pr.T4 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2 - pr.L4 - pr.L3;
+
+            var defs = new List<GenericModelPlacementDefinition>();
+
+            var pedestal = new GenericModelPlacementDefinition
+            {
+                SymbolName = pr.IsRectangularOpening ? "기초 콘크리트_사각형" : "기초 콘크리트_원형",
+                Origin = new Point3D(0,0,0),
+                LevelName = "상부슬래브",
+                Rotation = 45,
+                ElementCode = "PED1",
+                Part = "콘크리트기초",
+                Zone = "펌프장",
+
+                //Parameters = new Dictionary<string, object>
+                //{
+                //    { "D", " "}
+                //}
+            };
+
+            defs.Add(pedestal);
+            return defs;
+        }
+
         public static IReadOnlyList<SectionViewDefinition> CalculateSectionViews(PumpCreationRequestDto dto)
         {
             var d = dto.DesignConditionDto;
@@ -1980,5 +2024,7 @@ namespace DHBIMWATER.Application.Services
 
             return sectionViewDefs;
         }
+
+
     }
 }

@@ -13,11 +13,12 @@ namespace DHBIMWATER.Core.Structures
         public double Width { get; set; }
         public double Height { get; set; }
         public Point3D Position { get; set; }
-
         public string Name { get; set; } = string.Empty;
         public string LevelName { get; set; } = string.Empty;
         public string HostElementCode { get; set; } = string.Empty;
         public double OffsetZ { get; set; } = 0.0;
-
+        public string ElementCode { get; set; } = string.Empty;
+        public string Zone { get; set; } = string.Empty;
+        public string Part { get; set; } = string.Empty;
     }
 }

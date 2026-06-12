@@ -1,4 +1,5 @@
 using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Architecture;
 using DHBIMWATER.Application.Interfaces.Geometry;
 using DHBIMWATER.Core.Quantity;
 using DHBIMWATER.Infrastructure.Helpers;
@@ -39,7 +40,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
                 BuiltInCategory.OST_Walls => ClassifyWall(elem, normal),
                 BuiltInCategory.OST_Floors or BuiltInCategory.OST_StructuralFoundation => ClassifyFloor(normal),
                 BuiltInCategory.OST_StructuralColumns => ClassifyColumn(normal),
-                BuiltInCategory.OST_Stairs => ClassifyStairs(normal),
+                BuiltInCategory.OST_Stairs => ClassifyStairs(elem, normal),
                 _ => FaceType.Side,
             };
 
@@ -80,11 +81,45 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
             return FaceType.Side;
         }
 
-        private static FaceType ClassifyStairs(XYZ normal)
+        private static FaceType ClassifyStairs(Element elem, XYZ normal)
         {
             if (normal.Z < -0.1) return FaceType.Bottom;
             if (normal.Z > 0.9) return FaceType.Top;
-            return FaceType.Side;
+
+            var runDir = GetStairRunDir2D(elem);
+            if (runDir != null && Math.Abs(normal.DotProduct(runDir)) > 0.9)
+                return FaceType.End;  // 챌판(riser): 법선이 진행방향과 평행
+
+            return FaceType.Side;    // 계단 측면: 법선이 진행방향과 수직
+        }
+
+        private static XYZ? GetStairRunDir2D(Element elem)
+        {
+            if (elem is not Stairs stairs) return null;
+
+            var runIds = stairs.GetStairsRuns();
+            if (runIds.Count == 0) return null;
+
+            // 다수 Run이 있을 경우(L형·U형) 모두 수집
+            var dirs = new List<XYZ>();
+            foreach (var id in runIds)
+            {
+                if (elem.Document.GetElement(id) is not StairsRun run) continue;
+                var path = run.GetStairsPath();
+                var firstCurve = path?.FirstOrDefault();
+                if (firstCurve == null) continue;
+                var raw = firstCurve.GetEndPoint(1) - firstCurve.GetEndPoint(0);
+                var dir2D = new XYZ(raw.X, raw.Y, 0);
+                if (dir2D.GetLength() > 1e-6)
+                    dirs.Add(dir2D.Normalize());
+            }
+
+            return dirs.Count switch
+            {
+                0 => null,
+                1 => dirs[0],
+                _ => dirs.Aggregate((a, b) => a + b).Normalize(),  // 여러 Run 방향 평균
+            };
         }
     }
 }

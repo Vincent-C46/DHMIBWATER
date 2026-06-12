@@ -30,6 +30,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
         private readonly ISharedParameterRepository _sharedParameterRepo;
         private readonly IViewCommandRepo _viewCommandRepo;
         private readonly ISetParameterRepo _setParameterRepo;
+        private readonly IGenericModelCommandRepo _genericModelCmdRepo;
 
         private readonly IExcelReader _excelReader;
         #endregion
@@ -52,6 +53,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                                            ISharedParameterRepository sharedParameterRepo,
                                            IViewCommandRepo viewCommandRepo,
                                            ISetParameterRepo setParameterRepo,
+                                           IGenericModelCommandRepo genericModelCmdRepo,
                                            IExcelReader excelReader)
         {
             _levelQueryRepo = levelQueryRepo;
@@ -65,6 +67,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
             _sharedParameterRepo = sharedParameterRepo;
             _viewCommandRepo = viewCommandRepo;
             _setParameterRepo = setParameterRepo;
+            _genericModelCmdRepo = genericModelCmdRepo;
             _excelReader = excelReader;
 
             _tx = tx;
@@ -121,7 +124,6 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                             _levelCmdRepo.CreatePlan(levelId);
                         }
                     }
-
                     #endregion
 
                     #region 2. 슬래브 생성
@@ -160,11 +162,17 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                         _openingCmdRepo.CreateWallOpening(openingDef);
                     #endregion
 
-                    #region 6. 결합
+                    #region 6. 일반 모델 배치
+                    foreach (var def in PumpingStationGeometryCalculator.CalculateGenericModels(dto))
+                        _genericModelCmdRepo.PlaceInstance(def);
+                    #endregion
+
+
+                    #region 7. 결합
                     // 보 작성 메서드 내부에서 상부 슬래브와 결합 (임시 조치)
                     #endregion
 
-                    #region 7. 뷰 작성                    
+                    #region 8. 뷰 작성                    
                     var existingSectionViewNames = _levelQueryRepo.GetExistingSectionNames();
                     var sectionViewDefs = PumpingStationGeometryCalculator.CalculateSectionViews(dto);
 
@@ -183,7 +191,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                     }
                     #endregion
 
-                    #region 8. 타입 설명 추가
+                    #region 9. 타입 설명 추가
                     _setParameterRepo.SetTypeParameter(dto);
                     #endregion
 

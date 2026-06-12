@@ -36,6 +36,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IElementTypeQueryRepo, RevitElementTypeQueryRepo>();
         services.AddTransient<IElementTypeCommandRepo, RevitElementTypeCommandRepo>();
         services.AddTransient<IWallCommandRepo, RevitWallCommandRepo>();
+        services.AddTransient<IGenericModelCommandRepo, RevitGenericModelCommandRepo>();
         services.AddTransient<IBeamCommandRepo, RevitBeamCommandRepo>();
         services.AddTransient<ISlabCommandRepo, RevitSlabCommandRepo>();
         services.AddTransient<IOpeningCommandRepo, RevitOpeningCommandRepo>();
@@ -43,7 +44,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IViewCommandRepo, RevitViewCommandRepo>();
         services.AddTransient<ISetParameterRepo, RevitSetParameterRepo>();
         services.AddTransient<ISharedParameterRepository, RevitSharedParameterRepository>();
-
+        services.AddTransient<IGenericModelRepository, RevitGenericModelRepository>();
         services.AddTransient<IIntersectingElementFinder, RevitIntersectingElementFinder>();
         #endregion
 
@@ -91,6 +92,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IElementTypeQueryRepo, MockElementTypeQueryRepo>();
         services.AddTransient<IElementTypeCommandRepo, MockElementTypeCommandRepo>();
         services.AddTransient<IWallCommandRepo, MockWallCommandRepo>();
+        services.AddTransient<IGenericModelCommandRepo, MockGenericModelCommandRepo>();
         services.AddTransient<IBeamCommandRepo, MockBeamCommandRepo>();
         services.AddTransient<ISlabCommandRepo, MockSlabCommandRepo>();
         services.AddTransient<IOpeningCommandRepo, MockOpeningCommandRepo>();

@@ -22,5 +22,9 @@ namespace DHBIMWATER.Infrastructure.Converters
         // 체적
         public static double Ft3ToM3(double cubicFeet) => UnitUtils.ConvertFromInternalUnits(cubicFeet, UnitTypeId.CubicMeters);
         public static double M3ToFt3(double cubicMeters) => UnitUtils.ConvertToInternalUnits(cubicMeters, UnitTypeId.CubicMeters);
+
+        // 각도
+        public static double DegToRad(double degree) => UnitUtils.ConvertToInternalUnits(degree, UnitTypeId.Degrees);
+        public static double RadToDeg(double radian) => UnitUtils.ConvertFromInternalUnits(radian, UnitTypeId.Degrees);
     }
 }

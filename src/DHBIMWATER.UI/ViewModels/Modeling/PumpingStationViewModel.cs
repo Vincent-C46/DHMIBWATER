@@ -39,7 +39,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private double _b6 = 700.0;
         private double _b7 = 3000.0;
         private double _h1 = 500.0;
-        private double _h6 = 500.0;
+        private double _h6 = 600.0;
         private string _selectedTheta = "30˚";
 
         // 종단제원 - 계산값 or 고정값
@@ -596,7 +596,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_b5 != value)
                 {
                     _b5 = value;
-                    //RecalculateDerivedValues();
+                    UpdateB5Dependents();
                     OnPropertyChanged(nameof(B5));
                 }
             }
@@ -703,7 +703,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 }
             }
         }
-
         public double T6
         {
             get { return _t6; }
@@ -716,7 +715,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 }
             }
         }
-
         public double GB1
         {
             get { return _gb1; }
@@ -795,7 +793,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             _ = _usageLogger.LogAsync();
             _createPumpingStationUseCase.Execute(creationRequestDto);
         }
-
         // 프로퍼티 업데이트
         // 생성시 초기화 메서드
         private void InitializeDerivedValues()
@@ -820,7 +817,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             _h5 = H2 + _h3 + _h4;
 
             _b8 = Math.Ceiling(3 * _d / 100) * 100;
-
+ 
             // 부재유형
             _t4 = Math.Ceiling((H5 + _t1) * 0.1 / 100) * 100;
             _l5 = _b7 + _t3 + _b6 + _b5 / 2 + _l4 - _b10 - _t4; // 평면제원
@@ -857,6 +854,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             H4 = 2.9 * _d;
             B8 = Math.Ceiling(3 * _d / 100) * 100;
             UpdateThetaDependents();
+            UpdateB6();
         }
         private void UpdateThetaDependents()
         {
@@ -899,7 +897,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         {
             H5 = H2 + H3 + H4;
         }
-
         private void UpdateH4Dependents()
         {
             UpdateH3Calculation();
@@ -944,9 +941,19 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                : SelectedPumpingStationType == "Type1" ? 3000
                : 0;
 
-            PlanDefaultImagePath = SelectedPumpingStationType == "Type1" 
+            PlanDefaultImagePath = SelectedPumpingStationType == "Type1"
                 ? "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-1_평면제원-측면진입.png"
-                : "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-2&3_평면제원.png"; 
+                : "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-2&3_평면제원.png";
+
+            UpdateB6();
+        }
+        private void UpdateB5Dependents()
+        {
+            UpdateB6();
+        }
+        private void UpdateB6()
+        {
+            B6 = _selectedPumpingStationType == "Type1" ? 700 : D * 1.5 - B5 / 2;
         }
         #endregion
     }
