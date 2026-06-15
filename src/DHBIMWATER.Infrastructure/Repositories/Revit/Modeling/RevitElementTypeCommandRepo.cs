@@ -7,7 +7,7 @@ using System;
 using System.Linq;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
-namespace DHBIMWATER.Infrastructure.Repositories.Revit
+namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
 {
     internal class RevitElementTypeCommandRepo : IElementTypeCommandRepo
     {
@@ -122,7 +122,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             //Create
             var baseType = allBeamTypes.FirstOrDefault(fs => fs.LookupParameter("b") != null && fs.LookupParameter("h") != null);
 
-            if (baseType == null) { 
+            if (baseType == null) {
                 TaskDialog.Show("Error", "적절한 복제 대상 Beam type이 없습니다.");
                 return 0;
             }

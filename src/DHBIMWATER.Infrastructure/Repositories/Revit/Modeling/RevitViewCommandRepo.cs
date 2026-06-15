@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Core.Geometry;
@@ -7,7 +7,7 @@ using System.Diagnostics;
 using System.Windows.Controls;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
-namespace DHBIMWATER.Infrastructure.Repositories.Revit
+namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
 {
     public class RevitViewCommandRepo : IViewCommandRepo
     {
@@ -49,7 +49,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             transform.BasisX = new XYZ(sectionViewDef.BasisX.X, sectionViewDef.BasisX.Y, sectionViewDef.BasisX.Z).Normalize();
             transform.BasisZ = new XYZ(sectionViewDef.BasisZ.X, sectionViewDef.BasisZ.Y, sectionViewDef.BasisZ.Z).Normalize();
             transform.BasisY = transform.BasisX.CrossProduct(transform.BasisZ).Normalize();
-       
+
             var boundingBox = new BoundingBoxXYZ();
             boundingBox.Transform = transform;
 

@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB;
 using DHBIMWATER.Application.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Windows.Controls;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
-namespace DHBIMWATER.Infrastructure.Repositories.Revit
+namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
 {
     internal class RevitLevelCommandRepo : ILevelCommandRepo
     {

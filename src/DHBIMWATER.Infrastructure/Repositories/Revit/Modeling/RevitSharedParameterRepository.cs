@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.ApplicationServices;
+using Autodesk.Revit.ApplicationServices;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using DHBIMWATER.Core.Parameters;
@@ -9,7 +9,7 @@ using System.IO;
 using System.Windows.Controls;
 using App = Autodesk.Revit.ApplicationServices.Application;
 
-namespace DHBIMWATER.Infrastructure.Repositories.Revit
+namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
 {
     public class RevitSharedParameterRepository : ISharedParameterRepository
     {

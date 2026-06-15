@@ -1,13 +1,16 @@
 using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Application.Interfaces.Geometry;
 using DHBIMWATER.Application.Interfaces.Quantity;
+using DHBIMWATER.Application.Interfaces.Storage;
 using DHBIMWATER.Core.Parameters;
 using DHBIMWATER.Infrastructure.Repositories.DB;
 using DHBIMWATER.Infrastructure.Repositories.Mock;
 using DHBIMWATER.Infrastructure.Repositories.Mock.Quantity;
-using DHBIMWATER.Infrastructure.Repositories.Revit;
+using DHBIMWATER.Infrastructure.Repositories.Revit.Storage;
+using DHBIMWATER.Infrastructure.Repositories.Revit.Modeling;
 using DHBIMWATER.Infrastructure.Repositories.Revit.Geometry;
 using DHBIMWATER.Infrastructure.Repositories.Revit.Quantity;
+using DHBIMWATER.Infrastructure.Repositories.Revit;
 using DHBIMWATER.Infrastructure.Services.Common;
 using DHBIMWATER.Infrastructure.Services.Didas;
 using DHBIMWATER.Infrastructure.Services.Excel;
@@ -61,19 +64,18 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IQuantityExtractor, RevitDirectShapeExtractor>();
         services.AddTransient<IFaceClassifier, RevitFaceClassifier>();
         services.AddTransient<IExcelExporter, ClosedXmlExcelWriter>();
+        services.AddTransient<IExcelExporter, ClosedXmlExcelWriter>();
+        services.AddTransient<IElementQuantityRepo, ElementQuantityRepo>();
+        services.AddTransient<IManualQuantityRepo, ManualQuantityRepo>();
 
         services.AddTransient<IExcelReader, ExcelReader>();
         #endregion
-
-
-
         #region Service 등록
         services.AddTransient<IFileDialogService, WpfFileDialogService>();
         services.AddTransient<IDialogService, RevitDialogService>();
         services.AddTransient<IGuideLineService, RevitGuideLineService>();
         services.AddSingleton<IUsageLogger, DidasUsageService>();   // Didas 로그 연계
         #endregion
-
         return services;
     }
 

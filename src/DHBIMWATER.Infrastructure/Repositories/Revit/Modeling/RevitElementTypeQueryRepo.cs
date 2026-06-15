@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB;
 using DHBIMWATER.Application.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Automation.Provider;
 
-namespace DHBIMWATER.Infrastructure.Repositories.Revit
+namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
 {
     internal class RevitElementTypeQueryRepo : IElementTypeQueryRepo
     {
@@ -46,7 +46,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                         if (mat != null && (mat.Name.Contains("강철") || mat.Name.Contains("스틸") || mat.Name.Contains("steel")))
                             return false;
 
-                        return true;    
+                        return true;
                     })
                     .Select(fs => fs.Name)
                     .Where(n => !string.IsNullOrEmpty(n))

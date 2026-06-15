@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Structure;
 using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Core.Geometry;
@@ -6,7 +6,7 @@ using DHBIMWATER.Core.Structures;
 using System.Windows.Controls;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
-namespace DHBIMWATER.Infrastructure.Repositories.Revit
+namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
 {
     public class RevitOpeningCommandRepo : IOpeningCommandRepo
     {
@@ -22,7 +22,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
         {
             var doc = _doc();
             if (doc == null) return;
-                        
+
             var elementId = 0;
 
             // 슬래브 사각형 오프닝

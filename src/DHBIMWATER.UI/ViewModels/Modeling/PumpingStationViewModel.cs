@@ -4,6 +4,7 @@ using DHBIMWATER.Application.UseCases.AutoGenerator;
 using DHBIMWATER.UI.Base;
 using DHBIMWATER.UI.Commands;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Input;
 
@@ -15,6 +16,9 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private IDialogService _dialogService;
         private readonly CreatePumpingStationUseCase _createPumpingStationUseCase;
         private readonly IUsageLogger _usageLogger;
+        private readonly IExcelReader _excelReader;
+        private readonly IFileDialogService _fileDialogService;
+        private string _excelFilePath = string.Empty;
 
         private string _profileType1ImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-1_종단제원.png";
         private string _profileType2ImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-2_종단제원.png";
@@ -127,6 +131,18 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                     OnPropertyChanged(nameof(T5Visibility));
                     OnPropertyChanged(nameof(B9Visibility));
                     UpdateTypeDependents();
+                }
+            }
+        }
+        public string ExcelFilePath
+        {
+            get => _excelFilePath;
+            private set
+            {
+                if (_excelFilePath != value)
+                {
+                    _excelFilePath = value;
+                    OnPropertyChanged(nameof(ExcelFilePath));
                 }
             }
         }
@@ -814,21 +830,49 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
 
         #region Commands
         public ICommand CreatePumpingStationCommand { get; }
+        public ICommand ImportExcelCommand { get; }
         #endregion
 
         #region Constructor
-        public PumpingStationViewModel(CreatePumpingStationUseCase useCase, IDialogService dialogService, IElementTypeQueryRepo elementTypeQueryRepo, IUsageLogger usageLogger)
+        public PumpingStationViewModel(CreatePumpingStationUseCase useCase, IDialogService dialogService, IElementTypeQueryRepo elementTypeQueryRepo, IUsageLogger usageLogger, IExcelReader excelReader, IFileDialogService fileDialogService)
         {
             _createPumpingStationUseCase = useCase;
             _dialogService = dialogService;
             _usageLogger = usageLogger;
+            _excelReader = excelReader;
+            _fileDialogService = fileDialogService;
             CreatePumpingStationCommand = new RelayCommand(CreatePumpingStation);
+            ImportExcelCommand = new RelayCommand(ImportFromExcel);
 
             InitializeDerivedValues();
         }
         #endregion
 
         #region Methods
+        private void ImportFromExcel(object? obj)
+        {
+            var filePath = _fileDialogService.OpenFile("Excel 파일 선택", "Excel Files|*.xlsx;*.xls");
+            if (filePath == null) return;
+
+            ExcelFilePath = filePath;
+
+            var sheets = _excelReader.Read(filePath);
+            var rows = sheets.Values.FirstOrDefault();
+            if (rows == null) return;
+
+            var map = rows
+                .Where(r => r.Length >= 2 && !string.IsNullOrWhiteSpace(r[0]))
+                .ToDictionary(r => r[0].Trim(), r => r[1].Trim(), StringComparer.OrdinalIgnoreCase);
+
+            if (map.TryGetValue("D", out var d) && double.TryParse(d, out var dVal)) D = dVal;
+            if (map.TryGetValue("HD", out var hd) && double.TryParse(hd, out var hdVal)) HD = hdVal;
+            if (map.TryGetValue("N", out var n) && int.TryParse(n, out var nVal)) N = nVal;
+            if (map.TryGetValue("LWL", out var lwl) && double.TryParse(lwl, out var lwlVal)) LWL = lwlVal;
+            if (map.TryGetValue("HWL", out var hwl) && double.TryParse(hwl, out var hwlVal)) HWL = hwlVal;
+            if (map.TryGetValue("Type", out var type)) SelectedPumpingStationType = type;
+            if (map.TryGetValue("Entrance", out var entrance)) SelectedEntranceType = entrance;
+        }
+
         private void CreatePumpingStation(object? obj)
         {
             designConditionDto = new PumpDesignConditionDto(SelectedPumpingStationType, SelectedEntranceType, D, HD, H2, N, LWL, HWL);

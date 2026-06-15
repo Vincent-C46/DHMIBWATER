@@ -1,6 +1,7 @@
 ﻿using DHBIMWATER.Application.DTOs.Revit.PumpingStation;
 using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Application.Interfaces.Quantity;
+using DHBIMWATER.Application.Interfaces.Storage;
 using DHBIMWATER.Core.Quantity;
 using System;
 using System.Collections.Generic;
@@ -16,7 +17,7 @@ namespace DHBIMWATER.Application.UseCases.QuantityCalculator
         #region Fields
         private readonly ITransactionContext _tx;
         private readonly IDialogService _dialogService;
-
+        private readonly IElementQuantityRepo _elementQuantityRepo;
         private readonly IEnumerable<IQuantityExtractor> _extractors;
         #endregion
 
@@ -26,11 +27,12 @@ namespace DHBIMWATER.Application.UseCases.QuantityCalculator
         #region Constructor
         public CalculateQuantityUseCase(ITransactionContext tx,
                                         IDialogService dialogService,
+                                        IElementQuantityRepo elementQuantityRepo,
                                         IEnumerable<IQuantityExtractor> extractors)
         {
             _tx = tx;
             _dialogService = dialogService;
-
+            _elementQuantityRepo = elementQuantityRepo;
             _extractors = extractors;
         }
         #endregion
@@ -40,35 +42,29 @@ namespace DHBIMWATER.Application.UseCases.QuantityCalculator
         {
             var quantityItems = new List<QuantityItem>();
 
-            //using (_tx)
+            foreach (var extractor in _extractors)
+            {
+                var ids = extractor.CollectElementIds();
+                if (!ids.Any()) continue;   // 없으면 다음 Extractor 순환
+
+                foreach (var id in ids)
+                    quantityItems.AddRange(extractor.Extract(id));
+            }
+
+            using (_tx)
             {
                 try
                 {
-                    //_tx.Begin("Calculate Quantity");
-                    foreach (var extractor in _extractors)
-                    {
-                        var ids = extractor.CollectElementIds();
-                        if (!ids.Any()) continue;   // 없으면 다음 Extractor 순환
-
-                        foreach (var id in ids)
-                            quantityItems.AddRange(extractor.Extract(id));
-                    }
-
-                    if (quantityItems.Any())
-                    {
-                        var item = quantityItems.FirstOrDefault(r => r.WorkType.Contains("콘크리트"));
-                        //_dialogService.Info("Info",$"공종: {item.WorkType}\n규격: {item.Specification}\n산출식: {item.Formula}\n값: {item.Value}");
-                    }
-                                        
-                    //Debug.WriteLine($"{}");
+                    _tx.Begin("Save Quantity");
+                    foreach (var group in quantityItems.GroupBy(q => q.ElementId))
+                        _elementQuantityRepo.Save(group.Key, group.ToList());
+                    _tx.Commit();
 
                     return quantityItems;
-
-                    //_tx.Commit();
                 }
                 catch (Exception ex)
                 {
-                    //_tx.Rollback();
+                    _tx.Rollback();
                     _dialogService.Warn("Error", $"Error Message: {ex.Message}");
                     return quantityItems;
                 }

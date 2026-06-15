@@ -1,8 +1,8 @@
-﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB;
 using DHBIMWATER.Application.DTOs.Revit.PumpingStation;
 using DHBIMWATER.Application.Interfaces;
 
-namespace DHBIMWATER.Infrastructure.Repositories.Revit
+namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
 {
     internal class RevitSetParameterRepo : ISetParameterRepo
     {
@@ -14,7 +14,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
 
         public void SetTypeParameter(PumpCreationRequestDto dto)
         {
-            Document? doc = _doc(); 
+            Document? doc = _doc();
             if (doc == null) return;
 
             var categories = new List<BuiltInCategory>

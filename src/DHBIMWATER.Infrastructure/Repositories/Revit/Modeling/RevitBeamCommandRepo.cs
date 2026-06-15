@@ -1,12 +1,13 @@
-﻿using DHBIMWATER.Application.Interfaces;
+using DHBIMWATER.Application.Interfaces;
 using Autodesk.Revit.DB;
 using DHBIMWATER.Core.Structures;
 using Autodesk.Revit.DB.Structure;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 using System.Windows.Controls;
 using Autodesk.Revit.UI;
+using DocumentFormat.OpenXml.Drawing.Diagrams;
 
-namespace DHBIMWATER.Infrastructure.Repositories.Revit
+namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
 {
     public class RevitBeamCommandRepo : IBeamCommandRepo
     {
@@ -23,18 +24,35 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
         {
             var doc = _doc();
             if (doc == null) return 0;
-                        
-            var elementId = 0;
 
-            var beamTypeSpec = new BeamTypeSpec(beamDef.Width, beamDef.Height, $"{beamDef.Width} x {beamDef.Height}");
-            int beamTypeId = _elementTypeCmdRepo.FindOrCreateBeamType(beamTypeSpec);
+            FamilySymbol? beamType;
 
-            var beamType = doc.GetElement(new ElementId((long)beamTypeId)) as FamilySymbol;
+            if (beamDef.Part == "HAUNCH")
+            {
+                beamType = new FilteredElementCollector(doc)
+                    .OfCategory(BuiltInCategory.OST_StructuralFraming)
+                    .WhereElementIsElementType()
+                    .Cast<FamilySymbol>()
+                    .FirstOrDefault(s => s.Name.Contains("헌치") || s.Name.Contains("haunch"));
+
+                if (beamType == null)
+                {
+                    TaskDialog.Show("Error", "헌치 패밀리 심볼을 찾을 수 없습니다.");
+                    return 0;
+                }
+            }
+            else
+            {
+                var spec = new BeamTypeSpec(beamDef.Width, beamDef.Height, $"{beamDef.Width} x {beamDef.Height}");
+                int typeId = _elementTypeCmdRepo.FindOrCreateBeamType(spec);
+                beamType = doc.GetElement(new ElementId((long)typeId)) as FamilySymbol;
+                if (beamType == null) return 0;
+            }
 
             if (!beamType.IsActive)
             {
                 beamType.Activate();
-                TaskDialog.Show("Info", $"Beam type '{beamType.Name}' activated. BeamRepo에서 활성화됨");
+                //TaskDialog.Show("Info", $"Beam type '{beamType.Name}' activated. BeamRepo에서 활성화됨");
             }
 
             var curve = Line.CreateBound(new XYZ(UC.MmToFt(beamDef.StartPoint.X), UC.MmToFt(beamDef.StartPoint.Y), UC.MmToFt(beamDef.StartPoint.Z)),
@@ -50,7 +68,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
 
             beam.get_Parameter(BuiltInParameter.Z_JUSTIFICATION).Set(beamDef.ZJustification);
             JoinWithSlab(beam);
-            
+
             beam.LookupParameter("DH_ElementCode")?.Set(beamDef.ElementCode);
             beam.LookupParameter("DH_Addin")?.Set("DHBIMWATER");
             beam.LookupParameter("DH_Part")?.Set(beamDef.Part);
@@ -71,16 +89,15 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                 .ToElements()
                 .ToList();
 
-            if (intersectSlabs.Count == 0) 
-                TaskDialog.Show("Alert", "겹치는 Slab가 없습니다" );
+            if (intersectSlabs.Count == 0) return;
 
-            foreach(var slab in intersectSlabs)
+            foreach (var slab in intersectSlabs)
             {
                 try
                 {
                     JoinGeometryUtils.JoinGeometry(doc, slab, beam);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     TaskDialog.Show("Error", ex.Message);
                 }

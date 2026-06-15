@@ -1,4 +1,4 @@
-﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB;
 using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Core.Geometry;
 using DHBIMWATER.Core.Structures;
@@ -6,7 +6,7 @@ using GC = DHBIMWATER.Infrastructure.Converters.RevitGeometryConverter;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 using Wall = Autodesk.Revit.DB.Wall;
 
-namespace DHBIMWATER.Infrastructure.Repositories.Revit
+namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
 {
     internal class RevitWallCommandRepo : IWallCommandRepo
     {

@@ -1,10 +1,10 @@
-﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB;
 using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Core.Geometry;
 using DHBIMWATER.Core.Structures;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
-namespace DHBIMWATER.Infrastructure.Repositories.Revit
+namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
 {
     public class RevitSlabCommandRepo : ISlabCommandRepo
     {
@@ -63,7 +63,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
             }
 
             var floorSpec = new FloorTypeSpec(slabDef.Thickness, $"일반 - {slabDef.Thickness}mm");
-            var floorTypeId = new ElementId((long)_elementTypeCmdRepo.FindOrCreateSlabType(floorSpec)); 
+            var floorTypeId = new ElementId((long)_elementTypeCmdRepo.FindOrCreateSlabType(floorSpec));
 
             var levelId = new FilteredElementCollector(doc)
                 .OfClass(typeof(Level))

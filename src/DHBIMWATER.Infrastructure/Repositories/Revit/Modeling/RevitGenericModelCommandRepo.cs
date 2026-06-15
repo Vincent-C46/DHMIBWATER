@@ -5,7 +5,7 @@ using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Core.Structures;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
-namespace DHBIMWATER.Infrastructure.Repositories.Revit
+namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
 {
     internal class RevitGenericModelCommandRepo : IGenericModelCommandRepo
     {

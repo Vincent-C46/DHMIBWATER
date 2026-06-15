@@ -47,7 +47,7 @@ namespace DHBIMWATER.Application.Services
             var pl = dto.PlanSpecDto;
             //var ts = dto.TypeSelectionDto;
             var slabs = new List<SlabDefinition>();
-            var totalLength = pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
+            var totalLength = d.SelectedPumpingStationType == "Type2" ? pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T3 :  pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
             var totalWidth = pr.T4 * 2 + (pl.B8 * d.N) + (pl.T5 * (d.N - 1));
 
             var upperSlabDef = new SlabDefinition
@@ -232,7 +232,7 @@ namespace DHBIMWATER.Application.Services
             var pr = dto.ProfileSpecDto;
             var pl = dto.PlanSpecDto;
             //var ts = dto.TypeSelectionDto;
-            var totalLength = pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
+            var totalLength = d.SelectedPumpingStationType == "Type2" ? pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T3 : pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
             var totalWidth = pr.T4 * 2 + (pl.B8 * d.N) + (pl.T5 * (d.N - 1));
 
             var linearWalls = new List<LinearWallDefinition>();
@@ -972,7 +972,7 @@ namespace DHBIMWATER.Application.Services
             var pr = dto.ProfileSpecDto;
             var pl = dto.PlanSpecDto;
             //var ts = dto.TypeSelectionDto;
-            var totalLength = pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
+            var totalLength = d.SelectedPumpingStationType == "Type2" ? pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T3 : pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
             var totalWidth = pr.T4 * 2 + (pl.B8 * d.N) + (pl.T5 * (d.N - 1));
             double x2 = totalLength - pr.T4 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2 - pr.L4 - pr.L3;
 
@@ -1311,7 +1311,9 @@ namespace DHBIMWATER.Application.Services
             var pr = dto.ProfileSpecDto;
             var pl = dto.PlanSpecDto;
             //var ts = dto.TypeSelectionDto;
-            var totalLength = pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
+            var totalLength = d.SelectedPumpingStationType == "Type2" ?
+                pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T3 :
+                pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
             var totalWidth = pr.T4 * 2 + (pl.B8 * d.N) + (pl.T5 * (d.N - 1));
             double x2 = totalLength - pr.T4 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2 - pr.L4 - pr.L3;
 
@@ -1343,8 +1345,8 @@ namespace DHBIMWATER.Application.Services
                 };
                 var beamDef3 = new BeamDefinition()
                 {
-                    StartPoint = new Point3D(pr.B1 + pr.B2 + pr.B3 + pr.B4 - pr.GB1 / 2, (pl.B8 + pl.T5) * i, d.HWL * 1000 + pr.H3 + pr.T1 - pr.GH1 / 2),
-                    EndPoint = new Point3D(pr.B1 + pr.B2 + pr.B3 + pr.B4 - pr.GB1 / 2, (pl.B8 + pl.T5) * i + pl.B8, d.HWL * 1000 + pr.H3 + pr.T1 - pr.GH1 / 2),
+                    StartPoint = new Point3D(pr.B1 + pr.B2 + pr.B3 + pr.B4 - pr.GB1 / 2,    (pl.B8 + pl.T5) * i, d.HWL * 1000 + pr.H3 + pr.T1 - pr.GH1 / 2),
+                    EndPoint =   new Point3D(pr.B1 + pr.B2 + pr.B3 + pr.B4 - pr.GB1 / 2,    (pl.B8 + pl.T5) * i + pl.B8, d.HWL * 1000 + pr.H3 + pr.T1 - pr.GH1 / 2),
                     Width = pr.GB1,
                     Height = pr.GH1,
                     LevelName = UpperSlabLevelName,
@@ -1359,6 +1361,23 @@ namespace DHBIMWATER.Application.Services
                 beamDefs.Add(beamDef3);
             }
 
+            if(d.SelectedPumpingStationType == "Type2")
+            {
+                var haunchDef = new BeamDefinition()
+                {
+                    StartPoint = new Point3D(totalLength - pr.T3 - pr.B7 - pr.T3 + pr.T4,   totalWidth - pr.T4,     d.HWL * 1000 + pr.H3 + pr.T1 - (pr.H7 + d.D + pr.H6 + pr.T5Prime)),
+                    EndPoint = new Point3D(totalLength - pr.T3 - pr.B7 - pr.T3 + pr.T4,     -pr.T4,                 d.HWL * 1000 + pr.H3 + pr.T1 - (pr.H7 + d.D + pr.H6 + pr.T5Prime)),
+                    Width = pr.HB1,
+                    Height = pr.HH1,
+                    LevelName = ValveRoomLevelName,
+                    ElementCode = "H1",
+                    Zone = "",
+                    Part = "HAUNCH",
+                };
+
+                beamDefs.Add(haunchDef);
+            }
+
             return beamDefs;
         }
         public static IReadOnlyList<SolidExtrusionDefinition> CalculateSolids(PumpCreationRequestDto dto)
@@ -1368,7 +1387,7 @@ namespace DHBIMWATER.Application.Services
             var pl = dto.PlanSpecDto;
             //var ts = dto.TypeSelectionDto;
 
-            var totalLength = pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
+            var totalLength = d.SelectedPumpingStationType == "Type2" ? pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T3 : pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
             var totalWidth = pr.T4 * 2 + (pl.B8 * d.N) + (pl.T5 * (d.N - 1));
             double x2 = totalLength - pr.T4 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2 - pr.L4 - pr.L3;
             double subThk = 100; // 버림 두께 
@@ -1602,7 +1621,7 @@ namespace DHBIMWATER.Application.Services
             var pr = dto.ProfileSpecDto;
             var pl = dto.PlanSpecDto;
             //var ts = dto.TypeSelectionDto;
-            var totalLength = pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
+            var totalLength = d.SelectedPumpingStationType == "Type2" ? pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T3 : pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
             var totalWidth = pr.T4 * 2 + (pl.B8 * d.N) + (pl.T5 * (d.N - 1));
             double x2 = totalLength - pr.T4 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2 - pr.L4 - pr.L3;
 
@@ -1663,7 +1682,7 @@ namespace DHBIMWATER.Application.Services
             var pr = dto.ProfileSpecDto;
             var pl = dto.PlanSpecDto;
             //var ts = dto.TypeSelectionDto;
-            var totalLength = pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
+            var totalLength = d.SelectedPumpingStationType == "Type2" ? pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T3 : pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
             var totalWidth = pr.T4 * 2 + (pl.B8 * d.N) + (pl.T5 * (d.N - 1));
             double x2 = totalLength - pr.T4 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2 - pr.L4 - pr.L3;
 
@@ -1697,7 +1716,7 @@ namespace DHBIMWATER.Application.Services
             var pr = dto.ProfileSpecDto;
             var pl = dto.PlanSpecDto;
             //var ts = dto.TypeSelectionDto;
-            var totalLength = pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
+            var totalLength = d.SelectedPumpingStationType == "Type2" ? pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T3 : pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
             var totalWidth = pr.T4 * 2 + (pl.B8 * d.N) + (pl.T5 * (d.N - 1));
             var x2 = totalLength - pr.T4 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2 - pr.L4 - pr.L3;
 
@@ -1740,7 +1759,7 @@ namespace DHBIMWATER.Application.Services
             var pr = dto.ProfileSpecDto;
             var pl = dto.PlanSpecDto;
             //var ts = dto.TypeSelectionDto;
-            var totalLength = pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
+            var totalLength = d.SelectedPumpingStationType == "Type2" ? pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T3 : pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
             var totalWidth = pr.T4 * 2 + (pl.B8 * d.N) + (pl.T5 * (d.N - 1));
             var x2 = totalLength - pr.T4 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2 - pr.L4 - pr.L3;
 
@@ -1791,7 +1810,7 @@ namespace DHBIMWATER.Application.Services
             var pr = dto.ProfileSpecDto;
             var pl = dto.PlanSpecDto;
             //var ts = dto.TypeSelectionDto;
-            var totalLength = pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
+            var totalLength = d.SelectedPumpingStationType == "Type2" ? pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T3 : pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
             var totalWidth = pr.T4 * 2 + (pl.B8 * d.N) + (pl.T5 * (d.N - 1));
             var x2 = totalLength - pr.T4 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2 - pr.L4 - pr.L3;
 
@@ -1838,13 +1857,12 @@ namespace DHBIMWATER.Application.Services
             }
             return defs;
         }
-
         public static IReadOnlyList<SectionViewDefinition> CalculateSectionViews(PumpCreationRequestDto dto)
         {
             var d = dto.DesignConditionDto;
             var pr = dto.ProfileSpecDto;
             var pl = dto.PlanSpecDto;
-            var totalLength = pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
+            var totalLength = d.SelectedPumpingStationType == "Type2" ? pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T3 : pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
             var totalWidth = pr.T4 * 2 + (pl.B8 * d.N) + (pl.T5 * (d.N - 1));
 
             var sectionViewDefs = new List<SectionViewDefinition>();
@@ -2047,7 +2065,5 @@ namespace DHBIMWATER.Application.Services
 
             return sectionViewDefs;
         }
-
-
     }
 }

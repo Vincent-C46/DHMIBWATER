@@ -1,11 +1,11 @@
-﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Core.Structures;
 using System.Diagnostics;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
-namespace DHBIMWATER.Infrastructure.Repositories.Revit
+namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
 {
     public class RevitDirectShapeCommandRepo : IDirectShapeCommandRepo
     {
@@ -40,7 +40,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit
                 var solids = group.Select(def => BuildSolid(def)).ToList();
                 if (solids.Count == 0) continue;
 
-                Solid merged = solids[0]; 
+                Solid merged = solids[0];
                 foreach (var solid in solids.Skip(1))
                 {
                     try

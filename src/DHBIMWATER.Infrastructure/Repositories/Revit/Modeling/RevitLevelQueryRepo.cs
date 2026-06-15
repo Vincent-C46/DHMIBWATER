@@ -1,9 +1,9 @@
-﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB;
 using DHBIMWATER.Application.Interfaces;
 using System.Collections.Generic;
 using UC = DHBIMWATER.Shared.Helpers.UnitConverter;
 
-namespace DHBIMWATER.Infrastructure.Repositories.Revit
+namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
 {
     internal class RevitLevelQueryRepo : ILevelQueryRepo
     {

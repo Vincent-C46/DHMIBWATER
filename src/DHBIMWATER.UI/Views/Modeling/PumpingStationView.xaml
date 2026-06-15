@@ -51,6 +51,8 @@
                     <TabItem Header="설계조건" Style="{StaticResource PrimaryTabItemStyle}">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" Width="Auto">
                             <StackPanel Margin="10">
+
+   
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
@@ -58,6 +60,19 @@
                                     </Grid.ColumnDefinitions>
 
                                     <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Content="Excel 가져오기"
+                                     Command="{Binding ImportExcelCommand}"
+                                     Width="130" Height="20"
+                                     HorizontalAlignment="Left"
+                                     Margin="0,0,0,10"/>
+                                            <TextBox Text="{Binding ExcelFilePath, Mode=OneWay}" IsReadOnly="True" Margin="10,0,0,10" VerticalAlignment="Center" 
+                                             Width="170" BorderBrush="Transparent"
+                                             Foreground="Gray"/>
+                                        </StackPanel>
+
+                                        <Separator Margin="0,0,0,10"/>
+
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                             <TextBlock Text="펌프장 타입" Style="{StaticResource LabelTextBlockStyle}" Width="185" VerticalAlignment="Center"/>
                                             <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" 
