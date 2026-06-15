@@ -676,7 +676,7 @@ Text="{Binding HH1}" Width="100" Margin="10,0" VerticalAlignment="Center" Height
 
                                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                                     <TextBlock Text="T3:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
-                                                    <TextBlock Text="중간슬래브 두께" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="밸브실 내벽 두께" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                                                     <TextBox Style="{StaticResource ReservoirTextBoxStyle}"
              Text="{Binding T3}" Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                                     <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="50"/>
@@ -691,8 +691,8 @@ Text="{Binding HH1}" Width="100" Margin="10,0" VerticalAlignment="Center" Height
                                                 </StackPanel>
 
                                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,15" Visibility="{Binding T5PrimeVisibility}">
-                                                    <TextBlock Text="T5':" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
-                                                    <TextBlock Text="밸브실 슬래브 두께" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="T6':" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="중간슬래브 두께" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                                                     <TextBox Style="{StaticResource ReservoirTextBoxStyle}"
              Text="{Binding T5Prime}" Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                                     <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="50"/>
