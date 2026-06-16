@@ -902,10 +902,10 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 _l3 = Math.Ceiling((_h4 - _h1) / Math.Tan(45 * Math.PI / 180) / 100) * 100;
                 _l4 = Math.Ceiling(4.5 * _d / 100) * 100;
             }
-            _h3 = 1000 - _t1 + 100 - (H2 + _h4) % 100;
+            _h3 = 1200+ Math.Ceiling((H2 + _h4) / 100) * 100 - (H2 + _h4);
             _h7 = 1000 + (Math.Ceiling((_h6 + _d) / 100.0) * 100 - (_h6 + _d));
             _ns = (int)Math.Floor((_h4 - _h1) / _hs);
-            _h5 = H2 + _h3 + _h4;
+            _h5 = H2 + _h3 + _h4 - T1;
 
             _b8 = Math.Ceiling(3 * _d / 100) * 100;
 
@@ -976,7 +976,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         }
         private void UpdateT1Dependents()
         {
-            UpdateH3Calculation();
+            H5 = H2 + H3 + H4 - T1;
             GH1 = _t1 + 300;
         }
         private void UpdateHSDependents()
@@ -985,11 +985,11 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         }
         private void UpdateH3Calculation()
         {
-            H3 = 1000 - _t1 + 100 - (H2 + _h4) % 100;
+            H3 = 1200 + Math.Ceiling((H2 + _h4) / 100) * 100 - (H2 + _h4);
         }
         private void UpdateH3Dependents()
         {
-            H5 = H2 + H3 + H4;
+            H5 = H2 + H3 + H4 - T1; 
         }
         private void UpdateH4Dependents()
         {
@@ -1000,7 +1000,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         {
             OnPropertyChanged(nameof(H2));
             UpdateH3Calculation();
-            H5 = H2 + H3 + H4;
+            H5 = H2 + H3 + H4 - T1;
         }
         //private void UpdateB2Dependents()
         //{
