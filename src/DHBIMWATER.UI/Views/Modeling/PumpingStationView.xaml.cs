@@ -31,5 +31,11 @@ namespace DHBIMWATER.UI.Views.Modeling
                 SizeToContent = SizeToContent.WidthAndHeight;
             };
         }
+        private void OnParameterFocused(object sender, RoutedEventArgs e)
+        {
+            if (e.OriginalSource is TextBox tb && tb.Tag is string key &&
+                DataContext is PumpingStationViewModel vm)
+                vm.SetHint(key);
+        }
     }
 }

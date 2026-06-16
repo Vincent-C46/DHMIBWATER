@@ -24,8 +24,8 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private IReadOnlyDictionary<string, List<string[]>>? _allSheets;
         private Dictionary<string, Dictionary<(double D, double HD), PumpManufacturerSpecDto>>? _manufacturerSpecs;
         private Dictionary<double, PumpValveExtensionDto>? _valveExtensions;
-        private double _supportBlockWidth;
-        private double _supportBlockHeight;
+        private double _supportBlockWidth = 500;
+        private double _supportBlockHeight = 100;
 
         private string _profileType1ImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-1_종단제원.png";
         private string _profileType2ImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-2_종단제원.png";
@@ -42,7 +42,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private int _n = 3;
         private double _lwl = 0.0;
         private double _hwl = 2.5;
-        private bool _hasCheckValve;
+        private bool _hasCheckValve = false;
 
         // 종단제원
         private double _b1 = 1200.0;
@@ -50,6 +50,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private double _b4 = 3000.0;
         private double _b6 = 700.0;
         private double _b7 = 3000.0;
+        private double _b7Base = 3000.0;
         private double _h1 = 500.0;
         private double _h6 = 600.0;
         private string _selectedTheta = "30˚";
@@ -66,6 +67,8 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private double _oh1 = 3000.0;
         private int _ns;
         private double _hs = 200;
+        private int _ns1;
+        private double _hs1 = 200;
 
         private double _h5;
 
@@ -90,6 +93,11 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private double _gh1 = 700;
         private double _hb1 = 500;
         private double _hh1 = 500;
+
+        // 힌트
+        private string _hintTitle = string.Empty;
+        private string _hintDescription = string.Empty;
+        private string _currentHintKey = string.Empty;
         #endregion
 
         #region Properties
@@ -119,6 +127,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                         SelectedEntranceType = "측면부";
                         OnPropertyChanged(nameof(SelectedEntranceType));
                     }
+                    RefreshHint();
                 }
             }
         }
@@ -139,6 +148,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                     OnPropertyChanged(nameof(T5Visibility));
                     OnPropertyChanged(nameof(B9Visibility));
                     UpdateTypeDependents();
+                    RefreshHint();
                 }
             }
         }
@@ -436,12 +446,8 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             get { return _b7; }
             set
             {
-                if (_b7 != value)
-                {
-                    _b7 = value;
-                    UpdateB7Dependents();
-                    OnPropertyChanged(nameof(B7));
-                }
+                _b7Base = value;
+                ApplyB7Final();
             }
         }
         public double H1
@@ -621,6 +627,32 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                     //RecalculateDerivedValues();
                     UpdateHSDependents();
                     OnPropertyChanged(nameof(HS));
+                }
+            }
+        }
+        // Type1 전용 — 밸브실 계단
+        public int NS1
+        {
+            get => _ns1;
+            private set
+            {
+                if (_ns1 != value)
+                {
+                    _ns1 = value;
+                    OnPropertyChanged(nameof(NS1));
+                }
+            }
+        }
+        public double HS1
+        {
+            get => _hs1;
+            set
+            {
+                if (_hs1 != value)
+                {
+                    _hs1 = value;
+                    OnPropertyChanged(nameof(HS1));
+                    UpdateNS1();
                 }
             }
         }
@@ -877,6 +909,18 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             _ => PlanDefaultImagePath
         };
 
+        // 힌트
+        public string HintTitle
+        {
+            get => _hintTitle;
+            private set { if (_hintTitle != value) { _hintTitle = value; OnPropertyChanged(nameof(HintTitle)); } }
+        }
+        public string HintDescription
+        {
+            get => _hintDescription;
+            private set { if (_hintDescription != value) { _hintDescription = value; OnPropertyChanged(nameof(HintDescription)); } }
+        }
+
         // DTO
         public PumpDesignConditionDto designConditionDto { get; set; }
         public PumpPlanSpecDto planSpecDto { get; set; }
@@ -964,17 +1008,16 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             SupportBlockWidth = dto.SupportBlockWidth;
             SupportBlockHeight = dto.SupportBlockHeight;
         }
-
         private void ApplyValveExtension()
         {
             if (_valveExtensions == null) return;
             if (!_valveExtensions.TryGetValue(D, out var ext)) return;
 
-            B7 = HasCheckValve
+            _b7Base = HasCheckValve
                 ? ext.TotalExtension + ext.ValveExtension + 2200
                 : ext.TotalExtension + 1200;
+            ApplyB7Final();
         }
-
         private void CreatePumpingStation(object? obj)
         {
             designConditionDto = new PumpDesignConditionDto(SelectedPumpingStationType, SelectedEntranceType, D, HD, H2, N, LWL, HWL, SupportBlockWidth, SupportBlockHeight);
@@ -1097,6 +1140,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         {
             UpdateH3Calculation();
             NS = (int)Math.Floor((_h4 - _h1) / _hs);
+            H5 = H2 + H3 + H4 - T1; // H3가 변하지 않아도 H4 변경분 반영
         }
         private void UpdateWLDependents()
         {
@@ -1143,6 +1187,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 : "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-2&3_평면제원.png";
 
             UpdateB6Calculation();
+            ApplyB7Final();
         }
         private void UpdateB5Dependents()
         {
@@ -1155,7 +1200,31 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private void UpdateH7Calculation()
         {
             H7 = 1000 + (Math.Ceiling((_h6 + _d) / 100.0) * 100 - (_h6 + _d));
+            UpdateNS1();
         }
+        private void UpdateNS1()
+        {
+            if (_selectedPumpingStationType != "Type1") return;
+            var total = H7 + D + H6;
+            var mod = total % _hs1;
+            NS1 = (int)Math.Floor(total / _hs1) - (mod < 0.001 ? 1 : 0);
+            ApplyB7Final();
+        }
+
+        private void ApplyB7Final()
+        {
+            var effective = _selectedPumpingStationType == "Type1"
+                ? Math.Max(_b7Base, _ns1 * 300 + 1000)
+                : _b7Base;
+
+            if (_b7 != effective)
+            {
+                _b7 = effective;
+                UpdateB7Dependents();
+                OnPropertyChanged(nameof(B7));
+            }
+        }
+
         private void UpdateB7Dependents()
         {
             L5 = _b7 + _t3 + _b6 + _b5 / 2 + _l4 - _b10 - _t4;
@@ -1170,6 +1239,145 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         {
             T5Prime = Math.Max(400, Math.Ceiling((2 * _t3 + _b7 - _t4) / 500.0) * 50);
         }
+
+        public void SetHint(string key)
+        {
+            _currentHintKey = key;
+            RefreshHint();
+        }
+
+        private void RefreshHint()
+        {
+            if (string.IsNullOrEmpty(_currentHintKey)) return;
+            var hint = BuildHint(_currentHintKey);
+            HintTitle = hint.title;
+            HintDescription = hint.desc;
+        }
+
+        private (string title, string desc) BuildHint(string key)
+        {
+            var type = _selectedPumpingStationType;
+            var ent = _selectedEntranceType;
+
+            return key switch
+            {
+                "B4" when type == "Type1" && ent == "측면부"
+                    => ("B4", "펌프 유지관리 공간. 최소 3.0m. 펌프받침폭 고려."),
+
+                "B6" when type == "Type2" || type == "Type3"
+                    => ("B6", "KDS 67 30 25 양배수장 구조, P41, 4.3.1.3 흡입관의 설계\"에 따라 설계펌프 중심에서 벽체 끝까지 1.5D 확보. "),
+
+                "B7" when type == "Type2" || type == "Type3"
+                                   => ("B7", "1. 밸브 1만 적용 시\r\n밸브 + 관로 연장\r\n밸브 설치 및 유지관리를 위해 벽체에서 플랜지까지 600mm 공간확보 \n\n1. 밸브 1 + 2 적용 시\r\n밸브 + 관로 연장\r\n밸브 설치 및 유지관리를 위해 벽체에서 플랜지까지 600mm 공간확보\r\n밸브 1과 밸브 2사이 길이 1m의 관 설치 "),
+
+
+
+
+
+                "B9" when ent != "측면부"
+                    => ("B9 — 진입부 폭",
+                        $"진입부 내부 순폭.\n현재 설정({ent}): 직접 입력."),
+                "B9"
+                    => ("B9 — 진입부 폭",
+                        "측면부 진입 시 적용되지 않습니다."),
+
+                "T5" when ent != "측면부"
+                    => ("T5 — 진입부 내벽 두께 (계산값)",
+                        $"현재 설정({ent}): B8 < 3,000 → 400mm / 3,000≤B8≤4,000 → 500mm / B8 > 4,000 → 600mm."),
+                "T5"
+                    => ("T5 — 진입부 내벽 두께",
+                        "측면부 진입 시 적용되지 않습니다."),
+
+                "T5Prime" when type == "Type2"
+                    => ("T5' — 중간슬래브 두께 (Type 2)",
+                        "Type 2 전용. max(400, ⌈(2×T3+B7−T4)/500⌉×50) 으로 자동 산정."),
+                "T5Prime"
+                    => ("T5' — 중간슬래브 두께",
+                        $"Type 2 전용 항목. 현재 설정({type})에는 적용되지 않습니다."),
+
+                "T6" when type == "Type1"
+                    => ("T6 — 와류방지벽 두께 (Type 1)",
+                        "Type 1 전용. 흡수정 내 와류 방지벽 두께. 통상 300mm 적용."),
+                "T6"
+                    => ("T6 — 와류방지벽 두께",
+                        $"Type 1 전용 항목. 현재 설정({type})에는 적용되지 않습니다."),
+
+                "HB1" when type == "Type2"
+                    => ("HB1 — 밸브실 하부 헌치 폭 (Type 2)",
+                        "Type 2 전용. 밸브실 하부 모서리 헌치의 수평 폭."),
+                "HB1"
+                    => ("HB1 — 밸브실 하부 헌치 폭",
+                        $"Type 2 전용 항목. 현재 설정({type})에는 적용되지 않습니다."),
+
+                "HH1" when type == "Type2"
+                    => ("HH1 — 밸브실 하부 헌치 높이 (Type 2)",
+                        "Type 2 전용. 밸브실 하부 모서리 헌치의 수직 높이."),
+                "HH1"
+                    => ("HH1 — 밸브실 하부 헌치 높이",
+                        $"Type 2 전용 항목. 현재 설정({type})에는 적용되지 않습니다."),
+
+                _ when _paramHints.TryGetValue(key, out var h) => h,
+                _ => (string.Empty, string.Empty)
+            };
+        }
+
+        private static readonly Dictionary<string, (string title, string desc)> _paramHints = new()
+        {
+            // 설계조건
+            ["D"]       = ("D — 펌프 구경", "펌프 흡입관 구경(mm). H4(잠김깊이), L3·L4(경사부 길이), B8(오프닝 폭) 등 종·평면 제원 산정의 기준값."),
+            ["HD"]      = ("HD — 양정고", "펌프 총 양정(m). 제작사 스펙 매칭 기준으로 사용."),
+            ["N"]       = ("N — 펌프 대수", "펌프실에 설치되는 펌프의 총 대수."),
+            ["LWL"]     = ("LWL — 저수위 (EL, m)", "저수위(Low Water Level). H2(유효수심) 산정 기준. H2 = HWL − LWL."),
+            ["HWL"]     = ("HWL — 고수위 (EL, m)", "고수위(High Water Level). H2(유효수심) 및 H3(여유고) 산정 기준."),
+
+            // 종단제원 — B
+            ["B1"]      = ("B1", "제진기 유지관리 공간. 난간 설치로 인한 순폭 1m 확보를 위해 1,200mm 적용."),
+            ["B2"]      = ("B2", "제진기 설치 공간. 시공성 및 경제성 고려 3.5m 적용."),
+            ["B3"]      = ("B3", "제진기, 컨베이어벨트 설치 및 유지관리 공간. 유지관리 편의성 및 경제성 & 전기실 평균 사이즈 고려 7.0m 적용."),
+            ["B4"]      = ("B4", "펌프 유지관리 공간. 차량 진입 공간을 고려하여 최소 4.5m. 펌프받침폭 고려."),
+            ["B5"]      = ("B5", "펌프 INPUT DATA에서 추출"),
+            ["B6"]      = ("B6", "토출관 플랜지 접합 공간. 경제성 고려 700 적용."),
+            ["B7"]      = ("B7", "1. 밸브 1만 적용 시\r\nMAX(밸브 + 관로 연장, 계단 설치 연장+1000) 적용\r\n밸브 설치 및 유지관리를 위해 벽체에서 플랜지까지 600mm 공간확보\r\n계단폭은 300mm로 고정, 계단 끝단 동선확보를 위한 1m 여유공간 적용.\n\n2. 밸브 1 + 2 적용 시\r\nMAX(밸브 + 관로 연장, 계단 설치 연장+1000) 적용\r\n밸브 설치 및 유지관리를 위해 벽체에서 플랜지까지 600mm 공간확보\r\n밸브 1과 밸브 2사이 길이 1m의 관 설치\r\n계단폭은 300mm로 고정, 계단 끝단 동선확보를 위한 1m 여유공간 적용"),
+
+            // 종단제원 — H
+            ["H1"]      = ("H1 — 제진기 최소 운전 수위", "제진기가 정상 운전되기 위한 LWL 기준 최소 수심. 통상 500mm 적용."),
+            ["H2"]      = ("H2 — 유효수심 (계산값)", "HWL − LWL × 1,000으로 자동 산정. 변경 불가."),
+            ["H3"]      = ("H3 — 여유고", "HWL 상단에서 중간슬래브 하단까지의 여유 높이. 1,200mm 이상 확보 기준으로 자동 산정."),
+            ["H4"]      = ("H4 — 펌프 흡입관 잠김 깊이", "LWL 기준 흡입관이 잠겨야 하는 깊이. 2.9D 기준으로 자동 산정."),
+            ["H5"]      = ("H5 — 상부슬래브~기초슬래브 (계산값)", "H2 + H3 + H4 − T1 로 자동 산정. T4(외벽두께) 산정 기준."),
+            ["H6"]      = ("H6 — 밸브받침 높이", "밸브 하단 지지 받침의 높이. H7 및 NS1(밸브실 계단 단수) 산정에 영향."),
+            ["H7"]      = ("H7 — 최소 토피", "구조물 상부 슬래브~지표면 최소 흙 덮임 두께. 1,000mm 이상 확보 기준으로 자동 산정."),
+            ["HS"]      = ("HS — 계단 높이", "기초 경사부 계단 1단의 높이. NS(경사부 계단 단수) = (H4−H1)/HS."),
+
+            // 종단제원 — L
+            ["L1"]      = ("L1 — 슬래브 단부 길이1", "슬래브 단부 여유 길이. 통상 300mm 적용."),
+            ["L2"]      = ("L2 — 슬래브 단부 길이2 (계산값)", "H1과 동일한 값으로 자동 설정."),
+            ["L3"]      = ("L3 — 기초 경사부 길이", "θ=30°: (H4−H1)/tan30° / θ=45°: (H4−H1)/tan45° 로 자동 산정."),
+            ["L4"]      = ("L4 — 계단 끝~펌프 중심", "θ=30°: 3D / θ=45°: 4.5D 기준으로 자동 산정."),
+
+            // 종단제원 — T
+            ["T1"]      = ("T1 — 상부슬래브 두께", "펌프실 상부 슬래브 두께. H5, GH1 산정의 기준값."),
+            ["T2"]      = ("T2 — 기초슬래브 두께 (계산값)", "T4 + 100mm 로 자동 산정."),
+            ["T3"]      = ("T3 — 밸브실 내벽 두께", "밸브실과 펌프실 사이 격벽 두께. L5, T5' 산정에 영향."),
+            ["T4"]      = ("T4 — 외벽 두께 (계산값)", "(H5 + T1) × 0.1 기준으로 자동 산정."),
+            ["T5Prime"] = ("T5' — 중간슬래브 두께 (Type 2)", "Type 2 전용. max(400, ⌈(2×T3+B7−T4)/500⌉×50) 으로 자동 산정."),
+
+            // 종단제원 — 기타
+            ["OB1"]     = ("OB1 — 벽체 오프닝 폭", "배관 통과를 위한 벽체 오프닝의 폭."),
+            ["OH1"]     = ("OH1 — 벽체 오프닝 높이", "배관 통과를 위한 벽체 오프닝의 높이."),
+            ["GB1"]     = ("GB1 — 거더 폭", "상부 거더의 단면 폭."),
+            ["GH1"]     = ("GH1 — 거더 높이", "T1 + 300mm 로 자동 산정."),
+            ["HB1"]     = ("HB1 — 밸브실 하부 헌치 폭 (Type 2)", "Type 2 전용. 밸브실 하부 모서리 헌치의 수평 폭."),
+            ["HH1"]     = ("HH1 — 밸브실 하부 헌치 높이 (Type 2)", "Type 2 전용. 밸브실 하부 모서리 헌치의 수직 높이."),
+
+            // 평면제원
+            ["B8"]      = ("B8 — 제진기 오프닝 폭", "평면상 제진기 오프닝의 폭. 3D 기준으로 자동 산정."),
+            ["B9"]      = ("B9 — 진입부 폭", "진입부(좌안·우안) 내부 순폭. 측면부 진입 시 미적용."),
+            ["B10"]     = ("B10 — Toe 길이", "기초 슬래브 외부 돌출(Toe) 길이."),
+            ["L5"]      = ("L5 — 진입부 길이 (계산값)", "B7 + T3 + B6 + B5/2 + L4 − B10 − T4 로 자동 산정."),
+            ["T5"]      = ("T5 — 진입부 내벽 두께 (계산값)", "B8 < 3,000: 400mm / 3,000≤B8≤4,000: 500mm / B8 > 4,000: 600mm."),
+            ["T6"]      = ("T6 — 와류방지벽 두께 (Type 1)", "Type 1 전용. 흡수정 내 와류 방지벽의 두께. 통상 300mm 적용."),
+        };
         #endregion
     }
 }

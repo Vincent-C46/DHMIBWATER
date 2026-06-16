@@ -1860,8 +1860,8 @@ namespace DHBIMWATER.Application.Services
             var defs = new List<GenericModelPlacementDefinition>();
 
             double rec_d = d.SupportBlockWidth;
-            double rec_B = pr.B5 + rec_d;
-            double rec_L = pr.B5 + rec_d;
+            double rec_B = pr.B5 + rec_d*2;
+            double rec_L = pr.B5 + rec_d*2;
             double rec_T = d.SupportBlockHeight;
 
             double circ_d = d.SupportBlockWidth;
