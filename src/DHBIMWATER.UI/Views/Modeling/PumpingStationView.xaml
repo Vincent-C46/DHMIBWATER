@@ -66,10 +66,23 @@
                                      Width="130" Height="20"
                                      HorizontalAlignment="Left"
                                      Margin="0,0,0,10"/>
-                                            <TextBox Text="{Binding ExcelFilePath, Mode=OneWay}" IsReadOnly="True" Margin="10,0,0,10" VerticalAlignment="Center" 
+                                            <TextBox Text="{Binding ExcelFilePath, Mode=OneWay}" IsReadOnly="True" Margin="10,0,0,10" VerticalAlignment="Center"
                                              Width="170" BorderBrush="Transparent"
                                              Foreground="Gray"/>
                                         </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                            <TextBlock Text="펌프 제작사" Style="{StaticResource LabelTextBlockStyle}" Width="130" VerticalAlignment="Center"/>
+                                            <ComboBox Style="{StaticResource PrimaryComboBoxStyle}"
+                                                      Width="170" Margin="10,0,0,0"
+                                                      ItemsSource="{Binding PumpManufacturers}"
+                                                      SelectedItem="{Binding SelectedPumpManufacturer}"/>
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                            <CheckBox IsChecked="{Binding HasCheckValve}" Margin="0,0,10,0" Content=" 추가역지밸브 적용" />
+                                        </StackPanel>
+
 
                                         <Separator Margin="0,0,0,10"/>
 
@@ -803,7 +816,6 @@ Text="{Binding HH1}" Width="100" Margin="10,0" VerticalAlignment="Center" Height
                             </StackPanel>
                         </ScrollViewer>
                     </TabItem>
-
 
                     <!--부재 유형 탭-->
                     <!--

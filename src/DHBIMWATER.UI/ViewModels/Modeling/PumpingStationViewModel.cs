@@ -3,6 +3,7 @@ using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Application.UseCases.AutoGenerator;
 using DHBIMWATER.UI.Base;
 using DHBIMWATER.UI.Commands;
+using DocumentFormat.OpenXml.Spreadsheet;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Controls;
@@ -19,6 +20,11 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private readonly IExcelReader _excelReader;
         private readonly IFileDialogService _fileDialogService;
         private string _excelFilePath = string.Empty;
+        private string _selectedPumpManufacturer = string.Empty;
+        private IReadOnlyDictionary<string, List<string[]>>? _allSheets;
+        private Dictionary<string, Dictionary<(double D, double HD), PumpManufacturerSpecDto>>? _manufacturerSpecs;
+        private double _supportBlockWidth;
+        private double _supportBlockHeight;
 
         private string _profileType1ImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-1_종단제원.png";
         private string _profileType2ImagePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-2_종단제원.png";
@@ -35,6 +41,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private int _n = 3;
         private double _lwl = 0.0;
         private double _hwl = 2.5;
+        private bool _hasCheckValve;
 
         // 종단제원
         private double _b1 = 1200.0;
@@ -146,13 +153,59 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 }
             }
         }
+        public ObservableCollection<string> PumpManufacturers { get; } = new();
+        public string SelectedPumpManufacturer
+        {
+            get => _selectedPumpManufacturer;
+            set
+            {
+                if (_selectedPumpManufacturer != value)
+                {
+                    _selectedPumpManufacturer = value;
+                    OnPropertyChanged(nameof(SelectedPumpManufacturer));
+                    ApplyManufacturerSpec();
+                }
+            }
+        }
+        public double SupportBlockWidth
+        {
+            get => _supportBlockWidth;
+            set
+            {
+                if (_supportBlockWidth != value)
+                {
+                    _supportBlockWidth = value;
+                    OnPropertyChanged(nameof(SupportBlockWidth));
+                }
+            }
+        }
+        public double SupportBlockHeight
+        {
+            get => _supportBlockHeight;
+            set
+            {
+                if (_supportBlockHeight != value)
+                {
+                    _supportBlockHeight = value;
+                    OnPropertyChanged(nameof(SupportBlockHeight));
+                }
+            }
+        }
+        public bool HasCheckValve
+        {
+            get => _hasCheckValve;
+            set
+            {
+                _hasCheckValve = value;
+                OnPropertyChanged(nameof(HasCheckValve));
+            }
+        }
 
         // 가시성
         public string B4Visibility => SelectedPumpingStationType == "Type1" ? "Visible" : "Collapsed";
         public string T6Visibility => SelectedPumpingStationType == "Type1" ? "Visible" : "Collapsed";
         public string B9Visibility => SelectedEntranceType == "측면부" ? "Collapsed" : "Visible";
         public string T5Visibility => SelectedEntranceType == "측면부" ? "Collapsed" : "Visible";
-
 
         // 이미지 경로
         public string PlanDefaultImagePath
@@ -262,8 +315,8 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_d != value)
                 {
                     _d = value;
-                    //RecalculateDerivedValues();
                     UpdateDDependents();
+                    ApplyManufacturerSpec();
                     OnPropertyChanged(nameof(D));
                 }
             }
@@ -277,6 +330,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 {
                     _hd = value;
                     OnPropertyChanged(nameof(HD));
+                    ApplyManufacturerSpec();
                 }
             }
         }
@@ -847,7 +901,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             InitializeDerivedValues();
         }
         #endregion
-        // ㅁㅁㅁ
+
         #region Methods
         private void ImportFromExcel(object? obj)
         {
@@ -855,9 +909,9 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             if (filePath == null) return;
 
             ExcelFilePath = filePath;
+            _allSheets = _excelReader.Read(filePath);
 
-            var sheets = _excelReader.Read(filePath);
-            var rows = sheets.Values.FirstOrDefault();
+            var rows = _allSheets.Values.FirstOrDefault();
             if (rows == null) return;
 
             var map = rows
@@ -871,12 +925,58 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             if (map.TryGetValue("HWL", out var hwl) && double.TryParse(hwl, out var hwlVal)) HWL = hwlVal;
             if (map.TryGetValue("Type", out var type)) SelectedPumpingStationType = type;
             if (map.TryGetValue("Entrance", out var entrance)) SelectedEntranceType = entrance;
+
+            LoadPumpManufacturers();
+        }
+
+        private void LoadPumpManufacturers()
+        {
+            PumpManufacturers.Clear();
+            SelectedPumpManufacturer = string.Empty;
+
+            if (_allSheets == null) return;
+            var manufacturerSheetName = "펌프제작사 목록";
+
+            if (!_allSheets.TryGetValue(manufacturerSheetName, out var mfRows)) return;
+
+            // B6 = row index 5, column index 1
+            foreach (var row in mfRows.Skip(5))
+            {
+                if (row.Length < 2) break;
+                var value = row[1]?.Trim();
+                if (string.IsNullOrWhiteSpace(value)) break;
+                PumpManufacturers.Add(value);
+            }
+
+            // 스펙 딕셔너리 선파싱 — 이후 선택/D/HD 변경 시 딕셔너리 조회만
+            _manufacturerSpecs = new ParsePumpManufacturerSpecsUseCase().Execute(_allSheets, PumpManufacturers);
+
+            if (PumpManufacturers.Count > 0)
+                SelectedPumpManufacturer = PumpManufacturers[0];
+        }
+
+        private void ApplyManufacturerSpec()
+        {
+            if (string.IsNullOrEmpty(_selectedPumpManufacturer) || _manufacturerSpecs == null) return;
+            if (!_manufacturerSpecs.TryGetValue(_selectedPumpManufacturer, out var specs)) return;
+
+            var candidates = specs.Keys.Where(k => k.D == D).ToList();
+            if (candidates.Count == 0) return;
+
+            // HD가 정확히 없으면 가장 가까운 값 사용
+            var bestKey = candidates.MinBy(k => Math.Abs(k.HD - HD));
+            if (!specs.TryGetValue(bestKey, out var dto)) return;
+
+            IsRectangularOpening = dto.OpeningShape == "사각형";
+            B5 = dto.B5;
+            SupportBlockWidth = dto.SupportBlockWidth;
+            SupportBlockHeight = dto.SupportBlockHeight;
         }
 
         private void CreatePumpingStation(object? obj)
         {
             designConditionDto = new PumpDesignConditionDto(SelectedPumpingStationType, SelectedEntranceType, D, HD, H2, N, LWL, HWL);
-            profileSpecDto = new PumpProfileSpecDto(B1, B3, B4, B6, B7, H1, H5, H6, SelectedTheta, L1, L2, L3, L4, H3, H4, H7, OB1, OH1, NS, HB1, HH1, HS, T1, T2, T3, T4, T5Prime, GB1, GH1, B2, IsRectangularOpening, B5);
+            profileSpecDto = new PumpProfileSpecDto(B1, B3, B4, B6, B7, H1, H5, H6, SelectedTheta, L1, L2, L3, L4, H3, H4, H7, OB1, OH1, NS, HB1, HH1, HS, T1, T2, T3, T4, T5Prime, GB1, GH1, B2, IsRectangularOpening, B5, SupportBlockWidth, SupportBlockHeight);
             planSpecDto = new PumpPlanSpecDto(B8, B9, L5, B10, T5, T6);
             //typeSelectionDto = new PumpTypeSelectionDto(T1, T2, T3, T4, T5, T6, GB1, GH1);
             creationRequestDto = new PumpCreationRequestDto(designConditionDto, planSpecDto, profileSpecDto);
@@ -902,7 +1002,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 _l3 = Math.Ceiling((_h4 - _h1) / Math.Tan(45 * Math.PI / 180) / 100) * 100;
                 _l4 = Math.Ceiling(4.5 * _d / 100) * 100;
             }
-            _h3 = 1200+ Math.Ceiling((H2 + _h4) / 100) * 100 - (H2 + _h4);
+            _h3 = 1200 + Math.Ceiling((H2 + _h4) / 100) * 100 - (H2 + _h4);
             _h7 = 1000 + (Math.Ceiling((_h6 + _d) / 100.0) * 100 - (_h6 + _d));
             _ns = (int)Math.Floor((_h4 - _h1) / _hs);
             _h5 = H2 + _h3 + _h4 - T1;
@@ -989,7 +1089,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         }
         private void UpdateH3Dependents()
         {
-            H5 = H2 + H3 + H4 - T1; 
+            H5 = H2 + H3 + H4 - T1;
         }
         private void UpdateH4Dependents()
         {
