@@ -43,8 +43,6 @@ namespace DHBIMWATER.Application.DTOs.Revit.PumpingStation
 
         double B2,
         bool IsRectangularOpening,
-        double B5,
-        double SupportBlockWidth,
-        double SupportBlockHeight
+        double B5
     );
 }

@@ -31,7 +31,6 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
         private readonly IViewCommandRepo _viewCommandRepo;
         private readonly ISetParameterRepo _setParameterRepo;
         private readonly IGenericModelCommandRepo _genericModelCmdRepo;
-
         private readonly IExcelReader _excelReader;
         #endregion
 
@@ -42,7 +41,6 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
         #region Constructor
         public CreatePumpingStationUseCase(ITransactionContext tx,
                                            IDialogService dialogService,
-
                                            ILevelQueryRepo levelQueryRepo,
                                            ILevelCommandRepo levelCmdRepo,
                                            ISlabCommandRepo slabCmdRepo,

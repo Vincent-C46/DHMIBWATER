@@ -15,6 +15,8 @@ namespace DHBIMWATER.Application.DTOs.Revit.PumpingStation
         double H2,
         int N,
         double LWL,
-        double HWL
+        double HWL,
+        double SupportBlockWidth, 
+        double SupportBlockHeight
     );
 }

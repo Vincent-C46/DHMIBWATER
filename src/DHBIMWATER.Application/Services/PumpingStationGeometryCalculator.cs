@@ -1366,8 +1366,8 @@ namespace DHBIMWATER.Application.Services
                 };
                 var beamDef2 = new BeamDefinition()
                 {
-                    StartPoint = new Point3D(pr.B1 + pr.B2 + pr.B3 - pr.GB1 / 2, (pl.B8 + pl.T5) * i, d.HWL * 1000 + pr.H3  - pr.GH1 / 2),
-                    EndPoint = new Point3D(pr.B1 + pr.B2 + pr.B3 - pr.GB1 / 2, (pl.B8 + pl.T5) * i + pl.B8, d.HWL * 1000 + pr.H3  - pr.GH1 / 2),
+                    StartPoint = new Point3D(pr.B1 + pr.B2 + pr.B3 - pr.GB1 / 2, (pl.B8 + pl.T5) * i, d.HWL * 1000 + pr.H3 - pr.GH1 / 2),
+                    EndPoint = new Point3D(pr.B1 + pr.B2 + pr.B3 - pr.GB1 / 2, (pl.B8 + pl.T5) * i + pl.B8, d.HWL * 1000 + pr.H3 - pr.GH1 / 2),
                     Width = pr.GB1,
                     Height = pr.GH1,
                     LevelName = UpperSlabLevelName,
@@ -1399,8 +1399,8 @@ namespace DHBIMWATER.Application.Services
             {
                 var haunchDef = new BeamDefinition()
                 {
-                    StartPoint = new Point3D(totalLength - pr.T3 - pr.B7 - pr.T3 + pr.T4, totalWidth - pr.T4, d.HWL * 1000 + pr.H3  - (pr.H7 + d.D + pr.H6 + pr.T5Prime)),
-                    EndPoint = new Point3D(totalLength - pr.T3 - pr.B7 - pr.T3 + pr.T4, -pr.T4, d.HWL * 1000 + pr.H3  - (pr.H7 + d.D + pr.H6 + pr.T5Prime)),
+                    StartPoint = new Point3D(totalLength - pr.T3 - pr.B7 - pr.T3 + pr.T4, totalWidth - pr.T4, d.HWL * 1000 + pr.H3 - (pr.H7 + d.D + pr.H6 + pr.T5Prime)),
+                    EndPoint = new Point3D(totalLength - pr.T3 - pr.B7 - pr.T3 + pr.T4, -pr.T4, d.HWL * 1000 + pr.H3 - (pr.H7 + d.D + pr.H6 + pr.T5Prime)),
                     Width = pr.HB1,
                     Height = pr.HH1,
                     LevelName = ValveRoomLevelName,
@@ -1803,7 +1803,7 @@ namespace DHBIMWATER.Application.Services
             var pl = dto.PlanSpecDto;
             //var ts = dto.TypeSelectionDto;
             var totalLength = d.SelectedPumpingStationType == "Type2" ?
-                pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T3 : 
+                pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T3 :
                 pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
             var totalWidth = pr.T4 * 2 + (pl.B8 * d.N) + (pl.T5 * (d.N - 1));
             var x2 = totalLength - pr.T4 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2 - pr.L4 - pr.L3;
@@ -1859,14 +1859,14 @@ namespace DHBIMWATER.Application.Services
 
             var defs = new List<GenericModelPlacementDefinition>();
 
-            double rec_d = 400;
+            double rec_d = d.SupportBlockWidth;
             double rec_B = pr.B5 + rec_d;
             double rec_L = pr.B5 + rec_d;
-            double rec_T = 100;
+            double rec_T = d.SupportBlockHeight;
 
-            double circ_d = 400;
+            double circ_d = d.SupportBlockWidth;
             double circ_R = pr.B5 / 2 + rec_d;
-            double circ_T = 100;
+            double circ_T = d.SupportBlockHeight;
 
             var recDict = new Dictionary<string, object>
             {
@@ -1897,7 +1897,6 @@ namespace DHBIMWATER.Application.Services
 
                     Parameters = pr.IsRectangularOpening ? recDict : circDict,
                 };
-
 
                 defs.Add(pedestal);
             }

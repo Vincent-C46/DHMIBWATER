@@ -23,6 +23,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private string _selectedPumpManufacturer = string.Empty;
         private IReadOnlyDictionary<string, List<string[]>>? _allSheets;
         private Dictionary<string, Dictionary<(double D, double HD), PumpManufacturerSpecDto>>? _manufacturerSpecs;
+        private Dictionary<double, PumpValveExtensionDto>? _valveExtensions;
         private double _supportBlockWidth;
         private double _supportBlockHeight;
 
@@ -197,6 +198,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             set
             {
                 _hasCheckValve = value;
+                ApplyValveExtension();
                 OnPropertyChanged(nameof(HasCheckValve));
             }
         }
@@ -317,6 +319,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                     _d = value;
                     UpdateDDependents();
                     ApplyManufacturerSpec();
+                    ApplyValveExtension();
                     OnPropertyChanged(nameof(D));
                 }
             }
@@ -895,6 +898,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             _usageLogger = usageLogger;
             _excelReader = excelReader;
             _fileDialogService = fileDialogService;
+
             CreatePumpingStationCommand = new RelayCommand(CreatePumpingStation);
             ImportExcelCommand = new RelayCommand(ImportFromExcel);
 
@@ -910,21 +914,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
 
             ExcelFilePath = filePath;
             _allSheets = _excelReader.Read(filePath);
-
-            var rows = _allSheets.Values.FirstOrDefault();
-            if (rows == null) return;
-
-            var map = rows
-                .Where(r => r.Length >= 2 && !string.IsNullOrWhiteSpace(r[0]))
-                .ToDictionary(r => r[0].Trim(), r => r[1].Trim(), StringComparer.OrdinalIgnoreCase);
-
-            if (map.TryGetValue("D", out var d) && double.TryParse(d, out var dVal)) D = dVal;
-            if (map.TryGetValue("HD", out var hd) && double.TryParse(hd, out var hdVal)) HD = hdVal;
-            if (map.TryGetValue("N", out var n) && int.TryParse(n, out var nVal)) N = nVal;
-            if (map.TryGetValue("LWL", out var lwl) && double.TryParse(lwl, out var lwlVal)) LWL = lwlVal;
-            if (map.TryGetValue("HWL", out var hwl) && double.TryParse(hwl, out var hwlVal)) HWL = hwlVal;
-            if (map.TryGetValue("Type", out var type)) SelectedPumpingStationType = type;
-            if (map.TryGetValue("Entrance", out var entrance)) SelectedEntranceType = entrance;
 
             LoadPumpManufacturers();
         }
@@ -950,9 +939,12 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
 
             // 스펙 딕셔너리 선파싱 — 이후 선택/D/HD 변경 시 딕셔너리 조회만
             _manufacturerSpecs = new ParsePumpManufacturerSpecsUseCase().Execute(_allSheets, PumpManufacturers);
+            _valveExtensions = new ParseValveExtensionUseCase().Execute(_allSheets);
 
             if (PumpManufacturers.Count > 0)
                 SelectedPumpManufacturer = PumpManufacturers[0];
+
+            ApplyValveExtension();
         }
 
         private void ApplyManufacturerSpec()
@@ -973,10 +965,20 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             SupportBlockHeight = dto.SupportBlockHeight;
         }
 
+        private void ApplyValveExtension()
+        {
+            if (_valveExtensions == null) return;
+            if (!_valveExtensions.TryGetValue(D, out var ext)) return;
+
+            B7 = HasCheckValve
+                ? ext.TotalExtension + ext.ValveExtension + 2200
+                : ext.TotalExtension + 1200;
+        }
+
         private void CreatePumpingStation(object? obj)
         {
-            designConditionDto = new PumpDesignConditionDto(SelectedPumpingStationType, SelectedEntranceType, D, HD, H2, N, LWL, HWL);
-            profileSpecDto = new PumpProfileSpecDto(B1, B3, B4, B6, B7, H1, H5, H6, SelectedTheta, L1, L2, L3, L4, H3, H4, H7, OB1, OH1, NS, HB1, HH1, HS, T1, T2, T3, T4, T5Prime, GB1, GH1, B2, IsRectangularOpening, B5, SupportBlockWidth, SupportBlockHeight);
+            designConditionDto = new PumpDesignConditionDto(SelectedPumpingStationType, SelectedEntranceType, D, HD, H2, N, LWL, HWL, SupportBlockWidth, SupportBlockHeight);
+            profileSpecDto = new PumpProfileSpecDto(B1, B3, B4, B6, B7, H1, H5, H6, SelectedTheta, L1, L2, L3, L4, H3, H4, H7, OB1, OH1, NS, HB1, HH1, HS, T1, T2, T3, T4, T5Prime, GB1, GH1, B2, IsRectangularOpening, B5);
             planSpecDto = new PumpPlanSpecDto(B8, B9, L5, B10, T5, T6);
             //typeSelectionDto = new PumpTypeSelectionDto(T1, T2, T3, T4, T5, T6, GB1, GH1);
             creationRequestDto = new PumpCreationRequestDto(designConditionDto, planSpecDto, profileSpecDto);

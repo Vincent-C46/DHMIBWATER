@@ -225,16 +225,6 @@
                                             <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="30"/>
                                         </StackPanel>
 
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                                            <TextBlock Text="B7:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
-                                            <TextBlock Text="밸브실 폭" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
-                                            <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                                                     Text="{Binding B7}"
-                                                     Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
-                                            <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="30"/>
-                                        </StackPanel>
-
-
 
                                         <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                             <TextBlock Text="θ:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
@@ -498,6 +488,16 @@
                                                     <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
              Text="{Binding B6}"
              Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
+                                                    <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="30"/>
+                                                </StackPanel>
+
+
+                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                                    <TextBlock Text="B7:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="밸브실 폭" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                    <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
+                                                     Text="{Binding B7}"
+                                                     Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                                     <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="30"/>
                                                 </StackPanel>
 
