@@ -10,6 +10,7 @@ namespace DHBIMWATER.Revit.Commands.Quantity
     {
         None = 0,
         Calculate = 1,
+        SelectInRevit = 2,
     }
     public class QuantityRequest
     {

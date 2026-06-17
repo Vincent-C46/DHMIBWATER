@@ -16,7 +16,9 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         private IFileDialogService _fileDialogService;
         private readonly CalculateQuantityUseCase _calculateQuantityUseCase;
         private readonly ExportQuantityUseCase _exportQuantityUseCase;
-        private Action? _extractAction; // 액션 추가
+        private Action? _extractAction;
+        private Action<IList<long>>? _selectAction;
+        private bool _isSelectedInRevit;
 
         private List<QuantityItem> _currentSelectedItems = new();
         public ObservableCollection<QuantitySummaryItem> SummaryItems { get; set; }
@@ -57,6 +59,23 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
                 OnPropertyChanged();
             }
         }
+        public int AutoCount     => QuantityItems.Count(i => i.Status == QuantityStatus.Auto);
+        public int ModifiedCount => QuantityItems.Count(i => i.Status == QuantityStatus.Modified);
+        public int ManualCount   => QuantityItems.Count(i => i.Status == QuantityStatus.Manual);
+        public int TotalCount    => QuantityItems.Count;
+
+        public bool IsSelectedInRevit
+        {
+            get => _isSelectedInRevit;
+            private set { _isSelectedInRevit = value; OnPropertyChanged(); }
+        }
+
+        private int _revitSelectedCount;
+        public int RevitSelectedCount
+        {
+            get => _revitSelectedCount;
+            private set { _revitSelectedCount = value; OnPropertyChanged(); }
+        }
         public int SelectedTabIndex
         {
             get => _selectedTabIndex;
@@ -91,6 +110,7 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         public ICommand EditItemCommand      { get; }
         public ICommand DeleteItemCommand { get; }
         public ICommand ExportToExcelCommand { get; }
+        public ICommand SelectInRevitCommand { get; }
         #endregion
 
         #region Constructor
@@ -114,7 +134,8 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             AddManualItemCommand = new RelayCommand(_ => ManualInputRequested.Invoke(this, null));
             CopyItemCommand      = new RelayCommand(_ => OnCopyItem(),   _ => SelectedItem != null);
             EditItemCommand      = new RelayCommand(_ => OnEditItem(),   _ => SelectedItem != null);
-            DeleteItemCommand    = new RelayCommand(_ => OnDeleteItem(), _ => _currentSelectedItems.Count > 0);
+            DeleteItemCommand       = new RelayCommand(_ => OnDeleteItem(),    _ => _currentSelectedItems.Count > 0);
+            SelectInRevitCommand   = new RelayCommand(_ => OnSelectInRevit(), _ => _currentSelectedItems.Count > 0);
         }
         #endregion
 
@@ -133,6 +154,7 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         public void UpdateSelectedItems(IList<QuantityItem> items)
         {
             _currentSelectedItems = items.ToList();
+            IsSelectedInRevit = false;
 
             if (!items.Any())
             {
@@ -179,7 +201,9 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         {
             if (index >= 0 && index < QuantityItems.Count)
             {
-                QuantityItems[index] = newItem;
+                var original = QuantityItems[index];
+                var status = original.Status == QuantityStatus.Auto ? QuantityStatus.Modified : original.Status;
+                QuantityItems[index] = newItem with { Status = status };
                 OnPropertyChanged(nameof(QuantityItems));
                 UpdateSummary();
             }
@@ -226,6 +250,18 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             //UpdateSummary();
         }
         public void SetExtractAction(Action action) => _extractAction = action;
+        public void SetSelectAction(Action<IList<long>> action) => _selectAction = action;
+
+        private void OnSelectInRevit()
+        {
+            var ids = _currentSelectedItems
+                .Select(i => i.ElementId)
+                .Distinct()
+                .ToList();
+            _selectAction?.Invoke(ids);
+            RevitSelectedCount = ids.Count;
+            IsSelectedInRevit = true;
+        }
 
         public void ApplyCalculatedItems(List<QuantityItem> items)
         {
@@ -283,6 +319,10 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             }
             SummaryItems = new ObservableCollection<QuantitySummaryItem>(result);
             OnPropertyChanged(nameof(SummaryItems));
+            OnPropertyChanged(nameof(AutoCount));
+            OnPropertyChanged(nameof(ModifiedCount));
+            OnPropertyChanged(nameof(ManualCount));
+            OnPropertyChanged(nameof(TotalCount));
         }
         private int GetWorkTypeOrder(string workType)
         {

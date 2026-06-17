@@ -8,8 +8,9 @@ namespace DHBIMWATER.Core.Quantity
 {
     public enum QuantityStatus
     {
-        Auto,
-        Manual,
+        Auto,       // 자동 계산
+        Modified,   // 자동 계산 후 수정
+        Manual,     // 수동 추가
     }
 
     public record QuantityItem

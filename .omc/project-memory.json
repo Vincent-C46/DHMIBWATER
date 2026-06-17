@@ -77,6 +77,18 @@
   },
   "hotPaths": [
     {
+      "path": "src\\DHBIMWATER.UI\\ViewModels\\Quantity\\QuantityViewModel.cs",
+      "accessCount": 18,
+      "lastAccessed": 1781677248964,
+      "type": "file"
+    },
+    {
+      "path": "src\\DHBIMWATER.UI\\Views\\Quantity\\QuantityView.xaml",
+      "accessCount": 15,
+      "lastAccessed": 1781677255102,
+      "type": "file"
+    },
+    {
       "path": "src",
       "accessCount": 8,
       "lastAccessed": 1781675101488,
@@ -84,14 +96,20 @@
     },
     {
       "path": "",
-      "accessCount": 4,
-      "lastAccessed": 1781674256670,
+      "accessCount": 6,
+      "lastAccessed": 1781675956696,
       "type": "directory"
     },
     {
       "path": "src\\DHBIMWATER.Revit\\Commands\\Quantity\\QuantityCommand.cs",
+      "accessCount": 5,
+      "lastAccessed": 1781675827518,
+      "type": "file"
+    },
+    {
+      "path": "src\\DHBIMWATER.Revit\\Commands\\Quantity\\QuantityRequestHandler.cs",
       "accessCount": 3,
-      "lastAccessed": 1781675100454,
+      "lastAccessed": 1781675772574,
       "type": "file"
     },
     {
@@ -107,21 +125,27 @@
       "type": "file"
     },
     {
-      "path": "src\\DHBIMWATER.UI\\ViewModels\\Quantity\\QuantityViewModel.cs",
-      "accessCount": 2,
-      "lastAccessed": 1781672901558,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.Revit\\Commands\\Quantity\\QuantityRequestHandler.cs",
-      "accessCount": 2,
-      "lastAccessed": 1781675114530,
-      "type": "file"
-    },
-    {
       "path": "src\\DHBIMWATER.UI\\Views\\Quantity\\QuantityView.xaml.cs",
       "accessCount": 2,
       "lastAccessed": 1781675115505,
+      "type": "file"
+    },
+    {
+      "path": "src\\DHBIMWATER.Revit\\Commands\\Quantity\\QuantityRequest.cs",
+      "accessCount": 2,
+      "lastAccessed": 1781675770760,
+      "type": "file"
+    },
+    {
+      "path": "src\\DHBIMWATER.Core\\Quantity\\QuantityItem.cs",
+      "accessCount": 2,
+      "lastAccessed": 1781675982918,
+      "type": "file"
+    },
+    {
+      "path": "src\\DHBIMWATER.UI\\Converters\\QuantityStatusConverter.cs",
+      "accessCount": 2,
+      "lastAccessed": 1781676190728,
       "type": "file"
     },
     {
@@ -143,12 +167,6 @@
       "type": "file"
     },
     {
-      "path": "src\\DHBIMWATER.Revit\\Commands\\Quantity\\QuantityRequest.cs",
-      "accessCount": 1,
-      "lastAccessed": 1781672923952,
-      "type": "file"
-    },
-    {
       "path": "src\\DHBIMWATER.Application\\UseCases\\QuantityCalculator\\CalculateQuantityUseCase.cs",
       "accessCount": 1,
       "lastAccessed": 1781674751458,
@@ -164,6 +182,12 @@
       "path": "src\\DHBIMWATER.Infrastructure\\Transactions\\RevitTransactionContext.cs",
       "accessCount": 1,
       "lastAccessed": 1781675113492,
+      "type": "file"
+    },
+    {
+      "path": "C:\\Users\\admin\\.claude\\plans\\lazy-yawning-treehouse.md",
+      "accessCount": 1,
+      "lastAccessed": 1781676088826,
       "type": "file"
     }
   ],

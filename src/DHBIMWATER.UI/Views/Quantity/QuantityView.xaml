@@ -33,6 +33,9 @@
             -->
 
             <conv:GroupElementCountConverter x:Key="ElementCountConverter"/>
+            <conv:QuantityStatusToLabelConverter x:Key="StatusLabelConverter"/>
+            <conv:QuantityStatusToBrushConverter x:Key="StatusBrushConverter"/>
+            <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
 
             <CollectionViewSource x:Key="SummaryItemsSource"
                               Source="{Binding SummaryItems}"/>
@@ -116,7 +119,6 @@
                             <TextBlock Text="수정" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Grid.Column="1" HorizontalAlignment="Right">
@@ -351,13 +353,19 @@
                                   Style="{StaticResource QuantityDataGridStyle}"
                                   VirtualizingPanel.IsVirtualizingWhenGrouping="True"
                                   VirtualizingPanel.VirtualizationMode="Recycling">
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow">
+                                    <Setter Property="Background" Value="{Binding Status, Converter={StaticResource StatusBrushConverter}}"/>
+                                </Style>
+                            </DataGrid.RowStyle>
                             <DataGrid.Columns>
+                                <DataGridTextColumn Header="상태"      Binding="{Binding Status, Converter={StaticResource StatusLabelConverter}}" Width="45" MinWidth="45"/>
                                 <DataGridTextColumn Header="카테고리"  Binding="{Binding Category}"                Width="Auto" MinWidth="50"/>
                                 <DataGridTextColumn Header="ElementId" Binding="{Binding ElementId}"               Width="Auto" MinWidth="50"/>
                                 <DataGridTextColumn Header="코드"      Binding="{Binding ElementCode}"             Width="Auto" MinWidth="50"/>
                                 <DataGridTextColumn Header="공종"      Binding="{Binding WorkType}"                Width="Auto" MinWidth="50"/>
-                                <DataGridTextColumn Header="규격1"      Binding="{Binding Specification}"           Width="Auto" MinWidth="50"/>
-                                <DataGridTextColumn Header="규격2"      Binding="{Binding SubSpecification}"           Width="Auto" MinWidth="50"/>
+                                <DataGridTextColumn Header="규격1"     Binding="{Binding Specification}"           Width="Auto" MinWidth="50"/>
+                                <DataGridTextColumn Header="규격2"     Binding="{Binding SubSpecification}"        Width="Auto" MinWidth="50"/>
                                 <DataGridTextColumn Header="산출식"    Binding="{Binding RenderedFormula}"         Width="1*"   MinWidth="50"/>
                                 <DataGridTextColumn Header="값"        Binding="{Binding Value, StringFormat=F3}"  Width="Auto" MinWidth="50"/>
                                 <DataGridTextColumn Header="단위"      Binding="{Binding Unit}"                    Width="Auto" MinWidth="50"/>
@@ -391,8 +399,8 @@
                     Padding="14,12">
                     <StackPanel>
                         <TextBlock Text="선택 항목"
-                               FontSize="10" FontWeight="Medium"
-                               Foreground="#888780"
+                               FontSize="12" FontWeight="Medium"
+                               Foreground="Black"
                                Margin="0,0,0,8"/>
                         <Border>
                             <StackPanel Orientation="Vertical">
@@ -427,17 +435,30 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Revit 하이라이트 표시 -->
+                        <!-- Revit 선택 버튼 -->
+                        <Button Command="{Binding SelectInRevitCommand}"
+                                Padding="8,5" Margin="0,10,0,0"
+                                Style="{StaticResource ExportButtonStyle}"
+                                BorderThickness="1" HorizontalAlignment="Stretch">
+                            <StackPanel Orientation="Horizontal">
+                                <Image Source="/DHBIMWATER.UI;component/Resources/Quantity/selection.png" Width="18" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Revit에서 객체 선택" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- 선택 완료 배지 -->
                         <Border Background="#E6F1FB"
                             BorderBrush="#85B7EB"
                             BorderThickness="1"
                             CornerRadius="6"
                             Padding="8,6"
-                            Margin="0,10,0,0"
-                            Visibility="{Binding IsItemSelected}">
-                            <TextBlock Text="Revit에서 하이라이트됨"
-                                   FontSize="11"
-                                   Foreground="#0C447C"/>
+                            Margin="0,6,0,0"
+                            Visibility="{Binding IsSelectedInRevit, Converter={StaticResource BoolToVisConverter}}">
+                            <TextBlock FontSize="11" Foreground="#0C447C">
+                                <Run Text="Revit에서 객체 "/>
+                                <Run Text="{Binding RevitSelectedCount, Mode=OneWay}"/>
+                                <Run Text="개 선택됨"/>
+                            </TextBlock>
                         </Border>
                     </StackPanel>
                 </Border>
@@ -506,19 +527,21 @@
                 <StackPanel Orientation="Horizontal">
                     <Ellipse Width="6" Height="6" Fill="#639922" VerticalAlignment="Center" Margin="0,0,5,0"/>
                     <TextBlock FontSize="10" Foreground="#888780" Margin="0,0,12,0">
-                    <Run Text="자동 "/><Run Text="{Binding AutoCount}"/>
-                    <Run Text="개"/>
+                        <Run Text="자동 "/><Run Text="{Binding AutoCount, Mode=OneWay}"/><Run Text="개"/>
+                    </TextBlock>
+                    <Ellipse Width="6" Height="6" Fill="#D4A017" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                    <TextBlock FontSize="10" Foreground="#888780" Margin="0,0,12,0">
+                        <Run Text="연동 "/><Run Text="{Binding ModifiedCount, Mode=OneWay}"/><Run Text="개"/>
                     </TextBlock>
                     <Ellipse Width="6" Height="6" Fill="#BA7517" VerticalAlignment="Center" Margin="0,0,5,0"/>
                     <TextBlock FontSize="10" Foreground="#888780" Margin="0,0,12,0">
-                    <Run Text="수동 "/><Run Text="{Binding ManualCount}"/>
-                    <Run Text="개"/>
+                        <Run Text="수동 "/><Run Text="{Binding ManualCount, Mode=OneWay}"/><Run Text="개"/>
                     </TextBlock>
                 </StackPanel>
                 <TextBlock DockPanel.Dock="Right"
                        FontSize="10" Foreground="#888780"
                        VerticalAlignment="Center">
-                <Run Text="전체 "/><Run Text="{Binding TotalCount}"/><Run Text="개 항목"/>
+                <Run Text="전체 "/><Run Text="{Binding TotalCount, Mode=OneWay}"/><Run Text="개 항목"/>
                 </TextBlock>
             </DockPanel>
         </Border>

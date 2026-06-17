@@ -34,6 +34,13 @@ namespace DHBIMWATER.Revit.Commands.Quantity
                 exEvent.Raise();
             });
 
+            _view.ViewModel.SetSelectAction(ids =>
+            {
+                handler.ElementIdsToSelect = ids;
+                handler.QuantityRequest.Make(QuantityRequestId.SelectInRevit);
+                exEvent.Raise();
+            });
+
             _view.Show();
             return Result.Succeeded;
         }

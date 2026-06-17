@@ -15,13 +15,13 @@ namespace DHBIMWATER.Revit.Commands.Quantity
         private readonly QuantityRequest _quantityRequest = new QuantityRequest();
         public QuantityRequest QuantityRequest { get { return _quantityRequest; } }
 
+        public IList<long> ElementIdsToSelect { get; set; } = new List<long>();
 
         public QuantityRequestHandler(CalculateQuantityUseCase useCase, QuantityViewModel vm)
         {
             _useCase = useCase;
             _vm = vm;
         }
-
 
         public void Execute(UIApplication uiapp)
         {
@@ -38,6 +38,13 @@ namespace DHBIMWATER.Revit.Commands.Quantity
                     case QuantityRequestId.Calculate:
                         var items = _useCase.Execute();
                         System.Windows.Application.Current.Dispatcher.Invoke(() => _vm.ApplyCalculatedItems(items.ToList()));
+                        break;
+                    case QuantityRequestId.SelectInRevit:
+                        var elementIds = ElementIdsToSelect
+                                        .Select(id => new ElementId(id))
+                                        .Where(id => doc.GetElement(id) != null)
+                                        .ToList();
+                        uidoc.Selection.SetElementIds(elementIds);
                         break;
                     default:
                         break;

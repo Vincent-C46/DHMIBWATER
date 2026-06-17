@@ -62,6 +62,7 @@
 	  <None Remove="Resources\Quantity\edit.png" />
 	  <None Remove="Resources\Quantity\excel.png" />
 	  <None Remove="Resources\Quantity\refresh-arrow_white.png" />
+	  <None Remove="Resources\Quantity\selection.png" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -198,6 +199,9 @@
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Resource>
 		<Resource Include="Resources\Quantity\refresh-arrow_white.png">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Resources\Quantity\selection.png">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Resource>
 	</ItemGroup>
