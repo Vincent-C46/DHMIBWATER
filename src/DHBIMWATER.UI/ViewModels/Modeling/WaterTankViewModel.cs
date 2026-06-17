@@ -1,4 +1,4 @@
-﻿using DHBIMWATER.Application.DTOs.Revit.Reservoir;
+using DHBIMWATER.Application.DTOs.Revit.Reservoir;
 using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Application.UseCases.AutoGenerator;
 using DHBIMWATER.UI.Base;
@@ -15,11 +15,43 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private readonly CreateReservoirUseCase _createReservoirUseCase;
         private readonly IElementTypeQueryRepo _elementTypeQueryRepo;
 
+        // 설계조건
         private double _q = 5000;
         private double _rt = 12;
-        private int _n = 2; 
+        private int _n = 2;
         private double _lwl = 0;
 
+        // 수조부
+        private double _he = 4.5;
+        private double _hf = 0.3;
+        private double _hm = 0.15;
+        private double _w = 25;
+        private double _l = 30;
+        private double _m1 = 4;
+        private double _m2 = 4;
+        private double _m3 = 4;
+        private double _m4 = 4;
+        private double _wh = 2.5;
+        private double _lh = 2.5;
+        private double _hh = 2.0;
+        private double _ltt = 0;
+        private double _slv = 1.0;
+        private double _crt;
+
+        // 밸브실
+        private double _h1f = 4.0;
+        private double _lv = 30.0;
+        private double _wv = 5.0;
+        private double _lvt = 0;
+        private double _we = 2.5;
+        private double _trOff = 0.1;
+        private double _wp = 1.0;
+        private double _hp = 1.0;
+        private double _wpThk = 0.3;
+        private double _spThk = 0.3;
+        private double _slp = 1.0;
+
+        // Con'c 단면
         private string _selectedTankUpperSlabType;
         private string _selectedTankFoundSlabType;
         private string _selectedTankOuterWallType;
@@ -40,6 +72,8 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
 
         #region Properties
         public ICommand CreateWTankCommand { get; }
+
+        // 설계조건
         public double Q
         {
             get => _q;
@@ -47,8 +81,9 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             {
                 if (_q != value)
                 {
-                    _q= value;
+                    _q = value;
                     OnPropertyChanged(nameof(Q));
+                    UpdateCRT();
                 }
             }
         }
@@ -59,8 +94,9 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             {
                 if (_rt != value)
                 {
-                    _rt= value;
+                    _rt = value;
                     OnPropertyChanged(nameof(RT));
+                    OnPropertyChanged(nameof(RTCheck));
                 }
             }
         }
@@ -71,8 +107,9 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             {
                 if (_n != value)
                 {
-                    _n= value;
+                    _n = value;
                     OnPropertyChanged(nameof(N));
+                    UpdateCRT();
                 }
             }
         }
@@ -83,12 +120,216 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             {
                 if (_lwl != value)
                 {
-                    _lwl= value;
+                    _lwl = value;
                     OnPropertyChanged(nameof(LWL));
                 }
             }
         }
 
+        // 수조부
+        public double He
+        {
+            get => _he;
+            set
+            {
+                if (_he != value)
+                {
+                    _he = value;
+                    OnPropertyChanged(nameof(He));
+                    OnPropertyChanged(nameof(H2F));
+                    UpdateCRT();
+                }
+            }
+        }
+        public double Hf
+        {
+            get => _hf;
+            set
+            {
+                if (_hf != value)
+                {
+                    _hf = value;
+                    OnPropertyChanged(nameof(Hf));
+                    OnPropertyChanged(nameof(H2F));
+                }
+            }
+        }
+        public double Hm
+        {
+            get => _hm;
+            set
+            {
+                if (_hm != value)
+                {
+                    _hm = value;
+                    OnPropertyChanged(nameof(Hm));
+                    OnPropertyChanged(nameof(H2F));
+                }
+            }
+        }
+        public double W
+        {
+            get => _w;
+            set
+            {
+                if (_w != value)
+                {
+                    _w = value;
+                    OnPropertyChanged(nameof(W));
+                    UpdateCRT();
+                }
+            }
+        }
+        public double L
+        {
+            get => _l;
+            set
+            {
+                if (_l != value)
+                {
+                    _l = value;
+                    OnPropertyChanged(nameof(L));
+                    UpdateCRT();
+                }
+            }
+        }
+        public double M1
+        {
+            get => _m1;
+            set { if (_m1 != value) { _m1 = value; OnPropertyChanged(nameof(M1)); } }
+        }
+        public double M2
+        {
+            get => _m2;
+            set { if (_m2 != value) { _m2 = value; OnPropertyChanged(nameof(M2)); } }
+        }
+        public double M3
+        {
+            get => _m3;
+            set { if (_m3 != value) { _m3 = value; OnPropertyChanged(nameof(M3)); } }
+        }
+        public double M4
+        {
+            get => _m4;
+            set { if (_m4 != value) { _m4 = value; OnPropertyChanged(nameof(M4)); } }
+        }
+        public double Wh
+        {
+            get => _wh;
+            set { if (_wh != value) { _wh = value; OnPropertyChanged(nameof(Wh)); } }
+        }
+        public double Lh
+        {
+            get => _lh;
+            set { if (_lh != value) { _lh = value; OnPropertyChanged(nameof(Lh)); } }
+        }
+        public double Hh
+        {
+            get => _hh;
+            set
+            {
+                if (_hh != value)
+                {
+                    _hh = value;
+                    OnPropertyChanged(nameof(Hh));
+                    OnPropertyChanged(nameof(H2F));
+                }
+            }
+        }
+        public double Ltt
+        {
+            get => _ltt;
+            set { if (_ltt != value) { _ltt = value; OnPropertyChanged(nameof(Ltt)); } }
+        }
+        public double SLv
+        {
+            get => _slv;
+            set { if (_slv != value) { _slv = value; OnPropertyChanged(nameof(SLv)); } }
+        }
+        public double CRT
+        {
+            get => _crt;
+            private set
+            {
+                if (_crt != value)
+                {
+                    _crt = value;
+                    OnPropertyChanged(nameof(CRT));
+                    OnPropertyChanged(nameof(RTCheck));
+                }
+            }
+        }
+        public string RTCheck => CRT >= RT ? "O.K" : "N.G";
+
+        // 밸브실
+        public double H1F
+        {
+            get => _h1f;
+            set
+            {
+                if (_h1f != value)
+                {
+                    _h1f = value;
+                    OnPropertyChanged(nameof(H1F));
+                    OnPropertyChanged(nameof(H2F));
+                }
+            }
+        }
+        // Hh + He + Hf + Hm = 수조부 전체 내부 높이, 슬래브 두께는 추후 반영
+        public double H2F => Hh + He + Hf + Hm - H1F;
+
+        public double Lv
+        {
+            get => _lv;
+            set { if (_lv != value) { _lv = value; OnPropertyChanged(nameof(Lv)); } }
+        }
+        public double Wv
+        {
+            get => _wv;
+            set { if (_wv != value) { _wv = value; OnPropertyChanged(nameof(Wv)); } }
+        }
+        public double Lvt
+        {
+            get => _lvt;
+            set { if (_lvt != value) { _lvt = value; OnPropertyChanged(nameof(Lvt)); } }
+        }
+        public double We
+        {
+            get => _we;
+            set { if (_we != value) { _we = value; OnPropertyChanged(nameof(We)); } }
+        }
+        public double TrOff
+        {
+            get => _trOff;
+            set { if (_trOff != value) { _trOff = value; OnPropertyChanged(nameof(TrOff)); } }
+        }
+        public double Wp
+        {
+            get => _wp;
+            set { if (_wp != value) { _wp = value; OnPropertyChanged(nameof(Wp)); } }
+        }
+        public double Hp
+        {
+            get => _hp;
+            set { if (_hp != value) { _hp = value; OnPropertyChanged(nameof(Hp)); } }
+        }
+        public double WpThk
+        {
+            get => _wpThk;
+            set { if (_wpThk != value) { _wpThk = value; OnPropertyChanged(nameof(WpThk)); } }
+        }
+        public double SpThk
+        {
+            get => _spThk;
+            set { if (_spThk != value) { _spThk = value; OnPropertyChanged(nameof(SpThk)); } }
+        }
+        public double SLp
+        {
+            get => _slp;
+            set { if (_slp != value) { _slp = value; OnPropertyChanged(nameof(SLp)); } }
+        }
+
+        // Con'c 단면
         public ObservableCollection<string> SlabTypes { get; set; } = new ObservableCollection<string>();
         public ObservableCollection<string> WallTypes { get; set; } = new ObservableCollection<string>();
         public ObservableCollection<string> ColumnTypes { get; set; } = new ObservableCollection<string>();
@@ -114,7 +355,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 if (_selectedTankFoundSlabType != value)
                 {
                     _selectedTankFoundSlabType = value;
-                    OnPropertyChanged(nameof(_selectedTankFoundSlabType));
+                    OnPropertyChanged(nameof(SelectedTankFoundSlabType));
                 }
             }
         }
@@ -178,7 +419,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 }
             }
         }
-
         public string SelectedValveUpperSlabType
         {
             get => _selectedValveUpperSlabType;
@@ -239,7 +479,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 }
             }
         }
-
         public string SelectedSubSlabType
         {
             get => _selectedSubSlabType;
@@ -265,7 +504,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             }
         }
 
-
         // DTO
         public ReservoirDesignConditionDto designConditionDto { get; set; }
         public ReservoirTankDto tankDto { get; set; }
@@ -282,14 +520,13 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             _elementTypeQueryRepo = elementTypeQueryRepo;
 
             LoadElementTypes();
+            UpdateCRT();
 
             CreateWTankCommand = new RelayCommand(CreateWaterTank);
         }
 
-        // 목록 초기화
         private void LoadElementTypes()
         {
-            // 목록 초기화 
             SlabTypes.Clear();
             WallTypes.Clear();
             ColumnTypes.Clear();
@@ -297,13 +534,13 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
 
             foreach (var slabTypeName in _elementTypeQueryRepo.GetSlabTypeNames())
                 SlabTypes.Add(slabTypeName);
-            
+
             foreach (var wallTypeName in _elementTypeQueryRepo.GetWallTypeNames())
                 WallTypes.Add(wallTypeName);
-            
+
             foreach (var columnTypeName in _elementTypeQueryRepo.GetColumnTypeNames())
                 ColumnTypes.Add(columnTypeName);
-            
+
             foreach (var beamTypeName in _elementTypeQueryRepo.GetBeamTypeNames())
                 BeamTypes.Add(beamTypeName);
 
@@ -327,31 +564,25 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             SelectedHaunchType = BeamTypes.FirstOrDefault(bt => bt.Contains("헌치")) ??
                                  BeamTypes.FirstOrDefault(bt => bt.Contains("Haunch")) ??
                                  BeamTypes.FirstOrDefault();
-
         }
         #endregion
 
         #region Methods
+        private void UpdateCRT()
+        {
+            if (_q > 0)
+                CRT = (W * L * He * N) / Q * 24;
+        }
+
         private void CreateWaterTank(object? obj)
         {
-            // DTO 작성
             designConditionDto = new ReservoirDesignConditionDto(Q, RT, N, LWL);
-            tankDto = new ReservoirTankDto(0,0,0,0,0,0,0,0,0,0,0,0,0);
-            valveDto = new ReservoirValveDto(0,0,0,0);
+            tankDto = new ReservoirTankDto(He, Hf, Hm, W, L, M1, M2, M3, M4, Wh, Lh, Hh, Ltt);
+            valveDto = new ReservoirValveDto(H1F, Lv, Wv, Lvt);
             typeSelectionDto = new ReservoirSelectedTypeIdDto("a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a");
 
             reservoirCreationRequestDto = new ReservoirCreationRequestDto(designConditionDto, tankDto, valveDto, typeSelectionDto);
-
             _createReservoirUseCase.Execute(reservoirCreationRequestDto);
-
-            //var reservoirDto = new ReservoirDto
-            //{
-            //    StartPt = new Application.DTOs.Common.Point3DDto() { X = 0, Y = 0, Z = 0 },
-            //    EndPt = new Application.DTOs.Common.Point3DDto() { X = WallLength, Y = 0, Z = 0 },
-            //    Length = WallLength
-            //};
-
-            //_createWallUseCase.Execute(reservoirDto);
         }
         #endregion
     }

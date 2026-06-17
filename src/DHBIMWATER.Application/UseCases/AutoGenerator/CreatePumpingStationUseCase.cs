@@ -19,7 +19,6 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
         #region Fields
         private readonly ITransactionContext _tx;
         private readonly IDialogService _dialogService;
-
         private readonly ILevelQueryRepo _levelQueryRepo;
         private readonly ILevelCommandRepo _levelCmdRepo;
         private readonly IWallCommandRepo _wallCmdRepo;

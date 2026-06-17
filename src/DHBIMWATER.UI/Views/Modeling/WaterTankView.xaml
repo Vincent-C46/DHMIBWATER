@@ -235,75 +235,89 @@
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                                 <TextBlock Text="He:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                 <TextBlock Text="유효수심" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
-                                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                                                      Text="{Binding TextBoxContent}"
-                                                         Width="150" Margin="10,0" Height="25" VerticalAlignment ="Center"/>
+                                                <TextBox Style="{StaticResource ReservoirTextBoxStyle}"
+                                                         Text="{Binding He, UpdateSourceTrigger=LostFocus, Mode=TwoWay}"
+                                                         Width="150" Margin="10,0" Height="25" VerticalAlignment="Center"/>
                                                 <TextBlock Text="m (Min 3m ~ Max 6m)" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="150"/>
                                             </StackPanel>
 
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                                 <TextBlock Text="Hf:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                 <TextBlock Text="여유고" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
-                                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                                                      Text="{Binding TextBoxContent}"
-                                                         Width="150" Margin="10,0" Height="25" VerticalAlignment ="Center"/>
+                                                <TextBox Style="{StaticResource ReservoirTextBoxStyle}"
+                                                         Text="{Binding Hf, UpdateSourceTrigger=LostFocus, Mode=TwoWay}"
+                                                         Width="150" Margin="10,0" Height="25" VerticalAlignment="Center"/>
                                                 <TextBlock Text="m (Min 0.3m)" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="150"/>
                                             </StackPanel>
 
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                                 <TextBlock Text="Hm:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                 <TextBlock Text="수조부 바닥 ~ LWL 높이" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
-                                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                                                      Text="{Binding TextBoxContent}"
-                                                         Width="150" Margin="10,0" Height="25" VerticalAlignment ="Center"/>
+                                                <TextBox Style="{StaticResource ReservoirTextBoxStyle}"
+                                                         Text="{Binding Hm, UpdateSourceTrigger=LostFocus, Mode=TwoWay}"
+                                                         Width="150" Margin="10,0" Height="25" VerticalAlignment="Center"/>
                                                 <TextBlock Text="m (Min 0.15m)" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="150"/>
                                             </StackPanel>
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                                 <TextBlock Text="W:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                 <TextBlock Text="지 폭" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
-                                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                                                      Text="{Binding TextBoxContent}"
-                                                         Width="150" Margin="10,0" Height="25" VerticalAlignment ="Center"/>
+                                                <TextBox Style="{StaticResource ReservoirTextBoxStyle}"
+                                                         Text="{Binding W, UpdateSourceTrigger=LostFocus, Mode=TwoWay}"
+                                                         Width="150" Margin="10,0" Height="25" VerticalAlignment="Center"/>
                                                 <TextBlock Text="m" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="150"/>
                                             </StackPanel>
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                                 <TextBlock Text="L:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                 <TextBlock Text="지 길이" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
-                                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                                                      Text="{Binding TextBoxContent}"
-                                                         Width="150" Margin="10,0" Height="25" VerticalAlignment ="Center"/>
+                                                <TextBox Style="{StaticResource ReservoirTextBoxStyle}"
+                                                         Text="{Binding L, UpdateSourceTrigger=LostFocus, Mode=TwoWay}"
+                                                         Width="150" Margin="10,0" Height="25" VerticalAlignment="Center"/>
                                                 <TextBlock Text="m" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="150"/>
+                                            </StackPanel>
+
+                                            <StackPanel Orientation="Horizontal" Margin="0,5,0,15">
+                                                <TextBlock Style="{StaticResource LabelTextBlockStyle}" Text="체류시간:" Width="80" VerticalAlignment="Center"/>
+                                                <TextBlock Style="{StaticResource LabelTextBlockStyle}"
+                                                           Text="{Binding CRT, StringFormat={}{0:N2}}"
+                                                           Width="50" VerticalAlignment="Center" Foreground="#27AE60" FontWeight="SemiBold"/>
+                                                <TextBlock Style="{StaticResource LabelTextBlockStyle}" Text="hr  ≥  최소:" Width="60" VerticalAlignment="Center"/>
+                                                <TextBlock Style="{StaticResource LabelTextBlockStyle}"
+                                                           Text="{Binding RT, StringFormat={}{0:0.###}}"
+                                                           Width="35" VerticalAlignment="Center" Foreground="#27AE60" FontWeight="SemiBold"/>
+                                                <TextBlock Style="{StaticResource LabelTextBlockStyle}" Text="hr" Width="25" VerticalAlignment="Center"/>
+                                                <TextBlock Style="{StaticResource LabelTextBlockStyle}"
+                                                           Text="{Binding RTCheck}"
+                                                           Width="40" VerticalAlignment="Center" FontWeight="Bold"/>
                                             </StackPanel>
 
                                             <Separator/>
 
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                                                <TextBlock Style ="{StaticResource LabelTextBlockStyle}" Text="M:" Width="30" VerticalAlignment="Center"/>
-                                                <TextBlock Style ="{StaticResource LabelTextBlockStyle}" Text="기둥 Margin" Width="150" VerticalAlignment="Center"/>
-                                                <TextBlock Style ="{StaticResource LabelTextBlockStyle}" Text="상(M1): " Width="50" VerticalAlignment="Center" Margin="10, 0"/>
+                                                <TextBlock Style="{StaticResource LabelTextBlockStyle}" Text="M:" Width="30" VerticalAlignment="Center"/>
+                                                <TextBlock Style="{StaticResource LabelTextBlockStyle}" Text="기둥 Margin" Width="150" VerticalAlignment="Center"/>
+                                                <TextBlock Style="{StaticResource LabelTextBlockStyle}" Text="상(M1): " Width="50" VerticalAlignment="Center" Margin="10,0"/>
                                                 <TextBox Style="{StaticResource ReservoirTextBoxStyle}" Text="{Binding M1, UpdateSourceTrigger=LostFocus, Mode=TwoWay}"
                                                          Width="30" Height="25" VerticalAlignment="Center"/>
-                                                <TextBlock Style ="{StaticResource LabelTextBlockStyle}" Text="m /" Width="30" Margin="10, 0" VerticalAlignment="Center"/>
-                                                <TextBlock Style ="{StaticResource LabelTextBlockStyle}" Text="하(M2): " Width="50" VerticalAlignment="Center" Margin="10, 0"/>
-                                                <TextBox Style="{StaticResource ReservoirTextBoxStyle}" Text="{Binding M1, UpdateSourceTrigger=LostFocus, Mode=TwoWay}"
+                                                <TextBlock Style="{StaticResource LabelTextBlockStyle}" Text="m /" Width="30" Margin="10,0" VerticalAlignment="Center"/>
+                                                <TextBlock Style="{StaticResource LabelTextBlockStyle}" Text="하(M2): " Width="50" VerticalAlignment="Center" Margin="10,0"/>
+                                                <TextBox Style="{StaticResource ReservoirTextBoxStyle}" Text="{Binding M2, UpdateSourceTrigger=LostFocus, Mode=TwoWay}"
                                                          Width="30" Height="25" VerticalAlignment="Center"/>
-                                                <TextBlock Style ="{StaticResource LabelTextBlockStyle}" Text="m" Width="30" Margin="10, 0" VerticalAlignment="Center"/>
+                                                <TextBlock Style="{StaticResource LabelTextBlockStyle}" Text="m" Width="30" Margin="10,0" VerticalAlignment="Center"/>
                                             </StackPanel>
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Style ="{StaticResource LabelTextBlockStyle}" Text="" Width="180"/>
-                                                <TextBlock Style ="{StaticResource LabelTextBlockStyle}" Text="좌(M3): " Width="50" VerticalAlignment="Center" Margin="10, 0"/>
-                                                <TextBox Style="{StaticResource ReservoirTextBoxStyle}" Text="{Binding M1, UpdateSourceTrigger=LostFocus, Mode=TwoWay}"
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                                <TextBlock Style="{StaticResource LabelTextBlockStyle}" Text="" Width="180"/>
+                                                <TextBlock Style="{StaticResource LabelTextBlockStyle}" Text="좌(M3): " Width="50" VerticalAlignment="Center" Margin="10,0"/>
+                                                <TextBox Style="{StaticResource ReservoirTextBoxStyle}" Text="{Binding M3, UpdateSourceTrigger=LostFocus, Mode=TwoWay}"
                                                          Width="30" Height="25" VerticalAlignment="Center"/>
-                                                <TextBlock Style ="{StaticResource LabelTextBlockStyle}" Text="m /" Width="30" Margin="10, 0" VerticalAlignment="Center"/>
-                                                <TextBlock Style ="{StaticResource LabelTextBlockStyle}" Text="우(M4): " Width="50" VerticalAlignment="Center" Margin="10, 0"/>
-                                                <TextBox Style="{StaticResource ReservoirTextBoxStyle}" Text="{Binding M1, UpdateSourceTrigger=LostFocus, Mode=TwoWay}"
+                                                <TextBlock Style="{StaticResource LabelTextBlockStyle}" Text="m /" Width="30" Margin="10,0" VerticalAlignment="Center"/>
+                                                <TextBlock Style="{StaticResource LabelTextBlockStyle}" Text="우(M4): " Width="50" VerticalAlignment="Center" Margin="10,0"/>
+                                                <TextBox Style="{StaticResource ReservoirTextBoxStyle}" Text="{Binding M4, UpdateSourceTrigger=LostFocus, Mode=TwoWay}"
                                                          Width="30" Height="25" VerticalAlignment="Center"/>
-                                                <TextBlock Style ="{StaticResource LabelTextBlockStyle}" Text="m" Width="30" Margin="10, 0" VerticalAlignment="Center"/>
+                                                <TextBlock Style="{StaticResource LabelTextBlockStyle}" Text="m" Width="30" Margin="10,0" VerticalAlignment="Center"/>
                                             </StackPanel>
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBlock Style ="{StaticResource LabelTextBlockStyle}" Text="" Width="180"/>
-
-                                                <TextBlock Style ="{StaticResource LabelTextBlockStyle}" Text="(기둥간 중심간격 5m 이내 등간격 자동배치)" Width="300" Margin="12 5 0 12"/>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                                <TextBlock Style="{StaticResource LabelTextBlockStyle}" Text="" Width="180"/>
+                                                <TextBlock Style="{StaticResource LabelTextBlockStyle}" Text="(기둥간 중심간격 5m 이내 등간격 자동배치)" Width="300" Margin="12,5,0,0"/>
                                             </StackPanel>
 
                                             <Separator/>
@@ -311,34 +325,41 @@
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                                 <TextBlock Text="Wh:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                 <TextBlock Text="수조부 Hopper 폭" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
-                                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                                                      Text="{Binding TextBoxContent}"
-                                                         Width="150" Margin="10,0" Height="25" VerticalAlignment ="Center"/>
+                                                <TextBox Style="{StaticResource ReservoirTextBoxStyle}"
+                                                         Text="{Binding Wh, UpdateSourceTrigger=LostFocus, Mode=TwoWay}"
+                                                         Width="150" Margin="10,0" Height="25" VerticalAlignment="Center"/>
                                                 <TextBlock Text="m" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="150"/>
                                             </StackPanel>
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                                 <TextBlock Text="Lh:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                 <TextBlock Text="수조부 Hopper 길이" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
-                                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                                                      Text="{Binding TextBoxContent}"
-                                                         Width="150" Margin="10,0" Height="25" VerticalAlignment ="Center"/>
+                                                <TextBox Style="{StaticResource ReservoirTextBoxStyle}"
+                                                         Text="{Binding Lh, UpdateSourceTrigger=LostFocus, Mode=TwoWay}"
+                                                         Width="150" Margin="10,0" Height="25" VerticalAlignment="Center"/>
                                                 <TextBlock Text="m" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="150"/>
                                             </StackPanel>
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                                 <TextBlock Text="Hh:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                 <TextBlock Text="수조부 Hopper 깊이" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
-                                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                                                      Text="{Binding TextBoxContent}"
-                                                         Width="150" Margin="10,0" Height="25" VerticalAlignment ="Center"/>
+                                                <TextBox Style="{StaticResource ReservoirTextBoxStyle}"
+                                                         Text="{Binding Hh, UpdateSourceTrigger=LostFocus, Mode=TwoWay}"
+                                                         Width="150" Margin="10,0" Height="25" VerticalAlignment="Center"/>
                                                 <TextBlock Text="m" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="150"/>
                                             </StackPanel>
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                                 <TextBlock Text="Ltt:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                                 <TextBlock Text="기초 Toe 길이" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
-                                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-                                                      Text="{Binding TextBoxContent}"
-                                                         Width="150" Margin="10,0" Height="25" VerticalAlignment ="Center"/>
+                                                <TextBox Style="{StaticResource ReservoirTextBoxStyle}"
+                                                         Text="{Binding Ltt, UpdateSourceTrigger=LostFocus, Mode=TwoWay}"
+                                                         Width="150" Margin="10,0" Height="25" VerticalAlignment="Center"/>
                                                 <TextBlock Text="m" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="150"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                                <TextBlock Text="SLv:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                <TextBlock Text="단차부 사면경사 1 : x (V:H)" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                <TextBox Style="{StaticResource ReservoirTextBoxStyle}"
+                                                         Text="{Binding SLv, UpdateSourceTrigger=LostFocus, Mode=TwoWay}"
+                                                         Width="150" Margin="10,0" Height="25" VerticalAlignment="Center"/>
                                             </StackPanel>
 
                                         </StackPanel>
