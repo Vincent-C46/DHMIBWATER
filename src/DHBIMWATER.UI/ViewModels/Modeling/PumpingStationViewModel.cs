@@ -892,7 +892,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         public string HB1Visibility => SelectedPumpingStationType == "Type2" ? "Visible" : "Collapsed";
         public string HH1Visibility => SelectedPumpingStationType == "Type2" ? "Visible" : "Collapsed";
         //public string PlaneImagePath => _isRectangularOpening ? RectangularImagePath : CircularImagePath;
-
         public string ProfileImagePath => SelectedPumpingStationType switch
         {
             "Type1" => ProfileType1ImagePath,
@@ -900,7 +899,6 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             "Type3" => ProfileType3ImagePath,
             _ => ProfileType1ImagePath
         };
-
         public string PlanImagePath => SelectedEntranceType switch
         {
             "좌안부" => PlanLeftImagePath,

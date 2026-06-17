@@ -4,6 +4,7 @@ using DHBIMWATER.Core.Quantity;
 using DHBIMWATER.UI.Base;
 using DHBIMWATER.UI.Commands;
 using System.Collections.ObjectModel;
+using System.Windows;
 using System.Windows.Input;
 
 namespace DHBIMWATER.UI.ViewModels.Quantity
@@ -15,6 +16,7 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         private IFileDialogService _fileDialogService;
         private readonly CalculateQuantityUseCase _calculateQuantityUseCase;
         private readonly ExportQuantityUseCase _exportQuantityUseCase;
+        private Action? _extractAction;
 
         private List<QuantityItem> _currentSelectedItems = new();
         public ObservableCollection<QuantitySummaryItem> SummaryItems { get; set; }
@@ -215,9 +217,11 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         }
         private void GetCalculateQuantity(object? obj)
         {
+            _extractAction?.Invoke();
+            
             // 수동 입력 항목은 재산출 후에도 유지
             var manualItems = QuantityItems.Where(i => i.Status == QuantityStatus.Manual).ToList();
-            var items = _calculateQuantityUseCase.Execute();
+            var items = _calculateQuantityUseCase.Execute();    // 이게 Revit API
             QuantityItems = new ObservableCollection<QuantityItem>(items.Concat(manualItems));
             OnPropertyChanged(nameof(QuantityItems));
             UpdateSummary();

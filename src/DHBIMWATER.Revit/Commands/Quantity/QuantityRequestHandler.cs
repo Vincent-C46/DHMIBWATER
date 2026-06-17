@@ -1,4 +1,5 @@
 ﻿using Autodesk.Revit.UI;
+using Autodesk.Revit.DB;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,14 +13,31 @@ namespace DHBIMWATER.Revit.Commands.Quantity
         private readonly QuantityRequest _quantityRequest = new QuantityRequest();
         public QuantityRequest QuantityRequest { get { return _quantityRequest; } }
 
-        public void Execute(UIApplication app)
+        public void Execute(UIApplication uiapp)
         {
-            throw new NotImplementedException();
+            UIDocument uidoc = uiapp.ActiveUIDocument;
+            Autodesk.Revit.ApplicationServices.Application app = uiapp.Application;
+            Document doc = uidoc.Document;
+
+            try
+            {
+                switch (QuantityRequest.Take())
+                {
+                    case QuantityRequestId.None:
+                        break;
+                    case QuantityRequestId.Calculate:
+
+                        break;
+                    default:
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                TaskDialog.Show("Error", $"Requset 요청 실패\n{ex.Message}");
+            }
         }
 
-        public string GetName()
-        {
-            throw new NotImplementedException();
-        }
+        public string GetName() => "QuantityRequest";
     }
 }
