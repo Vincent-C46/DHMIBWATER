@@ -9,7 +9,7 @@
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance vm:QuantityViewModel, IsDesignTimeCreatable=False}"
         Title="DHBIM WATER - Quantity Calculator"
-        Width="980" Height="700"
+        Width="{Binding WindowWidth, Mode=OneWay}" Height="700"
         MinWidth="700" MinHeight="450"
         MaxWidth="1500" MaxHeight="1000"
         WindowStartupLocation="CenterOwner"
@@ -359,16 +359,16 @@
                                 </Style>
                             </DataGrid.RowStyle>
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="상태"      Binding="{Binding Status, Converter={StaticResource StatusLabelConverter}}" Width="45" MinWidth="45"/>
                                 <DataGridTextColumn Header="카테고리"  Binding="{Binding Category}"                Width="Auto" MinWidth="50"/>
                                 <DataGridTextColumn Header="ElementId" Binding="{Binding ElementId}"               Width="Auto" MinWidth="50"/>
                                 <DataGridTextColumn Header="코드"      Binding="{Binding ElementCode}"             Width="Auto" MinWidth="50"/>
                                 <DataGridTextColumn Header="공종"      Binding="{Binding WorkType}"                Width="Auto" MinWidth="50"/>
                                 <DataGridTextColumn Header="규격1"     Binding="{Binding Specification}"           Width="Auto" MinWidth="50"/>
                                 <DataGridTextColumn Header="규격2"     Binding="{Binding SubSpecification}"        Width="Auto" MinWidth="50"/>
-                                <DataGridTextColumn Header="산출식"    Binding="{Binding RenderedFormula}"         Width="1*"   MinWidth="50"/>
+                                <DataGridTextColumn Header="산출식"    Binding="{Binding RenderedFormula}"         Width="1*"   MinWidth="50" MaxWidth="300"/>
                                 <DataGridTextColumn Header="값"        Binding="{Binding Value, StringFormat=F3}"  Width="Auto" MinWidth="50"/>
                                 <DataGridTextColumn Header="단위"      Binding="{Binding Unit}"                    Width="Auto" MinWidth="50"/>
+                                <DataGridTextColumn Header="상태"      Binding="{Binding Status, Converter={StaticResource StatusLabelConverter}}" Width="45" MinWidth="45"/>
                             </DataGrid.Columns>
                         </DataGrid>
                     </TabItem>
@@ -441,7 +441,7 @@
                                 Style="{StaticResource ExportButtonStyle}"
                                 BorderThickness="1" HorizontalAlignment="Stretch">
                             <StackPanel Orientation="Horizontal">
-                                <Image Source="/DHBIMWATER.UI;component/Resources/Quantity/selection.png" Width="18" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <Image Source="/DHBIMWATER.UI;component/Resources/Quantity/check.png" Width="18" Margin="0,0,6,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="Revit에서 객체 선택" VerticalAlignment="Center"/>
                             </StackPanel>
                         </Button>
@@ -455,7 +455,7 @@
                             Margin="0,6,0,0"
                             Visibility="{Binding IsSelectedInRevit, Converter={StaticResource BoolToVisConverter}}">
                             <TextBlock FontSize="11" Foreground="#0C447C">
-                                <Run Text="Revit에서 객체 "/>
+                                <Run Text="객체 "/>
                                 <Run Text="{Binding RevitSelectedCount, Mode=OneWay}"/>
                                 <Run Text="개 선택됨"/>
                             </TextBlock>
@@ -533,7 +533,7 @@
                     <TextBlock FontSize="10" Foreground="#888780" Margin="0,0,12,0">
                         <Run Text="연동 "/><Run Text="{Binding ModifiedCount, Mode=OneWay}"/><Run Text="개"/>
                     </TextBlock>
-                    <Ellipse Width="6" Height="6" Fill="#BA7517" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                    <Ellipse Width="6" Height="6" Fill="IndianRed" VerticalAlignment="Center" Margin="0,0,5,0"/>
                     <TextBlock FontSize="10" Foreground="#888780" Margin="0,0,12,0">
                         <Run Text="수동 "/><Run Text="{Binding ManualCount, Mode=OneWay}"/><Run Text="개"/>
                     </TextBlock>

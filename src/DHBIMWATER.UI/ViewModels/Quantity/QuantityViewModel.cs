@@ -76,6 +76,9 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             get => _revitSelectedCount;
             private set { _revitSelectedCount = value; OnPropertyChanged(); }
         }
+        private static readonly double[] TabWidths = { 980, 980, 1280 };
+        public double WindowWidth => TabWidths[Math.Clamp(_selectedTabIndex, 0, TabWidths.Length - 1)];
+
         public int SelectedTabIndex
         {
             get => _selectedTabIndex;
@@ -84,6 +87,7 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
                 if (_selectedTabIndex == value) return;
                 _selectedTabIndex = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(WindowWidth));
                 SelectedItem = null;
                 GroupSummaries = new ObservableCollection<GroupSummaryItem>();
                 _currentSelectedItems.Clear();

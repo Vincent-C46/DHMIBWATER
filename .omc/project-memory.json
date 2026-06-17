@@ -78,14 +78,14 @@
   "hotPaths": [
     {
       "path": "src\\DHBIMWATER.UI\\ViewModels\\Quantity\\QuantityViewModel.cs",
-      "accessCount": 18,
-      "lastAccessed": 1781677248964,
+      "accessCount": 20,
+      "lastAccessed": 1781678572755,
       "type": "file"
     },
     {
       "path": "src\\DHBIMWATER.UI\\Views\\Quantity\\QuantityView.xaml",
-      "accessCount": 15,
-      "lastAccessed": 1781677255102,
+      "accessCount": 19,
+      "lastAccessed": 1781678592250,
       "type": "file"
     },
     {
