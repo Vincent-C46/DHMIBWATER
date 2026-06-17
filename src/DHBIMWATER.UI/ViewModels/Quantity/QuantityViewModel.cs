@@ -16,7 +16,7 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         private IFileDialogService _fileDialogService;
         private readonly CalculateQuantityUseCase _calculateQuantityUseCase;
         private readonly ExportQuantityUseCase _exportQuantityUseCase;
-        private Action? _extractAction;
+        private Action? _extractAction; // 액션 추가
 
         private List<QuantityItem> _currentSelectedItems = new();
         public ObservableCollection<QuantitySummaryItem> SummaryItems { get; set; }
@@ -218,14 +218,23 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         private void GetCalculateQuantity(object? obj)
         {
             _extractAction?.Invoke();
-            
-            // 수동 입력 항목은 재산출 후에도 유지
+            //// 수동 입력 항목은 재산출 후에도 유지
+            //var manualItems = QuantityItems.Where(i => i.Status == QuantityStatus.Manual).ToList();
+            //var items = _calculateQuantityUseCase.Execute();    // 이게 Revit API
+            //QuantityItems = new ObservableCollection<QuantityItem>(items.Concat(manualItems));
+            //OnPropertyChanged(nameof(QuantityItems));
+            //UpdateSummary();
+        }
+        public void SetExtractAction(Action action) => _extractAction = action;
+
+        public void ApplyCalculatedItems(List<QuantityItem> items)
+        {
             var manualItems = QuantityItems.Where(i => i.Status == QuantityStatus.Manual).ToList();
-            var items = _calculateQuantityUseCase.Execute();    // 이게 Revit API
             QuantityItems = new ObservableCollection<QuantityItem>(items.Concat(manualItems));
             OnPropertyChanged(nameof(QuantityItems));
             UpdateSummary();
         }
+
         // 해당 단어 포함된 공종 순으로 Sorting
         private static readonly List<string> WorkTypeOrder = new()
         {

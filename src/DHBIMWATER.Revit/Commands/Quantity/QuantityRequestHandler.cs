@@ -1,17 +1,27 @@
 ﻿using Autodesk.Revit.UI;
 using Autodesk.Revit.DB;
+using System.Windows;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using DHBIMWATER.Application.UseCases.QuantityCalculator;
+using DHBIMWATER.UI.ViewModels.Quantity;
 
 namespace DHBIMWATER.Revit.Commands.Quantity
 {
     public class QuantityRequestHandler : IExternalEventHandler
     {
+        private readonly CalculateQuantityUseCase _useCase;
+        private readonly QuantityViewModel _vm;
+
         private readonly QuantityRequest _quantityRequest = new QuantityRequest();
         public QuantityRequest QuantityRequest { get { return _quantityRequest; } }
+
+
+        public QuantityRequestHandler(CalculateQuantityUseCase useCase, QuantityViewModel vm)
+        {
+            _useCase = useCase;
+            _vm = vm;
+        }
+
 
         public void Execute(UIApplication uiapp)
         {
@@ -26,7 +36,8 @@ namespace DHBIMWATER.Revit.Commands.Quantity
                     case QuantityRequestId.None:
                         break;
                     case QuantityRequestId.Calculate:
-
+                        var items = _useCase.Execute();
+                        System.Windows.Application.Current.Dispatcher.Invoke(() => _vm.ApplyCalculatedItems(items.ToList()));
                         break;
                     default:
                         break;

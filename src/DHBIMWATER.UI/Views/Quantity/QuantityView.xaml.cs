@@ -10,6 +10,8 @@ namespace DHBIMWATER.UI.Views.Quantity
 {
     public partial class QuantityView : Window
     {
+        public QuantityViewModel ViewModel => (QuantityViewModel)DataContext;
+
         public QuantityView(QuantityViewModel vm)
         {
             InitializeComponent();
@@ -20,7 +22,7 @@ namespace DHBIMWATER.UI.Views.Quantity
             {
                 // 항상 New 모드 (추가만 가능)
                 var dialogVm = new ManualQuantityViewModel();
-                var dialog   = new ManualQuantityView(dialogVm) { Owner = this };
+                var dialog = new ManualQuantityView(dialogVm) { Owner = this };
 
                 if (dialog.ShowDialog() == true && dialogVm.ResultItem is not null)
                     vm.AddItem(dialogVm.ResultItem);
