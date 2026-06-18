@@ -73,7 +73,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             beam.LookupParameter("DH_Addin")?.Set("DHBIMWATER");
             beam.LookupParameter("DH_Part")?.Set(beamDef.Part);
             beam.LookupParameter("DH_Zone")?.Set(beamDef.Zone);
-            beam.LookupParameter("DH_Category")?.Set("");
+            beam.LookupParameter("DH_Category")?.Set(beamDef.Part == "HAUNCH" ? "HAUNCH" : "GIRDER");
 
             return (int)beam.Id.Value;
         }
@@ -81,7 +81,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
         private void JoinWithSlab(Element beam)
         {
             var doc = _doc();
-            doc.Regenerate();
+            doc.Regenerate();   
             var intersectFilter = new ElementIntersectsElementFilter(beam);
             var intersectSlabs = new FilteredElementCollector(doc)
                 .OfCategory(BuiltInCategory.OST_Floors)

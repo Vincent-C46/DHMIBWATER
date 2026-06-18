@@ -72,6 +72,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             var floor = Floor.Create(doc, curveLoopList, floorTypeId, levelId);
             //floor.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(slabDef.ElementCode);
             floor.LookupParameter("DH_Addin")?.Set("DHBIMWATER");
+            floor.LookupParameter("DH_Category")?.Set("바닥");
             floor.LookupParameter("DH_ElementCode")?.Set(slabDef.ElementCode);
             floor.LookupParameter("DH_Part")?.Set(slabDef.Part);
             floor.LookupParameter("DH_Zone")?.Set(slabDef.Zone);

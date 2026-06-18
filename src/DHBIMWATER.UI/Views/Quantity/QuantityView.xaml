@@ -368,7 +368,7 @@
                                 <DataGridTextColumn Header="산출식"    Binding="{Binding RenderedFormula}"         Width="1*"   MinWidth="50" MaxWidth="300"/>
                                 <DataGridTextColumn Header="값"        Binding="{Binding Value, StringFormat=F3}"  Width="Auto" MinWidth="50"/>
                                 <DataGridTextColumn Header="단위"      Binding="{Binding Unit}"                    Width="Auto" MinWidth="50"/>
-                                <DataGridTextColumn Header="상태"      Binding="{Binding Status, Converter={StaticResource StatusLabelConverter}}" Width="45" MinWidth="45"/>
+                                <DataGridTextColumn Header="상태"      Binding="{Binding Status, Converter={StaticResource StatusLabelConverter}}" Width="Auto" MinWidth="45"/>
                             </DataGrid.Columns>
                         </DataGrid>
                     </TabItem>

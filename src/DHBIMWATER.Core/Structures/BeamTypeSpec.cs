@@ -6,5 +6,5 @@ using System.Threading.Tasks;
 
 namespace DHBIMWATER.Core.Structures
 {
-    public record BeamTypeSpec(double Width, double Height, string Name = null);
+    public record BeamTypeSpec(double Width, double Height, string Name = null, ConcreteSpec Concrete = null);
 }

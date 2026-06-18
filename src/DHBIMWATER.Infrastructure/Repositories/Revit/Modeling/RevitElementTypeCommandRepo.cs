@@ -18,46 +18,70 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             _doc = doc;
         }
 
+        private ElementId FindOrCreateConcreteMaterial(Document doc, ConcreteSpec concrete)
+        {
+            var allMaterials = new FilteredElementCollector(doc)
+                .OfClass(typeof(Material))
+                .Cast<Material>()
+                .ToList();
+
+            var existing = allMaterials.FirstOrDefault(m =>
+                m.Name.Equals(concrete.MaterialName, StringComparison.OrdinalIgnoreCase));
+            if (existing != null) return existing.Id;
+
+            var baseMaterial = allMaterials.FirstOrDefault(m =>
+                m.Name.IndexOf("concrete", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                m.Name.Contains("콘크리트"));
+
+            if (baseMaterial == null)
+                return ElementId.InvalidElementId;
+
+            var newMat = baseMaterial.Duplicate(concrete.MaterialName) as Material;
+            var strength = UnitUtils.ConvertToInternalUnits(concrete.CompressiveStrength, UnitTypeId.Megapascals);
+            newMat.get_Parameter(BuiltInParameter.PHY_MATERIAL_PARAM_CONCRETE_COMPRESSION)?.Set(strength);
+            return newMat.Id;
+        }
+
         public int FindOrCreateSlabType(FloorTypeSpec spec)
         {
             var doc = _doc();
             if (doc == null) return 0;
 
-            var allFloorTypes = new FilteredElementCollector(doc)
-                .OfClass(typeof(FloorType))
-                .Cast<FloorType>()
-                .ToList();
-
             var name = spec.Name;
 
-            var existing = allFloorTypes.FirstOrDefault(ft => ft.Name == name);
-
-            //Find: 지정한 Name의 FloorType이 이미 존재할 경우
-            if (existing != null) return (int)existing.Id.Value;
-
-            //Create: 지정한 Name 의 FloorType이 없을 경우
-            var baseFloorType = new FilteredElementCollector(doc)
+            var floorType = new FilteredElementCollector(doc)
                 .OfClass(typeof(FloorType))
                 .Cast<FloorType>()
-                .FirstOrDefault(ft => ft.GetCompoundStructure() != null);
+                .FirstOrDefault(ft => ft.Name == name);
 
-            if (baseFloorType == null)
-                TaskDialog.Show("Error", "적절한 복제 대상 FloorType이 없습니다");
+            if (floorType == null)
+            {
+                var baseFloorType = new FilteredElementCollector(doc)
+                    .OfClass(typeof(FloorType))
+                    .Cast<FloorType>()
+                    .FirstOrDefault(ft => ft.GetCompoundStructure() != null);
 
-            var newType = baseFloorType.Duplicate(name) as FloorType;
-            if (newType == null) return 0;
+                if (baseFloorType == null)
+                {
+                    TaskDialog.Show("Error", "적절한 복제 대상 FloorType이 없습니다");
+                    return 0;
+                }
 
-            var cs = newType.GetCompoundStructure();
+                floorType = baseFloorType.Duplicate(name) as FloorType;
+                if (floorType == null) return 0;
+            }
 
-            var structureLayer = new CompoundStructureLayer(UC.MmToFt(spec.Thickness), MaterialFunctionAssignment.Structure, ElementId.InvalidElementId);
+            var cs = floorType.GetCompoundStructure();
+            var materialId = spec.Concrete != null
+                ? FindOrCreateConcreteMaterial(doc, spec.Concrete)
+                : ElementId.InvalidElementId;
+            var structureLayer = new CompoundStructureLayer(UC.MmToFt(spec.Thickness), MaterialFunctionAssignment.Structure, materialId);
             cs.SetLayers(new List<CompoundStructureLayer> { structureLayer });
-            // 코어 경계
             cs.SetNumberOfShellLayers(ShellLayerType.Exterior, 0);
             cs.SetNumberOfShellLayers(ShellLayerType.Interior, 0);
+            floorType.SetCompoundStructure(cs);
 
-            newType.SetCompoundStructure(cs);
-
-            return (int)newType.Id.Value;
+            return (int)floorType.Id.Value;
         }
 
         public int FindOrCreateWallType(WallTypeSpec spec)
@@ -65,41 +89,41 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             var doc = _doc();
             if (doc == null) return 0;
 
-            var allWallTypes = new FilteredElementCollector(doc)
-                .OfClass(typeof(WallType))
-                .Cast<WallType>()
-                .ToList();
-
             var name = spec.Name;
 
-            var existing = allWallTypes.FirstOrDefault(wt => wt.Name == name);
-
-            //Find: 지정한 Name의 WallType이 이미 존재할 경우
-            if (existing != null) return (int)existing.Id.Value;
-
-            //Create: 지정한 Name의 WallType이 없을 경우
-            var baseWallType = new FilteredElementCollector(doc)
+            var wallType = new FilteredElementCollector(doc)
                 .OfClass(typeof(WallType))
                 .Cast<WallType>()
-                .FirstOrDefault(ft => ft.GetCompoundStructure() != null);
+                .FirstOrDefault(wt => wt.Name == name);
 
-            if (baseWallType == null)
-                TaskDialog.Show("Error", "적절한 복제 대상 WallType이 없습니다");
+            if (wallType == null)
+            {
+                var baseWallType = new FilteredElementCollector(doc)
+                    .OfClass(typeof(WallType))
+                    .Cast<WallType>()
+                    .FirstOrDefault(wt => wt.GetCompoundStructure() != null);
 
-            var newType = baseWallType.Duplicate(name) as WallType;
-            if (newType == null) return 0;
+                if (baseWallType == null)
+                {
+                    TaskDialog.Show("Error", "적절한 복제 대상 WallType이 없습니다");
+                    return 0;
+                }
 
-            var cs = newType.GetCompoundStructure();
+                wallType = baseWallType.Duplicate(name) as WallType;
+                if (wallType == null) return 0;
+            }
 
-            var structureLayer = new CompoundStructureLayer(UC.MmToFt(spec.Thickness), MaterialFunctionAssignment.Structure, ElementId.InvalidElementId);
+            var cs = wallType.GetCompoundStructure();
+            var materialId = spec.Concrete != null
+                ? FindOrCreateConcreteMaterial(doc, spec.Concrete)
+                : ElementId.InvalidElementId;
+            var structureLayer = new CompoundStructureLayer(UC.MmToFt(spec.Thickness), MaterialFunctionAssignment.Structure, materialId);
             cs.SetLayers(new List<CompoundStructureLayer> { structureLayer });
-            // 코어 경계
             cs.SetNumberOfShellLayers(ShellLayerType.Exterior, 0);
             cs.SetNumberOfShellLayers(ShellLayerType.Interior, 0);
+            wallType.SetCompoundStructure(cs);
 
-            newType.SetCompoundStructure(cs);
-
-            return (int)newType.Id.Value;
+            return (int)wallType.Id.Value;
         }
 
         public int FindOrCreateBeamType(BeamTypeSpec spec)
