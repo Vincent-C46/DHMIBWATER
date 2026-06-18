@@ -16,7 +16,9 @@ namespace DHBIMWATER.Core.Structures
         public double Height { get; set; }
         public double BaseOffset { get; set; }
         public bool IsFlipped { get; set; } = false;
-        
+        public bool IsExterior { get; set; } = false;
+
+        public string Category { get; set; } = "벽";
         public string ElementCode { get; set; } = string.Empty;
         public string Zone { get; set; } = string.Empty;
         public string Part { get; set; } = string.Empty;

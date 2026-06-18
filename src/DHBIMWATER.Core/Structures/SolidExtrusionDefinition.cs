@@ -8,6 +8,7 @@ namespace DHBIMWATER.Core.Structures
         public Vector3D Normal { get; set; }
         public double Distance { get; set; }
 
+        public string Category { get; set; } = "DirectShape";
         public string ElementCode { get; set; } = string.Empty;
         public string Zone { get; set; } = string.Empty;
         public string Part { get; set; } = string.Empty;

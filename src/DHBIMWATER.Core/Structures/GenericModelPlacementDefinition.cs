@@ -8,7 +8,7 @@ namespace DHBIMWATER.Core.Structures
         public Point3D Origin { get; set; } = new Point3D(0, 0, 0);
         public string LevelName { get; set; } = string.Empty;
         public double Rotation { get; set; } = 0.0;
-
+        public string Category { get; set; } = "일반 모델";
         public string ElementCode { get; set; } = string.Empty;
         public string Zone { get; set; } = string.Empty;
         public string Part { get; set; } = string.Empty;

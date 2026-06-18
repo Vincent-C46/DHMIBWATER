@@ -14,7 +14,8 @@ namespace DHBIMWATER.Core.Structures
         public double Thickness { get; set; }
         public string LevelName { get; set; } = string.Empty;
         public bool IsFlipped { get; set; } = false;
-
+        public bool IsExterior { get; set; } = false;
+        public string Category { get; set; } = "벽";
         public string ElementCode { get; set; } = string.Empty;
         public string Zone { get; set; } = string.Empty;
         public string Part { get; set; } = string.Empty;

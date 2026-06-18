@@ -83,7 +83,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
 
             return (int)floorType.Id.Value;
         }
-
         public int FindOrCreateWallType(WallTypeSpec spec)
         {
             var doc = _doc();

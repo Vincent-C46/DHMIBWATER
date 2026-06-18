@@ -11,6 +11,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
         private readonly Func<Document?> _doc;
         private readonly IElementTypeCommandRepo _elementTypeCmdRepo;
 
+        // TODO: 설정값에서 가져오도록 변경 — 굵은골재최대치수-압축강도-슬럼프
+        private static readonly ConcreteSpec _concrete = new ConcreteSpec(25, 30, 150);
+
         public RevitSlabCommandRepo(Func<Document?> doc, IElementTypeCommandRepo elementTypeRepo)
         {
             _doc = doc;
@@ -62,7 +65,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
                 curveLoopList.Add(subCurveLoop);
             }
 
-            var floorSpec = new FloorTypeSpec(slabDef.Thickness, $"일반 - {slabDef.Thickness}mm");
+            var floorSpec = new FloorTypeSpec(slabDef.Thickness, $"일반 - {slabDef.Thickness}mm", _concrete);
             var floorTypeId = new ElementId((long)_elementTypeCmdRepo.FindOrCreateSlabType(floorSpec));
 
             var levelId = new FilteredElementCollector(doc)
@@ -72,7 +75,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             var floor = Floor.Create(doc, curveLoopList, floorTypeId, levelId);
             //floor.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(slabDef.ElementCode);
             floor.LookupParameter("DH_Addin")?.Set("DHBIMWATER");
-            floor.LookupParameter("DH_Category")?.Set("바닥");
+            floor.LookupParameter("DH_Category")?.Set(slabDef.Category);
             floor.LookupParameter("DH_ElementCode")?.Set(slabDef.ElementCode);
             floor.LookupParameter("DH_Part")?.Set(slabDef.Part);
             floor.LookupParameter("DH_Zone")?.Set(slabDef.Zone);

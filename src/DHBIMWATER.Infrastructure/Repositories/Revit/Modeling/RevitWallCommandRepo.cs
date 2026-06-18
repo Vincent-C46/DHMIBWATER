@@ -14,6 +14,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
         private readonly Func<Document?> _doc;  // Revit Document에 접근하기 위한 람다식
         private readonly IDialogService _dialog;
         private readonly IElementTypeCommandRepo _elementTypeCmdRepo;
+
+        // TODO: 설정값에서 가져오도록 변경 — 굵은골재최대치수-압축강도-슬럼프
+        private static readonly ConcreteSpec _concrete = new ConcreteSpec(25, 27, 120);
         #endregion
 
         #region Properties
@@ -58,7 +61,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
                                 UC.MmToFt(linearWallDefinition.EndPoint.Z));
             Curve wallCurve = Line.CreateBound(startPt, endPt);
 
-            var wallSpec = new WallTypeSpec(linearWallDefinition.Thickness, $"일반 - {linearWallDefinition.Thickness}mm");
+            var wallSpec = new WallTypeSpec(linearWallDefinition.Thickness, $"일반 - {linearWallDefinition.Thickness}mm", _concrete);
             var wallTypeId = new ElementId((long)_elementTypeCmdRepo.FindOrCreateWallType(wallSpec));
 
             //if (linearWallDefinition.Height <= 0)
@@ -81,12 +84,12 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
                 return 0;
             }
 
-
             WallUtils.DisallowWallJoinAtEnd(wall, 0);
             WallUtils.DisallowWallJoinAtEnd(wall, 1);
 
             //wall.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(linearWallDefinition.ElementCode);
             wall.LookupParameter("DH_Addin")?.Set("DHBIMWATER");
+            wall.LookupParameter("DH_Cateogry")?.Set(linearWallDefinition.Category);
             wall.LookupParameter("DH_ElementCode")?.Set(linearWallDefinition.ElementCode);
             wall.LookupParameter("DH_Part")?.Set(linearWallDefinition.Part);
             wall.LookupParameter("DH_Zone")?.Set(linearWallDefinition.Zone);
@@ -107,7 +110,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
                 return 0;
             }
 
-            var wallSpec = new WallTypeSpec(profileWallDefinition.Thickness, $"일반 - {profileWallDefinition.Thickness}mm");
+            var wallSpec = new WallTypeSpec(profileWallDefinition.Thickness, $"일반 - {profileWallDefinition.Thickness}mm", _concrete);
 
             var wallTypeIntId = _elementTypeCmdRepo.FindOrCreateWallType(wallSpec);
             if (wallTypeIntId == 0) { _dialog.Warn("Error", "WallType 생성 실패"); return 0; }
@@ -151,6 +154,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             }
 
             profileWall.LookupParameter("DH_ElementCode")?.Set(profileWallDefinition.ElementCode);
+            profileWall.LookupParameter("DH_Category")?.Set(profileWallDefinition.Category);
             profileWall.LookupParameter("DH_Addin")?.Set("DHBIMWATER");
             profileWall.LookupParameter("DH_Part")?.Set(profileWallDefinition.Part);
             profileWall.LookupParameter("DH_Zone")?.Set(profileWallDefinition.Zone);

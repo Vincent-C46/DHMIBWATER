@@ -64,7 +64,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             }
 
             instance.LookupParameter("DH_Addin")?.Set("DHBIMWATER");
-            instance.LookupParameter("DH_Category")?.Set("일반 모델");
+            instance.LookupParameter("DH_Category")?.Set(def.Category);
             instance.LookupParameter("DH_ElementCode")?.Set(def.ElementCode);
             instance.LookupParameter("DH_Part")?.Set(def.Part);
             instance.LookupParameter("DH_Zone")?.Set(def.Zone);

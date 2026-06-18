@@ -93,7 +93,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
                 ds.LookupParameter("DH_ElementCode")?.Set(group.Key);
                 ds.LookupParameter("DH_Addin")?.Set("DHBIMWATER");
                 ds.LookupParameter("DH_Part")?.Set(group.ElementAt(0).Part);
-                ds.LookupParameter("DH_Category")?.Set("DirectShape");
+                ds.LookupParameter("DH_Category")?.Set(group.ElementAt(0).Category);
 
                 ids.Add((int)ds.Id.Value);
             }

@@ -25,8 +25,8 @@ namespace DHBIMWATER.UI.Converters
     public class QuantityStatusToBrushConverter : IValueConverter
     {
         private static readonly SolidColorBrush AutoBrush     = new(Colors.White);
-        private static readonly SolidColorBrush ModifiedBrush = new(Color.FromRgb(0xD4, 0xA0, 0x17)); // #D4A017
-        private static readonly SolidColorBrush ManualBrush   = new(Color.FromRgb(0xCD, 0x5C, 0x5C)); // IndianRed
+        private static readonly SolidColorBrush ModifiedBrush = new(Color.FromRgb(0xFD, 0xF1, 0xD3));   // 파스텔 옐로우 (연하게) #FDF1D3
+        private static readonly SolidColorBrush ManualBrush = new(Color.FromRgb(0xFA, 0xDE, 0xDE));     // 파스텔 레드 (연하게)   #FADEDE
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
