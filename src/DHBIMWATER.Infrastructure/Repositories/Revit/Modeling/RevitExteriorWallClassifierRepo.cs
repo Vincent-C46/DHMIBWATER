@@ -14,7 +14,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             _doc = doc;
         }
 
-        public IReadOnlyList<(int ElementId, Point2D Midpoint)> GetWallMidpoints()
+        public IReadOnlyList<(int ElementId, Point2D Start, Point2D End)> GetWallEndpoints()
         {
             var doc = _doc();
             if (doc == null) return [];
@@ -26,9 +26,12 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
                 .Select(wall =>
                 {
                     var curve = (wall.Location as LocationCurve)?.Curve;
-                    if (curve == null) return ((int ElementId, Point2D Midpoint)?)null;
-                    var mid = curve.Evaluate(0.5, true);
-                    return ((int)wall.Id.Value, new Point2D(UC.FtToMm(mid.X), UC.FtToMm(mid.Y)));
+                    if (curve == null) return ((int ElementId, Point2D Start, Point2D End)?)null;
+                    var s = curve.GetEndPoint(0);
+                    var e = curve.GetEndPoint(1);
+                    return ((int)wall.Id.Value,
+                            new Point2D(UC.FtToMm(s.X), UC.FtToMm(s.Y)),
+                            new Point2D(UC.FtToMm(e.X), UC.FtToMm(e.Y)));
                 })
                 .Where(x => x.HasValue)
                 .Select(x => x!.Value)

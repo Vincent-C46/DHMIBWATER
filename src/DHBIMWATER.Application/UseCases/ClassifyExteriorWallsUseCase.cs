@@ -6,8 +6,8 @@ namespace DHBIMWATER.Application.UseCases
     public class ClassifyExteriorWallsUseCase
     {
         private readonly IExteriorWallClassifierRepo _repo;
-
-        // 벽체 중심점이 hull 경계로부터 이 거리(mm) 이내면 외벽으로 판단
+        
+        // 벽체 끝점이 hull 경계로부터 이 거리(mm) 이내면 외벽으로 판단
         private const double ToleranceMm = 500.0;
 
         public ClassifyExteriorWallsUseCase(IExteriorWallClassifierRepo repo)
@@ -17,17 +17,18 @@ namespace DHBIMWATER.Application.UseCases
 
         public IReadOnlyList<Point2D> Execute()
         {
-            var walls = _repo.GetWallMidpoints();
+            var walls = _repo.GetWallEndpoints();
             if (walls.Count == 0) return [];
 
-            var hull = ConvexHull.Compute(walls.Select(w => w.Midpoint));
+            var allPoints = walls.SelectMany(w => new[] { w.Start, w.End });
+            var hull = ConvexHull.Compute(allPoints);
 
-            foreach (var (elementId, midpoint) in walls)
+            foreach (var (elementId, start, end) in walls)
             {
-                bool isExterior = ConvexHull.IsOnBoundary(midpoint, hull, ToleranceMm);
+                bool isExterior = ConvexHull.IsOnBoundary(start, hull, ToleranceMm)
+                               || ConvexHull.IsOnBoundary(end, hull, ToleranceMm);
                 _repo.SetExteriorFlag(elementId, isExterior);
             }
-
             return hull;
         }
     }

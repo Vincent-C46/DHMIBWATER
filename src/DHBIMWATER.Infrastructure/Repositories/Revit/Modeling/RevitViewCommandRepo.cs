@@ -75,7 +75,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             }
 
             var viewSection = ViewSection.CreateSection(doc, vft.Id, boundingBox);
-            viewSection.Name = sectionViewDef.Name;
+            viewSection.Name = sectionViewDef.Name; 
 
             viewSection.LookupParameter("DH_뷰 카테고리")?.Set("모델링");
             viewSection.LookupParameter("DH_뷰 타입")?.Set("단면도");

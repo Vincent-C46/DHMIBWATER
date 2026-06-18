@@ -144,7 +144,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
 
                     var hull = _classifyWallsUseCase.Execute();
                     var hullStr = string.Join("\n", hull.Select((p, i) => $"[{i}] X={p.X:F0}  Y={p.Y:F0}"));
-                    _dialogService.Info("DEBUG - Hull 꼭짓점 (mm)", hullStr);
+                    //_dialogService.Info("DEBUG - Hull 꼭짓점 (mm)", hullStr);
                     #endregion
 
                     #region 4. 보 생성
