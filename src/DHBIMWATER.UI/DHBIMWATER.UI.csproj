@@ -49,12 +49,18 @@
 	  <None Remove="Resources\PumpStationImages\2-1.평면제원_좌안부_배경제거.png" />
 	  <None Remove="Resources\PumpStationImages\2-2.평면제원_우안부.png" />
 	  <None Remove="Resources\PumpStationImages\2-3.평면제원_측면부.png" />
+	  <None Remove="Resources\PumpStationImages\TYPE-1_종단개요.png" />
 	  <None Remove="Resources\PumpStationImages\TYPE-1_종단제원.png" />
+	  <None Remove="Resources\PumpStationImages\TYPE-1_평면개요_우안부.png" />
+	  <None Remove="Resources\PumpStationImages\TYPE-1_평면개요_좌안부.png" />
+	  <None Remove="Resources\PumpStationImages\TYPE-1_평면개요_측면부.png" />
 	  <None Remove="Resources\PumpStationImages\TYPE-1_평면제원-우안진입.png" />
 	  <None Remove="Resources\PumpStationImages\TYPE-1_평면제원-좌안진입.png" />
 	  <None Remove="Resources\PumpStationImages\TYPE-1_평면제원-측면진입.png" />
 	  <None Remove="Resources\PumpStationImages\TYPE-2&amp;3_평면제원.png" />
+	  <None Remove="Resources\PumpStationImages\TYPE-2_종단개요.png" />
 	  <None Remove="Resources\PumpStationImages\TYPE-2_종단제원.png" />
+	  <None Remove="Resources\PumpStationImages\TYPE-3_종단개요.png" />
 	  <None Remove="Resources\PumpStationImages\TYPE-3_종단제원.png" />
 	  <None Remove="Resources\Quantity\add.png" />
 	  <None Remove="Resources\Quantity\check.png" />
@@ -67,7 +73,25 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Resource Include="Resources\PumpStationImages\TYPE-1_종단개요.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Resource>
+	  <Resource Include="Resources\PumpStationImages\TYPE-1_평면개요_우안부.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Resource>
+	  <Resource Include="Resources\PumpStationImages\TYPE-1_평면개요_좌안부.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Resource>
+	  <Resource Include="Resources\PumpStationImages\TYPE-1_평면개요_측면부.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Resource>
+	  <Resource Include="Resources\PumpStationImages\TYPE-2_종단개요.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Resource>
 	  <Resource Include="Resources\PumpStationImages\TYPE-2_종단제원.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Resource>
+	  <Resource Include="Resources\PumpStationImages\TYPE-3_종단개요.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Resource>
 	  <Resource Include="Resources\PumpStationImages\TYPE-3_종단제원.png">

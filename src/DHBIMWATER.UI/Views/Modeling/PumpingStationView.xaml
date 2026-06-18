@@ -148,15 +148,15 @@
                                         <StackPanel Orientation="Horizontal">
                                             <StackPanel Margin="0,0,10,0">
                                                 <TextBlock Text="Type 1" HorizontalAlignment="Center" FontSize="11" Foreground="#666" Margin="0,0,0,4"/>
-                                                <Image Source="{Binding ProfileType1ImagePath}" Width="350" Stretch="Uniform"/>
+                                                <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-1_종단개요.png" Width="350" Stretch="Uniform"/>
                                             </StackPanel>
                                             <StackPanel Margin="0,0,10,0">
                                                 <TextBlock Text="Type 2" HorizontalAlignment="Center" FontSize="11" Foreground="#666" Margin="0,0,0,4"/>
-                                                <Image Source="{Binding ProfileType2ImagePath}" Width="350" Stretch="Uniform"/>
+                                                <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-2_종단개요.png" Width="350" Stretch="Uniform"/>
                                             </StackPanel>
                                             <StackPanel>
                                                 <TextBlock Text="Type 3" HorizontalAlignment="Center" FontSize="11" Foreground="#666" Margin="0,0,0,4"/>
-                                                <Image Source="{Binding ProfileType3ImagePath}" Width="350" Stretch="Uniform"/>
+                                                <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-3_종단개요.png" Width="350" Stretch="Uniform"/>
                                             </StackPanel>
                                         </StackPanel>
                                     </StackPanel>
@@ -167,15 +167,15 @@
                                         <StackPanel Orientation="Horizontal">
                                             <StackPanel Margin="0,0,10,0">
                                                 <TextBlock Text="Type 1 · 좌안부" HorizontalAlignment="Center" FontSize="11" Foreground="#666" Margin="0,0,0,4"/>
-                                                <Image Source="{Binding PlanLeftImagePath}" Width="350" Stretch="Uniform"/>
+                                                <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-1_평면개요_좌안부.png" Width="350" Stretch="Uniform"/>
                                             </StackPanel>
                                             <StackPanel Margin="0,0,10,0">
                                                 <TextBlock Text="Type 1 · 우안부" HorizontalAlignment="Center" FontSize="11" Foreground="#666" Margin="0,0,0,4"/>
-                                                <Image Source="{Binding PlanRightImagePath}" Width="350" Stretch="Uniform"/>
+                                                <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-1_평면개요_우안부.png" Width="350" Stretch="Uniform"/>
                                             </StackPanel>
                                             <StackPanel>
                                                 <TextBlock Text="측면부" HorizontalAlignment="Center" FontSize="11" Foreground="#666" Margin="0,0,0,4"/>
-                                                <Image Source="{Binding PlanDefaultImagePath}" Width="350" Stretch="Uniform"/>
+                                                <Image Source="pack://application:,,,/DHBIMWATER.UI;component/Resources/PumpStationImages/TYPE-1_평면개요_측면부.png" Width="350" Stretch="Uniform"/>
                                             </StackPanel>
                                         </StackPanel>
                                     </StackPanel>
