@@ -13,6 +13,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<CountGenericModelUseCase>();
         services.AddTransient<CreateReservoirUseCase>();
         services.AddTransient<CreatePumpingStationUseCase>();
+        services.AddTransient<ClassifyExteriorWallsUseCase>();
         services.AddTransient<CalculateQuantityUseCase>();
         services.AddTransient<ExportQuantityUseCase>();
 

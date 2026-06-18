@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using DHBIMWATER.Application.UseCases;
 
 namespace DHBIMWATER.Application.UseCases.AutoGenerator
 {
@@ -31,6 +32,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
         private readonly ISetParameterRepo _setParameterRepo;
         private readonly IGenericModelCommandRepo _genericModelCmdRepo;
         private readonly IExcelReader _excelReader;
+        private readonly ClassifyExteriorWallsUseCase _classifyWallsUseCase;
         #endregion
 
         #region Properties
@@ -51,7 +53,8 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                                            IViewCommandRepo viewCommandRepo,
                                            ISetParameterRepo setParameterRepo,
                                            IGenericModelCommandRepo genericModelCmdRepo,
-                                           IExcelReader excelReader)
+                                           IExcelReader excelReader,
+                                           ClassifyExteriorWallsUseCase classifyWallsUseCase)
         {
             _levelQueryRepo = levelQueryRepo;
             _levelCmdRepo = levelCmdRepo;
@@ -66,6 +69,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
             _setParameterRepo = setParameterRepo;
             _genericModelCmdRepo = genericModelCmdRepo;
             _excelReader = excelReader;
+            _classifyWallsUseCase = classifyWallsUseCase;
 
             _tx = tx;
         }
@@ -137,6 +141,10 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                         _wallCmdRepo.CreateLinearWall(linearWallDef);
                     foreach (var profileWallDef in PumpingStationGeometryCalculator.CalculateProfileWalls(dto))
                         _wallCmdRepo.CreateProfileWall(profileWallDef);
+
+                    var hull = _classifyWallsUseCase.Execute();
+                    var hullStr = string.Join("\n", hull.Select((p, i) => $"[{i}] X={p.X:F0}  Y={p.Y:F0}"));
+                    _dialogService.Info("DEBUG - Hull 꼭짓점 (mm)", hullStr);
                     #endregion
 
                     #region 4. 보 생성

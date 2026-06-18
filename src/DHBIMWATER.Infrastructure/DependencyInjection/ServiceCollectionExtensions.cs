@@ -49,6 +49,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ISharedParameterRepository, RevitSharedParameterRepository>();
         services.AddTransient<IGenericModelRepository, RevitGenericModelRepository>();
         services.AddTransient<IIntersectingElementFinder, RevitIntersectingElementFinder>();
+        services.AddTransient<IExteriorWallClassifierRepo, RevitExteriorWallClassifierRepo>();
         #endregion
 
         #region Quantity 관련

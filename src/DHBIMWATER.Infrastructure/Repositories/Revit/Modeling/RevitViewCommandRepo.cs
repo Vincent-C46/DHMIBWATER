@@ -81,9 +81,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             viewSection.LookupParameter("DH_뷰 타입")?.Set("단면도");
 
             return (int)viewSection.Id.Value;
-
         }
-
         //public int UpdateSectionView(SectionViewDefinition sectionViewDef)
         //{
         //    var doc = _doc();
