@@ -102,7 +102,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 StructuralAssetClass.Concrete => "철근콘크리트",
                 StructuralAssetClass.Metal => "강재",
                 StructuralAssetClass.Generic => "기타",
-                _ => "미분류"
+                _ => "철근콘크리트"
             };
 
             quantityItems.Add(new QuantityItem

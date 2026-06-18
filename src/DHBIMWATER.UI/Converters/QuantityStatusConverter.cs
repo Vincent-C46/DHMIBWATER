@@ -12,7 +12,7 @@ namespace DHBIMWATER.UI.Converters
             return (QuantityStatus)value switch
             {
                 QuantityStatus.Auto     => "자동",
-                QuantityStatus.Modified => "연동",
+                QuantityStatus.Modified => "수정",
                 QuantityStatus.Manual   => "수동",
                 _                       => string.Empty
             };
@@ -25,8 +25,8 @@ namespace DHBIMWATER.UI.Converters
     public class QuantityStatusToBrushConverter : IValueConverter
     {
         private static readonly SolidColorBrush AutoBrush     = new(Colors.White);
-        private static readonly SolidColorBrush ModifiedBrush = new(Color.FromRgb(0xFF, 0xF8, 0xE7)); // 연노랑
-        private static readonly SolidColorBrush ManualBrush   = new(Color.FromRgb(0xFF, 0xF0, 0xD6)); // 연주황
+        private static readonly SolidColorBrush ModifiedBrush = new(Color.FromRgb(0xD4, 0xA0, 0x17)); // #D4A017
+        private static readonly SolidColorBrush ManualBrush   = new(Color.FromRgb(0xCD, 0x5C, 0x5C)); // IndianRed
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

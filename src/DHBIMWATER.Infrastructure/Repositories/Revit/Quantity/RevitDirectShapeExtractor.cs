@@ -69,13 +69,22 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             //double concValue = FormulaCalculator.Calculate(concFormula, varDict);
             double concValue = volume;
 
+            string materialName = string.Empty;
+            var materialId = ds.GetMaterialIds(false).FirstOrDefault();
+
+            if (materialId == null || materialId == ElementId.InvalidElementId)
+                materialName = string.Empty;
+            else
+                materialName = (doc.GetElement(materialId) as Material).Name;
+
+
             var concreteItem = new QuantityItem
             {
                 ElementId = elementId,
                 Category = ds.LookupParameter("DH_Category")?.AsString() ?? string.Empty,
                 ElementCode = ds.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
                 WorkType = "철근콘크리트",
-                Specification = "",
+                Specification = materialName,
                 RawFormula = concFormula,
                 RenderedFormula = concRendered,
                 Value = concValue,

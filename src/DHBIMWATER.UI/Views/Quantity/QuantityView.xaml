@@ -531,7 +531,7 @@
                     </TextBlock>
                     <Ellipse Width="6" Height="6" Fill="#D4A017" VerticalAlignment="Center" Margin="0,0,5,0"/>
                     <TextBlock FontSize="10" Foreground="#888780" Margin="0,0,12,0">
-                        <Run Text="연동 "/><Run Text="{Binding ModifiedCount, Mode=OneWay}"/><Run Text="개"/>
+                        <Run Text="수정 "/><Run Text="{Binding ModifiedCount, Mode=OneWay}"/><Run Text="개"/>
                     </TextBlock>
                     <Ellipse Width="6" Height="6" Fill="IndianRed" VerticalAlignment="Center" Margin="0,0,5,0"/>
                     <TextBlock FontSize="10" Foreground="#888780" Margin="0,0,12,0">
