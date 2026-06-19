@@ -25,10 +25,11 @@ namespace DHBIMWATER.UI.Views.Modeling
         {
             InitializeComponent();
             DataContext = pumpingStationViewModel;
+            pumpingStationViewModel.CloseAction = Close;
             ContentRendered += (s, e) =>
             {
                 SizeToContent = SizeToContent.Manual;
-                SizeToContent = SizeToContent.WidthAndHeight;
+                SizeToContent = SizeToContent.Height;
             };
         }
         private void OnParameterFocused(object sender, RoutedEventArgs e)

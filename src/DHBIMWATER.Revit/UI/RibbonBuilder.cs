@@ -22,7 +22,7 @@ namespace DHBIMWATER.Revit.UI
             List<IRibbonModule> modules = new List<IRibbonModule>()
             {
                 new ModelingRibbonModule(),
-                new QuantityRibbonModule(),
+                //new QuantityRibbonModule(),
                 new DocumentationRibbonModule(),
                 //new UtilityRibbonModule()
             };

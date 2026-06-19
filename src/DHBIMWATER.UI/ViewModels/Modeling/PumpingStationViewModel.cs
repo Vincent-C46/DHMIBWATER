@@ -930,6 +930,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         #region Commands
         public ICommand CreatePumpingStationCommand { get; }
         public ICommand ImportExcelCommand { get; }
+        public Action? CloseAction { get; set; }
         #endregion
 
         #region Constructor
@@ -1026,6 +1027,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
 
             _ = _usageLogger.LogAsync();
             _createPumpingStationUseCase.Execute(creationRequestDto);
+            CloseAction?.Invoke();
         }
         // 프로퍼티 업데이트
         // 생성시 초기화 메서드

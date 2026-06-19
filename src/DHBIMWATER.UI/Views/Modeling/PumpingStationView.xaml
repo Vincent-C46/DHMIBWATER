@@ -9,8 +9,8 @@
         d:DataContext="{d:DesignInstance vm:PumpingStationViewModel, IsDesignTimeCreatable=False}"
         
         Title="DHBIM WATER - PumpingStation Builder"
-        SizeToContent="WidthAndHeight" MinWidth="500" MinHeight="300"
-        MaxHeight="900"
+        SizeToContent="Height" Width="1300" MinWidth="900" MaxWidth="1500" MinHeight="300"
+        MaxHeight="820"
         WindowStartupLocation="CenterScreen"
         Background="#F4F7F9" 
         AllowsTransparency="False" 
@@ -189,7 +189,7 @@
                         <Grid GotFocus="OnParameterFocused" Margin="10">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="1*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Margin="0,0,10,0">
@@ -695,7 +695,7 @@ Tag="HH1" Text="{Binding HH1}" Width="100" Margin="10,0" VerticalAlignment="Cent
                                 </StackPanel>
                             </ScrollViewer>
                             <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                                <Image Source="{Binding ProfileImagePath}" Width="900" HorizontalAlignment="Left"/>
+                                <Image Source="{Binding ProfileImagePath}" MaxWidth="900" Stretch="Uniform" HorizontalAlignment="Stretch"/>
                             </StackPanel>
 
                             <Border Grid.Column="2" Background="#EEF2F7" CornerRadius="8" Padding="15" Margin="10,0,0,0" VerticalAlignment="Top" MinWidth="260">
@@ -810,7 +810,7 @@ Tag="HH1" Text="{Binding HH1}" Width="100" Margin="10,0" VerticalAlignment="Cent
                                 </StackPanel>
                             </ScrollViewer>
                             <StackPanel Grid.Column="1" Grid.RowSpan="2" Margin="10,0,0,0" VerticalAlignment="Top">
-                                <Image Source="{Binding PlanImagePath}" Width="800" Height="Auto" HorizontalAlignment="Left"/>
+                                <Image Source="{Binding PlanImagePath}" MaxWidth="800" Stretch="Uniform" HorizontalAlignment="Stretch"/>
                             </StackPanel>
 
                             <Border Grid.Column="2" Background="#EEF2F7" CornerRadius="8" Padding="15" Margin="10,0,0,0" VerticalAlignment="Top" MinWidth="260">
