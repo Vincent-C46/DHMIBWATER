@@ -9,8 +9,8 @@
         d:DataContext="{d:DesignInstance vm:PumpingStationViewModel, IsDesignTimeCreatable=False}"
         
         Title="DHBIM WATER - PumpingStation Builder"
-        SizeToContent="Height" Width="1300" MinWidth="900" MaxWidth="1500" MinHeight="300"
-        MaxHeight="820"
+        SizeToContent="Height" Width="1300" MinWidth="900" MaxWidth="1900" MinHeight="300"
+        MaxHeight="1000"
         WindowStartupLocation="CenterScreen"
         Background="#F4F7F9" 
         AllowsTransparency="False" 

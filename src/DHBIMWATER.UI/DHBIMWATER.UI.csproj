@@ -234,12 +234,6 @@
 		</Resource>
 	</ItemGroup>
 
-	<ItemGroup>
-	  <Compile Update="Views\Modeling\PumpingStationView.xaml.cs">
-	    <SubType>Code</SubType>
-	  </Compile>
-	</ItemGroup>
-
 	<PropertyGroup>
 		<TargetFramework>net8.0-windows</TargetFramework>
 		<Nullable>enable</Nullable>
