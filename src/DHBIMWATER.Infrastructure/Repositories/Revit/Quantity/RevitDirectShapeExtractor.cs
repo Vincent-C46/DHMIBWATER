@@ -23,7 +23,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             _finder = finder;
             _classifier = classifier;
         }
-
         public bool CanExtract(long elementId)
         {
             var doc = _doc();
