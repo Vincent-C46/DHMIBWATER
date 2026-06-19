@@ -144,7 +144,7 @@
                             <StackPanel Grid.Column="1" Margin="20,0,0,0" VerticalAlignment="Top">
                                 <Border Background="#EEF2F7" CornerRadius="8" Padding="12" Margin="0,0,0,10">
                                     <StackPanel>
-                                        <TextBlock Text="종단 형상" FontWeight="SemiBold" Foreground="#4A6FA5" Margin="0,0,0,8"/>
+                                        <TextBlock Text="펌프장 타입" FontWeight="SemiBold" Foreground="#4A6FA5" Margin="0,0,0,8"/>
                                         <StackPanel Orientation="Horizontal">
                                             <StackPanel Margin="0,0,10,0">
                                                 <TextBlock Text="Type 1" HorizontalAlignment="Center" FontSize="11" Foreground="#666" Margin="0,0,0,4"/>
@@ -163,7 +163,7 @@
                                 </Border>
                                 <Border Background="#EEF2F7" CornerRadius="8" Padding="12" Margin="0,0,0,10">
                                     <StackPanel>
-                                        <TextBlock Text="평면 형상" FontWeight="SemiBold" Foreground="#4A6FA5" Margin="0,0,0,8"/>
+                                        <TextBlock Text="진입부 위치" FontWeight="SemiBold" Foreground="#4A6FA5" Margin="0,0,0,8"/>
                                         <StackPanel Orientation="Horizontal">
                                             <StackPanel Margin="0,0,10,0">
                                                 <TextBlock Text="Type 1 · 좌안부" HorizontalAlignment="Center" FontSize="11" Foreground="#666" Margin="0,0,0,4"/>

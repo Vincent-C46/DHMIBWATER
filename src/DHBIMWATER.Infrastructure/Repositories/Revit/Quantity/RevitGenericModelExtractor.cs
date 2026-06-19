@@ -1,4 +1,5 @@
 ﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Mechanical;
 using Autodesk.Revit.UI;
 using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Core.Quantity;
@@ -60,8 +61,19 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var generic = doc.GetElement(new ElementId(elementId)) as FamilyInstance;
             var quantityItems = new List<QuantityItem>();
 
+            var placementType = generic.Symbol.Family.FamilyPlacementType;
+
+            //placementType switch
+            //{
+            //    FamilyPlacementType.Invalid => {
+            //        return new List<QuantityItem>()
+            //    }
+            //};
+
+
+
             double concValue = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(generic).Sum(s => s.Volume));
-            
+
             var varDict = new Dictionary<string, double>
             {
                 ["V"] = concValue,
@@ -78,7 +90,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             string typeName = generic.Document.GetElement(generic.GetTypeId()).Name;
 
-            var placementType = generic.Symbol.Family.FamilyPlacementType;
 
             // 개수 산출
             const string numFormula = "N";
@@ -96,7 +107,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 Value = 1,
                 Unit = "EA"
             };
-            if (concValue > 1e-6)  quantityItems.Add(numItem);
+            if (concValue > 1e-6) quantityItems.Add(numItem);
 
             // 철근콘크리트
             const string concFormula = "V";

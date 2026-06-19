@@ -1,6 +1,5 @@
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Architecture;
-using Autodesk.Revit.DB.Structure;
 using DHBIMWATER.Application.Interfaces.Geometry;
 using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Core.Quantity;
@@ -66,7 +65,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             //if (workType != "철근콘크리트") return quantityItems;
 
-            // 콘크리트 수량
+            #region 콘크리트 수량
             double volumeM3 = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(stair).Sum(s => s.Volume));
             var concVarDict = new Dictionary<string, double> { ["V"] = volumeM3 };
             string concFormula = "V";
@@ -83,8 +82,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 Value            = volumeM3,
                 Unit             = "m³"
             });
+            #endregion
 
-            // 거푸집 — 하부면(경사 소피트 포함) + 측면
+            #region 거푸집 수량
             var refFaceDict = _classifier.GetFaceAreas(elementId);
             var deductionByFaceType = QuantityExtractorHelper.GroupDeductions(_finder.FindContactAreas(elementId));
 
@@ -122,6 +122,44 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
                 if (formworkItem.Value > 1e-6) quantityItems.Add(formworkItem);
             }
+            #endregion
+
+            #region 논슬립 수량
+            var stairRuns = stair.GetStairsRuns();
+            foreach (var runId in stairRuns)
+            {
+                var run = doc.GetElement(runId) as StairsRun;
+                if (run == null) continue;
+
+                var treadCount = run.ActualTreadsNumber;
+                if (treadCount < 1) continue;
+
+                var runWidth = UC.FtToM(run.ActualRunWidth);
+                var nonSlipVarDict = new Dictionary<string, double>
+                {
+                    ["W"] = runWidth,
+                    ["N"] = treadCount,
+                };
+
+                const string nonSlipFormula = "W x N";
+                var nonSlipRendered = FormulaCalculator.Render(nonSlipFormula, nonSlipVarDict);
+                var nonSlipLength = FormulaCalculator.Calculate(nonSlipFormula, nonSlipVarDict);
+
+                quantityItems.Add(new QuantityItem
+                {
+                    ElementId        = elementId,
+                    Category         = stair.Category.Name ?? "계단",
+                    ElementCode      = stair.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
+                    WorkType         = "계단논슬립",
+                    Specification    = "논슬립",
+                    RawFormula       = nonSlipFormula,
+                    RenderedFormula  = nonSlipRendered,
+                    Value            = nonSlipLength,
+                    Unit             = "m"
+                });
+            }
+
+            #endregion
 
             return quantityItems;
         }

@@ -1,6 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <Compile Remove="Repositories\Revit\Element\**" />
+    <EmbeddedResource Remove="Repositories\Revit\Element\**" />
+    <None Remove="Repositories\Revit\Element\**" />
+    <Page Remove="Repositories\Revit\Element\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\DHBIMWATER.Core\DHBIMWATER.Core.csproj" />
     <ProjectReference Include="..\DHBIMWATER.Application\DHBIMWATER.Application.csproj" />
   </ItemGroup>
@@ -22,10 +29,6 @@
     <Reference Include="RevitAPIUI">
       <HintPath>C:\Program Files\Autodesk\Revit 2026\RevitAPIUI.dll</HintPath>
     </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Repositories\Revit\Element\" />
   </ItemGroup>
 
   <PropertyGroup>
