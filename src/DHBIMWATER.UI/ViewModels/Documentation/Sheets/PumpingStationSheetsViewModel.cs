@@ -45,8 +45,8 @@ namespace DHBIMWATER.UI.ViewModels.Documentation.Sheets
             PlaceDimensionsCommand = new RelayCommand(_ => PlaceDimensions());
             PlaceAnnotatesCommand = new RelayCommand(_ => PlaceAnnotates());
             DeleteSheetsAndViewsCommand = new RelayCommand(_ => DeleteSheetsAndViews());
-            DeleteSheetsCommand = new RelayCommand(_ => _dialogService.Info("펌프장", "개발 예정입니다."));
-            DeleteViewsCommand = new RelayCommand(_ => _dialogService.Info("펌프장", "개발 예정입니다."));
+            DeleteSheetsCommand = new RelayCommand(_ => DeleteSheetsOnly());
+            DeleteViewsCommand = new RelayCommand(_ => DeleteViewsOnly());
             ConfirmCommand = new RelayCommand(_ => MainDialogResult = true);
             CancelCommand = new RelayCommand(_ => MainDialogResult = false);
         }
@@ -63,9 +63,37 @@ namespace DHBIMWATER.UI.ViewModels.Documentation.Sheets
             _refreshSheets?.Invoke();
         }
 
+        private void DeleteSheetsOnly()
+        {
+            int deleted = _useCase.DeletePumpingStationSheetsOnly();
+
+            if (deleted == 0)
+                _dialogService.Warn("삭제 완료", "삭제할 펌프장 시트가 없습니다.");
+            else
+                _dialogService.Info("삭제 완료", $"시트 {deleted}개가 삭제되었습니다.");
+
+            _refreshSheets?.Invoke();
+        }
+
+        private void DeleteViewsOnly()
+        {
+            _useCase.DeletePumpingStationViewsOnly();
+            _refreshSheets?.Invoke();
+            _dialogService.Info("삭제 완료", "출력 뷰가 삭제되었습니다.");
+        }
+
         private void PlaceViews()
         {
-            var result = _useCase.PlacePumpingStationViews();
+            var templateVm = new ViewTemplateSelectViewModel(_useCase.GetViewTemplates());
+            var templateDlg = new ViewTemplateSelectView(templateVm);
+            if (templateDlg.ShowDialog() != true) return;
+
+            var planTemplateId = templateVm.SelectedPlanTemplate?.Id ?? "";
+            var sectionTemplateId = templateVm.SelectedSectionTemplate?.Id ?? "";
+
+            var result = _useCase.PlacePumpingStationViews(
+                planTemplateId, sectionTemplateId,
+                templateVm.PlanScale, templateVm.SectionScale);
 
             if (result.PlacedCount == 0 && result.NotFoundSheets.Count > 0)
             {

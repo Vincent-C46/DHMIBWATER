@@ -2,6 +2,7 @@
 using System.Linq;
 using Autodesk.Revit.DB;
 using DHBIMWATER.Application.DTOs.Revit.Sheet;
+using DHBIMWATER.Application.DTOs.Revit.Sheets;
 using Autodesk.Revit.DB.ExtensibleStorage;
 
 namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
@@ -40,6 +41,22 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
                 SheetForm = GetSavedForm(v)
             }).ToList();
         }
+        public IList<ViewTemplateDto> GetViewTemplates()
+        {
+            return new FilteredElementCollector(_doc)
+                .OfClass(typeof(View))
+                .Cast<View>()
+                .Where(v => v.IsTemplate)
+                .Select(v => new ViewTemplateDto
+                {
+                    Id = v.Id.Value.ToString(),
+                    Name = v.Name,
+                    ViewType = v.ViewType.ToString()
+                })
+                .OrderBy(v => v.Name)
+                .ToList();
+        }
+
         private static string ToVisualStyleText(DisplayStyle s)
         {
             return s switch

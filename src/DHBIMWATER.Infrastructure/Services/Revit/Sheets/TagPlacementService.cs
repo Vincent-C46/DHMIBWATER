@@ -101,9 +101,8 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
 
             RemoveExistingTags(new List<View> { view }, allTagTypes);
 
-            var placedBoxes = new List<Outline>();
             foreach (var tagType in tagTypes)
-                TryPlaceTag(view, tagType, placedBoxes, targetIds);
+                TryPlaceTag(view, tagType, targetIds);
 
             tx.Commit();
         }
@@ -149,12 +148,11 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
 
         private void ProcessView(View view, List<FamilySymbol> tagTypes)
         {
-            var placedBoxes = new List<Outline>();
             foreach (var tagType in tagTypes)
-                TryPlaceTag(view, tagType, placedBoxes);
+                TryPlaceTag(view, tagType, targetIds: null);
         }
 
-        private void TryPlaceTag(View view, FamilySymbol tagType, List<Outline> placedBoxes, HashSet<long> targetIds = null)
+        private void TryPlaceTag(View view, FamilySymbol tagType, HashSet<long> targetIds = null)
         {
             if (tagType.Category?.Id == null) return;
             if (!TagCategoryMap.TryGetValue(tagType.Category.Id, out var elemCat)) return;
@@ -177,6 +175,7 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
 
             var right = view.RightDirection.Normalize();
             var up    = view.UpDirection.Normalize();
+            var offset = 600.0 / 304.8;
 
             foreach (var elem in elems)
             {
@@ -185,46 +184,22 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
                     var bb = elem.get_BoundingBox(view);
                     if (bb == null) continue;
                     var center = (bb.Min + bb.Max) * 0.5;
-                    var tagPos = center + right.Multiply(300.0 / 304.8) + up.Multiply(300.0 / 304.8);
+                    var tagPos = center + right.Multiply(offset) + up.Multiply(offset);
 
                     var @ref = new Reference(elem);
-                    var tag  = IndependentTag.Create(_doc, tagType.Id, view.Id, @ref, true, TagOrientation.Horizontal, tagPos);
+
+                    // addLeader=true -> Revit이 직각(ㄴ자) 리더를 자동으로 배치
+                    var tag = IndependentTag.Create(_doc, tagType.Id, view.Id, @ref, true, TagOrientation.Horizontal, tagPos);
                     if (tag == null) continue;
 
-                    tag.LeaderEndCondition = LeaderEndCondition.Free;
-                    try { tag.SetLeaderEnd(@ref, center); } catch { }
+                    _doc.Regenerate();
 
-                    AvoidOverlap(tag, view, up, placedBoxes);
+                    // 자동 배치된 리더 형태(엘보우 위치)는 그대로 두고,
+                    // 끝점 조건만 Free(열린 끝)로 바꿔서 배치 후 수동 드래그가 가능하도록 함
+                    try { tag.LeaderEndCondition = LeaderEndCondition.Free; } catch { }
                 }
                 catch { }
             }
-        }
-
-        // 같은 뷰 안에서 이미 배치된 태그와 겹치면 위쪽으로 밀어 올려서 겹침 방지
-        private void AvoidOverlap(IndependentTag tag, View view, XYZ shiftDir, List<Outline> placedBoxes)
-        {
-            const int maxAttempts = 12;
-            double step = 300.0 / 304.8;
-
-            for (int i = 0; i < maxAttempts; i++)
-            {
-                var bb = tag.get_BoundingBox(view);
-                if (bb == null) return;
-                var outline = new Outline(bb.Min, bb.Max);
-
-                if (!placedBoxes.Any(o => o.Intersects(outline, 1e-6)))
-                {
-                    placedBoxes.Add(outline);
-                    return;
-                }
-
-                try { tag.TagHeadPosition += shiftDir.Multiply(step); }
-                catch { break; }
-            }
-
-            var finalBb = tag.get_BoundingBox(view);
-            if (finalBb != null)
-                placedBoxes.Add(new Outline(finalBb.Min, finalBb.Max));
         }
 
         private List<FamilySymbol> GetTagFamilySymbols()

@@ -496,11 +496,16 @@
                         Background="#5C6BC0"
                         Style="{StaticResource PrimaryButtonStyle}"
                         Command="{Binding AnnotateCommand}"/>
+               
+                <!--
                 <Button Grid.Column="2" Content="배수지용"
                         Width="120" FontSize="15" Margin="5,0"
                         Background="#D97B7B"
                         Style="{StaticResource PrimaryButtonStyle}"
                         Command="{Binding WaterReservoirCommand}"/>
+                 -->
+                
+                
                 <Button Grid.Column="3" Content="펌프장용"
                         Width="120" FontSize="15" Margin="5,0"
                         Background="#27AE60"
