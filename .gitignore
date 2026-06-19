@@ -60,3 +60,8 @@ Desktop.ini
 *.tmp
 *.temp
 *.log
+/.understand-anything
+/docs/ai
+/AGENTS.md
+/CLAUDE.md
+/.claude
