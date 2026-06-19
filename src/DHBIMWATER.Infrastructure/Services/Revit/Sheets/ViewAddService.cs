@@ -12,11 +12,11 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             _prepare = new ViewSheetPreparationService(doc);
         }
 
-        public string AddViewToSheet(string sheetId, string viewId, string suffix = "_시트", string targetViewName = null, bool duplicate = true)
+        public string AddViewToSheet(string sheetId, string viewId, string suffix = "_시트", string targetViewName = null, bool duplicate = true, string planTemplateId = null, string sectionTemplateId = null)
         {
             var sId = new ElementId(long.Parse(sheetId));
             var preparedViewId = duplicate
-                ? _prepare.CreateSheetView(viewId, suffix, targetViewName)
+                ? _prepare.CreateSheetView(viewId, suffix, targetViewName, planTemplateId, sectionTemplateId)
                 : viewId;
 
             var vId = new ElementId(long.Parse(preparedViewId));

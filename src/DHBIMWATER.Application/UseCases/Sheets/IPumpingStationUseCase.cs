@@ -7,8 +7,11 @@ namespace DHBIMWATER.Application.UseCases.Sheets
     public interface IPumpingStationUseCase
     {
         PumpingStationCreateResult CreatePumpingStationSheets(string titleBlockId);
-        PumpingStationPlaceViewsResult PlacePumpingStationViews();
+        PumpingStationPlaceViewsResult PlacePumpingStationViews(string planTemplateId = null, string sectionTemplateId = null, int? planScale = null, int? sectionScale = null);
+        IList<ViewTemplateDto> GetViewTemplates();
         int DeletePumpingStationSheets();
+        int DeletePumpingStationSheetsOnly();
+        void DeletePumpingStationViewsOnly();
         void PlacePumpingStationDimensions(string dimensionTypeName);
         IList<DimensionTypeDto> GetDimensionTypes();
         void CreateOrUpdateWaterLevels(string hwl, string lwl);

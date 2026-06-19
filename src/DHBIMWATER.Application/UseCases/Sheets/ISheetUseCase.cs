@@ -11,13 +11,14 @@ namespace DHBIMWATER.Application.UseCases
         IList<SheetInfoDto> GetSheets();
         IList<TitleBlockDto> GetTitleBlocks();
         IList<ViewInfoDto> GetViews();
+        IList<ViewTemplateDto> GetViewTemplates();
         IList<DimensionTypeDto> GetDimensionTypes();
 
         SheetInfoDto CreateSheet(string titleBlockId, string sheetNumber, string sheetName);
         void DeleteSheet(string sheetId);
         SheetInfoDto CopySheet(string sheetId);
         void RenameSheet(string sheetId, string newName);
-        string AddViewToSheet(string sheetId, string viewId, string suffix = "_시트", string targetViewName = null, bool duplicate = true);
+        string AddViewToSheet(string sheetId, string viewId, string suffix = "_시트", string targetViewName = null, bool duplicate = true, string planTemplateId = null, string sectionTemplateId = null);
         void ReplaceViewOnSheet(string sheetId, string oldViewId, string newViewId);
         void RemoveView(string sheetId, string viewId);
         void UpdateViewScale(string viewId, int scale);

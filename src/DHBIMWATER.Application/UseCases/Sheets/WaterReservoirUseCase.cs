@@ -158,8 +158,10 @@ namespace DHBIMWATER.Application.UseCases.Sheets
         }
 
 
+        public IList<ViewTemplateDto> GetViewTemplates() => _sheetUseCase.GetViewTemplates();
+
         // 시트에 배치할 뷰 설정
-        public void PlaceReservoirViews()
+        public void PlaceReservoirViews(string planTemplateId = null, string sectionTemplateId = null, int? planScale = null, int? sectionScale = null)
         {
             var sheets = _sheetUseCase.GetSheets();
             var views = _sheetUseCase.GetViews();
@@ -209,12 +211,16 @@ namespace DHBIMWATER.Application.UseCases.Sheets
                 if (!viewByName.TryGetValue(placement.ViewName, out var view))
                     continue;
 
-                var placedViewId = _sheetUseCase.AddViewToSheet(sheet.Id, view.ViewId, "_시트");
+                var placedViewId = _sheetUseCase.AddViewToSheet(sheet.Id, view.ViewId, "_시트",
+                    planTemplateId: planTemplateId, sectionTemplateId: sectionTemplateId);
 
                 if (!string.IsNullOrWhiteSpace(placedViewId))
                 {
-                    if (placement.Scale > 0)
-                        _sheetUseCase.UpdateViewScale(placedViewId, placement.Scale);
+                    var overrideScale = IsPlanPlacement(placement) ? planScale : sectionScale;
+                    var effectiveScale = overrideScale ?? placement.Scale;
+
+                    if (effectiveScale > 0)
+                        _sheetUseCase.UpdateViewScale(placedViewId, effectiveScale);
 
                     if (!string.IsNullOrWhiteSpace(placement.Form))
                         _sheetUseCase.ApplyViewFormProfile(placedViewId, placement.Form);
@@ -224,8 +230,8 @@ namespace DHBIMWATER.Application.UseCases.Sheets
                     if (!string.IsNullOrWhiteSpace(placement.ViewTitleOnSheet))
                         _sheetUseCase.UpdateViewTitleOnSheet(placedViewId, placement.ViewTitleOnSheet);
                     _sheetUseCase.UpdateSheetParameters(
-                        sheet.Id, sheet.SheetName, string.Empty, 
-                        placement.Scale > 0 ? $"1:{placement.Scale}" : string.Empty, sheet.SheetNumber);
+                        sheet.Id, sheet.SheetName, string.Empty,
+                        effectiveScale > 0 ? $"1:{effectiveScale}" : string.Empty, sheet.SheetNumber);
 
                     _sheetUseCase.RecenterViewportToSheetCenter(sheet.Id, placedViewId);
                     _sheetUseCase.UpdateReservoirViewportTitleLayout(sheet.Id, placedViewId, IsPlanPlacement(placement));
@@ -240,7 +246,8 @@ namespace DHBIMWATER.Application.UseCases.Sheets
                 if (!viewByName.TryGetValue(km.BasePlanViewName, out var baseView))
                     continue;
 
-                var placedKeyMapViewId = _sheetUseCase.AddViewToSheet(sheet.Id, baseView.ViewId, "_KeyMap", km.Title);
+                var placedKeyMapViewId = _sheetUseCase.AddViewToSheet(sheet.Id, baseView.ViewId, "_KeyMap", km.Title,
+                    planTemplateId: planTemplateId, sectionTemplateId: sectionTemplateId);
 
                 if (string.IsNullOrWhiteSpace(placedKeyMapViewId))
                     continue;
