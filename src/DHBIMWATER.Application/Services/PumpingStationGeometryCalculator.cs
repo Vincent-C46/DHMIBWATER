@@ -1463,6 +1463,23 @@ namespace DHBIMWATER.Application.Services
                                                 new Point3D(x2 - pr.T2 * Math.Tan(calculatedTheta / 2),         -pr.T4 - pl.B10, d.LWL*1000 - pr.H1 - pr.T2),
                                                 new Point3D(0,                                                  -pr.T4 - pl.B10, d.LWL*1000 - pr.H1 - pr.T2),
                                             };
+
+                    //fndBaseSolid.Voids = new List<VoidExtrusionDefinition>()
+                    //{
+                    //    new VoidExtrusionDefinition()
+                    //    {
+                    //        Normal = new Vector3D(0, 0, -1),
+                    //        Distance = pr.T2 + 200,
+                    //        Profile = new List<Point3D>()
+                    //        {
+                    //            new Point3D(totalLength - pr.OB1, 0,      d.LWL*1000 - pr.H4 + 100),
+                    //            new Point3D(totalLength - 100,          0,      d.LWL*1000 - pr.H4 + 100),
+                    //            new Point3D(totalLength - 100,          pr.OH1, d.LWL*1000 - pr.H4 + 100),
+                    //            new Point3D(totalLength - pr.OB1, pr.OH1, d.LWL*1000 - pr.H4 + 100),
+                    //        },
+                    //    }
+                    //};
+
                     subBaseSolid.Profile = new List<Point3D>()
                                             {
                                                 new Point3D(- subThk,                                                  -pr.T4 - pl.B10- subThk, d.LWL*1000 - pr.H1 - pr.T2),
@@ -1860,8 +1877,8 @@ namespace DHBIMWATER.Application.Services
             var defs = new List<GenericModelPlacementDefinition>();
 
             double rec_d = d.SupportBlockWidth;
-            double rec_B = pr.B5 + rec_d*2;
-            double rec_L = pr.B5 + rec_d*2;
+            double rec_B = pr.B5 + rec_d * 2;
+            double rec_L = pr.B5 + rec_d * 2;
             double rec_T = d.SupportBlockHeight;
 
             double circ_d = d.SupportBlockWidth;

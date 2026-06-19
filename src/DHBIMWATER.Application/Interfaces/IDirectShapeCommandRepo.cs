@@ -1,4 +1,4 @@
-﻿using DHBIMWATER.Core.Structures;
+﻿using DHBIMWATER.Core.Geometry;
 using System;
 using System.Collections.Generic;
 using System.Linq;

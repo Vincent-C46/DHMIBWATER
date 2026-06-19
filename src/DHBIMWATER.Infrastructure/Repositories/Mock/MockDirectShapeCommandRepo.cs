@@ -1,6 +1,5 @@
 ﻿using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Core.Geometry;
-using DHBIMWATER.Core.Structures;
 using DHBIMWATER.Infrastructure.Services.Mock;
 using System;
 using System.Collections.Generic;

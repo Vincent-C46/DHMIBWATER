@@ -1,6 +1,7 @@
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using DHBIMWATER.Application.Interfaces;
+using DHBIMWATER.Core.Geometry;
 using DHBIMWATER.Core.Structures;
 using System.Diagnostics;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
@@ -48,7 +49,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             if (doc == null) return 0;
 
             var materialId = FindOrCreateConcreteMaterial(doc);
-            var geometry = BuildSolid(solidExtrusionDef, materialId);
+            var geometry = BuildExtrusion(solidExtrusionDef, materialId);
             var ds = DirectShape.CreateElement(doc, new ElementId(BuiltInCategory.OST_Floors));
             ds.SetShape(new GeometryObject[] { geometry });
             ds.Name = solidExtrusionDef.ElementCode;
@@ -66,7 +67,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             foreach (var group in solidExtrusionDefs.GroupBy(d => d.ElementCode))
             {
                 //TaskDialog.Show("info", $"=== 그룹: {group.Key} ({group.Count()}개) ===");
-                var solids = group.Select(def => BuildSolid(def, materialId)).ToList();
+                var solids = group.Select(def => BuildExtrusion(def, materialId)).ToList();
                 if (solids.Count == 0) continue;
 
                 Solid merged = solids[0];
@@ -100,25 +101,46 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             return ids;
         }
 
-        private Solid BuildSolid(SolidExtrusionDefinition def, ElementId materialId)
+        private Solid BuildExtrusion(SolidExtrusionDefinition def, ElementId materialId)
         {
-            CurveLoop curveLoop = new CurveLoop();
-            var ptNum = def.Profile.Count;
-            for (int i = 0; i < ptNum; i++)
+            Solid solid = CreateExtrusion(def.Profile, def.Normal, def.Distance, materialId);
+
+            foreach (var voidDef in def.Voids)
             {
-                var start = def.Profile[i];
-                var end = def.Profile[(i + 1) % ptNum];
-                var line = Line.CreateBound(new XYZ(UC.MmToFt(start.X), UC.MmToFt(start.Y), UC.MmToFt(start.Z)),
-                    new XYZ(UC.MmToFt(end.X), UC.MmToFt(end.Y), UC.MmToFt(end.Z)));
-                curveLoop.Append(line);
+                var voidSolid = CreateExtrusion(voidDef.Profile, voidDef.Normal, voidDef.Distance, materialId);
+                solid = BooleanOperationsUtils.ExecuteBooleanOperation(solid, voidSolid, BooleanOperationsType.Difference);
             }
-            SolidOptions solidOptions = new SolidOptions(materialId, ElementId.InvalidElementId);
-            Solid solid = GeometryCreationUtilities.CreateExtrusionGeometry(new List<CurveLoop> { curveLoop },
-                new XYZ(def.Normal.X, def.Normal.Y, def.Normal.Z),
-                UC.MmToFt(def.Distance),
-                solidOptions);
 
             return solid;
+        }
+
+        private Solid CreateExtrusion(
+            IReadOnlyList<Point3D> profile,
+            Vector3D normal,
+            double distance,
+            ElementId materialId)
+        {
+            var curveLoop = new CurveLoop();
+
+            for (int i = 0; i < profile.Count; i++)
+            {
+                var start = profile[i];
+                var end = profile[(i + 1) % profile.Count];
+
+                var line = Line.CreateBound(
+                    new XYZ(UC.MmToFt(start.X), UC.MmToFt(start.Y), UC.MmToFt(start.Z)),
+                    new XYZ(UC.MmToFt(end.X), UC.MmToFt(end.Y), UC.MmToFt(end.Z)));
+
+                curveLoop.Append(line);
+            }
+
+            var solidOptions = new SolidOptions(materialId, ElementId.InvalidElementId);
+
+            return GeometryCreationUtilities.CreateExtrusionGeometry(
+                new List<CurveLoop> { curveLoop },
+                new XYZ(normal.X, normal.Y, normal.Z),
+                UC.MmToFt(distance),
+                solidOptions);
         }
     }
 }
