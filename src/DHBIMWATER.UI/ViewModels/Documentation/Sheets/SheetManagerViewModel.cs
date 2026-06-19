@@ -17,6 +17,7 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
         private readonly ISheetUseCase _useCase;
 
         private readonly IWaterReservoirUseCase _waterReservoirUseCase;
+        private readonly IPumpingStationUseCase _pumpingStationUseCase;
 
         private readonly List<SheetPendingAction> _pending = new();
 
@@ -29,6 +30,7 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
         public bool RequestedCurrentViewSelectedObjects { get; private set; }
         public bool RequestedCurrentViewSelectedAnnotates { get; private set; }
         public bool RequestedCurrentViewAllAnnotates { get; private set; }
+        public IList<string> RequestedAnnotateTagFamilyIds { get; private set; }
 
 
 
@@ -55,6 +57,7 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
         public RelayCommand CancelCommand { get; }
         public RelayCommand DimensionCommand { get; }
         public RelayCommand WaterReservoirCommand { get; }
+        public RelayCommand PumpingStationCommand { get; }
         public enum SheetActionType { Create, Delete, Copy, Rename, AddView, ReplaceView, RemoveView, ArrangeViews }
         public RelayCommand AnnotateCommand { get; }
 
@@ -85,10 +88,12 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
         public SheetManagerViewModel(
             ISheetUseCase useCase,
             IWaterReservoirUseCase waterReservoirUseCase,
+            IPumpingStationUseCase pumpingStationUseCase,
             IDialogService dialogService)
         {
             _useCase = useCase;
             _waterReservoirUseCase = waterReservoirUseCase;
+            _pumpingStationUseCase = pumpingStationUseCase;
             _dialogService = dialogService;
 
             AddCommand = new RelayCommand(_ => Add());
@@ -101,6 +106,7 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
             RemoveViewCommand = new RelayCommand(p => RemoveLastView(p as SheetRow), p => p is SheetRow row && row.Views.Count > 0);
             DimensionCommand = new RelayCommand(_ => ApplyDimensions());
             WaterReservoirCommand = new RelayCommand(_ => OpenWaterReservoir());
+            PumpingStationCommand = new RelayCommand(_ => OpenPumpingStation());
             AnnotateCommand = new RelayCommand(_ => ApplyAnnotates());
 
             LoadSheets();
@@ -538,6 +544,8 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
             RequestedCurrentViewSelectedObjects = false;
             RequestedCurrentViewDimensionTypeName = null;
             RequestedCurrentViewSelectedAnnotates = false;
+            RequestedCurrentViewAllAnnotates = false;
+            RequestedAnnotateTagFamilyIds = null;
 
 
         }
@@ -598,6 +606,30 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
                 .OfType<System.Windows.Window>()
                 .FirstOrDefault(x => x is SheetManagerView);
             
+            if (owner != null)
+                dlg.Owner = owner;
+
+            dlg.ShowDialog();
+
+            if (owner != null)
+                owner.Activate();
+        }
+
+        private void OpenPumpingStation()
+        {
+            PumpingStationSheetsView dlg = null;
+
+            var vm = new PumpingStationSheetsViewModel(
+                _pumpingStationUseCase,
+                _dialogService,
+                LoadSheets);
+
+            dlg = new PumpingStationSheetsView { DataContext = vm };
+
+            var owner = System.Windows.Application.Current.Windows
+                .OfType<System.Windows.Window>()
+                .FirstOrDefault(x => x is SheetManagerView);
+
             if (owner != null)
                 dlg.Owner = owner;
 
@@ -714,6 +746,15 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
 
             if (dlg.ShowDialog() != true)
                 return;
+
+            var tagFamilies = _useCase.GetAvailableTagFamilies();
+            var selectVm = new AnnotateSelectViewModel(tagFamilies);
+            var selectDlg = new AnnotateSelectView(selectVm);
+
+            if (selectDlg.ShowDialog() != true)
+                return;
+
+            RequestedAnnotateTagFamilyIds = selectVm.SelectedTagFamilyIds;
 
             if (vm.IsSelectedObjectsMode)
             {

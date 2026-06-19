@@ -168,7 +168,9 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
                 BuiltInCategory.OST_StairsRailing,
                 BuiltInCategory.OST_Stairs,
                 BuiltInCategory.OST_StructuralFraming,
-                BuiltInCategory.OST_Floors
+                BuiltInCategory.OST_Floors,
+                BuiltInCategory.OST_GenericModel
+
             };
 
             if (form == "구조도")

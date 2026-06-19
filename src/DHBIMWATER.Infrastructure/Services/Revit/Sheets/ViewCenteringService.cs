@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using Autodesk.Revit.DB;
 
 namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
@@ -27,17 +27,15 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             if (viewport == null) return;
 
             var outline = sheet.Outline;
-            var center = new XYZ(
+            var center  = new XYZ(
                 (outline.Min.U + outline.Max.U) * 0.5,
                 (outline.Min.V + outline.Max.V) * 0.5,
                 0);
 
-            using (var tx = new Transaction(_doc, "Recenter Viewport"))
-            {
-                tx.Start();
-                viewport.SetBoxCenter(center);
-                tx.Commit();
-            }
+            using var tx = new Transaction(_doc, "Recenter Viewport");
+            tx.Start();
+            viewport.SetBoxCenter(center);
+            tx.Commit();
         }
     }
 }

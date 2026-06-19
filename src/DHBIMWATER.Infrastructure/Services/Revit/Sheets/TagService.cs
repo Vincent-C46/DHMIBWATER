@@ -19,26 +19,6 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             _doc = doc;
         }
 
-        public void ApplyTagsToSelectedOnCurrentView(IList<string> elementIds)
-        {
-            if (elementIds == null || elementIds.Count == 0)
-                return;
-
-            var ids = elementIds
-                .Select(x => long.TryParse(x, out var v) ? new ElementId(v) : ElementId.InvalidElementId)
-                .Where(x => x != ElementId.InvalidElementId)
-                .ToList();
-
-            if (ids.Count == 0)
-                return;
-
-            var view = _doc.ActiveView;
-            if (view == null)
-                return;
-
-            ApplyTagsToElementsOnView(view, ids);
-        }
-
         private XYZ GetTagPoint(Element element, View view)
         {
             if (element is Wall wall)
@@ -55,15 +35,6 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
                 return null;
 
             return (bb.Min + bb.Max) * 0.5;
-        }
-
-        public void ApplyTagsToAllOnCurrentView()
-        {
-            var view = _doc.ActiveView;
-            if (view == null)
-                return;
-
-            ApplyTagsToAllOnView(view);
         }
 
         private void ApplyTagsToAllOnView(View view)

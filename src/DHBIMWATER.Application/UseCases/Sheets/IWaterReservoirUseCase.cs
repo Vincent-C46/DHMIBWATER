@@ -18,6 +18,8 @@ namespace DHBIMWATER.Application.UseCases.Sheets
         void CloseReservoirSheets();
         void ApplyReservoirTags();
         void SetReservoirSheetRange(string startSheetNumber, int totalSheetCount);
+        (string hwl, string lwl) GetWaterLevels();
+        void CreateOrUpdateWaterLevels(string hwl, string lwl);
     }
 
     public class WaterReservoirCreateResult

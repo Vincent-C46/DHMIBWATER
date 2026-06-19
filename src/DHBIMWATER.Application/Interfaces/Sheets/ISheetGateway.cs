@@ -14,7 +14,6 @@ namespace DHBIMWATER.Application.Interfaces.Sheets
         IList<ViewInfoDto> GetViews();
         IList<string> PickDimensionTargetIds();
         IList<DimensionTypeDto> GetDimensionTypes();
-
         SheetInfoDto CreateSheet(string titleBlockId, string sheetNumber, string sheetName);
         void DeleteSheet(string sheetId);
         SheetInfoDto CopySheet(string sheetId);
@@ -47,12 +46,20 @@ namespace DHBIMWATER.Application.Interfaces.Sheets
         void ActivateView(string viewId);
         void UpdateViewportTitleLayout(string sheetId, string viewId, double offsetX, double offsetY, double lineLength);
         void UpdateReservoirViewportTitleLayout(string sheetId, string viewId, bool alignRightBottom);
-        void ApplyTagsToSelectedOnCurrentView(IList<string> elementIds);
+        void ApplyDHTagsToSelectedOnCurrentView(IList<string> elementIds, IList<string> selectedFamilyIds);
         void SaveSheetDirection(string sheetId, string directionType);
         void HideSectionMarkersOnReservoirSectionViews();
         void HideCopiedSectionMarkersOnReservoirPlanViews();
-        void ApplyTagsToAllOnCurrentView();
+        void HideSectionMarkersOnPumpingStationSectionViews();
+        void HideCopiedSectionMarkersOnPumpingStationPlanViews();
+        void ApplyPumpingStationDimensions(string sheetId, string dimensionTypeName);
+        void ApplyDHTagsToAllOnCurrentView(IList<string> selectedFamilyIds);
         void ApplyReservoirTags(string sheetId);
-
+        void CreateOrUpdateWaterLevels(string hwl, string lwl);
+        (string hwl, string lwl) GetWaterLevels();
+        void HideNonWaterLevels();
+        void ApplyPumpingStationAnnotations();
+        void ApplyDHTags(IList<string> selectedFamilyIds);
+        IList<TagFamilyDto> GetAvailableTagFamilies();
     }
 }

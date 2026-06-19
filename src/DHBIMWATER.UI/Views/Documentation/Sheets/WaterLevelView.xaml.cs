@@ -15,11 +15,11 @@ using System.Windows.Shapes;
 namespace DHBIMWATER.UI.Views.Documentation.Sheets
 {
     /// <summary>
-    /// PumpingStationView_waml.xaml에 대한 상호 작용 논리
+    /// WaterLevelView.xaml에 대한 상호 작용 논리
     /// </summary>
-    public partial class PumpingStationView : Window
+    public partial class WaterLevelView : Window
     {
-        public PumpingStationView()
+        public WaterLevelView()
         {
             InitializeComponent();
         }

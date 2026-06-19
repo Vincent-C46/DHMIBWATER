@@ -181,13 +181,13 @@ namespace DHBIMWATER.Application.UseCases.Sheets
         {
             _gateway.UpdateReservoirViewportTitleLayout(sheetId, viewId, alignRightBottom);
         }
-        public void ApplyTagsToSelectedOnCurrentView()
+        public void ApplyTagsToSelectedOnCurrentView(IList<string> selectedFamilyIds)
         {
             var pickedIds = _gateway.PickDimensionTargetIds();
             if (pickedIds == null || pickedIds.Count == 0)
                 return;
 
-            _gateway.ApplyTagsToSelectedOnCurrentView(pickedIds);
+            _gateway.ApplyDHTagsToSelectedOnCurrentView(pickedIds, selectedFamilyIds);
         }
         public void SaveSheetDirection(string sheetId, string directionType)
         {
@@ -203,13 +203,58 @@ namespace DHBIMWATER.Application.UseCases.Sheets
         {
             _gateway.HideCopiedSectionMarkersOnReservoirPlanViews();
         }
-        public void ApplyTagsToAllOnCurrentView()
+
+        public void HideSectionMarkersOnPumpingStationSectionViews()
         {
-            _gateway.ApplyTagsToAllOnCurrentView();
+            _gateway.HideSectionMarkersOnPumpingStationSectionViews();
+        }
+
+        public void HideCopiedSectionMarkersOnPumpingStationPlanViews()
+        {
+            _gateway.HideCopiedSectionMarkersOnPumpingStationPlanViews();
+        }
+
+        public void ApplyPumpingStationDimensions(string sheetId, string dimensionTypeName)
+        {
+            _gateway.ApplyPumpingStationDimensions(sheetId, dimensionTypeName);
+        }
+
+        public void ApplyTagsToAllOnCurrentView(IList<string> selectedFamilyIds)
+        {
+            _gateway.ApplyDHTagsToAllOnCurrentView(selectedFamilyIds);
         }
         public void ApplyReservoirTags(string sheetId)
         {
             _gateway.ApplyReservoirTags(sheetId);
+        }
+        public void CreateOrUpdateWaterLevels(string hwl, string lwl)
+        {
+            _gateway.CreateOrUpdateWaterLevels(hwl, lwl);
+        }
+
+        public (string hwl, string lwl) GetWaterLevels()
+        {
+            return _gateway.GetWaterLevels();
+        }
+
+        public void HideNonWaterLevels()
+        {
+            _gateway.HideNonWaterLevels();
+        }
+
+        public void ApplyPumpingStationAnnotations()
+        {
+            _gateway.ApplyPumpingStationAnnotations();
+        }
+
+        public void ApplyDHTags(IList<string> selectedFamilyIds)
+        {
+            _gateway.ApplyDHTags(selectedFamilyIds);
+        }
+
+        public IList<TagFamilyDto> GetAvailableTagFamilies()
+        {
+            return _gateway.GetAvailableTagFamilies();
         }
     }
 }

@@ -62,5 +62,15 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             _prepare.HideCopiedSectionMarkersOnReservoirPlanViews();
         }
 
+        public void HideSectionMarkersOnPumpingStationSectionViews()
+        {
+            _prepare.HideSectionMarkersOnPumpingStationSectionViews();
+        }
+
+        public void HideCopiedSectionMarkersOnPumpingStationPlanViews()
+        {
+            _prepare.HideCopiedSectionMarkersOnPumpingStationPlanViews();
+        }
+
     }
 }

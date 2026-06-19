@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Autodesk.Revit.DB;
+﻿using Autodesk.Revit.DB;
 using DHBIMWATER.Application.UseCases.Sheets;
 
 namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
@@ -38,7 +35,6 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
                     AutoDimensionView(view);
 
                 }
-
                 tx.Commit();
             }
         }
@@ -51,6 +47,9 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
                     e.Category != null &&
                     (e.Category.Id.Value == (int)BuiltInCategory.OST_Walls ||
                      e.Category.Id.Value == (int)BuiltInCategory.OST_StructuralColumns ||
+                     e.Category.Id.Value == (int)BuiltInCategory.OST_StructuralFraming ||
+                     e.Category.Id.Value == (int)BuiltInCategory.OST_Floors ||
+                     e.Category.Id.Value == (int)BuiltInCategory.OST_GenericModel ||
                      e.Category.Id.Value == (int)BuiltInCategory.OST_StructuralFoundation))
                 .ToList();
 
@@ -122,7 +121,7 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
                     if (includeOverall) CreateOverallDimensionAtRight(view, yRefs, up, right, rightTotal);
                 }
             }
-        }                   
+        }
 
         private bool TryGetFaceRefs(
             View view, Element e, XYZ right, XYZ up,
@@ -438,7 +437,7 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             if (p1.DistanceTo(p2) < 1e-6) return;
             _doc.Create.NewDimension(view, Line.CreateBound(p1, p2), ra);
         }
-        
+
         public void ApplyDimensionsToSelected(string sheetId, IList<string> elementIds)
         {
             if (!long.TryParse(sheetId, out var sid)) return;
@@ -473,7 +472,7 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
                     foreach (var id in selectedIds)
                     {
                         var e = _doc.GetElement(id);
-                        if (e == null || e.Category == null) continue;                        
+                        if (e == null || e.Category == null) continue;
 
                         // 현재 plan view에서 보이는 요소만
                         if (e.get_BoundingBox(view) == null) continue;
