@@ -48,9 +48,13 @@ namespace DHBIMWATER.Application.UseCases.Sheets
         {
             return _gateway.GetViews();
         }
-        public string AddViewToSheet(string sheetId, string viewId, string suffix = "_시트", string targetViewName = null, bool duplicate = true)
+        public IList<ViewTemplateDto> GetViewTemplates()
         {
-            return _gateway.AddViewToSheet(sheetId, viewId, suffix, targetViewName, duplicate);
+            return _gateway.GetViewTemplates();
+        }
+        public string AddViewToSheet(string sheetId, string viewId, string suffix = "_시트", string targetViewName = null, bool duplicate = true, string planTemplateId = null, string sectionTemplateId = null)
+        {
+            return _gateway.AddViewToSheet(sheetId, viewId, suffix, targetViewName, duplicate, planTemplateId, sectionTemplateId);
         }
         public void ReplaceViewOnSheet(string sheetId, string oldViewId, string newViewId)
         {

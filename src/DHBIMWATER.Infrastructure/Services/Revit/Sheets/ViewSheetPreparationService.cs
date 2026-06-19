@@ -9,12 +9,15 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
     {
         private readonly Document _doc;
 
+        private const string PlanViewTemplateName = "DH_평면도";
+        private const string SectionViewTemplateName = "DH_단면도";
+
         public ViewSheetPreparationService(Document doc)
         {
             _doc = doc;
         }
 
-        public string CreateSheetView(string sourceViewId, string suffix = "_시트", string targetViewName = null)
+        public string CreateSheetView(string sourceViewId, string suffix = "_시트", string targetViewName = null, string planTemplateId = null, string sectionTemplateId = null)
         {
             var sourceId = new ElementId(long.Parse(sourceViewId));
             var sourceView = _doc.GetElement(sourceId) as View;
@@ -39,6 +42,7 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
 
                 duplicatedView.Name = GetUniqueViewName(SanitizeViewName(desiredName));
                 ViewCategoryService.SetViewCategory(duplicatedView, "출력");
+                ApplyViewTemplate(duplicatedView, planTemplateId, sectionTemplateId);
 
                 tx.Commit();
             }
@@ -46,7 +50,7 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             return duplicatedId.Value.ToString();
         }
 
-        public View CreateSheetViewInOpenTransaction(string sourceViewId, string suffix = "_시트", string targetViewName = null)
+        public View CreateSheetViewInOpenTransaction(string sourceViewId, string suffix = "_시트", string targetViewName = null, string planTemplateId = null, string sectionTemplateId = null)
         {
             var sourceId = new ElementId(long.Parse(sourceViewId));
             var sourceView = _doc.GetElement(sourceId) as View;
@@ -65,8 +69,46 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
 
             duplicatedView.Name = GetUniqueViewName(SanitizeViewName(desiredName));
             ViewCategoryService.SetViewCategory(duplicatedView, "출력");
+            ApplyViewTemplate(duplicatedView, planTemplateId, sectionTemplateId);
 
             return duplicatedView;
+        }
+
+        /// <summary>
+        /// 복제된 뷰 종류에 맞는 뷰 템플릿을 적용한다.
+        /// planTemplateId/sectionTemplateId가 null이면 DH_평면도/DH_단면도 이름으로 기본 템플릿을 찾고,
+        /// 빈 문자열("")이면 "없음"으로 간주하여 템플릿을 적용하지 않는다.
+        /// </summary>
+        private void ApplyViewTemplate(View view, string planTemplateId, string sectionTemplateId)
+        {
+            var templateId = view switch
+            {
+                ViewPlan => ResolveTemplateId(planTemplateId, PlanViewTemplateName),
+                ViewSection => ResolveTemplateId(sectionTemplateId, SectionViewTemplateName),
+                _ => null
+            };
+            if (templateId == null) return;
+
+            try
+            {
+                if (view.IsValidViewTemplate(templateId))
+                    view.ViewTemplateId = templateId;
+            }
+            catch { }
+        }
+
+        private ElementId ResolveTemplateId(string templateId, string fallbackName)
+        {
+            if (templateId == string.Empty) return null;
+
+            if (!string.IsNullOrWhiteSpace(templateId) && long.TryParse(templateId, out var idValue))
+                return new ElementId(idValue);
+
+            var template = new FilteredElementCollector(_doc)
+                .OfClass(typeof(View))
+                .Cast<View>()
+                .FirstOrDefault(v => v.IsTemplate && v.Name.Equals(fallbackName, StringComparison.OrdinalIgnoreCase));
+            return template?.Id;
         }
 
         private string GetUniqueViewName(string baseName)

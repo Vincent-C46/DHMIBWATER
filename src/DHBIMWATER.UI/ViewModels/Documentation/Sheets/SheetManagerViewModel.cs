@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using DHBIMWATER.Application.DTOs.Revit.Sheet;
+using DHBIMWATER.Application.DTOs.Revit.Sheets;
 using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Application.UseCases;
 using DHBIMWATER.Application.UseCases.Sheets;
@@ -82,6 +83,8 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
             public string DrawingNumber { get; set; }
             public string ViewDirectionType { get; set; }
             public bool DuplicateView { get; set; } = true;
+            public string PlanTemplateId { get; set; }
+            public string SectionTemplateId { get; set; }
 
         }
 
@@ -202,6 +205,19 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
                 "뷰 복제",
                 $"선택한 뷰를 복제하여 시트에 추가할까요?\n\n복제하면 '{selected.ViewName}_시트' 형태의 새 뷰가 생성됩니다.\n복제하지 않으면 원본 뷰가 그대로 시트에 배치됩니다.");
 
+            string planTemplateId = null;
+            string sectionTemplateId = null;
+
+            if (duplicateView)
+            {
+                var templateVm = new ViewTemplateSelectViewModel(_useCase.GetViewTemplates());
+                var templateDlg = new ViewTemplateSelectView(templateVm);
+                if (templateDlg.ShowDialog() != true) return;
+
+                planTemplateId = templateVm.SelectedPlanTemplate?.Id ?? "";
+                sectionTemplateId = templateVm.SelectedSectionTemplate?.Id ?? "";
+            }
+
             row.Views.Add(new SheetViewRow
             {
                 ViewId = selected.ViewId,
@@ -222,7 +238,9 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
                 DrawingMember = string.Empty,
                 DrawingScale = selected.Scale > 0 ? $"1:{selected.Scale}" : string.Empty,
                 DrawingNumber = row.SheetNumber,
-                DuplicateView = duplicateView
+                DuplicateView = duplicateView,
+                PlanTemplateId = planTemplateId,
+                SectionTemplateId = sectionTemplateId
             });
 
             QueueArrange(row);
@@ -456,7 +474,8 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
                         break;
 
                     case SheetActionType.AddView:
-                        var placedViewId = _useCase.AddViewToSheet(ResolveSheetId(p.SheetId), p.ViewId, duplicate: p.DuplicateView);
+                        var placedViewId = _useCase.AddViewToSheet(ResolveSheetId(p.SheetId), p.ViewId, duplicate: p.DuplicateView,
+                            planTemplateId: p.PlanTemplateId, sectionTemplateId: p.SectionTemplateId);
 
                         if (!string.IsNullOrWhiteSpace(placedViewId))
                         {

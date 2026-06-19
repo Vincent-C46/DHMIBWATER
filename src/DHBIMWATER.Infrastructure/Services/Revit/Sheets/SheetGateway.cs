@@ -84,14 +84,15 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
 
         public IList<SheetInfoDto> GetSheets() => _query.GetSheets();
         public IList<ViewInfoDto> GetViews() => _viewQuery.GetViews();
+        public IList<ViewTemplateDto> GetViewTemplates() => _viewQuery.GetViewTemplates();
         public SheetInfoDto CreateSheet(string titleBlockId, string sheetNumber, string sheetName)
             => _create.CreateSheet(titleBlockId, sheetNumber, sheetName);
         public void DeleteSheet(string sheetId) => _delete.DeleteSheet(sheetId);
         public SheetInfoDto CopySheet(string sheetId) => _copy.CopySheet(sheetId);
         public void RenameSheet(string sheetId, string newName) => _rename.RenameSheet(sheetId, newName);
         public IList<TitleBlockDto> GetTitleBlocks() => _titleBlocks.GetTitleBlocks();
-        public string AddViewToSheet(string sheetId, string viewId, string suffix = "_시트", string targetViewName = null, bool duplicate = true)
-            => _viewAdd.AddViewToSheet(sheetId, viewId, suffix, targetViewName, duplicate);
+        public string AddViewToSheet(string sheetId, string viewId, string suffix = "_시트", string targetViewName = null, bool duplicate = true, string planTemplateId = null, string sectionTemplateId = null)
+            => _viewAdd.AddViewToSheet(sheetId, viewId, suffix, targetViewName, duplicate, planTemplateId, sectionTemplateId);
         public void ReplaceViewOnSheet(string sheetId, string oldViewId, string newViewId)
             => _viewReplace.ReplaceViewOnSheet(sheetId, oldViewId, newViewId);
         public void RemoveView(string sheetId, string viewId)

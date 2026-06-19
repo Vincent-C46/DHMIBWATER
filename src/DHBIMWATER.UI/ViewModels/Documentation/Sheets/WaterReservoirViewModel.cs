@@ -161,7 +161,20 @@ namespace DHBIMWATER.UI.ViewModels.Documentation.Sheets
 
         private void PlaceViews()
         {
-            _useCase.PlaceReservoirViews();
+            var templateVm = new ViewTemplateSelectViewModel(_useCase.GetViewTemplates());
+            var templateDlg = new ViewTemplateSelectView(templateVm);
+            if (templateDlg.ShowDialog() != true)
+            {
+                _reactivateWindow?.Invoke();
+                return;
+            }
+
+            var planTemplateId = templateVm.SelectedPlanTemplate?.Id ?? "";
+            var sectionTemplateId = templateVm.SelectedSectionTemplate?.Id ?? "";
+
+            _useCase.PlaceReservoirViews(
+                planTemplateId, sectionTemplateId,
+                templateVm.PlanScale, templateVm.SectionScale);
             _refreshSheets?.Invoke();
             _dialogService.Info("배수지 뷰 배치", "뷰 배치가 완료되었습니다.");
             _reactivateWindow?.Invoke();

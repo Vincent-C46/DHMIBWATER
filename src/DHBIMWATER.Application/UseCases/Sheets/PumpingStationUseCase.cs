@@ -64,7 +64,9 @@ namespace DHBIMWATER.Application.UseCases.Sheets
             return result;
         }
 
-        public PumpingStationPlaceViewsResult PlacePumpingStationViews()
+        public IList<ViewTemplateDto> GetViewTemplates() => _sheetUseCase.GetViewTemplates();
+
+        public PumpingStationPlaceViewsResult PlacePumpingStationViews(string planTemplateId = null, string sectionTemplateId = null, int? planScale = null, int? sectionScale = null)
         {
             var result = new PumpingStationPlaceViewsResult();
 
@@ -100,7 +102,8 @@ namespace DHBIMWATER.Application.UseCases.Sheets
 
                 var placedId = _sheetUseCase.AddViewToSheet(
                     sheet.Id, match.ViewId,
-                    suffix: "_시트", targetViewName: null);
+                    suffix: "_시트", targetViewName: null,
+                    planTemplateId: planTemplateId, sectionTemplateId: sectionTemplateId);
 
                 if (placedId == null)
                 {
@@ -108,7 +111,9 @@ namespace DHBIMWATER.Application.UseCases.Sheets
                     continue;
                 }
 
-                int scale = PlanViewNames.Contains(sheet.SheetName) ? PlanViewScale : SectionViewScale;
+                int scale = PlanViewNames.Contains(sheet.SheetName)
+                    ? (planScale ?? PlanViewScale)
+                    : (sectionScale ?? SectionViewScale);
                 _sheetUseCase.UpdateViewScale(placedId, scale);
                 _sheetUseCase.RecenterViewportToSheetCenter(sheet.Id, placedId);
                 _sheetUseCase.ApplyViewFormProfile(placedId, "일반도");
@@ -126,6 +131,13 @@ namespace DHBIMWATER.Application.UseCases.Sheets
 
         public int DeletePumpingStationSheets()
         {
+            int count = DeletePumpingStationSheetsOnly();
+            _sheetUseCase.DeleteReservoirViews();
+            return count;
+        }
+
+        public int DeletePumpingStationSheetsOnly()
+        {
             var sheets = _sheetUseCase.GetSheets();
             int count = 0;
 
@@ -142,9 +154,12 @@ namespace DHBIMWATER.Application.UseCases.Sheets
                 count++;
             }
 
-            _sheetUseCase.DeleteReservoirViews();
-
             return count;
+        }
+
+        public void DeletePumpingStationViewsOnly()
+        {
+            _sheetUseCase.DeleteReservoirViews();
         }
 
         public void PlacePumpingStationDimensions(string dimensionTypeName)

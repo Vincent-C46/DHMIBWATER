@@ -7,7 +7,8 @@ namespace DHBIMWATER.Application.UseCases.Sheets
     public interface IWaterReservoirUseCase
     {
         WaterReservoirCreateResult CreateReservoirSheets(string startSheetNumber, int totalSheetCount);
-        void PlaceReservoirViews();
+        void PlaceReservoirViews(string planTemplateId = null, string sectionTemplateId = null, int? planScale = null, int? sectionScale = null);
+        IList<ViewTemplateDto> GetViewTemplates();
         void DeleteReservoirSheetsAndViews();
         void DeleteReservoirSheets();
         void DeleteReservoirViews();
