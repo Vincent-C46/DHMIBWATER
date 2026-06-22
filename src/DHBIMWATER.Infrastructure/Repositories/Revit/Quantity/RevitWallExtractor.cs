@@ -71,11 +71,18 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             Dictionary<string, double> varDict = new Dictionary<string, double>
             {
-                ["V"] = volume,
-                ["H"] = wallHeight,
-                ["L"] = wallLength,
-                ["Thk"] = thickness,
-                ["CJ"] = concreteJointNum,  // 수동 입력
+                ["V"]            = volume,
+                ["H"]            = wallHeight,
+                ["L"]            = wallLength,
+                ["A"]            = area,
+                ["Thk"]          = thickness,
+                ["CJ"]           = concreteJointNum,
+                ["A_left_gross"]  = refFaceDict.GetValueOrDefault(FaceType.Left,  0),
+                ["A_right_gross"] = refFaceDict.GetValueOrDefault(FaceType.Right, 0),
+                ["A_end_gross"]   = refFaceDict.GetValueOrDefault(FaceType.End,   0),
+                ["A_left_net"]    = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.Left),
+                ["A_right_net"]   = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.Right),
+                ["A_end_net"]     = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.End),
             };
 
             // H x L 이 A 와 5% 이내 일치하면 치수 수식, 아니면 A x Thk
@@ -86,22 +93,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             #endregion
 
             #region 콘크리트
-            string concFormula;
-
-            if (useDimensions)
-            {
-                concFormula = "H x L x Thk";
-
-            }
-            else
-            {
-                concFormula = "A x Thk";
-                varDict = new Dictionary<string, double>
-                {
-                    ["A"] = area,
-                    ["Thk"] = thickness,
-                };
-            }
+            string concFormula = useDimensions ? "H x L x Thk" : "A x Thk";
 
             string? concRendered = FormulaCalculator.Render(concFormula, varDict);
             var materialClass = FamilyInstanceHelper.GetStructuralAssetClass(wall);

@@ -122,44 +122,34 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             // 매개변수 계산값이 실제 단면적 A와 5% 이내 일치할 때만 매개변수 공식 사용
             const double tolerance = 0.05;
-            string concFormula;
-            Dictionary<string, double> varDict;
+
+            double volumeM3 = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(column).Sum(s => s.Volume));
+
+            var varDict = new Dictionary<string, double>
+            {
+                ["Vol"]          = volumeM3,
+                ["L"]            = effectiveLength,
+                ["B"]            = b,
+                ["D"]            = d,
+                ["R"]            = r,
+                ["A"]            = actualCrossSection,
+                ["A_cs"]         = actualCrossSection,
+                ["A_side_gross"] = refFaceDict.GetValueOrDefault(FaceType.Side, 0),
+                ["A_side_net"]   = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.Side),
+            };
 
             bool circularMatches = isCircular && r > 0 && actualCrossSection > 0
                 && Math.Abs(Math.PI * r * r - actualCrossSection) / actualCrossSection < tolerance;
             bool rectMatches = !isCircular && b > 0 && d > 0 && actualCrossSection > 0
                 && Math.Abs(b * d - actualCrossSection) / actualCrossSection < tolerance;
 
+            string concFormula;
             if (circularMatches)
-            {
                 concFormula = "PI x R^2 x L";
-                varDict = new Dictionary<string, double>
-                {
-                    ["R"] = r,
-                    ["L"] = effectiveLength,
-                };
-            }
             else if (rectMatches)
-            {
                 concFormula = "B x D x L";
-                varDict = new Dictionary<string, double>
-                {
-                    ["B"] = b,
-                    ["D"] = d,
-                    ["L"] = effectiveLength,
-                };
-            }
             else
-            {
                 concFormula = "A x L";
-                varDict = new Dictionary<string, double>
-                {
-                    ["A"] = actualCrossSection,
-                    ["L"] = effectiveLength,
-                };
-            }
-
-            double volumeM3 = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(column).Sum(s => s.Volume));
 
             switch (workType)
             {

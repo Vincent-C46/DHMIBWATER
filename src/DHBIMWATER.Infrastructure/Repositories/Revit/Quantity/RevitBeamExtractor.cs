@@ -70,7 +70,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 .Where(s => s.Volume > 1e-9)
                 .ToList();
 
-            Dictionary<string, double> varDict;
 
 
 
@@ -117,29 +116,27 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 && actualCrossSection > 0
                 && Math.Abs(b * h - actualCrossSection) / actualCrossSection < tolerance;
 
-            string concFormula;
-
-            if (useDimensions)
-            {
-                concFormula = "B x D x L";
-                varDict = new Dictionary<string, double>
-                {
-                    ["B"] = b,
-                    ["D"] = h,
-                    ["L"] = effectiveLength,
-                };
-            }
-            else
-            {
-                concFormula = "A x L";
-                varDict = new Dictionary<string, double>
-                {
-                    ["A"] = actualCrossSection,
-                    ["L"] = effectiveLength,
-                };
-            }
-
             double volume = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(beam).Sum(s => s.Volume));
+
+            var varDict = new Dictionary<string, double>
+            {
+                ["Vol"]            = volume,
+                ["L"]              = effectiveLength,
+                ["B"]              = b,
+                ["D"]              = h,
+                ["A"]              = actualCrossSection,
+                ["A_cs"]           = actualCrossSection,
+                ["A_bottom_gross"] = refFaceDict.GetValueOrDefault(FaceType.Bottom, 0),
+                ["A_left_gross"]   = refFaceDict.GetValueOrDefault(FaceType.Left,   0),
+                ["A_right_gross"]  = refFaceDict.GetValueOrDefault(FaceType.Right,  0),
+                ["A_end_gross"]    = refFaceDict.GetValueOrDefault(FaceType.End,    0),
+                ["A_bottom_net"]   = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.Bottom),
+                ["A_left_net"]     = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.Left),
+                ["A_right_net"]    = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.Right),
+                ["A_end_net"]      = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.End),
+            };
+
+            string concFormula = useDimensions ? "B x D x L" : "A x L";
             string concRendered = FormulaCalculator.Render(concFormula, varDict);
 
             switch (workType)
