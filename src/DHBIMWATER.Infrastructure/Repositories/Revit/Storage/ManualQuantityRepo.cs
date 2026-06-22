@@ -16,16 +16,16 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Storage
             PropertyNameCaseInsensitive = true
         };
 
-        private readonly Document _doc;
+        private readonly Func<Document?> _doc;
 
-        public ManualQuantityRepo(Document doc)
+        public ManualQuantityRepo(Func<Document?> doc)
         {
             _doc = doc;
         }
-
         public void Save(IEnumerable<QuantityItem> items)
         {
             var storage = GetOrCreateStorage();
+            if (storage is null) return;
             var schema = ManualQuantityStorageSchema.GetOrCreate();
             var entity = new Entity(schema);
             entity.Set(ManualQuantityStorageSchema.FieldItems, JsonSerializer.Serialize(items, _jsonOptions));
@@ -56,15 +56,19 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Storage
             storage.DeleteEntity(schema);
         }
 
-        private DataStorage GetOrCreateStorage()
+        private DataStorage? GetOrCreateStorage()
         {
-            return FindStorage() ?? DataStorage.Create(_doc);
+            var doc = _doc();
+            if (doc is null) return null;
+            return FindStorage() ?? DataStorage.Create(doc);
         }
 
         private DataStorage? FindStorage()
         {
+            var doc = _doc();
+            if (doc is null) return null;
             var schema = ManualQuantityStorageSchema.GetOrCreate();
-            return new FilteredElementCollector(_doc)
+            return new FilteredElementCollector(doc)
                 .OfClass(typeof(DataStorage))
                 .Cast<DataStorage>()
                 .FirstOrDefault(ds => ds.GetEntity(schema).IsValid());

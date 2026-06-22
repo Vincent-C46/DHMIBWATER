@@ -189,11 +189,12 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                         var rawFormula = QuantityExtractorHelper.GetDeductionRawFormula(refFaceDict, deductionByFaceType, faceType);
                         var renderedFormula = QuantityExtractorHelper.GetDeductionRenderedFormula(refFaceDict, deductionByFaceType, faceType);
 
-                        var spec = faceType switch
+                        var formwork = faceType switch
                         {
-                            FaceType.Side => "합판3회",      // 추후 세팅값으로 연동
+                            FaceType.Side => FormworkType.Plywood3,
                             _ => throw new ArgumentOutOfRangeException(),
                         };
+                        var spec = formwork.ToSpecification();
 
                         var formworkItem = new QuantityItem
                         {
@@ -213,7 +214,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                         if (formworkItem.Value > 1e-6) quantityItems.Add(formworkItem);
                     }
                     break;
-
                 case "강재":
                     var steelFormula = concFormula + " x UW";
                     var steelVarDict = new Dictionary<string, double>(varDict) { ["UW"] = 7.850 };
@@ -230,7 +230,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                         Unit = "ton"
                     });
                     break;
-
                 default:
                     quantityItems.Add(new QuantityItem
                     {
@@ -246,7 +245,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                     });
                     break;
             }
-
             return quantityItems;
         }
 

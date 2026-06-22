@@ -18,6 +18,7 @@ namespace DHBIMWATER.Application.UseCases.QuantityCalculator
         private readonly ITransactionContext _tx;
         private readonly IDialogService _dialogService;
         private readonly IElementQuantityRepo _elementQuantityRepo;
+        private readonly IManualQuantityRepo _manualQuantityRepo;
         private readonly IEnumerable<IQuantityExtractor> _extractors;
         #endregion
 
@@ -28,11 +29,13 @@ namespace DHBIMWATER.Application.UseCases.QuantityCalculator
         public CalculateQuantityUseCase(ITransactionContext tx,
                                         IDialogService dialogService,
                                         IElementQuantityRepo elementQuantityRepo,
+                                        IManualQuantityRepo manualQuantityRepo,
                                         IEnumerable<IQuantityExtractor> extractors)
         {
             _tx = tx;
             _dialogService = dialogService;
             _elementQuantityRepo = elementQuantityRepo;
+            _manualQuantityRepo = manualQuantityRepo;
             _extractors = extractors;
         }
         #endregion
@@ -41,6 +44,7 @@ namespace DHBIMWATER.Application.UseCases.QuantityCalculator
         public IEnumerable<QuantityItem> Execute()
         {
             var quantityItems = new List<QuantityItem>();
+            var manualItems = _manualQuantityRepo.LoadAll();
 
             foreach (var extractor in _extractors)
             {
@@ -60,16 +64,17 @@ namespace DHBIMWATER.Application.UseCases.QuantityCalculator
                         _elementQuantityRepo.Save(group.Key, group.ToList());
                     _tx.Commit();
 
-                    return quantityItems;
+                    return quantityItems.Concat(manualItems).ToList();
                 }
                 catch (Exception ex)
                 {
                     _tx.Rollback();
                     _dialogService.Warn("Error", $"Error Message: {ex.Message}");
-                    return quantityItems;
+                    return quantityItems.Concat(manualItems).ToList();
                 }
             }
-            #endregion
         }
+        #endregion
+
     }
 }

@@ -57,7 +57,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var refFaceDict = _classifier.GetFaceAreas(elementId);
             var deductionByFaceType = QuantityExtractorHelper.GroupDeductions(_finder.FindContactAreas(elementId));
 
-            // 객체 추출값
+            #region 보 정보 추출
             var length = UC.FtToM(beam.get_Parameter(BuiltInParameter.INSTANCE_LENGTH_PARAM)?.AsDouble() ?? 0);
             var b = UC.FtToM(FamilyInstanceHelper.FindParameter(beam, "b") ?? FamilyInstanceHelper.FindParameter(beam, "width") ?? FamilyInstanceHelper.FindParameter(beam, "폭") ?? 0);
             var h = UC.FtToM(FamilyInstanceHelper.FindParameter(beam, "h") ?? FamilyInstanceHelper.FindParameter(beam, "d") ?? FamilyInstanceHelper.FindParameter(beam, "높이") ?? FamilyInstanceHelper.FindParameter(beam, "Height") ?? 0);
@@ -69,6 +69,10 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 .SelectMany(s => { try { return SolidUtils.SplitVolumes(s); } catch { return [s]; } })
                 .Where(s => s.Volume > 1e-9)
                 .ToList();
+
+            Dictionary<string, double> varDict;
+
+
 
             // 유효 길이: 각 SplitSolid에서 보 방향 최장 Edge 합산
             double effectiveLength = length;
@@ -96,6 +100,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 materialName = (doc.GetElement(materialId) as Material).Name;
 
             var materialClass = FamilyInstanceHelper.GetStructuralAssetClass(beam);
+            #endregion
+
+
             var workType = materialClass switch
             {
                 StructuralAssetClass.Concrete => "철근콘크리트",
@@ -111,7 +118,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 && Math.Abs(b * h - actualCrossSection) / actualCrossSection < tolerance;
 
             string concFormula;
-            Dictionary<string, double> varDict;
 
             if (useDimensions)
             {
@@ -133,7 +139,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 };
             }
 
-            double volumeM3 = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(beam).Sum(s => s.Volume));
+            double volume = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(beam).Sum(s => s.Volume));
             string concRendered = FormulaCalculator.Render(concFormula, varDict);
 
             switch (workType)
@@ -148,7 +154,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                         Specification = materialName,
                         RawFormula = concFormula,
                         RenderedFormula = concRendered,
-                        Value = volumeM3,
+                        Value = volume,
                         Unit = "m³"
                     };
                     quantityItems.Add(concreteItem);
@@ -165,14 +171,15 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                         var rawFormula = QuantityExtractorHelper.GetDeductionRawFormula(refFaceDict, deductionByFaceType, faceType);
                         var renderedFormula = QuantityExtractorHelper.GetDeductionRenderedFormula(refFaceDict, deductionByFaceType, faceType);
 
-                        var spec = faceType switch
+                        var formwork = faceType switch
                         {
-                            FaceType.Bottom => "합판4회",      // 추후 세팅값으로 연동
-                            FaceType.Left => "합판3회",
-                            FaceType.Right => "합판3회",
-                            FaceType.End => "합판3회",
+                            FaceType.Bottom => FormworkType.Plywood4,
+                            FaceType.Left   => FormworkType.Plywood3,
+                            FaceType.Right  => FormworkType.Plywood3,
+                            FaceType.End    => FormworkType.Plywood3,
                             _ => throw new ArgumentOutOfRangeException(),
                         };
+                        var spec = formwork.ToSpecification();
 
                         var formworkItem = new QuantityItem
                         {
@@ -204,7 +211,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                         Specification = materialName,
                         RawFormula = steelFormula,
                         RenderedFormula = FormulaCalculator.Render(steelFormula, steelVarDict),
-                        Value = volumeM3 * 7.850,
+                        Value = volume * 7.850,
                         Unit = "ton"
                     };
                     quantityItems.Add(steelItem);
@@ -219,7 +226,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                         Specification = materialName,
                         RawFormula = concFormula,
                         RenderedFormula = concRendered,
-                        Value = volumeM3,
+                        Value = volume,
                         Unit = "m³"
                     });
                     break;

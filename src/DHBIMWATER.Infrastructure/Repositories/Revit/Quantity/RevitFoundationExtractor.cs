@@ -116,7 +116,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 var rawFormula = QuantityExtractorHelper.GetDeductionRawFormula(refFaceDict, deductionByFaceType, faceType);
                 var renderedFormula = QuantityExtractorHelper.GetDeductionRenderedFormula(refFaceDict, deductionByFaceType, faceType);
 
-                var spec = workType == "무근콘크리트" ? "합판6회" : "합판4회";
+                var formwork = workType == "무근콘크리트" ? FormworkType.Plywood6 : FormworkType.Plywood4;
+                var spec = formwork.ToSpecification();
 
                 var formworkItem = new QuantityItem
                 {

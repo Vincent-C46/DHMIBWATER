@@ -136,14 +136,15 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 var rawFormula = QuantityExtractorHelper.GetDeductionRawFormula(refFaceDict, deductionByFaceType, faceType);
                 var renderedFormula = QuantityExtractorHelper.GetDeductionRenderedFormula(refFaceDict, deductionByFaceType, faceType);
 
-                var spec = (isPlain, faceType) switch
+                var formwork = (isPlain, faceType) switch
                 {
-                    (true,  FaceType.Side)   => "합판6회",
+                    (true,  FaceType.Side)   => FormworkType.Plywood6,
                     // 무근콘크리트 하부 거푸집 산출 필요 없음 (확실?)
-                    (false, FaceType.Bottom) => "합판4회",
-                    (false, FaceType.Side)   => "합판3회",
+                    (false, FaceType.Bottom) => FormworkType.Plywood4,
+                    (false, FaceType.Side)   => FormworkType.Plywood3,
                     _ => throw new ArgumentOutOfRangeException(),
                 };
+                var spec = formwork.ToSpecification();
 
                 var formworkItem = new QuantityItem
                 {

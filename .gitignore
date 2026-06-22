@@ -62,10 +62,11 @@ Desktop.ini
 *.log
 
 # Claude 문서 (개인)
+AGENTS.md
 Claude.md
+PROGRESS.md
 docs/ai/
 .claude/
 .understand-anything/
 .omc/
-AGENTS.md
 /DHBIMWATER.zip
