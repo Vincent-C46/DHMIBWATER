@@ -1,6 +1,7 @@
 using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Application.Interfaces.Geometry;
 using DHBIMWATER.Application.Interfaces.Quantity;
+using DHBIMWATER.Application.Services;
 using DHBIMWATER.Application.Interfaces.Storage;
 using DHBIMWATER.Core.Parameters;
 using DHBIMWATER.Infrastructure.Repositories.DB;
@@ -53,6 +54,7 @@ public static class ServiceCollectionExtensions
         #endregion
 
         #region Quantity 관련
+        // IQuantityExtractor 경로 (비-벽체 카테고리)
         services.AddTransient<IQuantityExtractor, RevitBeamExtractor>();
         services.AddTransient<IQuantityExtractor, RevitColumnExtractor>();
         services.AddTransient<IQuantityExtractor, RevitFloorExtractor>();
@@ -60,15 +62,17 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IQuantityExtractor, RevitGenericModelExtractor>();
         services.AddTransient<IQuantityExtractor, RevitRebarExtractor>();
         services.AddTransient<IQuantityExtractor, RevitStairsExtractor>();
-        services.AddTransient<IQuantityExtractor, RevitWallExtractor>();
         services.AddTransient<IQuantityExtractor, RevitRailingExtractor>();
         services.AddTransient<IQuantityExtractor, RevitDirectShapeExtractor>();
+
+        // IElementMeasurementExtractor + Rule Engine 경로 (벽체)
+        services.AddTransient<IElementMeasurementExtractor, RevitWallMeasurementExtractor>();
+        services.AddSingleton<QuantityRuleEngine>();
+
         services.AddTransient<IFaceClassifier, RevitFaceClassifier>();
-        services.AddTransient<IExcelExporter, ClosedXmlExcelWriter>();
         services.AddTransient<IExcelExporter, ClosedXmlExcelWriter>();
         services.AddTransient<IElementQuantityRepo, ElementQuantityRepo>();
         services.AddTransient<IManualQuantityRepo, ManualQuantityRepo>();
-
         services.AddTransient<IExcelReader, ExcelReader>();
         #endregion
         #region Service 등록

@@ -9,8 +9,8 @@ namespace DHBIMWATER.Core.Quantity
         public string Unit { get; set; } = string.Empty;
         public bool IsEnabled { get; set; } = true;
 
-        // 비어있으면 전체 카테고리에 적용
-        public List<string> ApplicableCategories { get; set; } = new();
+        // 비어있으면 전체 카테고리에 적용. (int)BuiltInCategory 값으로 비교
+        public List<int> CategoryIds { get; set; } = new();
 
         // 모든 조건 AND. 빈 리스트면 필터 없이 전체 적용
         public List<RuleFilter> Filters { get; set; } = new();

@@ -1,14 +1,8 @@
-﻿using DHBIMWATER.Application.DTOs.Revit.PumpingStation;
 using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Application.Interfaces.Storage;
+using DHBIMWATER.Application.Services;
 using DHBIMWATER.Core.Quantity;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DHBIMWATER.Application.UseCases.QuantityCalculator
 {
@@ -20,9 +14,8 @@ namespace DHBIMWATER.Application.UseCases.QuantityCalculator
         private readonly IElementQuantityRepo _elementQuantityRepo;
         private readonly IManualQuantityRepo _manualQuantityRepo;
         private readonly IEnumerable<IQuantityExtractor> _extractors;
-        #endregion
-
-        #region Properties
+        private readonly IEnumerable<IElementMeasurementExtractor> _measurementExtractors;
+        private readonly QuantityRuleEngine _ruleEngine;
         #endregion
 
         #region Constructor
@@ -30,13 +23,17 @@ namespace DHBIMWATER.Application.UseCases.QuantityCalculator
                                         IDialogService dialogService,
                                         IElementQuantityRepo elementQuantityRepo,
                                         IManualQuantityRepo manualQuantityRepo,
-                                        IEnumerable<IQuantityExtractor> extractors)
+                                        IEnumerable<IQuantityExtractor> extractors,
+                                        IEnumerable<IElementMeasurementExtractor> measurementExtractors,
+                                        QuantityRuleEngine ruleEngine)
         {
             _tx = tx;
             _dialogService = dialogService;
             _elementQuantityRepo = elementQuantityRepo;
             _manualQuantityRepo = manualQuantityRepo;
             _extractors = extractors;
+            _measurementExtractors = measurementExtractors;
+            _ruleEngine = ruleEngine;
         }
         #endregion
 
@@ -46,13 +43,28 @@ namespace DHBIMWATER.Application.UseCases.QuantityCalculator
             var quantityItems = new List<QuantityItem>();
             var manualItems = _manualQuantityRepo.LoadAll();
 
+            // 기존 IQuantityExtractor 경로 (벽체 제외 카테고리)
             foreach (var extractor in _extractors)
             {
                 var ids = extractor.CollectElementIds();
-                if (!ids.Any()) continue;   // 없으면 다음 Extractor 순환
+                if (!ids.Any()) continue;
 
                 foreach (var id in ids)
                     quantityItems.AddRange(extractor.Extract(id));
+            }
+
+            // Rule Engine 경로
+            var rules = DefaultRuleSet.Create().Rules;
+            foreach (var measExtractor in _measurementExtractors)
+            {
+                var ids = measExtractor.CollectElementIds();
+                if (!ids.Any()) continue;
+
+                foreach (var id in ids)
+                {
+                    var measurements = measExtractor.Extract(id);
+                    quantityItems.AddRange(_ruleEngine.Apply(measurements, rules));
+                }
             }
 
             using (_tx)
@@ -75,6 +87,5 @@ namespace DHBIMWATER.Application.UseCases.QuantityCalculator
             }
         }
         #endregion
-
     }
 }

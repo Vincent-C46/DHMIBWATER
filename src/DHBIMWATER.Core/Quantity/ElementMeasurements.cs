@@ -18,7 +18,8 @@ namespace DHBIMWATER.Core.Quantity
     public class ElementMeasurements
     {
         public long ElementId { get; set; }
-        public string Category { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;   // 표시용
+        public int CategoryId { get; set; }                    // BuiltInCategory int 값 (로케일 무관)
         public Dictionary<string, double> Values { get; set; } = new();
         public Dictionary<string, string> Parameters { get; set; } = new();
     }
