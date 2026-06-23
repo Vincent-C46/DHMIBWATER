@@ -1,4 +1,4 @@
-using DHBIMWATER.Core.Quantity;
+using DHBIMWATER.Core.Quantity.RuleSets;
 
 namespace DHBIMWATER.Application.Interfaces.Quantity
 {

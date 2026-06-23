@@ -1,4 +1,4 @@
-namespace DHBIMWATER.Core.Quantity
+namespace DHBIMWATER.Core.Quantity.RuleSets
 {
     public class RuleSet
     {

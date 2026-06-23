@@ -82,7 +82,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             double volumeM3 = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(beam).Sum(s => s.Volume));
 
-            // ── 단면 치수 파라미터 (b=폭, d/h=춤) ────────────────────────
+            // ── 단면 치수 파라미터 (b=폭, d/h=높이) ────────────────────────
             var b = UC.FtToM(FamilyInstanceHelper.FindParameter(beam, "b") ??
                              FamilyInstanceHelper.FindParameter(beam, "width") ??
                              FamilyInstanceHelper.FindParameter(beam, "폭") ?? 0);

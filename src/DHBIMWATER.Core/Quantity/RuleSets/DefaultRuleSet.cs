@@ -1,4 +1,4 @@
-namespace DHBIMWATER.Core.Quantity
+namespace DHBIMWATER.Core.Quantity.RuleSets
 {
     // 모든 프로젝트에 공통 적용되는 기본 수량 규칙 (콘크리트, 거푸집, 스페이서)
     //
@@ -8,6 +8,7 @@ namespace DHBIMWATER.Core.Quantity
     //   DH_IsExterior : "1" | "0"
     public static class DefaultRuleSet
     {
+        // 기본 규칙 세트의 고정 ID: DataStorage 조회 시 항상 동일한 키로 식별하기 위해 하드코딩
         public static readonly Guid Id = Guid.Parse("00000000-0000-0000-0000-000000000001");
 
         public static RuleSet Create() => new RuleSet
@@ -92,7 +93,7 @@ namespace DHBIMWATER.Core.Quantity
         private static int Generic => (int)RevitCategory.GenericModel;
 
         // ── 공용 필터 ──────────────────────────────────────────────────────
-        private static RuleFilter IsRc          => Filter   ("ConcWorkType",    "철근콘크리트");
+        private static RuleFilter IsRc          => Filter("ConcWorkType",    "철근콘크리트");
         private static RuleFilter IsPlain       => Filter("ConcWorkType",    "무근콘크리트");
         private static RuleFilter IsSteel       => Filter("MaterialClass",   "강재");
         private static RuleFilter IsExterior    => Filter("DH_IsExterior",   "1");
