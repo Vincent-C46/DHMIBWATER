@@ -54,9 +54,7 @@ public static class ServiceCollectionExtensions
         #endregion
 
         #region Quantity 관련
-        // IQuantityExtractor 경로 (비-벽체 카테고리)
-        services.AddTransient<IQuantityExtractor, RevitBeamExtractor>();
-        services.AddTransient<IQuantityExtractor, RevitColumnExtractor>();
+        // IQuantityExtractor 경로 (시스템 패밀리 카테고리)
         services.AddTransient<IQuantityExtractor, RevitFloorExtractor>();
         services.AddTransient<IQuantityExtractor, RevitFoundationExtractor>();
         services.AddTransient<IQuantityExtractor, RevitGenericModelExtractor>();
@@ -65,8 +63,10 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IQuantityExtractor, RevitRailingExtractor>();
         services.AddTransient<IQuantityExtractor, RevitDirectShapeExtractor>();
 
-        // IElementMeasurementExtractor + Rule Engine 경로 (벽체)
+        // IElementMeasurementExtractor + Rule Engine 경로 (FamilyInstance 카테고리)
         services.AddTransient<IElementMeasurementExtractor, RevitWallMeasurementExtractor>();
+        services.AddTransient<IElementMeasurementExtractor, RevitColumnMeasurementExtractor>();
+        services.AddTransient<IElementMeasurementExtractor, RevitBeamMeasurementExtractor>();
         services.AddSingleton<QuantityRuleEngine>();
 
         services.AddTransient<IFaceClassifier, RevitFaceClassifier>();

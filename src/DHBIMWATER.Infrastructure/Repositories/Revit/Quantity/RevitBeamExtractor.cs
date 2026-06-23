@@ -70,9 +70,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 .Where(s => s.Volume > 1e-9)
                 .ToList();
 
-
-
-
             // 유효 길이: 각 SplitSolid에서 보 방향 최장 Edge 합산
             double effectiveLength = length;
             double totalLength = splitSolids

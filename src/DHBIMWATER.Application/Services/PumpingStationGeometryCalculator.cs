@@ -1479,7 +1479,7 @@ namespace DHBIMWATER.Application.Services
                     //        },
                     //    }
                     //};
-
+                        
                     subBaseSolid.Profile = new List<Point3D>()
                                             {
                                                 new Point3D(- subThk,                                                  -pr.T4 - pl.B10- subThk, d.LWL*1000 - pr.H1 - pr.T2),

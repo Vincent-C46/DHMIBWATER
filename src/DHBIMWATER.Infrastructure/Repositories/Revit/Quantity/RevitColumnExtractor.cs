@@ -106,12 +106,10 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var b = UC.FtToM(FamilyInstanceHelper.FindParameter(column, "b") ?? 0);
             var d = UC.FtToM(FamilyInstanceHelper.FindParameter(column, "d") ??
                              FamilyInstanceHelper.FindParameter(column, "h") ??
-                             FamilyInstanceHelper.FindParameter(column, "b") ??
-                             b);
+                             FamilyInstanceHelper.FindParameter(column, "b") ?? b);
             var r = UC.FtToM(FamilyInstanceHelper.FindParameter(column, "r") ??
                              FamilyInstanceHelper.FindParameter(column, "d") / 2 ??
-                             FamilyInstanceHelper.FindParameter(column, "b") / 2 ??
-                             0);
+                             FamilyInstanceHelper.FindParameter(column, "b") / 2 ?? 0);
 
             string typeName = column.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).AsValueString() ?? string.Empty;
             string familyName = column.Symbol.FamilyName;
@@ -127,15 +125,15 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             var varDict = new Dictionary<string, double>
             {
-                ["Vol"]          = volumeM3,
-                ["L"]            = effectiveLength,
-                ["B"]            = b,
-                ["D"]            = d,
-                ["R"]            = r,
-                ["A"]            = actualCrossSection,
-                ["A_cs"]         = actualCrossSection,
+                ["Vol"] = volumeM3,
+                ["L"] = effectiveLength,
+                ["B"] = b,
+                ["D"] = d,
+                ["R"] = r,
+                ["A"] = actualCrossSection,
+                ["A_cs"] = actualCrossSection,
                 ["A_side_gross"] = refFaceDict.GetValueOrDefault(FaceType.Side, 0),
-                ["A_side_net"]   = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.Side),
+                ["A_side_net"] = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.Side),
             };
 
             bool circularMatches = isCircular && r > 0 && actualCrossSection > 0

@@ -23,8 +23,16 @@ namespace DHBIMWATER.Core.Quantity
             // ── 철근콘크리트 ────────────────────────────────────────────────
             // Specification 빈 string → 엔진이 Parameters["MaterialName"]으로 채움
             yield return Rc("철근콘크리트", "", "A x Thk", "m³", [Walls], [IsRc]);
-            yield return Rc("철근콘크리트", "", "Vol", "m³",
-                [Columns, Framing, Floors, Foundation], [IsRc]);
+
+            // 시스템 패밀리: Floor는 A x Thk, Foundation(독립기초 FamilyInstance)은 Vol
+            yield return Rc("철근콘크리트", "", "A x Thk", "m³", [Floors],     [IsRc]);
+            yield return Rc("철근콘크리트", "", "Vol",      "m³", [Foundation], [IsRc]);
+
+            // FamilyInstance (Column, Beam): 단면 판별 후 공식 분기
+            yield return Rc("철근콘크리트", "", "B x D x L",    "m³", [Columns, Framing], [IsRc, IsRectFormula]);
+            yield return Rc("철근콘크리트", "", "PI x R^2 x L", "m³", [Columns],          [IsRc, IsCircular]);
+            yield return Rc("철근콘크리트", "", "A_cs x L",     "m³", [Columns, Framing],
+                [IsRc, Filter("UseRectFormula", "false"), Filter("IsCircular", "false")]);
 
             // ── 강재 ────────────────────────────────────────────────────────
             yield return new QuantityRule
@@ -39,7 +47,8 @@ namespace DHBIMWATER.Core.Quantity
             };
 
             // ── 무근콘크리트 ─────────────────────────────────────────────────
-            yield return Rc("무근콘크리트", "", "Vol", "m³", [Floors, Foundation], [IsPlain]);
+            yield return Rc("무근콘크리트", "", "A x Thk", "m³", [Floors],     [IsPlain]);
+            yield return Rc("무근콘크리트", "", "Vol",      "m³", [Foundation], [IsPlain]);
 
             // ── 거푸집: 벽체 ─────────────────────────────────────────────────
             yield return Fw(FormworkType.Euroform, "A_right_net", Walls, [IsRc, IsExterior]);
@@ -80,13 +89,16 @@ namespace DHBIMWATER.Core.Quantity
         private static int Framing    => (int)RevitCategory.StructuralFraming;
         private static int Floors     => (int)RevitCategory.Floors;
         private static int Foundation => (int)RevitCategory.StructuralFoundation;
+        private static int Generic => (int)RevitCategory.GenericModel;
 
         // ── 공용 필터 ──────────────────────────────────────────────────────
-        private static RuleFilter IsRc       => Filter("ConcWorkType",  "철근콘크리트");
-        private static RuleFilter IsPlain    => Filter("ConcWorkType",  "무근콘크리트");
-        private static RuleFilter IsSteel    => Filter("MaterialClass", "강재");
-        private static RuleFilter IsExterior => Filter("DH_IsExterior", "1");
-        private static RuleFilter IsInterior => Filter("DH_IsExterior", "0");
+        private static RuleFilter IsRc          => Filter   ("ConcWorkType",    "철근콘크리트");
+        private static RuleFilter IsPlain       => Filter("ConcWorkType",    "무근콘크리트");
+        private static RuleFilter IsSteel       => Filter("MaterialClass",   "강재");
+        private static RuleFilter IsExterior    => Filter("DH_IsExterior",   "1");
+        private static RuleFilter IsInterior    => Filter("DH_IsExterior",   "0");
+        private static RuleFilter IsRectFormula => Filter("UseRectFormula",  "true");
+        private static RuleFilter IsCircular    => Filter("IsCircular",      "true");
 
         private static RuleFilter Filter(string param, string value) =>
             new() { ParameterName = param, Operator = FilterOperator.Equals, Value = value };
