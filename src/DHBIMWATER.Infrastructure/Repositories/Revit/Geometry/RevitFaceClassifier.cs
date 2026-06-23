@@ -36,13 +36,13 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
         internal static FaceType Classify(Element elem, PlanarFace face) =>
             (BuiltInCategory)elem.Category.Id.Value switch
             {
-                BuiltInCategory.OST_StructuralFraming      => ClassifyBeam(elem, face.FaceNormal),
-                BuiltInCategory.OST_Walls                  => ClassifyWall(elem, face),
-                BuiltInCategory.OST_Floors                 => ClassifyFloor(elem, face),
-                BuiltInCategory.OST_StructuralFoundation   => ClassifyFoundation(face.FaceNormal),
-                BuiltInCategory.OST_StructuralColumns      => ClassifyColumn(face.FaceNormal),
-                BuiltInCategory.OST_Stairs                 => ClassifyStairs(elem, face.FaceNormal),
-                _                                          => FaceType.Side,
+                BuiltInCategory.OST_StructuralFraming    => ClassifyBeam(elem, face.FaceNormal),
+                BuiltInCategory.OST_Walls                => ClassifyWall(elem, face),
+                BuiltInCategory.OST_Floors               => ClassifyFloor(elem, face),
+                BuiltInCategory.OST_StructuralFoundation => ClassifyFoundation(face.FaceNormal),
+                BuiltInCategory.OST_StructuralColumns    => ClassifyColumn(face.FaceNormal),
+                BuiltInCategory.OST_Stairs               => ClassifyStairs(elem, face.FaceNormal),
+                _                                        => FaceType.Side,
             };
 
         private static FaceType ClassifyBeam(Element elem, XYZ normal)
@@ -68,19 +68,22 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
             var dot = normal.DotProduct(wall.Orientation);
             if (Math.Abs(dot) > 0.9) return dot > 0 ? FaceType.Right : FaceType.Left;
 
-            // 벽 방향(길이 방향) 법선 → 마구리 또는 오프닝 측면
-            var lc = wall.Location as LocationCurve;
-            if (lc == null) return FaceType.End;
+            // 벽 방향(길이 방향) 법선 → End vs OpeningSide
+            // Left/Right 메인면의 내부 EdgeLoop 엣지와 공유 여부로 판별
+            try
+            {
+                foreach (var solid in RevitGeometryHelper.GetSolids(wall))
+                {
+                    var innerEdges = GetInnerLoopEdges(solid,
+                        f => f is PlanarFace pf && Math.Abs(pf.FaceNormal.DotProduct(wall.Orientation)) > 0.9);
 
-            var facePt = EvaluateFaceCenter(face);
-            var p0 = lc.Curve.GetEndPoint(0);
-            var p1 = lc.Curve.GetEndPoint(1);
-            double tolerance = wall.Width; // 벽 두께 기준으로 끝단 판별
+                    if (innerEdges.Count == 0) continue;
+                    if (SharesEdgeWith(face, innerEdges)) return FaceType.OpeningSide;
+                }
+            }
+            catch { }
 
-            bool nearStart = new XYZ(facePt.X - p0.X, facePt.Y - p0.Y, 0).GetLength() < tolerance;
-            bool nearEnd   = new XYZ(facePt.X - p1.X, facePt.Y - p1.Y, 0).GetLength() < tolerance;
-
-            return (nearStart || nearEnd) ? FaceType.End : FaceType.OpeningSide;
+            return FaceType.End;
         }
 
         private static FaceType ClassifyFloor(Element elem, PlanarFace face)
@@ -89,28 +92,24 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
             if (normal.Z > 0.9) return FaceType.Top;
             if (normal.Z < -0.9) return FaceType.Bottom;
 
-            if (elem is not Floor floor) return FaceType.Side;
-
+            // 수평면(Top/Bottom)의 내부 EdgeLoop 엣지와 공유 여부로 판별
             try
             {
-                var sketchIds = floor.GetDependentElements(new ElementClassFilter(typeof(Sketch)));
-                var sketch = sketchIds.Count > 0
-                    ? floor.Document.GetElement(sketchIds.First()) as Sketch
-                    : null;
-                if (sketch == null || sketch.Profile.Size <= 1) return FaceType.Side;
+                foreach (var solid in RevitGeometryHelper.GetSolids(elem))
+                {
+                    var innerEdges = GetInnerLoopEdges(solid,
+                        f => f is PlanarFace pf && Math.Abs(pf.FaceNormal.Z) > 0.9);
 
-                var facePt = EvaluateFaceCenter(face);
-                double minDistOuter = MinDistToLoop(sketch.Profile.get_Item(0), facePt);
-                double minDistInner = double.MaxValue;
-                for (int i = 1; i < sketch.Profile.Size; i++)
-                    minDistInner = Math.Min(minDistInner, MinDistToLoop(sketch.Profile.get_Item(i), facePt));
-
-                return minDistInner < minDistOuter ? FaceType.OpeningSide : FaceType.Side;
+                    if (innerEdges.Count == 0) continue;
+                    if (SharesEdgeWith(face, innerEdges)) return FaceType.OpeningSide;
+                }
             }
-            catch { return FaceType.Side; }
+            catch { }
+
+            return FaceType.Side;
         }
 
-        // Foundation은 오프닝 분리 미적용 (슬래브와 다름)
+        // Foundation은 오프닝 분리 미적용
         private static FaceType ClassifyFoundation(XYZ normal)
         {
             if (normal.Z > 0.9) return FaceType.Top;
@@ -137,23 +136,28 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
             return FaceType.Side;
         }
 
-        private static XYZ EvaluateFaceCenter(PlanarFace face)
+        // 기준면의 내부 EdgeLoop(1+) 엣지를 수집
+        private static HashSet<Edge> GetInnerLoopEdges(Solid solid, Func<Face, bool> isFaceMatch)
         {
-            var bbox = face.GetBoundingBox();
-            var mid = new UV((bbox.Min.U + bbox.Max.U) / 2, (bbox.Min.V + bbox.Max.V) / 2);
-            return face.Evaluate(mid);
+            var result = new HashSet<Edge>();
+            foreach (Face f in solid.Faces)
+            {
+                if (!isFaceMatch(f) || f.EdgeLoops.Size <= 1) continue;
+                for (int i = 1; i < f.EdgeLoops.Size; i++)
+                    foreach (Edge e in f.EdgeLoops.get_Item(i))
+                        result.Add(e);
+            }
+            return result;
         }
 
-        private static double MinDistToLoop(CurveArray loop, XYZ point)
+        // 면의 EdgeLoop 중 innerEdges와 공유되는 엣지가 있는지 확인
+        private static bool SharesEdgeWith(PlanarFace face, HashSet<Edge> innerEdges)
         {
-            double min = double.MaxValue;
-            foreach (Curve c in loop)
-            {
-                var result = c.Project(point);
-                if (result != null)
-                    min = Math.Min(min, result.Distance);
-            }
-            return min;
+            foreach (EdgeArray loop in face.EdgeLoops)
+                foreach (Edge e in loop)
+                    if (innerEdges.Contains(e))
+                        return true;
+            return false;
         }
 
         private static XYZ? GetStairRunDir2D(Element elem)
