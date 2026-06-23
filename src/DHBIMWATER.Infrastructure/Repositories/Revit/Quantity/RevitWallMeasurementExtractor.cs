@@ -100,10 +100,12 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                     ["Thk"]           = thickness,
                     ["A_left_gross"]  = refFaceDict.GetValueOrDefault(FaceType.Left,  0),
                     ["A_right_gross"] = refFaceDict.GetValueOrDefault(FaceType.Right, 0),
-                    ["A_end_gross"]   = refFaceDict.GetValueOrDefault(FaceType.End,   0),
-                    ["A_left_net"]    = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.Left),
-                    ["A_right_net"]   = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.Right),
-                    ["A_end_net"]     = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.End),
+                    ["A_end_gross"]          = refFaceDict.GetValueOrDefault(FaceType.End,         0),
+                    ["A_opening_side_gross"] = refFaceDict.GetValueOrDefault(FaceType.OpeningSide, 0),
+                    ["A_left_net"]           = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.Left),
+                    ["A_right_net"]          = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.Right),
+                    ["A_end_net"]            = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.End),
+                    ["A_opening_side_net"]   = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.OpeningSide),
                 },
                 Parameters = new Dictionary<string, string>
                 {

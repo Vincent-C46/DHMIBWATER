@@ -89,7 +89,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
 
                             if (intersectingSolid == null || intersectingSolid.Volume < 1e-10) continue;
                             var area = Math.Round(UC.Ft2ToM2(intersectingSolid.Volume / SolidThk), 3);
-                            var faceType = RevitFaceClassifier.Classify(refElem, refNormal);
+                            var faceType = RevitFaceClassifier.Classify(refElem, planarRef);
 
                             contacts.Add(new FaceDeduction(faceType, candidate.Id.Value, area));
                         }

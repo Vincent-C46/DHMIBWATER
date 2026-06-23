@@ -12,5 +12,6 @@ namespace DHBIMWATER.Core.Quantity
         GenericModel         = -2000151,
         Railings             = -2000126,
         Stairs               = -2000120,
+        Rebar                = -2009000,
     }
 }

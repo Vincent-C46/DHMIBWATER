@@ -5,7 +5,7 @@ using DHBIMWATER.Core.Settings;
 
 namespace DHBIMWATER.Infrastructure.Repositories.FileSystem
 {
-    public class DhsProjectSettingsRepository : IProjectSettingsRepository
+    public class DhcfgRepo : IProjectSettingsRepository
     {
         private static readonly JsonSerializerOptions _options = new()
         {

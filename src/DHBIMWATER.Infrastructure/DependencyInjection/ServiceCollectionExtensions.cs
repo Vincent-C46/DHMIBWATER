@@ -58,7 +58,6 @@ public static class ServiceCollectionExtensions
         #region Quantity 관련
         // IQuantityExtractor 경로 (Rule Engine 미적용 카테고리)
         services.AddTransient<IQuantityExtractor, RevitGenericModelExtractor>();
-        services.AddTransient<IQuantityExtractor, RevitRebarExtractor>();
         services.AddTransient<IQuantityExtractor, RevitStairsExtractor>();
         services.AddTransient<IQuantityExtractor, RevitRailingExtractor>();
         services.AddTransient<IQuantityExtractor, RevitDirectShapeExtractor>();
@@ -69,6 +68,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IElementMeasurementExtractor, RevitBeamMeasurementExtractor>();
         services.AddTransient<IElementMeasurementExtractor, RevitFloorMeasurementExtractor>();
         services.AddTransient<IElementMeasurementExtractor, RevitFoundationMeasurementExtractor>();
+        services.AddTransient<IElementMeasurementExtractor, RevitRebarMeasurementExtractor>();
         services.AddSingleton<QuantityRuleEngine>();
 
         services.AddTransient<IFaceClassifier, RevitFaceClassifier>();
@@ -76,7 +76,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IElementQuantityRepo, ElementQuantityRepo>();
         services.AddTransient<IManualQuantityRepo, ManualQuantityRepo>();
         services.AddTransient<IExcelReader, ExcelReader>();
-        services.AddTransient<IProjectSettingsRepository, DhsProjectSettingsRepository>();
+        services.AddTransient<IProjectSettingsRepository, DhcfgRepo>();
         #endregion
         #region Service 등록
         services.AddTransient<IFileDialogService, WpfFileDialogService>();

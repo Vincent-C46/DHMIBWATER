@@ -5,6 +5,8 @@ namespace DHBIMWATER.Core.Quantity
         public Guid Id { get; set; } = Guid.NewGuid();
         public string WorkType { get; set; } = string.Empty;
         public string Specification { get; set; } = string.Empty;
+        // Specification이 빈 string일 때 Parameters에서 읽을 키. 기본값은 "MaterialName"
+        public string SpecParamName { get; set; } = "MaterialName";
         public string Formula { get; set; } = string.Empty;
         public string Unit { get; set; } = string.Empty;
         public bool IsEnabled { get; set; } = true;

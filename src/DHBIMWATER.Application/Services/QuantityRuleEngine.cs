@@ -25,7 +25,7 @@ namespace DHBIMWATER.Application.Services
                 if (value <= 1e-6) continue;
 
                 var spec = string.IsNullOrEmpty(rule.Specification)
-                    ? measurements.Parameters.GetValueOrDefault("MaterialName", "")
+                    ? measurements.Parameters.GetValueOrDefault(rule.SpecParamName, "")
                     : rule.Specification;
 
                 yield return new QuantityItem

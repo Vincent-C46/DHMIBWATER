@@ -56,7 +56,8 @@ namespace DHBIMWATER.Core.Quantity.RuleSets
             yield return Fw(FormworkType.Euroform, "A_left_net",  Walls, [IsRc, IsExterior]);
             yield return Fw(FormworkType.Euroform, "A_left_net",  Walls, [IsRc, IsInterior]);
             yield return Fw(FormworkType.Euroform, "A_right_net", Walls, [IsRc, IsInterior]);
-            yield return Fw(FormworkType.Plywood3, "A_end_net",   Walls, [IsRc]);
+            yield return Fw(FormworkType.Plywood3, "A_end_net",          Walls, [IsRc]);
+            yield return Fw(FormworkType.Plywood3, "A_opening_side_net", Walls, [IsRc]);
 
             // ── 거푸집: 기둥 ─────────────────────────────────────────────────
             yield return Fw(FormworkType.Plywood3, "A_side_net", Columns, [IsRc]);
@@ -68,9 +69,11 @@ namespace DHBIMWATER.Core.Quantity.RuleSets
             yield return Fw(FormworkType.Plywood3, "A_end_net",    Framing, [IsRc]);
 
             // ── 거푸집: 슬래브 ───────────────────────────────────────────────
-            yield return Fw(FormworkType.Plywood4, "A_bottom_net", Floors, [IsRc]);
-            yield return Fw(FormworkType.Plywood3, "A_side_net",   Floors, [IsRc]);
-            yield return Fw(FormworkType.Plywood6, "A_side_net",   Floors, [IsPlain]);
+            yield return Fw(FormworkType.Plywood4, "A_bottom_net",       Floors, [IsRc]);
+            yield return Fw(FormworkType.Plywood3, "A_side_net",         Floors, [IsRc]);
+            yield return Fw(FormworkType.Plywood3, "A_opening_side_net", Floors, [IsRc]);
+            yield return Fw(FormworkType.Plywood6, "A_side_net",         Floors, [IsPlain]);
+            yield return Fw(FormworkType.Plywood6, "A_opening_side_net", Floors, [IsPlain]);
 
             // ── 거푸집: 기초 ─────────────────────────────────────────────────
             yield return Fw(FormworkType.Plywood4, "A_side_net", Foundation, [IsRc]);
@@ -82,6 +85,18 @@ namespace DHBIMWATER.Core.Quantity.RuleSets
 
             // ── 스페이서: 슬래브 ─────────────────────────────────────────────
             yield return Spacer("수평", "A", Floors, [IsRc]);
+
+            // ── 철근 ─────────────────────────────────────────────────────────
+            yield return new QuantityRule
+            {
+                WorkType = "철근",
+                Specification = "",
+                SpecParamName = "RebarKey",
+                Formula = "L x N x UW x 0.001",
+                Unit = "ton",
+                CategoryIds = [Rebar],
+                Filters = [],
+            };
         }
 
         // ── 카테고리 ID 단축 ────────────────────────────────────────────────
@@ -90,7 +105,8 @@ namespace DHBIMWATER.Core.Quantity.RuleSets
         private static int Framing    => (int)RevitCategory.StructuralFraming;
         private static int Floors     => (int)RevitCategory.Floors;
         private static int Foundation => (int)RevitCategory.StructuralFoundation;
-        private static int Generic => (int)RevitCategory.GenericModel;
+        private static int Generic    => (int)RevitCategory.GenericModel;
+        private static int Rebar      => (int)RevitCategory.Rebar;
 
         // ── 공용 필터 ──────────────────────────────────────────────────────
         private static RuleFilter IsRc          => Filter("ConcWorkType",    "철근콘크리트");

@@ -93,10 +93,12 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                     ["A"]              = area,
                     ["Thk"]            = thickness,
                     ["Vol"]            = volume,
-                    ["A_bottom_gross"] = refFaceDict.GetValueOrDefault(FaceType.Bottom, 0),
-                    ["A_side_gross"]   = refFaceDict.GetValueOrDefault(FaceType.Side,   0),
-                    ["A_bottom_net"]   = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.Bottom),
-                    ["A_side_net"]     = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.Side),
+                    ["A_bottom_gross"]       = refFaceDict.GetValueOrDefault(FaceType.Bottom,       0),
+                    ["A_side_gross"]         = refFaceDict.GetValueOrDefault(FaceType.Side,         0),
+                    ["A_opening_side_gross"] = refFaceDict.GetValueOrDefault(FaceType.OpeningSide,  0),
+                    ["A_bottom_net"]         = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.Bottom),
+                    ["A_side_net"]           = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.Side),
+                    ["A_opening_side_net"]   = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.OpeningSide),
                 },
                 Parameters = new Dictionary<string, string>
                 {
