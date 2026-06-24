@@ -16,7 +16,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             _doc = doc;
         }
 
-        public int PlaceColumn(ColumnDefinition def)
+        public int CreateColumn(ColumnDefinition def)
         {
             var doc = _doc();
             if (doc == null) return 0;
@@ -50,10 +50,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
                 doc.Regenerate();
             }
 
-            var insertPt = new XYZ(UC.MmToFt(def.Position.X), UC.MmToFt(def.Position.Y), UC.MmToFt(def.Position.Z));
-            var col = doc.Create.NewFamilyInstance(insertPt, colType, level, StructuralType.Column);
-
-            col.get_Parameter(BuiltInParameter.FAMILY_TOP_LEVEL_OFFSET_PARAM)?.Set(UC.MmToFt(def.Height));
+            var basePt = new XYZ(UC.MmToFt(def.Position.X), UC.MmToFt(def.Position.Y), UC.MmToFt(def.Position.Z));
+            var col = doc.Create.NewFamilyInstance(basePt, colType, level, StructuralType.Column);
 
             col.LookupParameter("DH_ElementCode")?.Set(def.ElementCode);
             col.LookupParameter("DH_Addin")?.Set("DHBIMWATER");

@@ -24,6 +24,7 @@ namespace DHBIMWATER.UI.Views.Modeling
         {
             InitializeComponent();
             DataContext = waterTankViewModel;
+            waterTankViewModel.CloseAction = Close;
         }
     }
 }

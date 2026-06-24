@@ -99,9 +99,14 @@ namespace DHBIMWATER.Application.Services
 
                 slabs.Add(new SlabDefinition
                 {
-                    Points = b1Pts, SubPoints = Array.Empty<Point2D>(),
-                    Thickness = stbThk, ElevationZ = tfE, LevelName = TankFoundLevelName,
-                    ElementCode = "B1", Zone = "수조부", Part = "기초콘크리트",
+                    Points = b1Pts,
+                    SubPoints = Array.Empty<Point2D>(),
+                    Thickness = stbThk,
+                    ElevationZ = tfE,
+                    LevelName = TankFoundLevelName,
+                    ElementCode = "B1",
+                    Zone = "수조부",
+                    Part = "기초콘크리트",
                 });
 
                 List<Point2D> l1Pts;
@@ -111,9 +116,14 @@ namespace DHBIMWATER.Application.Services
 
                 slabs.Add(new SlabDefinition
                 {
-                    Points = l1Pts, SubPoints = Array.Empty<Point2D>(),
-                    Thickness = lcThk, ElevationZ = tfE - stbThk - lcThk, LevelName = ValveFoundLevelName,
-                    ElementCode = "L1", Zone = "수조부", Part = "버림콘크리트",
+                    Points = l1Pts, 
+                    SubPoints = Array.Empty<Point2D>(),
+                    Thickness = lcThk, 
+                    ElevationZ = tfE - stbThk, 
+                    LevelName = TankFoundLevelName,
+                    ElementCode = "L1", 
+                    Zone = "수조부", 
+                    Part = "버림콘크리트",
                 });
 
                 double s1StartX = (n == 1 || isFirst) ? -wteThk : xOff - wtiThk / 2;
@@ -121,11 +131,17 @@ namespace DHBIMWATER.Application.Services
                            : isFirst  ? w + wteThk + wtiThk / 2
                            : isLast   ? w + wteThk + wtiThk / 2
                            :            w + wtiThk;
+
                 slabs.Add(new SlabDefinition
                 {
-                    Points = Rect(s1StartX, -wteThk, s1W, l + 2 * wteThk), SubPoints = Array.Empty<Point2D>(),
-                    Thickness = stuThk, ElevationZ = tuE, LevelName = TankUpperLevelName,
-                    ElementCode = "S1", Zone = "수조부", Part = "상부슬래브",
+                    Points = Rect(s1StartX, -wteThk, s1W, l + 2 * wteThk),
+                    SubPoints = Array.Empty<Point2D>(),
+                    Thickness = stuThk, 
+                    ElevationZ = tuE, 
+                    LevelName = TankUpperLevelName,
+                    ElementCode = "S1", 
+                    Zone = "수조부", 
+                    Part = "상부슬래브",
                 });
             }
 
@@ -342,7 +358,7 @@ namespace DHBIMWATER.Application.Services
             double wtiThk = th.WtiThk;
 
             var (tfE, tuE, _, _) = LevelElevations(dto);
-            double colH = tuE - tfE;
+            double colH = tuE - tfE - th.StuThk;
 
             const double maxCTC = 5000;
             double colSpan  = w - m3 - m4;

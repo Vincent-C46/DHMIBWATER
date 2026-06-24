@@ -40,6 +40,10 @@
 		</None>
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Commands\Modeling\" />
+	</ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net8.0-windows</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -59,35 +63,19 @@
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <ItemGroup>
       <_AddinFiles Include="$(ProjectDir)*.addin" />
-      <_DidasDlls  Include="$(ProjectDir)libs\DidasUsage\DidasUsage.dll;$(ProjectDir)libs\DidasUsage\DidasReader.dll" />
-      <_MainDll    Include="$(ProjectDir)$(OutputPath)DHBIMWATER.Revit.dll" />
+      <_DidasDlls Include="$(ProjectDir)libs\DidasUsage\DidasUsage.dll;$(ProjectDir)libs\DidasUsage\DidasReader.dll" />
+      <_MainDll Include="$(ProjectDir)$(OutputPath)DHBIMWATER.Revit.dll" />
     </ItemGroup>
 
     <!-- Revit 2025 -->
-    <MakeDir Directories="$(APPDATA)\Autodesk\Revit\Addins\2025\DHBIMWATER"
-             Condition="Exists('$(APPDATA)\Autodesk\Revit\Addins\2025')" />
-    <Copy SourceFiles="@(_AddinFiles)"
-          DestinationFolder="$(APPDATA)\Autodesk\Revit\Addins\2025"
-          Condition="Exists('$(APPDATA)\Autodesk\Revit\Addins\2025')"
-          SkipUnchangedFiles="false" />
-    <Copy SourceFiles="@(_MainDll);@(_DidasDlls)"
-          DestinationFolder="$(APPDATA)\Autodesk\Revit\Addins\2025\DHBIMWATER"
-          Condition="Exists('$(APPDATA)\Autodesk\Revit\Addins\2025')"
-          SkipUnchangedFiles="false"
-          ContinueOnError="WarnAndContinue" />
+    <MakeDir Directories="$(APPDATA)\Autodesk\Revit\Addins\2025\DHBIMWATER" Condition="Exists('$(APPDATA)\Autodesk\Revit\Addins\2025')" />
+    <Copy SourceFiles="@(_AddinFiles)" DestinationFolder="$(APPDATA)\Autodesk\Revit\Addins\2025" Condition="Exists('$(APPDATA)\Autodesk\Revit\Addins\2025')" SkipUnchangedFiles="false" />
+    <Copy SourceFiles="@(_MainDll);@(_DidasDlls)" DestinationFolder="$(APPDATA)\Autodesk\Revit\Addins\2025\DHBIMWATER" Condition="Exists('$(APPDATA)\Autodesk\Revit\Addins\2025')" SkipUnchangedFiles="false" ContinueOnError="WarnAndContinue" />
 
     <!-- Revit 2026 -->
-    <MakeDir Directories="$(APPDATA)\Autodesk\Revit\Addins\2026\DHBIMWATER"
-             Condition="Exists('$(APPDATA)\Autodesk\Revit\Addins\2026')" />
-    <Copy SourceFiles="@(_AddinFiles)"
-          DestinationFolder="$(APPDATA)\Autodesk\Revit\Addins\2026"
-          Condition="Exists('$(APPDATA)\Autodesk\Revit\Addins\2026')"
-          SkipUnchangedFiles="false" />
-    <Copy SourceFiles="@(_MainDll);@(_DidasDlls)"
-          DestinationFolder="$(APPDATA)\Autodesk\Revit\Addins\2026\DHBIMWATER"
-          Condition="Exists('$(APPDATA)\Autodesk\Revit\Addins\2026')"
-          SkipUnchangedFiles="false"
-          ContinueOnError="WarnAndContinue" />
+    <MakeDir Directories="$(APPDATA)\Autodesk\Revit\Addins\2026\DHBIMWATER" Condition="Exists('$(APPDATA)\Autodesk\Revit\Addins\2026')" />
+    <Copy SourceFiles="@(_AddinFiles)" DestinationFolder="$(APPDATA)\Autodesk\Revit\Addins\2026" Condition="Exists('$(APPDATA)\Autodesk\Revit\Addins\2026')" SkipUnchangedFiles="false" />
+    <Copy SourceFiles="@(_MainDll);@(_DidasDlls)" DestinationFolder="$(APPDATA)\Autodesk\Revit\Addins\2026\DHBIMWATER" Condition="Exists('$(APPDATA)\Autodesk\Revit\Addins\2026')" SkipUnchangedFiles="false" ContinueOnError="WarnAndContinue" />
   </Target>
 
 </Project>

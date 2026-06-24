@@ -69,11 +69,18 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             var floorSpec = new FloorTypeSpec(slabDef.Thickness, $"일반 - {slabDef.Thickness}mm", _concrete);
             var floorTypeId = new ElementId((long)_elementTypeCmdRepo.FindOrCreateSlabType(floorSpec));
 
-            var levelId = new FilteredElementCollector(doc)
+            var level = new FilteredElementCollector(doc)
                 .OfClass(typeof(Level))
-                .FirstOrDefault(e => e.Name.Equals(slabDef.LevelName))?.Id ?? ElementId.InvalidElementId;
+                .Cast<Level>()
+                .FirstOrDefault(e => e.Name.Equals(slabDef.LevelName));
+            if (level == null)
+            {
+                throw new Exception($"Level '{slabDef.LevelName}' not found.");
+            }
 
-            var floor = Floor.Create(doc, curveLoopList, floorTypeId, levelId);
+            var floor = Floor.Create(doc, curveLoopList, floorTypeId, level.Id);
+            // Z값 조정
+            floor.get_Parameter(BuiltInParameter.FLOOR_HEIGHTABOVELEVEL_PARAM)?.Set(UC.MmToFt(slabDef.ElevationZ) - level.Elevation); ;
             //floor.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(slabDef.ElementCode);
             floor.LookupParameter("DH_Addin")?.Set("DHBIMWATER");
             floor.LookupParameter("DH_Category")?.Set(slabDef.Category);

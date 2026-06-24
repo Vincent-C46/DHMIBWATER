@@ -31,11 +31,11 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
                     .OfCategory(BuiltInCategory.OST_StructuralFraming)
                     .WhereElementIsElementType()
                     .Cast<FamilySymbol>()
-                    .FirstOrDefault(s => s.Name.Contains("헌치") || s.Name.Contains("haunch"));
+                    .FirstOrDefault(s => s.Name.Contains("헌치") || s.Name.Contains("haunch") || s.FamilyName.Contains("헌치") || s.FamilyName.Contains("haunch"));
 
                 if (beamType == null)
                 {
-                    TaskDialog.Show("Error", "헌치 패밀리 심볼을 찾을 수 없습니다.");
+                    //TaskDialog.Show("Error", "헌치 패밀리 심볼을 찾을 수 없습니다.");
                     return 0;
                 }
             }

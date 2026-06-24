@@ -97,7 +97,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
 
                     #region 4. 기둥 생성
                     foreach (var colDef in ReservoirGeometryCalculator.CalculateColumns(dto))
-                        _columnCmdRepo.PlaceColumn(colDef);
+                        _columnCmdRepo.CreateColumn(colDef);
                     #endregion
 
                     #region 5. 보 생성

@@ -70,6 +70,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
 
         #region Properties
         public ICommand CreateWTankCommand { get; }
+        public Action? CloseAction { get; set; }
 
         // 설계조건
         public double Q
@@ -323,6 +324,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
 
             var requestDto = new ReservoirCreationRequestDto(designConditionDto, tankDto, valveDto, thicknessDto);
             _createReservoirUseCase.Execute(requestDto);
+            CloseAction?.Invoke();
         }
         #endregion
     }
