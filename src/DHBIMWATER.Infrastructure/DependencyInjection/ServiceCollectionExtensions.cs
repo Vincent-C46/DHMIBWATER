@@ -44,6 +44,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IWallCommandRepo, RevitWallCommandRepo>();
         services.AddTransient<IGenericModelCommandRepo, RevitGenericModelCommandRepo>();
         services.AddTransient<IBeamCommandRepo, RevitBeamCommandRepo>();
+        services.AddTransient<IColumnCommandRepo, RevitColumnCommandRepo>();
         services.AddTransient<ISlabCommandRepo, RevitSlabCommandRepo>();
         services.AddTransient<IOpeningCommandRepo, RevitOpeningCommandRepo>();
         services.AddTransient<IDirectShapeCommandRepo, RevitDirectShapeCommandRepo>();
