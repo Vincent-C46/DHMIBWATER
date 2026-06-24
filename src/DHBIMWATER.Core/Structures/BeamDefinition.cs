@@ -11,7 +11,8 @@ namespace DHBIMWATER.Core.Structures
     {
         public Point3D StartPoint { get; set; }
         public Point3D EndPoint { get; set; }
-        public double Width { get; set; }
+        public string TypeName { get; set; } = string.Empty; // Revit 패밀리 타입명 (설정 시 우선 사용)
+        public double Width { get; set; }   // TypeName이 없을 때 자동 유형 탐색용
         public double Height { get; set; }
         public string LevelName { get; init; } = string.Empty;
 

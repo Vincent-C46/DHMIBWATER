@@ -10,7 +10,7 @@ namespace DHBIMWATER.Application.Services
     /// 배수지(저수조) 지오메트리 계산기.
     /// 모든 좌표 단위는 mm.
     /// DTO 단위: LWL(m)·He(m) → *1000 변환, 나머지 치수는 이미 mm.
-    /// 원점(0,0): 수조부 내부 좌하단. 이식 원본: DH_Revit_test/Utilities/RequestHandler.cs 65~1560.
+    /// 원점(0,0): 수조부 내부 좌하단.
     /// </summary>
     public static class ReservoirGeometryCalculator
     {
@@ -340,8 +340,6 @@ namespace DHBIMWATER.Application.Services
             double m3 = t.M3;  // mm
             double m4 = t.M4;  // mm
             double wtiThk = th.WtiThk;
-            double cw = th.Cw;
-            double cd = th.Cd;
 
             var (tfE, tuE, _, _) = LevelElevations(dto);
             double colH = tuE - tfE;
@@ -363,8 +361,7 @@ namespace DHBIMWATER.Application.Services
                         columns.Add(new ColumnDefinition
                         {
                             Position    = new Point3D(xOff + m3 + c * colOff, m2 + r * rowOff, 0),
-                            Width       = cw,
-                            Depth       = cd,
+                            TypeName    = th.ColumnTypeName,
                             LevelName   = TankFoundLevelName,
                             Height      = colH,
                             ElementCode = "C1",
@@ -391,10 +388,6 @@ namespace DHBIMWATER.Application.Services
             double lh = t.Lh;  // mm
             double wh = t.Wh;  // mm
             double wtiThk = th.WtiThk;
-            double gw = th.Gw;
-            double gh = th.Gh;
-            double cw = th.Cw;
-            double cd = th.Cd;
 
             var (tfE, tuE, _, _) = LevelElevations(dto);
             double beamZ = tuE;
@@ -414,36 +407,37 @@ namespace DHBIMWATER.Application.Services
                 double xOff = ci * (w + wtiThk);
                 var pts = ColumnGrid(xOff + m3, m2, rowOff, colOff, rowNum, colNum, beamZ);
 
+                string beamType = th.BeamTypeName;
                 for (int i = 0; i < pts.Count; i++)
                 {
                     if ((i + 1) % colNum != 0)
-                        beams.Add(Beam("G1", gw, gh, TankUpperLevelName,
-                            new Point3D(pts[i].X + cw / 2, pts[i].Y, beamZ),
-                            new Point3D(pts[i + 1].X - cw / 2, pts[i + 1].Y, beamZ), "수조부", "보"));
+                        beams.Add(Beam("G1", beamType, TankUpperLevelName,
+                            new Point3D(pts[i].X, pts[i].Y, beamZ),
+                            new Point3D(pts[i + 1].X, pts[i + 1].Y, beamZ), "수조부", "보"));
 
                     if (i + colNum < pts.Count)
-                        beams.Add(Beam("G1", gw, gh, TankUpperLevelName,
-                            new Point3D(pts[i].X, pts[i].Y + cd / 2, beamZ),
-                            new Point3D(pts[i + colNum].X, pts[i + colNum].Y - cd / 2, beamZ), "수조부", "보"));
+                        beams.Add(Beam("G1", beamType, TankUpperLevelName,
+                            new Point3D(pts[i].X, pts[i].Y, beamZ),
+                            new Point3D(pts[i + colNum].X, pts[i + colNum].Y, beamZ), "수조부", "보"));
 
                     if (i >= colNum * (rowNum - 1))
-                        beams.Add(Beam("G1", gw, gh, TankUpperLevelName,
-                            new Point3D(pts[i].X, pts[i].Y + cd / 2, beamZ),
+                        beams.Add(Beam("G1", beamType, TankUpperLevelName,
+                            new Point3D(pts[i].X, pts[i].Y, beamZ),
                             new Point3D(pts[i].X, pts[i].Y + m1, beamZ), "수조부", "보"));
 
                     if (i < colNum)
-                        beams.Add(Beam("G1", gw, gh, TankUpperLevelName,
-                            new Point3D(pts[i].X, pts[i].Y - cd / 2, beamZ),
+                        beams.Add(Beam("G1", beamType, TankUpperLevelName,
+                            new Point3D(pts[i].X, pts[i].Y, beamZ),
                             new Point3D(pts[i].X, pts[i].Y - m2, beamZ), "수조부", "보"));
 
                     if (i % colNum == 0)
-                        beams.Add(Beam("G1", gw, gh, TankUpperLevelName,
-                            new Point3D(pts[i].X - cw / 2, pts[i].Y, beamZ),
+                        beams.Add(Beam("G1", beamType, TankUpperLevelName,
+                            new Point3D(pts[i].X, pts[i].Y, beamZ),
                             new Point3D(pts[i].X - m3, pts[i].Y, beamZ), "수조부", "보"));
 
                     if (i % colNum == colNum - 1)
-                        beams.Add(Beam("G1", gw, gh, TankUpperLevelName,
-                            new Point3D(pts[i].X + cw / 2, pts[i].Y, beamZ),
+                        beams.Add(Beam("G1", beamType, TankUpperLevelName,
+                            new Point3D(pts[i].X, pts[i].Y, beamZ),
                             new Point3D(pts[i].X + m4, pts[i].Y, beamZ), "수조부", "보"));
                 }
 
@@ -457,12 +451,12 @@ namespace DHBIMWATER.Application.Services
                     new Point3D(xOff + w - wh, 0, tfE),
                 };
                 for (int i = 0; i < fndPts.Count - 1; i++)
-                    beams.Add(Beam("H2", gw, gh, TankFoundLevelName, fndPts[i], fndPts[i + 1], "수조부", "HAUNCH"));
+                    beams.Add(Beam("H2", beamType, TankFoundLevelName, fndPts[i], fndPts[i + 1], "수조부", "HAUNCH"));
 
                 // H1: 상부 헌치
-                var upperPts = BuildUpperHaunchPoints(xOff, w, l, m1, m2, m3, m4, rowOff, colOff, rowNum, colNum, cd, beamZ);
+                var upperPts = BuildUpperHaunchPoints(xOff, w, l, m1, m2, m3, m4, rowOff, colOff, rowNum, colNum, beamZ);
                 for (int i = 0; i < upperPts.Count - 1; i++)
-                    beams.Add(Beam("H1", gw, gh, TankUpperLevelName, upperPts[i], upperPts[i + 1], "수조부", "HAUNCH"));
+                    beams.Add(Beam("H1", beamType, TankUpperLevelName, upperPts[i], upperPts[i + 1], "수조부", "HAUNCH"));
             }
 
             return beams;
@@ -574,11 +568,11 @@ namespace DHBIMWATER.Application.Services
             };
 
         private static BeamDefinition Beam(
-            string code, double width, double height, string levelName,
+            string code, string typeName, string levelName,
             Point3D start, Point3D end, string zone, string part)
             => new BeamDefinition
             {
-                ElementCode = code, Width = width, Height = height, LevelName = levelName,
+                ElementCode = code, TypeName = typeName, LevelName = levelName,
                 StartPoint = start, EndPoint = end, Zone = zone, Part = part,
                 ZJustification = 0,
             };
@@ -587,7 +581,7 @@ namespace DHBIMWATER.Application.Services
             double xOff, double w, double l,
             double m1, double m2, double m3, double m4,
             double rowOff, double colOff, int rowNum, int colNum,
-            double cd, double z)
+            double z)
         {
             var pts = new List<Point3D>();
             pts.Add(new Point3D(xOff, 0, z));

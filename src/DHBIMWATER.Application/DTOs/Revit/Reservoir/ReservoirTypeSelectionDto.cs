@@ -27,12 +27,8 @@ namespace DHBIMWATER.Application.DTOs.Revit.Reservoir
         double WviThk,   // 밸브실 내벽
         double LcThk,    // 버림콘크리트 두께
 
-        // 기둥 단면 (mm)
-        double Cw,       // 기둥 폭
-        double Cd,       // 기둥 깊이
-
-        // 보 단면 (mm)
-        double Gw,       // 보 폭
-        double Gh        // 보 높이
+        // 기둥 / 보 유형 이름 (Revit 패밀리 타입명)
+        string ColumnTypeName,
+        string BeamTypeName
     );
 }

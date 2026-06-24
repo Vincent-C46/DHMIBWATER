@@ -32,31 +32,16 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
                 return 0;
             }
 
-            var typeName = $"{(int)def.Width} x {(int)def.Depth}";
-
-            var allColumnTypes = new FilteredElementCollector(doc)
+            var colType = new FilteredElementCollector(doc)
                 .OfCategory(BuiltInCategory.OST_StructuralColumns)
                 .WhereElementIsElementType()
                 .Cast<FamilySymbol>()
-                .Where(fs => fs.Family.StructuralMaterialType == StructuralMaterialType.Concrete)
-                .ToList();
-
-            var colType = allColumnTypes.FirstOrDefault(fs => fs.Name == typeName);
+                .FirstOrDefault(fs => fs.Name == def.TypeName);
 
             if (colType == null)
             {
-                var baseType = allColumnTypes.FirstOrDefault(fs =>
-                    fs.LookupParameter("b") != null && fs.LookupParameter("h") != null);
-
-                if (baseType == null)
-                {
-                    TaskDialog.Show("Error", "적절한 복제 대상 Column type이 없습니다.");
-                    return 0;
-                }
-
-                colType = baseType.Duplicate(typeName) as FamilySymbol;
-                colType.LookupParameter("b")?.Set(UC.MmToFt(def.Width));
-                colType.LookupParameter("h")?.Set(UC.MmToFt(def.Depth));
+                TaskDialog.Show("Error", $"기둥 유형을 찾을 수 없습니다: {def.TypeName}");
+                return 0;
             }
 
             if (!colType.IsActive)

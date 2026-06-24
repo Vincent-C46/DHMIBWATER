@@ -94,23 +94,17 @@
                                             </StackPanel>
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
                                                 <TextBlock Text="1-6." Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
-                                                <TextBlock Text="기둥 단면 (b x h)" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
-                                                <TextBox Style="{StaticResource ReservoirTextBoxStyle}" Width="45" Height="25" Margin="10,0,4,0"
-                                                         Text="{Binding Cw, UpdateSourceTrigger=LostFocus, Mode=TwoWay}" VerticalAlignment="Center"/>
-                                                <TextBlock Text="x" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="10"/>
-                                                <TextBox Style="{StaticResource ReservoirTextBoxStyle}" Width="45" Height="25" Margin="4,0,10,0"
-                                                         Text="{Binding Cd, UpdateSourceTrigger=LostFocus, Mode=TwoWay}" VerticalAlignment="Center"/>
-                                                <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center"/>
+                                                <TextBlock Text="기둥 유형" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                <ComboBox Width="200" Height="25" Margin="10,0" VerticalAlignment="Center"
+                                                          ItemsSource="{Binding ColumnTypeNames}"
+                                                          SelectedItem="{Binding ColumnTypeName, Mode=TwoWay}"/>
                                             </StackPanel>
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
                                                 <TextBlock Text="1-7." Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
-                                                <TextBlock Text="보 단면 (b x h)" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
-                                                <TextBox Style="{StaticResource ReservoirTextBoxStyle}" Width="45" Height="25" Margin="10,0,4,0"
-                                                         Text="{Binding Gw, UpdateSourceTrigger=LostFocus, Mode=TwoWay}" VerticalAlignment="Center"/>
-                                                <TextBlock Text="x" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="10"/>
-                                                <TextBox Style="{StaticResource ReservoirTextBoxStyle}" Width="45" Height="25" Margin="4,0,10,0"
-                                                         Text="{Binding Gh, UpdateSourceTrigger=LostFocus, Mode=TwoWay}" VerticalAlignment="Center"/>
-                                                <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center"/>
+                                                <TextBlock Text="보 유형" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                <ComboBox Width="200" Height="25" Margin="10,0" VerticalAlignment="Center"
+                                                          ItemsSource="{Binding BeamTypeNames}"
+                                                          SelectedItem="{Binding BeamTypeName, Mode=TwoWay}"/>
                                             </StackPanel>
 
                                             <!--배관실-->

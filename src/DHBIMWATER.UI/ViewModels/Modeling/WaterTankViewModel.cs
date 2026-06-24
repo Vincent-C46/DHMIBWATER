@@ -3,6 +3,8 @@ using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Application.UseCases.AutoGenerator;
 using DHBIMWATER.UI.Base;
 using DHBIMWATER.UI.Commands;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Input;
 
 namespace DHBIMWATER.UI.ViewModels.Modeling
@@ -12,6 +14,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         #region Fields
         private readonly IDialogService _dialogService;
         private readonly CreateReservoirUseCase _createReservoirUseCase;
+        private readonly IElementTypeQueryRepo _typeQueryRepo;
 
         // 설계조건
         private double _q   = 5000;
@@ -61,10 +64,8 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private double _wveThk = 300;
         private double _wviThk = 300;
         private double _lcThk  = 100;
-        private double _cw     = 500;
-        private double _cd     = 500;
-        private double _gw     = 500;
-        private double _gh     = 600;
+        private string _columnTypeName = string.Empty;
+        private string _beamTypeName   = string.Empty;
         #endregion
 
         #region Properties
@@ -265,20 +266,40 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         public double WveThk { get => _wveThk; set { if (_wveThk != value) { _wveThk = value; OnPropertyChanged(nameof(WveThk)); } } }
         public double WviThk { get => _wviThk; set { if (_wviThk != value) { _wviThk = value; OnPropertyChanged(nameof(WviThk)); } } }
         public double LcThk  { get => _lcThk;  set { if (_lcThk  != value) { _lcThk  = value; OnPropertyChanged(nameof(LcThk));  } } }
-        public double Cw     { get => _cw;     set { if (_cw     != value) { _cw     = value; OnPropertyChanged(nameof(Cw));     } } }
-        public double Cd     { get => _cd;     set { if (_cd     != value) { _cd     = value; OnPropertyChanged(nameof(Cd));     } } }
-        public double Gw     { get => _gw;     set { if (_gw     != value) { _gw     = value; OnPropertyChanged(nameof(Gw));     } } }
-        public double Gh     { get => _gh;     set { if (_gh     != value) { _gh     = value; OnPropertyChanged(nameof(Gh));     } } }
+
+        public IReadOnlyList<string> ColumnTypeNames { get; private set; } = new List<string>();
+        public IReadOnlyList<string> BeamTypeNames   { get; private set; } = new List<string>();
+
+        public string ColumnTypeName
+        {
+            get => _columnTypeName;
+            set { if (_columnTypeName != value) { _columnTypeName = value; OnPropertyChanged(nameof(ColumnTypeName)); } }
+        }
+        public string BeamTypeName
+        {
+            get => _beamTypeName;
+            set { if (_beamTypeName != value) { _beamTypeName = value; OnPropertyChanged(nameof(BeamTypeName)); } }
+        }
         #endregion
 
         #region Constructor
-        public WaterTankViewModel(CreateReservoirUseCase useCase, IDialogService dialogService)
+        public WaterTankViewModel(CreateReservoirUseCase useCase, IDialogService dialogService, IElementTypeQueryRepo typeQueryRepo)
         {
             _createReservoirUseCase = useCase;
-            _dialogService = dialogService;
+            _dialogService          = dialogService;
+            _typeQueryRepo          = typeQueryRepo;
 
+            LoadTypeNames();
             UpdateCRT();
             CreateWTankCommand = new RelayCommand(CreateWaterTank);
+        }
+
+        private void LoadTypeNames()
+        {
+            ColumnTypeNames  = _typeQueryRepo.GetColumnTypeNames().ToList();
+            BeamTypeNames    = _typeQueryRepo.GetBeamTypeNames().ToList();
+            _columnTypeName  = ColumnTypeNames.FirstOrDefault() ?? string.Empty;
+            _beamTypeName    = BeamTypeNames.FirstOrDefault()   ?? string.Empty;
         }
         #endregion
 
@@ -298,7 +319,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             var thicknessDto = new ReservoirTypeThicknessDto(
                 StuThk, StbThk, SvuThk, SvmThk, SvbThk,
                 WteThk, WtiThk, WhThk, WveThk, WviThk, LcThk,
-                Cw, Cd, Gw, Gh);
+                ColumnTypeName, BeamTypeName);
 
             var requestDto = new ReservoirCreationRequestDto(designConditionDto, tankDto, valveDto, thicknessDto);
             _createReservoirUseCase.Execute(requestDto);

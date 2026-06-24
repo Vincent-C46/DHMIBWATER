@@ -62,7 +62,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
                     subCurveLoop.Append(line);
                 }
 
-                curveLoopList.Add(subCurveLoop);
+                if (subPoints.Count > 0)
+                    curveLoopList.Add(subCurveLoop);
             }
 
             var floorSpec = new FloorTypeSpec(slabDef.Thickness, $"일반 - {slabDef.Thickness}mm", _concrete);
