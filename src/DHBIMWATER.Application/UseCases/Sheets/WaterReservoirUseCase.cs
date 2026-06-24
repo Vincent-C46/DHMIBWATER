@@ -1,4 +1,5 @@
-﻿using DHBIMWATER.Application.DTOs.Revit;
+﻿using System.Linq;
+using DHBIMWATER.Application.DTOs.Revit;
 using DHBIMWATER.Application.DTOs.Revit.Sheet;
 using DHBIMWATER.Application.DTOs.Revit.Sheets;
 
@@ -274,16 +275,37 @@ namespace DHBIMWATER.Application.UseCases.Sheets
 
         public void DeleteReservoirSheetsAndViews()
         {
+            ActivateSafeView();
             _sheetUseCase.DeleteReservoirSheetsAndViews(_reservoirStartSheetNumber, _reservoirTotalSheetCount);
         }
         public void DeleteReservoirSheets()
         {
+            ActivateSafeView();
             _sheetUseCase.DeleteReservoirSheets(_reservoirStartSheetNumber, _reservoirTotalSheetCount);
         }
 
         public void DeleteReservoirViews()
         {
+            ActivateSafeView();
             _sheetUseCase.DeleteReservoirViews();
+        }
+
+        private void ActivateSafeView()
+        {
+            try
+            {
+                var activeViewId = _sheetUseCase.GetActiveViewId();
+                var views = _sheetUseCase.GetViews();
+                var safeView = views.FirstOrDefault(v =>
+                    v.ViewType == "ThreeD" || v.ViewName == "{3D}");
+
+                safeView ??= views.FirstOrDefault(v =>
+                    v.ViewType != "DrawingSheet" && v.ViewId != activeViewId);
+
+                if (safeView != null && safeView.ViewId != activeViewId)
+                    _sheetUseCase.ActivateView(safeView.ViewId);
+            }
+            catch { }
         }
 
 
@@ -348,6 +370,13 @@ namespace DHBIMWATER.Application.UseCases.Sheets
                 _sheetUseCase.ApplyReservoirTags(sheet.Id);
             }
         }
+
+        public void ApplyDHTags(IList<string> selectedFamilyIds)
+        {
+            _sheetUseCase.ApplyDHTags(selectedFamilyIds);
+        }
+
+        public IList<TagFamilyDto> GetAvailableTagFamilies() => _sheetUseCase.GetAvailableTagFamilies();
 
         public (string hwl, string lwl) GetWaterLevels() => _sheetUseCase.GetWaterLevels();
 

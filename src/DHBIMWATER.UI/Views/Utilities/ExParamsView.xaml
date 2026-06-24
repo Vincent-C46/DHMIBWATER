@@ -34,7 +34,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="40"/>
+            <RowDefinition Height="50"/>
         </Grid.RowDefinitions>
 
         <controls:TitleBar Grid.Row="0"/>
@@ -47,7 +47,7 @@
             </Grid.ColumnDefinitions>
             
             <!-- 카테고리-->
-            <GroupBox Header="카테고리 선택" Grid.Column="0" Margin="5">                
+            <GroupBox Header="카테고리 선택" Grid.Column="0" Margin="5,5,5,0">                
                 <ListBox x:Name="CategoryListBox"
                          ItemsSource="{Binding Categories}"
                          SelectedItem="{Binding SelectedCategory, Mode=TwoWay}"
@@ -55,7 +55,7 @@
             </GroupBox>
 
             <!-- 매개변수 선택-->
-            <GroupBox Header="매개변수 선택" Grid.Column="1" Margin="5">
+            <GroupBox Header="매개변수 선택" Grid.Column="1" Margin="5,5,5,0">
                 <ListBox x:Name="ParameterListBox" ItemsSource="{Binding Parameters}"
                          SelectionMode="Extended"
                          behaviors:ListBoxSelectedItemsBehavior.SelectedItems="{Binding SelectedParameterItems}">
@@ -73,13 +73,13 @@
         </Grid>
         
         <!-- 버튼 -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5">
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5,0,20,10">
             <Button Content="전체 선택" Width="80" Margin="0,0,10,0" Command="{Binding SelectAllCommand}" Style="{StaticResource PrimaryButtonStyle}"/>
             <Button Content="전체 해제" Width="80" Margin="0,0,10,0" Command="{Binding DeselectAllCommand}" Style="{StaticResource PrimaryButtonStyle}"/>
             <Button Content="확인" Width="80" Margin="0,0,10,0" Command="{Binding ConfirmCommand}" Style="{StaticResource PrimaryButtonStyle}"/>
             <Button Content="취소" Width="80" Command="{Binding CancelCommand}" Style="{StaticResource PrimaryButtonStyle}"/>
         </StackPanel>
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Left" Margin="4">
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Left" Margin="15,0,4,10">
             <Button Content="Import" Width="100" Command="{Binding ImportCommand}" Style="{StaticResource PrimaryButtonStyle}"/>
         </StackPanel>
 

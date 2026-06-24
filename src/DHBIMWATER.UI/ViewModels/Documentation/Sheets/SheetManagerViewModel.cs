@@ -760,17 +760,17 @@ namespace DHBIMWATER.UI.ViewModels.Documentation
         }
         private void ApplyAnnotates()
         {
-            var vm = new AnnotateViewModel();
-            var dlg = new AnnotateView(vm);
-
-            if (dlg.ShowDialog() != true)
-                return;
-
             var tagFamilies = _useCase.GetAvailableTagFamilies();
             var selectVm = new AnnotateSelectViewModel(tagFamilies);
             var selectDlg = new AnnotateSelectView(selectVm);
 
             if (selectDlg.ShowDialog() != true)
+                return;
+
+            var vm = new AnnotateViewModel();
+            var dlg = new AnnotateView(vm);
+
+            if (dlg.ShowDialog() != true)
                 return;
 
             RequestedAnnotateTagFamilyIds = selectVm.SelectedTagFamilyIds;

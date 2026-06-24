@@ -131,6 +131,7 @@ namespace DHBIMWATER.Application.UseCases.Sheets
 
         public int DeletePumpingStationSheets()
         {
+            ActivateSafeView();
             int count = DeletePumpingStationSheetsOnly();
             _sheetUseCase.DeleteReservoirViews();
             return count;
@@ -138,6 +139,7 @@ namespace DHBIMWATER.Application.UseCases.Sheets
 
         public int DeletePumpingStationSheetsOnly()
         {
+            ActivateSafeView();
             var sheets = _sheetUseCase.GetSheets();
             int count = 0;
 
@@ -159,7 +161,27 @@ namespace DHBIMWATER.Application.UseCases.Sheets
 
         public void DeletePumpingStationViewsOnly()
         {
+            ActivateSafeView();
             _sheetUseCase.DeleteReservoirViews();
+        }
+
+        // 삭제 전 활성 시트/뷰가 삭제 대상이면 오류 발생 → 안전한 뷰로 전환
+        private void ActivateSafeView()
+        {
+            try
+            {
+                var activeViewId = _sheetUseCase.GetActiveViewId();
+                var views = _sheetUseCase.GetViews();
+                var safeView = views.FirstOrDefault(v =>
+                    v.ViewType == "ThreeD" || v.ViewName == "{3D}");
+
+                safeView ??= views.FirstOrDefault(v =>
+                    v.ViewType != "DrawingSheet" && v.ViewId != activeViewId);
+
+                if (safeView != null && safeView.ViewId != activeViewId)
+                    _sheetUseCase.ActivateView(safeView.ViewId);
+            }
+            catch { }
         }
 
         public void PlacePumpingStationDimensions(string dimensionTypeName)

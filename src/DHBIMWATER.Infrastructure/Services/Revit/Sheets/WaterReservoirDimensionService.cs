@@ -414,12 +414,17 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
                 .ThenBy(r => r.StableKey)
                 .ToList();
 
+            // 같은 요소(ElementId)의 같은 위치 ref만 중복 제거 (다른 요소는 유지)
             var filtered = new List<FaceRef>();
-            const double tol = 1.0;
+            const double tol = 0.5;
 
             foreach (var r in ordered)
             {
-                if (filtered.Count == 0 || Math.Abs(r.Projection - filtered[^1].Projection) > tol)
+                bool isDuplicate = filtered.Any(f =>
+                    Math.Abs(f.Projection - r.Projection) <= tol &&
+                    f.ElementIdValue == r.ElementIdValue);
+
+                if (!isDuplicate)
                     filtered.Add(r);
             }
 
@@ -941,7 +946,9 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
 
             // 상부 //
             SectionA.TopRule.IncludeParameterName = "DH_ElementCode";
-            SectionA.TopRule.IncludeParameterValue = "S1, C1, W1, W2, W6";
+            SectionA.TopRule.IncludeParameterValue = "S1, W1, W2, W6, G1";
+            //SectionA.TopRule.ExcludeParameterName = "DH_ElementCode";
+            //SectionA.TopRule.ExcludeParameterValue = "C1";
             SectionA.TopRule.ExcludeCategories.Add(BuiltInCategory.OST_Stairs);
             SectionA.TopRule.ExcludeCategories.Add(BuiltInCategory.OST_Railings);
             SectionA.TopRule.ExcludeNameKeywords = new[] { "도류벽", "헌치" };
@@ -982,14 +989,14 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
 
             // 상부 //
             SectionB.TopRule.IncludeParameterName = "DH_ElementCode";
-            SectionB.TopRule.IncludeParameterValue = "S1, B1, B2, B3, L1, W2, G1";
+            SectionB.TopRule.IncludeParameterValue = "S1, B3, W1, W2, G1";
             SectionB.TopRule.ExcludeCategories.Add(BuiltInCategory.OST_Stairs);
             SectionB.TopRule.ExcludeCategories.Add(BuiltInCategory.OST_Railings);
             SectionB.TopRule.ExcludeNameKeywords = new[] { "도류벽", "헌치" };
 
             // 하부 //
             SectionB.BottomRule.IncludeParameterName = "DH_ElementCode";
-            SectionB.BottomRule.IncludeParameterValue = "B1, W1, W2, C1, L1";
+            SectionB.BottomRule.IncludeParameterValue = "B1, B2, W1, W2, C1, L1";
             SectionB.BottomRule.ExcludeCategories.Add(BuiltInCategory.OST_Stairs);
             SectionB.BottomRule.ExcludeCategories.Add(BuiltInCategory.OST_Railings);
             SectionB.BottomRule.ExcludeNameKeywords = new[] { "도류벽", "헌치" };
@@ -1023,28 +1030,28 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
 
             // 상부 //
             SectionC.TopRule.IncludeParameterName = "DH_ElementCode";
-            SectionC.TopRule.IncludeParameterValue = "S2, W7, W8, W10";
+            SectionC.TopRule.IncludeParameterValue = "S2, W7, W8, W10, G1";
             SectionC.TopRule.ExcludeCategories.Add(BuiltInCategory.OST_Stairs);
             SectionC.TopRule.ExcludeCategories.Add(BuiltInCategory.OST_Railings);
             SectionC.TopRule.ExcludeNameKeywords = new[] { "도류벽", "헌치" };
 
             // 하부 //
             SectionC.BottomRule.IncludeParameterName = "DH_ElementCode";
-            SectionC.BottomRule.IncludeParameterValue = "L4, B4, W7, W8, W10";
+            SectionC.BottomRule.IncludeParameterValue = "L4, B3, B4, W5, W7, W8, W10";
             SectionC.BottomRule.ExcludeCategories.Add(BuiltInCategory.OST_Stairs);
             SectionC.BottomRule.ExcludeCategories.Add(BuiltInCategory.OST_Railings);
             SectionC.BottomRule.ExcludeNameKeywords = new[] { "도류벽", "헌치" };
 
             // 좌측 //
             SectionC.LeftRule.IncludeParameterName = "DH_ElementCode";
-            SectionC.LeftRule.IncludeParameterValue = "S2, MS1, B4, L4, W7";       
+            SectionC.LeftRule.IncludeParameterValue = "S2, MS1, TC3, TC2, B4, L4, W7";       
             SectionC.LeftRule.ExcludeCategories.Add(BuiltInCategory.OST_Stairs);
             SectionC.LeftRule.ExcludeCategories.Add(BuiltInCategory.OST_Railings);
             SectionC.LeftRule.ExcludeNameKeywords = new[] { "도류벽", "헌치" };
 
             // 우측 //
             SectionC.RightRule.IncludeParameterName = "DH_ElementCode";
-            SectionC.RightRule.IncludeParameterValue = "S2, MS1, B4, L4, W8";          
+            SectionC.RightRule.IncludeParameterValue = "S2, MS1, TC3, TC2, B4, L4, W8";          
             SectionC.RightRule.ExcludeCategories.Add(BuiltInCategory.OST_Stairs);
             SectionC.RightRule.ExcludeCategories.Add(BuiltInCategory.OST_Railings);
             SectionC.RightRule.ExcludeNameKeywords = new[] { "도류벽", "헌치" };
@@ -1078,14 +1085,14 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
 
             // 좌측 //
             SectionD.LeftRule.IncludeParameterName = "DH_ElementCode";
-            SectionD.LeftRule.IncludeParameterValue = "S2, MS1, B4, L4";
+            SectionD.LeftRule.IncludeParameterValue = "S2, W7, MS1, B4, L4, H3, TC2";
             SectionD.LeftRule.ExcludeCategories.Add(BuiltInCategory.OST_Stairs);
             SectionD.LeftRule.ExcludeCategories.Add(BuiltInCategory.OST_Railings);
             SectionD.LeftRule.ExcludeNameKeywords = new[] { "도류벽", "헌치" };
 
             // 우측 //
             SectionD.RightRule.IncludeParameterName = "DH_ElementCode";
-            SectionD.RightRule.IncludeParameterValue = "S2, MS1, B4, L4";
+            SectionD.RightRule.IncludeParameterValue = "S2, W8, MS1, TC2, B4, L4, H3";
             SectionD.RightRule.ExcludeCategories.Add(BuiltInCategory.OST_Stairs);
             SectionD.RightRule.ExcludeCategories.Add(BuiltInCategory.OST_Railings);
             SectionD.RightRule.ExcludeNameKeywords = new[] { "도류벽", "헌치" };
@@ -1105,7 +1112,7 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
 
             // 상부 //
             SectionE.TopRule.IncludeParameterName = "DH_ElementCode";
-            SectionE.TopRule.IncludeParameterValue = "S1, W3, W4, C1";
+            SectionE.TopRule.IncludeParameterValue = "S1, W3, W4, G1";
             SectionE.TopRule.ExcludeCategories.Add(BuiltInCategory.OST_Stairs);
             SectionE.TopRule.ExcludeCategories.Add(BuiltInCategory.OST_Railings);
             SectionE.TopRule.ExcludeNameKeywords = new[] { "도류벽", "헌치" };
@@ -1230,14 +1237,14 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
 
             // 상부 //
             SectionH.TopRule.IncludeParameterName = "DH_ElementCode";
-            SectionH.TopRule.IncludeParameterValue = "S1, W3, W5, W9, C1";
+            SectionH.TopRule.IncludeParameterValue = "S1, W3, W5, W9, G1";
             SectionH.TopRule.ExcludeCategories.Add(BuiltInCategory.OST_Stairs);
             SectionH.TopRule.ExcludeCategories.Add(BuiltInCategory.OST_Railings);
             SectionH.TopRule.ExcludeNameKeywords = new[] { "도류벽", "헌치" };
 
             // 하부 //
             SectionH.BottomRule.IncludeParameterName = "DH_ElementCode";
-            SectionH.BottomRule.IncludeParameterValue = "B1, B4, L1, L4, W3, W5, W9, C1";
+            SectionH.BottomRule.IncludeParameterValue = "B1, B3, B4, L1, L4, W3, W5, W9, C1";
             SectionH.BottomRule.ExcludeCategories.Add(BuiltInCategory.OST_Stairs);
             SectionH.BottomRule.ExcludeCategories.Add(BuiltInCategory.OST_Railings);
             SectionH.BottomRule.ExcludeNameKeywords = new[] { "도류벽", "헌치" };
