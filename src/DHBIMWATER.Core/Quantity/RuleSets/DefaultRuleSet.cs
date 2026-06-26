@@ -86,25 +86,15 @@ namespace DHBIMWATER.Core.Quantity.RuleSets
             // ── 스페이서: 슬래브 ─────────────────────────────────────────────
             yield return Spacer("수평", "A", Floors, [IsRc]);
 
-            // ── 동바리 ───────────────────────────────────────────────────────
-            yield return new QuantityRule
-            {
-                WorkType      = "동바리",
-                Specification = "강관동바리",
-                Formula       = "A_bottom_gross x ShoringFactor",
-                Unit          = "m²",
-                CategoryIds   = [Floors],
-                Filters       = [Filter("HasSteelShoring", "true")],
-            };
-            yield return new QuantityRule
-            {
-                WorkType      = "동바리",
-                Specification = "시스템동바리",
-                Formula       = "A_bottom_gross x H_shoring x ShoringFactor",
-                Unit          = "공m³",
-                CategoryIds   = [Floors],
-                Filters       = [Filter("HasSystemShoring", "true")],
-            };
+            // ── 동바리: 강관 ─────────────────────────────────────────────────
+            yield return SteelShoring("H≤3.5m",      "강관_3.5");
+            yield return SteelShoring("3.5m<H≤4.2m", "강관_4.2");
+
+            // ── 동바리: 시스템 ───────────────────────────────────────────────
+            yield return SystemShoring("H≤5m",        "시스템_5");
+            yield return SystemShoring("5m<H≤10m",    "시스템_10");
+            yield return SystemShoring("10m<H≤20m",   "시스템_20");
+            yield return SystemShoring("20m<H≤30m",   "시스템_30");
 
             // ── 철근 ─────────────────────────────────────────────────────────
             yield return new QuantityRule
@@ -163,6 +153,28 @@ namespace DHBIMWATER.Core.Quantity.RuleSets
                 Unit = "m²",
                 CategoryIds = [category],
                 Filters = filters
+            };
+
+        private static QuantityRule SteelShoring(string spec, string rangeKey) =>
+            new()
+            {
+                WorkType      = "강관동바리",
+                Specification = spec,
+                Formula       = "A_bottom_net x ShoringFactor",
+                Unit          = "m²",
+                CategoryIds   = [Floors],
+                Filters       = [Filter("ShoringRange", rangeKey)],
+            };
+
+        private static QuantityRule SystemShoring(string spec, string rangeKey) =>
+            new()
+            {
+                WorkType      = "시스템동바리",
+                Specification = spec,
+                Formula       = "A_bottom_net x H_shoring x ShoringFactor",
+                Unit          = "공m³",
+                CategoryIds   = [Floors],
+                Filters       = [Filter("ShoringRange", rangeKey)],
             };
 
         private static QuantityRule Spacer(string spec, string formula, int category,

@@ -16,6 +16,20 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
         private const double ShoringHeightThresholdM = 4.2; // 4.2m 기준으로 동바리 종류를 구분 (강관동바리 / 시스템 동바리)
         private const double ShoringCoefficient      = 0.9; // 동바리 계수 (동바리 면적 (or 부피) * 0.9)
 
+        private static string CalcShoringRange(double h)
+        {
+            if (h <= 0)                          return string.Empty;
+            if (h <= ShoringHeightThresholdM)
+            {
+                if (h <= 3.5) return "강관_3.5";
+                return "강관_4.2";
+            }
+            if (h <= 5)  return "시스템_5";
+            if (h <= 10) return "시스템_10";
+            if (h <= 20) return "시스템_20";
+            return "시스템_30";
+        }
+
         public RevitFloorMeasurementExtractor(Func<Document?> doc, IIntersectingElementFinder finder, IFaceClassifier classifier)
         {
             _doc = doc;
@@ -87,10 +101,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 : string.Empty;
 
             // ── 동바리 ────────────────────────────────────────────────────────
-            double aBottomGross    = refFaceDict.GetValueOrDefault(FaceType.Bottom, 0);
-            double shoringHeightM  = CalcShoringHeight(floor, doc);
-            bool hasSteelShoring   = shoringHeightM > 0 && shoringHeightM <= ShoringHeightThresholdM;
-            bool hasSystemShoring  = shoringHeightM > ShoringHeightThresholdM;
+            double aBottomGross   = refFaceDict.GetValueOrDefault(FaceType.Bottom, 0);
+            double shoringHeightM = CalcShoringHeight(floor, doc);
+            string shoringRange   = CalcShoringRange(shoringHeightM);
 
             return new ElementMeasurements
             {
@@ -117,8 +130,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                     ["ConcWorkType"]     = concWorkType,
                     ["MaterialName"]     = materialName,
                     ["DH_ElementCode"]   = floor.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
-                    ["HasSteelShoring"]  = hasSteelShoring  ? "true" : "false",
-                    ["HasSystemShoring"] = hasSystemShoring ? "true" : "false",
+                    ["ShoringRange"] = shoringRange,
                 }
             };
         }
