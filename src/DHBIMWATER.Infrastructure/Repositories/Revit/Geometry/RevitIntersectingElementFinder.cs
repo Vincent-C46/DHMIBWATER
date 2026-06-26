@@ -197,8 +197,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
                 {
                     BuiltInCategory.OST_Walls,
                     BuiltInCategory.OST_Floors,
-                    BuiltInCategory.OST_StructuralColumns,
-                    BuiltInCategory.OST_StructuralFraming,
                     BuiltInCategory.OST_StructuralFoundation,
                 },
                 BuiltInCategory.OST_StructuralColumns => new[]

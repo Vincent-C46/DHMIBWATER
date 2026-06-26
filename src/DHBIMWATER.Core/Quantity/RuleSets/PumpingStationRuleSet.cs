@@ -19,6 +19,7 @@ namespace DHBIMWATER.Core.Quantity.RuleSets
 
         private static IEnumerable<QuantityRule> BuildRules()
         {
+            // ── 지수판 ───────────────────────────────────────────────────────
             yield return new QuantityRule
             {
                 WorkType = "지수판",
@@ -36,6 +37,26 @@ namespace DHBIMWATER.Core.Quantity.RuleSets
                     }
                 ],
                 // TODO: CJ는 설정 Repository에서 주입받도록 변경 예정
+                Constants = new() { ["CJ"] = 1.0 }
+            };
+
+            // ── 방수 ───────────────────────────────────────────────────────
+            yield return new QuantityRule
+            {
+                WorkType = "방수",
+                Specification = "수성페인트칠(롤러2회)",
+                Formula = "L x CJ",
+                Unit = "m",
+                CategoryIds = [(int)RevitCategory.Walls],   // 벽체 카테고리 중에
+                Filters =
+                [
+                    new RuleFilter
+                    {
+                        ParameterName = "ConcWorkType",
+                        Operator = FilterOperator.Equals,
+                        Value = "철근콘크리트"
+                    }
+                ],
                 Constants = new() { ["CJ"] = 1.0 }
             };
         }

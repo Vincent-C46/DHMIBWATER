@@ -72,6 +72,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IElementMeasurementExtractor, RevitRebarMeasurementExtractor>();
         services.AddSingleton<QuantityRuleEngine>();
 
+        services.AddTransient<IQuantityRuleRepository, RevitQuantityRuleRepo>();
         services.AddTransient<IFaceClassifier, RevitFaceClassifier>();
         services.AddTransient<IExcelExporter, ClosedXmlExcelWriter>();
         services.AddTransient<IElementQuantityRepo, ElementQuantityRepo>();

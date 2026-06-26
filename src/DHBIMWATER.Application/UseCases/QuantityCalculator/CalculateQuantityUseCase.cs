@@ -17,6 +17,7 @@ namespace DHBIMWATER.Application.UseCases.QuantityCalculator
         private readonly IEnumerable<IQuantityExtractor> _extractors;
         private readonly IEnumerable<IElementMeasurementExtractor> _measurementExtractors;
         private readonly QuantityRuleEngine _ruleEngine;
+        private readonly IQuantityRuleRepository _ruleRepo;
         #endregion
 
         #region Constructor
@@ -26,7 +27,8 @@ namespace DHBIMWATER.Application.UseCases.QuantityCalculator
                                         IManualQuantityRepo manualQuantityRepo,
                                         IEnumerable<IQuantityExtractor> extractors,
                                         IEnumerable<IElementMeasurementExtractor> measurementExtractors,
-                                        QuantityRuleEngine ruleEngine)
+                                        QuantityRuleEngine ruleEngine,
+                                        IQuantityRuleRepository ruleRepo)
         {
             _tx = tx;
             _dialogService = dialogService;
@@ -35,6 +37,7 @@ namespace DHBIMWATER.Application.UseCases.QuantityCalculator
             _extractors = extractors;
             _measurementExtractors = measurementExtractors;
             _ruleEngine = ruleEngine;
+            _ruleRepo = ruleRepo;
         }
         #endregion
 
@@ -54,8 +57,10 @@ namespace DHBIMWATER.Application.UseCases.QuantityCalculator
                     quantityItems.AddRange(extractor.Extract(id));
             }
 
-            // Rule Engine 경로
-            var rules = DefaultRuleSet.Create().Rules;
+            // Rule Engine 경로 (DefaultRuleSet 항상 적용 + 프로젝트 특화 규칙 추가)
+            var rules = DefaultRuleSet.Create().Rules
+                .Concat(_ruleRepo.GetProjectRuleSet()?.Rules ?? [])
+                .ToList();
             foreach (var measExtractor in _measurementExtractors)
             {
                 var ids = measExtractor.CollectElementIds();

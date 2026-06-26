@@ -63,7 +63,7 @@ namespace DHBIMWATER.Core.Quantity.RuleSets
             yield return Fw(FormworkType.Plywood3, "A_side_net", Columns, [IsRc]);
 
             // ── 거푸집: 보 ───────────────────────────────────────────────────
-            yield return Fw(FormworkType.Plywood4, "A_bottom_net", Framing, [IsRc]);
+            // A_bottom_net(Framing) 제거: 보 하부면 거푸집은 슬래브 하부 거푸집에 포함
             yield return Fw(FormworkType.Plywood3, "A_left_net",   Framing, [IsRc]);
             yield return Fw(FormworkType.Plywood3, "A_right_net",  Framing, [IsRc]);
             yield return Fw(FormworkType.Plywood3, "A_end_net",    Framing, [IsRc]);
@@ -85,6 +85,26 @@ namespace DHBIMWATER.Core.Quantity.RuleSets
 
             // ── 스페이서: 슬래브 ─────────────────────────────────────────────
             yield return Spacer("수평", "A", Floors, [IsRc]);
+
+            // ── 동바리 ───────────────────────────────────────────────────────
+            yield return new QuantityRule
+            {
+                WorkType      = "동바리",
+                Specification = "강관동바리",
+                Formula       = "A_bottom_gross x ShoringFactor",
+                Unit          = "m²",
+                CategoryIds   = [Floors],
+                Filters       = [Filter("HasSteelShoring", "true")],
+            };
+            yield return new QuantityRule
+            {
+                WorkType      = "동바리",
+                Specification = "시스템동바리",
+                Formula       = "A_bottom_gross x H_shoring x ShoringFactor",
+                Unit          = "공m³",
+                CategoryIds   = [Floors],
+                Filters       = [Filter("HasSystemShoring", "true")],
+            };
 
             // ── 철근 ─────────────────────────────────────────────────────────
             yield return new QuantityRule
