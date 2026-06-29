@@ -63,5 +63,19 @@ namespace DHBIMWATER.Infrastructure.Helpers
             var pse = element.Document.GetElement(assetId) as PropertySetElement;
             return pse?.GetStructuralAsset()?.StructuralAssetClass;
         }
+
+        public static bool IsConcreteMaterial(Document doc, ElementId? materialId)
+        {
+            if (materialId == null || materialId == ElementId.InvalidElementId) return false;
+            var material = doc.GetElement(materialId) as Material;
+            if (material == null) return false;
+
+            var assetId = material.StructuralAssetId;
+            if (assetId == null || assetId == ElementId.InvalidElementId) return false;
+
+            var cls = (doc.GetElement(assetId) as PropertySetElement)
+                          ?.GetStructuralAsset()?.StructuralAssetClass;
+            return cls == StructuralAssetClass.Concrete;
+        }
     }
 }

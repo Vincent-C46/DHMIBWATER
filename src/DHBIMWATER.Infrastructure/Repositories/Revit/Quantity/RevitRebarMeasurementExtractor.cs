@@ -65,11 +65,14 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var dhCategory = rebar.LookupParameter("DH_Category")?.AsString();
             var category = !string.IsNullOrEmpty(dhCategory) ? dhCategory : builtInCategory;
 
+            var hostId = rebar.GetHostId();
+
             return new ElementMeasurements
             {
-                ElementId  = elementId,
-                Category   = category,
-                CategoryId = (int)BuiltInCategory.OST_Rebar,
+                ElementId     = elementId,
+                HostElementId = (hostId != null && hostId != ElementId.InvalidElementId) ? hostId.Value : null,
+                Category      = category,
+                CategoryId    = (int)BuiltInCategory.OST_Rebar,
                 Values = new Dictionary<string, double>
                 {
                     ["L"]  = totalLength,

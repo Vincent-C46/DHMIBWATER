@@ -18,6 +18,7 @@ namespace DHBIMWATER.Core.Quantity
     public class ElementMeasurements
     {
         public long ElementId { get; set; }
+        public long? HostElementId { get; set; }               // 호스트 객체 ID (철근 등 종속 요소에만 사용)
         public string Category { get; set; } = string.Empty;   // 표시용
         public int CategoryId { get; set; }                    // BuiltInCategory int 값 (로케일 무관)
         public Dictionary<string, double> Values { get; set; } = new();

@@ -30,13 +30,14 @@ namespace DHBIMWATER.Application.Services
 
                 yield return new QuantityItem
                 {
-                    ElementId   = measurements.ElementId,
-                    Category    = measurements.Category,
-                    ElementCode = measurements.Parameters.GetValueOrDefault("DH_ElementCode", ""),
-                    WorkType    = rule.WorkType,
-                    Specification    = spec,
-                    RawFormula       = rule.Formula,
-                    RenderedFormula  = FormulaCalculator.Render(rule.Formula, varDict),
+                    ElementId      = measurements.ElementId,
+                    HostElementId  = measurements.HostElementId,
+                    Category       = measurements.Category,
+                    ElementCode    = measurements.Parameters.GetValueOrDefault("DH_ElementCode", ""),
+                    WorkType       = rule.WorkType,
+                    Specification  = spec,
+                    RawFormula     = rule.Formula,
+                    RenderedFormula = FormulaCalculator.Render(rule.Formula, varDict),
                     Value = value,
                     Unit  = rule.Unit,
                 };
