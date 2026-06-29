@@ -54,8 +54,8 @@ namespace DHBIMWATER.Core.Quantity.RuleSets
             // ── 거푸집: 벽체 ─────────────────────────────────────────────────
             yield return Fw(FormworkType.Euroform, "A_right_net", Walls, [IsRc, IsExterior]);
             yield return Fw(FormworkType.Euroform, "A_left_net",  Walls, [IsRc, IsExterior]);
-            yield return Fw(FormworkType.Euroform, "A_left_net",  Walls, [IsRc, IsInterior]);
             yield return Fw(FormworkType.Euroform, "A_right_net", Walls, [IsRc, IsInterior]);
+            yield return Fw(FormworkType.Euroform, "A_left_net", Walls, [IsRc, IsInterior]);
             yield return Fw(FormworkType.Plywood3, "A_end_net",          Walls, [IsRc]);
             yield return Fw(FormworkType.Plywood3, "A_opening_side_net", Walls, [IsRc]);
 
@@ -69,9 +69,11 @@ namespace DHBIMWATER.Core.Quantity.RuleSets
             yield return Fw(FormworkType.Plywood3, "A_end_net",    Framing, [IsRc]);
 
             // ── 거푸집: 슬래브 ───────────────────────────────────────────────
+            // 철근
             yield return Fw(FormworkType.Plywood4, "A_bottom_net",       Floors, [IsRc]);
             yield return Fw(FormworkType.Plywood3, "A_side_net",         Floors, [IsRc]);
             yield return Fw(FormworkType.Plywood3, "A_opening_side_net", Floors, [IsRc]);
+            // 무근
             yield return Fw(FormworkType.Plywood6, "A_side_net",         Floors, [IsPlain]);
             yield return Fw(FormworkType.Plywood6, "A_opening_side_net", Floors, [IsPlain]);
 

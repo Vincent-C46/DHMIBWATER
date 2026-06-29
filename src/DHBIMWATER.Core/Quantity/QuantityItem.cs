@@ -38,5 +38,9 @@ namespace DHBIMWATER.Core.Quantity
         public bool HasDeductions => Deductions != null && Deductions.Count > 0;
 
         public double? GrossValue { get; init; } = null;
+
+        public string ElementGroupLabel => string.IsNullOrEmpty(ElementCode)
+            ? $"(Id: {ElementId})"
+            : $"{ElementCode} (Id: {ElementId})";
     }
 }

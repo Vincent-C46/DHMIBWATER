@@ -13,12 +13,13 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
         private readonly IIntersectingElementFinder _finder;
         private readonly IFaceClassifier _classifier;
 
-        private const double ShoringHeightThresholdM = 4.2; // 4.2m 기준으로 동바리 종류를 구분 (강관동바리 / 시스템 동바리)
-        private const double ShoringCoefficient      = 0.9; // 동바리 계수 (동바리 면적 (or 부피) * 0.9)
+        private const double ShoringHeightThresholdM = 4.2;  // 강관/시스템 동바리 분기 기준
+        private const double MinShoringHeightM        = 0.05; // 직접 접촉 슬래브의 부동소수점 오차 제거용
+        private const double ShoringCoefficient       = 0.9;  // 동바리 면적(or 부피) 계수
 
         private static string CalcShoringRange(double h)
         {
-            if (h <= 0)                          return string.Empty;
+            if (h < MinShoringHeightM)               return string.Empty;
             if (h <= ShoringHeightThresholdM)
             {
                 if (h <= 3.5) return "강관_3.5";
@@ -142,13 +143,16 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             double thisBottomZ = bbox.Min.Z;
 
-            // 바로 아래 슬래브: BBox 상단이 현재 슬래브 하면보다 낮은 것 중 가장 가까운 것
+            // 바로 아래 슬래브: Z가 낮고 XY BBox가 현재 슬래브와 겹치는 것 중 가장 가까운 것
             var lowerBBoxMaxZ = new FilteredElementCollector(doc)
                 .OfClass(typeof(Floor))
                 .WhereElementIsNotElementType()
                 .Where(e => e.Id != floor.Id)
                 .Select(e => e.get_BoundingBox(null))
-                .Where(b => b != null && b.Max.Z < thisBottomZ)
+                .Where(b => b != null
+                         && b.Max.Z < thisBottomZ
+                         && b.Min.X < bbox.Max.X && b.Max.X > bbox.Min.X
+                         && b.Min.Y < bbox.Max.Y && b.Max.Y > bbox.Min.Y)
                 .OrderByDescending(b => b.Max.Z)
                 .FirstOrDefault()?.Max.Z;
 
