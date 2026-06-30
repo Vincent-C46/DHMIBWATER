@@ -1195,7 +1195,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         }
         private void UpdateB6Calculation()
         {
-            B6 = _selectedPumpingStationType == "Type1" ? 700 : D * 1.5 - B5 / 2;
+            B6 = _selectedPumpingStationType == "Type1" ? 700 : Math.Max(D * 1.5 - B5 / 2, 700);
         }
         private void UpdateH7Calculation()
         {
@@ -1213,9 +1213,12 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
 
         private void ApplyB7Final()
         {
-            var effective = _selectedPumpingStationType == "Type1"
-                ? Math.Max(_b7Base, _ns1 * 300 + 1000)
+            var baseValue = _selectedPumpingStationType == "Type1"
+                ? Math.Max(_b7Base, _ns1 * 300 + 1000)  // 계단 폭 300mm 고정
                 : _b7Base;
+
+            // B7 최종값은 100mm 단위로 올림
+            var effective = Math.Ceiling(baseValue / 100.0) * 100;
 
             if (_b7 != effective)
             {
@@ -1262,8 +1265,9 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             return key switch
             {
                 "B4" when type == "Type1" && ent == "측면부"
-                    => ("B4", "펌프 유지관리 공간. 최소 3.0m. 펌프받침폭 고려."),
-
+                    => ("B4", "펌프 유지관리 공간. 차량 진입 폭 및 펌프받침폭 고려하여 최소 4.5m 적용"),
+                "B4" when type == "Type1" && (ent == "좌안부" || ent == "우안부")
+                    => ("B4", "펌프 유지관리 공간. 펌프받침폭 고려하여 최소 3.0m 적용"),    
                 "B6" when type == "Type2" || type == "Type3"
                     => ("B6", "KDS 67 30 25 양배수장 구조, P41, 4.3.1.3 흡입관의 설계\"에 따라 설계펌프 중심에서 벽체 끝까지 1.5D 확보. "),
 
@@ -1308,6 +1312,9 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             ["L2"] = ("L2", "H1과 1:1 경사"),
             ["L3"] = ("L3", "하부슬래브 단차와 경사(θ)에 대한 길이. 정치수(roundup) 적용"),
             ["L4"] = ("L4", "θ = 30° 인 경우 3D, 45°의 경우 4.5D. 정치수(roundup) 적용"),
+
+            // 기초 경사부 기울기
+            ["θ"] = ("θ", "「농업생산기반정비사업계획 설계기준-배수편(2012), P215, 다.흡입수조」 및 「빗물펌프장 수문 유지관리 및 설계요령(2023), P112, 9)흡입부의 크기 검토」 등에 30° 또는 45°를 적용하도록 규정하고 있으나, 45° 적용시 급한 경사로 인한 시공성 문제가 발생할 수 있으므로 30°를 권고안으로 적용"),
 
             // 종단제원 — T
             ["T1"] = ("T1", "400mm 고정. 구조적 최적설계."),
