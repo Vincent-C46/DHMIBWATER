@@ -78,9 +78,11 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             // null(재료 미지정) → 콘크리트 가정 (기존 WallExtractor 동작과 동일)
             var materialClassStr = materialClass switch
             {
+                StructuralAssetClass.Concrete => "콘크리트",
                 StructuralAssetClass.Metal    => "강재",
-                StructuralAssetClass.Generic  => "기타",
-                _                             => "콘크리트"
+                StructuralAssetClass.Generic  => "일반",
+                StructuralAssetClass.Basic  => "기본",
+                _ => "미분류"
             };
             var concWorkType = materialClassStr == "콘크리트" ? "철근콘크리트" : string.Empty;
 

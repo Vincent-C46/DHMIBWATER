@@ -43,6 +43,9 @@
 
             <CollectionViewSource x:Key="GroupByMembers" Source="{Binding QuantityItems}">
                 <CollectionViewSource.SortDescriptions>
+                    <scm:SortDescription PropertyName="Category"/>
+                    <scm:SortDescription PropertyName="ElementCode"/>
+                    <scm:SortDescription PropertyName="ElementId"/>
                     <scm:SortDescription PropertyName="WorkType"/>
                     <scm:SortDescription PropertyName="Specification"/>
                     <scm:SortDescription PropertyName="SubSpecification"/>

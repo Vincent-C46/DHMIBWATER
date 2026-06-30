@@ -50,12 +50,16 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var quantityItems = new List<QuantityItem>();
 
             var materialId = stair.GetMaterialIds(false).FirstOrDefault();
-            string materialName = (doc.GetElement(materialId) as Material)?.Name ?? string.Empty;
+            var material = (materialId != null && materialId != ElementId.InvalidElementId)
+                ? doc.GetElement(materialId) as Material
+                : null;
+
+            string materialName = material?.Name ?? string.Empty;
 
             StructuralAssetClass? materialClass = null;
-            if (materialId != null && materialId != ElementId.InvalidElementId)
+            if (material != null)
             {
-                var assetId = (doc.GetElement(materialId) as Material)?.StructuralAssetId;
+                var assetId = material.StructuralAssetId;
                 if (assetId != null && assetId != ElementId.InvalidElementId)
                     materialClass = (doc.GetElement(assetId) as PropertySetElement)
                                         ?.GetStructuralAsset()?.StructuralAssetClass;

@@ -39,8 +39,17 @@ namespace DHBIMWATER.Core.Quantity
 
         public double? GrossValue { get; init; } = null;
 
-        public string ElementGroupLabel => string.IsNullOrEmpty(ElementCode)
-            ? $"(Id: {ElementId})"
-            : $"{ElementCode} (Id: {ElementId})";
+        public string ElementGroupLabel
+        {
+            get
+            {
+                if (WorkType == "철근")
+                    return string.IsNullOrEmpty(ElementCode) ? "(코드 없음)" : ElementCode;
+
+                return string.IsNullOrEmpty(ElementCode)
+                    ? $"(Id: {ElementId})"
+                    : $"{ElementCode} (Id: {ElementId})";
+            }
+        }
     }
 }
