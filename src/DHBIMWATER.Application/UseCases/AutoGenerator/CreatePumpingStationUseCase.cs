@@ -157,7 +157,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                         _openingCmdRepo.CreateWallOpening(openingDef);
                     #endregion
 
-                    #region 6. 펌프받침 배치
+                    #region 6. 펌프받침 배치 (FamilyInstance)
                     foreach (var def in PumpingStationGeometryCalculator.CalculateGenericModels(dto))
                         _genericModelCmdRepo.PlaceInstance(def);
                     #endregion

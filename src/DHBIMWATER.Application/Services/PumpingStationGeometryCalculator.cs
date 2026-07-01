@@ -1906,6 +1906,24 @@ namespace DHBIMWATER.Application.Services
                 };
 
                 defs.Add(pedestal);
+
+                // 밸브받침 추가
+                var valveBase = new GenericModelPlacementDefinition
+                {
+                    SymbolName = pr.IsRectangularOpening ? "기초 콘크리트_사각형" : "기초 콘크리트_원형",
+                    Origin = d.SelectedPumpingStationType == "Type2" ?
+                         new Point3D(totalLength - pr.T3 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2, pl.B8 / 2 + (pl.B8 + pl.T5) * i, 0) :
+                         new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2, pl.B8 / 2 + (pl.B8 + pl.T5) * i, 0),
+                    LevelName = "상부슬래브",
+                    Rotation = -90, // 기본적으로 회전방향은 ccw.
+                    ElementCode = "PED1",
+                    Part = "콘크리트기초",
+                    Zone = "펌프장",
+
+                    Parameters = pr.IsRectangularOpening ? recDict : circDict,
+                };
+
+                defs.Add(valveBase);
             }
             return defs;
         }
@@ -1987,7 +2005,7 @@ namespace DHBIMWATER.Application.Services
                 {
                     Name = "C",
                     Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - pl.B10 - offset, (totalWidth - pr.T4 * 2) + pl.T5 + pl.B9 - 100, d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
-                    Max = new Point3D(totalLength + pl.B10 + offset, (totalWidth - pr.T4 ) + pl.T5 + pl.B9 + 100, d.HWL * 1000 + pr.H3 + pr.T1 + offset),
+                    Max = new Point3D(totalLength + pl.B10 + offset, (totalWidth - pr.T4) + pl.T5 + pl.B9 + 100, d.HWL * 1000 + pr.H3 + pr.T1 + offset),
 
                     BasisX = new Vector3D(1, 0, 0),
                     BasisZ = new Vector3D(0, 1, 0),
