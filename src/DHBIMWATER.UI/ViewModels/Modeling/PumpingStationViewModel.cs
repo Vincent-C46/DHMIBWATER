@@ -1049,6 +1049,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             }
             _h3 = 1200 + Math.Ceiling((H2 + _h4) / 100) * 100 - (H2 + _h4);
             _h7 = 1000 + (Math.Ceiling((_h6 + _d) / 100.0) * 100 - (_h6 + _d));
+            UpdateNS1(); // NS1 → B7(ApplyB7Final) 연쇄 계산
             _ns = (int)Math.Floor((_h4 - _h1) / _hs);
             _h5 = H2 + _h3 + _h4 - T1;
 

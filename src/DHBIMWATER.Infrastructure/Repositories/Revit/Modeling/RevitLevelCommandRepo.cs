@@ -60,6 +60,16 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
 
             var viewPlan = ViewPlan.Create(doc, structViewType.Id, new ElementId((long)levelId));
 
+            var offset = UC.MmToFt(550); // 레벨 평면뷰 작성시 절단기준면 550mm 로 설정
+            var viewRange = viewPlan.GetViewRange();
+
+            var top = viewRange.GetOffset(PlanViewPlane.TopClipPlane);
+            if (top >= offset) 
+            {
+                viewRange.SetOffset(PlanViewPlane.CutPlane, offset);
+                viewPlan.SetViewRange(viewRange);
+            };
+
             viewPlan.LookupParameter("DH_뷰 카테고리")?.Set("모델링");
             viewPlan.LookupParameter("DH_뷰 타입")?.Set("평면도");
         }
