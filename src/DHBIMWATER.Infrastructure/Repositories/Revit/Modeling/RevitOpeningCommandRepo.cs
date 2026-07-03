@@ -70,6 +70,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             opening.LookupParameter("DH_Category")?.Set(openingDef.Category);
             opening.LookupParameter("DH_Part")?.Set(openingDef.Part);
             opening.LookupParameter("DH_HostElementCode")?.Set(openingDef.HostElementCode);
+            opening.LookupParameter("DH_ElementCode")?.Set(openingDef.ElementCode);
 
             return;
         }
@@ -123,6 +124,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             opening.LookupParameter("DH_Category")?.Set(openingDef.Category);
             opening.LookupParameter("DH_Part")?.Set(openingDef.Part);
             opening.LookupParameter("DH_HostElementCode")?.Set(openingDef.HostElementCode);
+            opening.LookupParameter("DH_ElementCode")?.Set(openingDef.ElementCode);
 
             return;
         }
@@ -181,6 +183,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
                 opening.LookupParameter("DH_Category")?.Set(openingDef.Category);
                 opening.LookupParameter("DH_Part")?.Set(openingDef.Part);
                 opening.LookupParameter("DH_HostElementCode")?.Set(openingDef.HostElementCode);
+                opening.LookupParameter("DH_ElementCode")?.Set(openingDef.ElementCode);
+
             }
             return;
         }
@@ -232,6 +236,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             opening.LookupParameter("DH_Category")?.Set(openingDef.Category);
             opening.LookupParameter("DH_Part")?.Set(openingDef.Part);
             opening.LookupParameter("DH_HostElementCode")?.Set(openingDef.HostElementCode);
+            opening.LookupParameter("DH_ElementCode")?.Set(openingDef.ElementCode);
 
             return;
         }

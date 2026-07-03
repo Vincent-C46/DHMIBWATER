@@ -1674,7 +1674,7 @@ namespace DHBIMWATER.Application.Services
 
             for (int i = 0; i < d.N; i++)
             {
-
+                // 펌프 오프닝
                 if (pr.IsRectangularOpening)
                 {
                     var pumpOpening = new RectangularSlabOpeningDefinition
@@ -1689,6 +1689,7 @@ namespace DHBIMWATER.Application.Services
                         Name = "",
                         HostElementCode = "S1",
                         Part = "OPEN",
+                        ElementCode = "SO2",
                     };
                     openings.Add(pumpOpening);
                 }
@@ -1704,7 +1705,7 @@ namespace DHBIMWATER.Application.Services
                     Name = "",
                     HostElementCode = "S1",
                     Part = "OPEN",
-
+                    ElementCode = "SO1",
                 };
                 openings.Add(screenOpening);
             }
@@ -1750,7 +1751,7 @@ namespace DHBIMWATER.Application.Services
                         Name = "",
                         HostElementCode = "S1",
                         Part = "OPEN",
-
+                        ElementCode = "SO2",
                     };
                     openings.Add(pumpOpening);
                 }
@@ -1781,6 +1782,7 @@ namespace DHBIMWATER.Application.Services
                 HostElementCode = "W3",
                 OffsetZ = 0,
                 Part = "OPEN",
+                ElementCode = "WO2",
             };
             openings.Add(innerWallOpening);
 
@@ -1798,6 +1800,7 @@ namespace DHBIMWATER.Application.Services
                 HostElementCode = "W5",
                 OffsetZ = 0,
                 Part = "OPEN",
+                ElementCode = "WO3",
             };
             openings.Add(partitionWall);
 
@@ -1830,7 +1833,7 @@ namespace DHBIMWATER.Application.Services
                     HostElementCode = "W2",
                     OffsetZ = pr.H6,
                     Part = "OPEN",
-
+                    ElementCode = "WO1",
                 };
                 openings.Add(wallOpening);
             }
@@ -1847,7 +1850,7 @@ namespace DHBIMWATER.Application.Services
                     HostElementCode = "W4",
                     OffsetZ = pr.H6,
                     Part = "OPEN",
-
+                    ElementCode = "WO1",
                 };
                 openings.Add(wallOpening);
             }

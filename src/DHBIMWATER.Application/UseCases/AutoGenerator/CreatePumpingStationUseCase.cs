@@ -203,7 +203,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
             }
         }
 
-        // 공유 매개변수 작성
+        // 공유 매개변작성
         private List<SharedParameterDefinition> GetPumpSharedParameterDefinitions()
         {
             var defs = new List<SharedParameterDefinition>();
