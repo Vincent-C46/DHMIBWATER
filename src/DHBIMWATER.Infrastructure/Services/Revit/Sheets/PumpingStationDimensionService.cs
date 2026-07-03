@@ -11,8 +11,8 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
         private readonly Document    _doc;
         private readonly UIDocument  _uidoc;
 
-        private const double SegmentOffset = 2.5;   // ft
-        private const double OverallOffset  = 5.0;   // ft
+        private const double SegmentOffset = 5.25;   // ft
+        private const double OverallOffset = 6.89;   // ft
 
         public PumpingStationDimensionService(Document doc, UIDocument uidoc)
         {

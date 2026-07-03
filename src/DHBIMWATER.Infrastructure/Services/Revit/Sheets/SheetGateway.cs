@@ -45,6 +45,7 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
         private readonly WaterLevelService _waterLevel;
         private readonly PumpingStationAnnotationService _pumpingStationAnnotation;
         private readonly TagPlacementService _dhTagPlacement;
+        private readonly ViewBorderAndTitleService _viewBorderAndTitle;
         public SheetGateway(Document doc, UIDocument uidoc)
         {
             _sheetDirection = new SheetDirectionStorageService(doc);
@@ -80,6 +81,7 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             _waterLevel = new WaterLevelService(doc);
             _pumpingStationAnnotation = new PumpingStationAnnotationService(doc);
             _dhTagPlacement = new TagPlacementService(doc);
+            _viewBorderAndTitle = new ViewBorderAndTitleService(doc);
         }
 
         public IList<SheetInfoDto> GetSheets() => _query.GetSheets();
@@ -266,14 +268,29 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             _pumpingStationAnnotation.Apply();
         }
 
-        public void ApplyDHTags(IList<string> selectedFamilyIds)
+        public void ApplyDHTags(IList<string> selectedFamilyIds, IDictionary<string, (IList<string> Codes, IList<string> Parts)> viewFilters = null)
         {
-            _dhTagPlacement.Apply(selectedFamilyIds);
+            _dhTagPlacement.Apply(selectedFamilyIds, viewFilters);
         }
 
         public IList<TagFamilyDto> GetAvailableTagFamilies()
         {
             return _dhTagPlacement.GetAvailableTagFamilies();
+        }
+
+        public IList<string> GetAvailableDHElementCodes()
+        {
+            return _dhTagPlacement.GetAvailableElementCodes();
+        }
+
+        public IList<string> GetAvailableDHParts()
+        {
+            return _dhTagPlacement.GetAvailableParts();
+        }
+
+        public void ApplyViewBorderAndTitle(string viewId, string titleText)
+        {
+            _viewBorderAndTitle.Apply(viewId, titleText);
         }
     }
 }

@@ -160,25 +160,29 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             if (targetViews.Count == 0)
                 return;
 
-            var categoriesToHide = new[]
+            var targetBics = new HashSet<BuiltInCategory>
             {
                 BuiltInCategory.OST_SectionHeads,
                 BuiltInCategory.OST_Sections,
-                BuiltInCategory.OST_Viewers
+                BuiltInCategory.OST_Viewers,
+                BuiltInCategory.OST_Levels
             };
 
-            using var tx = new Transaction(_doc, "Hide Section Markers On Section Views");
+            using var tx = new Transaction(_doc, "Hide Section Markers And Levels On Section Views");
             tx.Start();
 
             foreach (var view in targetViews)
             {
-                foreach (var bic in categoriesToHide)
-                {
-                    var cat = Category.GetCategory(_doc, bic);
-                    if (cat == null) continue;
-                    if (!view.CanCategoryBeHidden(cat.Id)) continue;
-                    view.SetCategoryHidden(cat.Id, true);
-                }
+                var hideIds = new FilteredElementCollector(_doc, view.Id)
+                    .WhereElementIsNotElementType()
+                    .Where(e => e.Category != null &&
+                                targetBics.Contains((BuiltInCategory)e.Category.Id.Value) &&
+                                e.CanBeHidden(view))
+                    .Select(e => e.Id)
+                    .ToList();
+
+                if (hideIds.Count > 0)
+                    view.HideElements(hideIds);
             }
 
             tx.Commit();
@@ -199,8 +203,10 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
                 .Where(v =>
                     !v.IsTemplate &&
                     v is ViewPlan &&
-                    targetViewNamePrefixes.Any(prefix =>
-                        v.Name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
+                    (targetViewNamePrefixes.Any(prefix =>
+                        v.Name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) ||
+                     v.Name.Contains("KeyMap", StringComparison.OrdinalIgnoreCase) ||
+                     v.Name.Contains("KEY PLAN", StringComparison.OrdinalIgnoreCase)))
                 .ToList();
 
             if (targetViews.Count == 0)
@@ -208,6 +214,13 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
 
             using var tx = new Transaction(_doc, "Hide Copied Section Markers");
             tx.Start();
+
+            // 입면도 기호는 무조건 숨김, 단면기호는 복사본만 숨김
+            var elevationBics = new HashSet<BuiltInCategory>
+            {
+                BuiltInCategory.OST_Elev,
+                BuiltInCategory.OST_ElevationMarks
+            };
 
             foreach (var targetView in targetViews)
             {
@@ -224,12 +237,18 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
 
                     var bic = (BuiltInCategory)element.Category.Id.Value;
 
+                    if (!element.CanBeHidden(targetView))
+                        continue;
+
+                    if (elevationBics.Contains(bic))
+                    {
+                        hideIds.Add(element.Id);
+                        continue;
+                    }
+
                     if (bic != BuiltInCategory.OST_Viewers &&
                         bic != BuiltInCategory.OST_Sections &&
                         bic != BuiltInCategory.OST_SectionHeads)
-                        continue;
-
-                    if (!element.CanBeHidden(targetView))
                         continue;
 
                     if (IsCopiedSectionMarkerElement(element))

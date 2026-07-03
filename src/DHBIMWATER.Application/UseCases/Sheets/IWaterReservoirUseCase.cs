@@ -18,6 +18,8 @@ namespace DHBIMWATER.Application.UseCases.Sheets
         void OpenFirstReservoirSheet();
         void CloseReservoirSheets();
         void ApplyReservoirTags();
+        void ApplyDHTags(IList<string> selectedFamilyIds);
+        IList<TagFamilyDto> GetAvailableTagFamilies();
         void SetReservoirSheetRange(string startSheetNumber, int totalSheetCount);
         (string hwl, string lwl) GetWaterLevels();
         void CreateOrUpdateWaterLevels(string hwl, string lwl);
