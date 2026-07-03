@@ -60,7 +60,10 @@ namespace DHBIMWATER.Application.Interfaces.Sheets
         (string hwl, string lwl) GetWaterLevels();
         void HideNonWaterLevels();
         void ApplyPumpingStationAnnotations();
-        void ApplyDHTags(IList<string> selectedFamilyIds);
+        void ApplyDHTags(IList<string> selectedFamilyIds, IDictionary<string, (IList<string> Codes, IList<string> Parts)> viewFilters = null);
         IList<TagFamilyDto> GetAvailableTagFamilies();
+        IList<string> GetAvailableDHElementCodes();
+        IList<string> GetAvailableDHParts();
+        void ApplyViewBorderAndTitle(string viewId, string titleText);
     }
 }

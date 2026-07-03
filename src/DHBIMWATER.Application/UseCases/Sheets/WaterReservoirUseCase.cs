@@ -297,7 +297,7 @@ namespace DHBIMWATER.Application.UseCases.Sheets
                 var activeViewId = _sheetUseCase.GetActiveViewId();
                 var views = _sheetUseCase.GetViews();
                 var safeView = views.FirstOrDefault(v =>
-                    v.ViewType == "ThreeD" || v.ViewName == "{3D}");
+                    v.ViewType == "3D" || v.ViewType == "ThreeD" || v.ViewName == "{3D}");
 
                 safeView ??= views.FirstOrDefault(v =>
                     v.ViewType != "DrawingSheet" && v.ViewId != activeViewId);

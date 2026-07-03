@@ -118,6 +118,7 @@ namespace DHBIMWATER.Application.UseCases.Sheets
                 _sheetUseCase.RecenterViewportToSheetCenter(sheet.Id, placedId);
                 _sheetUseCase.ApplyViewFormProfile(placedId, "일반도");
                 _sheetUseCase.UpdateViewCategory(placedId, "출력");
+                _sheetUseCase.ApplyViewBorderAndTitle(placedId, sheet.SheetName);
 
                 result.PlacedCount++;
             }
@@ -173,7 +174,7 @@ namespace DHBIMWATER.Application.UseCases.Sheets
                 var activeViewId = _sheetUseCase.GetActiveViewId();
                 var views = _sheetUseCase.GetViews();
                 var safeView = views.FirstOrDefault(v =>
-                    v.ViewType == "ThreeD" || v.ViewName == "{3D}");
+                    v.ViewType == "3D" || v.ViewType == "ThreeD" || v.ViewName == "{3D}");
 
                 safeView ??= views.FirstOrDefault(v =>
                     v.ViewType != "DrawingSheet" && v.ViewId != activeViewId);
@@ -218,12 +219,16 @@ namespace DHBIMWATER.Application.UseCases.Sheets
             _sheetUseCase.ApplyPumpingStationAnnotations();
         }
 
-        public void ApplyDHTags(IList<string> selectedFamilyIds)
+        public void ApplyDHTags(IList<string> selectedFamilyIds, IDictionary<string, (IList<string> Codes, IList<string> Parts)> viewFilters = null)
         {
-            _sheetUseCase.ApplyDHTags(selectedFamilyIds);
+            _sheetUseCase.ApplyDHTags(selectedFamilyIds, viewFilters);
         }
 
         public IList<TagFamilyDto> GetAvailableTagFamilies() => _sheetUseCase.GetAvailableTagFamilies();
+
+        public IList<string> GetAvailableDHElementCodes() => _sheetUseCase.GetAvailableDHElementCodes();
+
+        public IList<string> GetAvailableDHParts() => _sheetUseCase.GetAvailableDHParts();
 
         public IList<TitleBlockDto> GetTitleBlocks() => _sheetUseCase.GetTitleBlocks();
     }

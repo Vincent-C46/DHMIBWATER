@@ -34,9 +34,9 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
                         .ToList();
 
                     var match = allTypes.FirstOrDefault(e =>
-                            e.Name.Contains("채워진 화살표 30", StringComparison.OrdinalIgnoreCase)) ??
+                            e.Name.Contains("채워진 화살표 15", StringComparison.OrdinalIgnoreCase)) ??
                         allTypes.FirstOrDefault(e =>
-                            e.Name.Contains("Filled Arrow 30", StringComparison.OrdinalIgnoreCase));
+                            e.Name.Contains("Filled Arrow 15", StringComparison.OrdinalIgnoreCase));
 
                     _arrowheadId = match?.Id ?? ElementId.InvalidElementId;
                 }
