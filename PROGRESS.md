@@ -109,6 +109,30 @@
 
 ## ⚠️ 의사결정 대기
 
+### 밸브실 계단 작성 (2026-07-03) — KEEP, 다음 세션 결정사항부터 재개
+요청 요약: 밸브실에 상부슬래브→밸브실로 내려오는 **Run 단독** 계단 작성.
+- **조건**: `SelectedPumpingStationType == "Type1"` 일 때만 생성
+- **단수**: `NS1` (ViewModel `UpdateNS1()`에 기존 구현: `total = H7 + D + H6`, 200 배수면 -1)
+- **수직**: 밸브실 바닥에서 시작 → 상부슬래브보다 **한 단(200mm) 아래**에서 끝
+- **단높이**: 기본 200mm(`HS1`), 높이차 나머지는 **최하단 리저에 반영**
+  - 해석(확인 필요): 위 NS1-1개 = 200mm, 최하단 = `total - NS1*200` (예 total=2100 → NS1=10, 최하단 100mm + 200mm×9)
+
+조사 완료 사실:
+- 레벨 확인: `밸브실` = `상부슬래브 - (H7+D+H6)` → 높이차가 정확히 `total`과 일치
+- 계단 인프라(`IStairCommandRepo`/`RevitStairCommandRepo`/`StairsDefinition·Run·Landing`) 이미 존재, DI 등록됨
+- B7 계산에 going=300mm, `B7 ≥ NS1*300+1000` → 밸브실에 계단 공간 이미 확보
+
+🚧 결정/정보 필요 (다음 세션 시작점):
+1. **리저 모델링** — `CreateStraightRun`은 리저 균등분할만 가능 → "나머지 최하단 반영" 불가.
+   - (A) `StairsRun.CreateSketchedRun`으로 Repo 확장(정확, 작업량↑) vs (B) 균등 리저 근사(간단, 요구 불충족)
+2. **StairsEditScope ↔ 트랜잭션 충돌 (구조적)** — `CreatePumpingStationUseCase.Execute()`는 `_tx.Begin()`로 큰 트랜잭션을 여는데, `StairsEditScope`는 열린 트랜잭션 내부에서 Start/Commit 불가 → 그대로 끼우면 런타임 예외. 계단만 트랜잭션 밖 별도 단계로 분리 등 경계 재설계 필요.
+3. **수평 배치** — Run 시작/끝점, 하강 방향(X/Y), 위치(어느 펌프열/위치) 정보 없음
+4. **폭 / 유형** — Run 폭, `StairsType` 이름 (비우면 문서 기본유형 사용 가능)
+5. **NS1/HS1 전달** — 현재 ViewModel에만 있음 → DTO(`PumpProfileSpecDto` 등)에 실어 Calculator로 전달 필요, `IStairCommandRepo`도 UseCase에 미주입
+
+제안 순서(승인 시): 1·2 결정 → DTO에 NS1/HS1 추가 + 호출부 갱신 → `PumpingStationGeometryCalculator.CalculateStairs(dto)` 신설(Type1 아니면 빈 리스트) → UseCase에 `IStairCommandRepo` 주입 + 트랜잭션 경계 맞춰 호출 → 빌드/기록.
+> 이번 세션은 코드 미변경(조사만). 다음 세션에서 1·3·4(리저 방식·수평배치·폭/유형)와 2(트랜잭션 경계) 확정 후 구현.
+
 ### Stair 샘플 코드 구현 방식 (2026-07-01)
 - 요청: "0,0,0에서 시작하는 계단 작성하는 샘플 코드" 필요 (`IStairCommandRepo`/`RevitStairCommandRepo` 호출 예시)
 - 선택지 2가지 중 미결정:
@@ -119,6 +143,16 @@
 ---
 
 ## 진행 중인 작업
+
+#### 레벨 3D 범위 최대화 API + `ILevelCommandRepo` long 마이그레이션 마무리 (2026-07-03)
+- [x] `ILevelCommandRepo.Maximize3dExtents(long levelId)` 추가 — 우클릭 "3D 범위 최대화"의 API 버전(`DatumPlane.Maximize3DExtents()`)
+- [x] `RevitLevelCommandRepo.Maximize3dExtents` 구현 (Transaction은 UseCase에서 관리 전제, API 호출만)
+- [x] `ILevelCommandRepo` int→long 마이그레이션 잔여 정리 (앞선 미완 상태였음)
+  - `MockLevelCommandRepo` — `CreateLevel`/`UpdateLevel` 반환형 + `CreatePlan` 파라미터 int→long, `Maximize3dExtents` 스텁 추가
+  - `CreateReservoirUseCase`의 `int levelId → long` (사용자가 처리)
+  - `CreatePumpingStationUseCase`는 이미 `long levelId`로 갱신돼 있었음
+- [x] 전체 솔루션 빌드 오류 0개 확인
+- TODO: `Maximize3dExtents`를 호출하는 UseCase/호출부 미작성 (사용처 확정 후 연동)
 
 #### Revit Element DTO `ElementId` long 마이그레이션 (2026-07-03)
 - [x] `RevitElementDto` / `RevitWallDto` / `RevitColumnDto` / `RevitSlabDto` 의 `ElementId`를 `int` -> `long`으로 변경

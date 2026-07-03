@@ -792,7 +792,7 @@ Tag="HH1" Text="{Binding HH1}" Width="100" Margin="10,0" VerticalAlignment="Cent
                                                              Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                                 <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="30"/>
                                             </StackPanel>
-                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,15" Visibility="{Binding L5Visibility}">
                                                 <TextBlock Text="L5:" Style="{StaticResource LabelTextBlockStyle}" Width="35" VerticalAlignment="Center"/>
                                                 <TextBlock Text="진입부 길이" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                                                 <TextBox Style="{StaticResource PrimaryTextBoxStyle}"

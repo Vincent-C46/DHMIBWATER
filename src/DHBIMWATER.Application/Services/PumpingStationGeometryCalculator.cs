@@ -2145,5 +2145,87 @@ namespace DHBIMWATER.Application.Services
 
             return sectionViewDefs;
         }
+        public static IReadOnlyList<StairsDefinition> CalculateStairs(PumpCreationRequestDto dto)
+        {
+            var d = dto.DesignConditionDto;
+            var pr = dto.ProfileSpecDto;
+            var pl = dto.PlanSpecDto;
+            var totalLength = d.SelectedPumpingStationType == "Type2" ? pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T3 : pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
+            var totalWidth = pr.T4 * 2 + (pl.B8 * d.N) + (pl.T5 * (d.N - 1));
+            double x2 = d.SelectedPumpingStationType == "Type2" ? totalLength - pr.T3 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2 - pr.L4 - pr.L3 : totalLength - pr.T4 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2 - pr.L4 - pr.L3;
+
+            var defs = new List<GenericModelPlacementDefinition>();
+
+            double rec_d = d.SupportBlockWidth;
+            double rec_B = pr.B5 + rec_d * 2;
+            double rec_L = pr.B5 + rec_d * 2;
+            double rec_T = d.SupportBlockHeight;
+
+            double circ_d = d.SupportBlockWidth;
+            double circ_R = pr.B5 / 2 + rec_d;
+            double circ_T = d.SupportBlockHeight;
+
+            var recDict = new Dictionary<string, object>
+            {
+                { "B", rec_B },
+                { "L", rec_L },
+                { "T", rec_T },
+                { "d", rec_d },
+            };
+            var circDict = new Dictionary<string, object>
+            {
+                { "R", circ_R },
+                { "T", circ_T },
+                { "d", circ_d },
+            };
+            // 밸브받침("DH_받침") 매개변수 — Excel "밸브 연장" 시트에서 파싱한 제원 (HasCheckValve 반영됨)
+            var valveBaseDict = new Dictionary<string, object>
+            {
+                { "B", dto.ValveBase.ValveBaseWidth },
+                { "L", dto.ValveBase.ValveBaseLength },
+                { "H", dto.ValveBase.ValveBaseHeight },
+            };
+            // Excel 밸브받침 배치값(J/Q열)이 미로드/누락(0)이면 B7/2 기본값 사용
+            double valveBasePlacement = dto.ValveBase.ValveBasePlacement != 0 ? dto.ValveBase.ValveBasePlacement : pr.B7 / 2;
+            for (int i = 0; i < d.N; i++)
+            {
+                var pedestal = new GenericModelPlacementDefinition
+                {
+                    SymbolName = pr.IsRectangularOpening ? "기초 콘크리트_사각형" : "기초 콘크리트_원형",
+                    Origin = d.SelectedPumpingStationType == "Type2" ?
+                             new Point3D(totalLength - pr.T3 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2, pl.B8 / 2 + (pl.B8 + pl.T5) * i, 0) :
+                             new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2, pl.B8 / 2 + (pl.B8 + pl.T5) * i, 0),
+                    LevelName = UpperSlabLevelName,
+                    Rotation = -90, // 기본적으로 회전방향은 ccw.
+                    ElementCode = "PED1",
+                    Part = "콘크리트기초",
+                    Zone = "펌프장",
+
+                    Parameters = pr.IsRectangularOpening ? recDict : circDict,
+                };
+
+                defs.Add(pedestal);
+
+                // 밸브받침 추가
+                var valveBase = new GenericModelPlacementDefinition
+                {
+                    SymbolName = "DH_받침",
+                    // X = totalLength - T4(Type2는 T3) - B7 + ValveBasePlacement (J/Q열). Y/Z는 펌프 기초와 동일 열/레벨
+                    Origin = d.SelectedPumpingStationType == "Type2"
+                             ? new Point3D(totalLength - pr.T3 - pr.B7 + valveBasePlacement, pl.B8 / 2 + (pl.B8 + pl.T5) * i, 0)
+                             : new Point3D(totalLength - pr.T4 - pr.B7 + valveBasePlacement, pl.B8 / 2 + (pl.B8 + pl.T5) * i, 0),
+                    LevelName = ValveRoomLevelName,
+                    Rotation = -90, // 기본적으로 회전방향은 ccw.
+                    ElementCode = "PED2",
+                    Part = "콘크리트기초",
+                    Zone = "밸브실",
+
+                    Parameters = valveBaseDict,
+                };
+
+                defs.Add(valveBase);
+            }
+            return defs;
+        }
     }
 }

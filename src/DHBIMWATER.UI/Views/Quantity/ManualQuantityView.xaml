@@ -169,22 +169,22 @@
                                                     CommandParameter="{Binding}"
                                                     Margin="2,0,0,0"
                                                     Padding="0"
-                                                    Width="24"
+                                                    Width="26"
                                                     Height="24"
                                                     FontSize="11"
                                                     ToolTip="길이 측정: 점을 연속 클릭하고 ESC로 완료">
-                                                <Image Source="/DHBIMWATER.UI;component/Resources/Quantity/length.png" Width="18" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                <Image Source="/DHBIMWATER.UI;component/Resources/Quantity/length.png" Width="20" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             </Button>
                                             <Button Grid.Column="4"
                                                     Command="{Binding DataContext.MeasureAreaCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                     CommandParameter="{Binding}"
                                                     Margin="2,0,0,0"
                                                     Padding="0"
-                                                    Width="24"
+                                                    Width="26"
                                                     Height="24"
                                                     FontSize="11"
                                                     ToolTip="면적 측정: 면을 선택하세요">
-                                                <Image Source="/DHBIMWATER.UI;component/Resources/Quantity/area.png" Width="18" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                <Image Source="/DHBIMWATER.UI;component/Resources/Quantity/area.png" Width="20" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             </Button>
                                         </Grid>
                                     </Border>

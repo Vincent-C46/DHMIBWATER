@@ -149,6 +149,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                     OnPropertyChanged(nameof(PlanImagePath));
                     OnPropertyChanged(nameof(T5Visibility));
                     OnPropertyChanged(nameof(B9Visibility));
+                    OnPropertyChanged(nameof(L5Visibility));
                     UpdateTypeDependents();
                     RefreshHint();
                 }
@@ -217,6 +218,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
 
         // 가시성
         public string B4Visibility => SelectedPumpingStationType == "Type1" ? "Visible" : "Collapsed";
+        public string L5Visibility => SelectedEntranceType == "측면부" ? "Collapsed" : "Visible";
         public string T6Visibility => SelectedPumpingStationType == "Type1" ? "Visible" : "Collapsed";
         public string B9Visibility => SelectedEntranceType == "측면부" ? "Collapsed" : "Visible";
         public string T5Visibility => SelectedEntranceType == "측면부" ? "Collapsed" : "Visible";
@@ -1269,13 +1271,14 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
 
             return key switch
             {
+                "B3" when type == "Type2" || type == "Type3"
+                  => ("B3", "제진기, 컨베이어벨트 설치 및 유지관리 공간. 제진기, 컨베이어벨트 설치 공간 4m와 유지관리 공간 3m 고려하여 7.0m 적용"),
                 "B4" when type == "Type1" && ent == "측면부"
                     => ("B4", "펌프 유지관리 공간. 차량 진입 폭 및 펌프받침폭 고려하여 최소 4.5m 적용"),
                 "B4" when type == "Type1" && (ent == "좌안부" || ent == "우안부")
                     => ("B4", "펌프 유지관리 공간. 펌프받침폭 고려하여 최소 3.0m 적용"),    
                 "B6" when type == "Type2" || type == "Type3"
-                    => ("B6", "KDS 67 30 25 양배수장 구조, P41, 4.3.1.3 흡입관의 설계\"에 따라 설계펌프 중심에서 벽체 끝까지 1.5D 확보. "),
-
+                    => ("B6", "「KDS 67 30 25 양배수장 구조, P41, 4.3.1.3 흡입관의 설계」에 따라 설계펌프 중심에서 벽체 끝까지 1.5D와 토출관 접합을 위한 작업공간 700mm 중 큰 값 적용"),
                 "B7" when type == "Type2" || type == "Type3"
                                    => ("B7", "1. 밸브 1만 적용 시\r\n밸브 + 관로 연장\r\n밸브 설치 및 유지관리를 위해 벽체에서 플랜지까지 600mm 공간확보 \n\n1. 밸브 1 + 2 적용 시\r\n밸브 + 관로 연장\r\n밸브 설치 및 유지관리를 위해 벽체에서 플랜지까지 600mm 공간확보\r\n밸브 1과 밸브 2사이 길이 1m의 관 설치 "),
 
@@ -1339,7 +1342,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             ["HS1"] = ("HS1", "밸브실 내 계단 높이 200mm 고정. 나머지 발생시 최하단에서 나머지 반영한 높이 적용"),
 
             // 평면제원
-            ["B8"] = ("B8", "「KDS 67 30 25 양배수장 구조 설계, P41, 4.3.1.3 흡입관의 설계」. 정치수(roundup) 적용"),
+            ["B8"] = ("B8", "「KDS 67 30 25 양배수장 구조 설계, P41, 4.3.1.3 흡입관의 설계」. 정치수 적용"),
             ["B9"] = ("B9", "계단 및 지배수펌프 개구부(1.0m)와 유지관리차량 진입 및 여유동선(3.5m) 고려."),
             ["B10"] = ("B10", "직접기초시 부력키 불필요. 말뚝기초시 하부슬래브 두께와 동일폭 적용권장."),
             ["L5"] = ("L5", "유입부측 끝이 하부슬래브 경사부를 침범하지 않는 위치까지의 연장."),
