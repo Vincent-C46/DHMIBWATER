@@ -72,26 +72,75 @@ namespace DHBIMWATER.Revit.Commands.Quantity
             }
         }
 
-        private static MeasureResult MeasureLength(UIDocument uidoc)
+        private static MeasureResult? MeasureLength(UIDocument uidoc)
+        {
+            if (uidoc.ActiveView is View3D view3D)
+                return MeasureLengthOn3D(uidoc, view3D);
+
+            return PickAndSumLength(uidoc);
+        }
+
+        private static MeasureResult? MeasureLengthOn3D(UIDocument uidoc, View3D view)
+        {
+            var doc = uidoc.Document;
+            var reference = uidoc.Selection.PickObject(
+                ObjectType.Face,
+                "작업기준면이 될 면을 먼저 선택하세요. 취소: ESC");
+            var element = doc.GetElement(reference);
+
+            if (element?.GetGeometryObjectFromReference(reference) is not PlanarFace planarFace)
+            {
+                TaskDialog.Show("작업기준면", "평면인 면을 선택해야 합니다.");
+                return null;
+            }
+
+            var previousSketchPlane = view.SketchPlane;
+            SketchPlane? tempSketchPlane = null;
+            var plane = Plane.CreateByNormalAndOrigin(planarFace.FaceNormal, planarFace.Origin);
+
+            using (var tx = new Transaction(doc, "임시 작업기준면 설정"))
+            {
+                tx.Start();
+                tempSketchPlane = SketchPlane.Create(doc, plane);
+                view.SketchPlane = tempSketchPlane;
+                tx.Commit();
+            }
+
+            try
+            {
+                return PickAndSumLength(uidoc);
+            }
+            finally
+            {
+                using var tx = new Transaction(doc, "작업기준면 복원");
+                tx.Start();
+                view.SketchPlane = previousSketchPlane;
+
+                if (previousSketchPlane == null && tempSketchPlane != null)
+                    doc.Delete(tempSketchPlane.Id);
+
+                tx.Commit();
+            }
+        }
+
+        private static MeasureResult? PickAndSumLength(UIDocument uidoc)
         {
             var points = new List<XYZ>();
 
-            while (true)
+            try
             {
-                try
+                while (true)
                 {
-                    points.Add(uidoc.Selection.PickPoint("길이를 측정할 점을 클릭하세요. 종료: ESC"));
+                    points.Add(uidoc.Selection.PickPoint(
+                        "점을 연속 클릭하세요. 완료: ESC"));
                 }
-                catch (Autodesk.Revit.Exceptions.OperationCanceledException)
-                {
-                    if (points.Count == 0)
-                        throw;
-                    break;
-                }
+            }
+            catch (Autodesk.Revit.Exceptions.OperationCanceledException)
+            {
             }
 
             if (points.Count < 2)
-                return new MeasureResult(0, "m");
+                return null;
 
             double totalFt = 0;
             for (int i = 1; i < points.Count; i++)
@@ -101,13 +150,13 @@ namespace DHBIMWATER.Revit.Commands.Quantity
             return new MeasureResult(meters, "m");
         }
 
-        private static MeasureResult MeasureArea(UIDocument uidoc)
+        private static MeasureResult? MeasureArea(UIDocument uidoc)
         {
             var refFace = uidoc.Selection.PickObject(ObjectType.Face, "면을 선택하세요. 취소: ESC");
             var element = uidoc.Document.GetElement(refFace);
             var face = element?.GetGeometryObjectFromReference(refFace) as Face;
             if (face == null)
-                return new MeasureResult(0, "m²");
+                return null;
 
             double m2 = UnitUtils.ConvertFromInternalUnits(face.Area, UnitTypeId.SquareMeters);
             return new MeasureResult(m2, "m²");
@@ -116,3 +165,4 @@ namespace DHBIMWATER.Revit.Commands.Quantity
         public string GetName() => "MeasurePick";
     }
 }
+

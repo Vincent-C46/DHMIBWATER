@@ -2,10 +2,6 @@
 using DHBIMWATER.Core.Geometry;
 using DHBIMWATER.Core.Structures;
 using System.Diagnostics;
-using System.Net;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Runtime.Intrinsics.Arm;
 
 namespace DHBIMWATER.Application.Services
 {
@@ -1891,6 +1887,15 @@ namespace DHBIMWATER.Application.Services
                 { "T", circ_T },
                 { "d", circ_d },
             };
+            // 밸브받침("DH_받침") 매개변수 — Excel "밸브 연장" 시트에서 파싱한 제원 (HasCheckValve 반영됨)
+            var valveBaseDict = new Dictionary<string, object>
+            {
+                { "B", dto.ValveBase.ValveBaseWidth },
+                { "L", dto.ValveBase.ValveBaseLength },
+                { "H", dto.ValveBase.ValveBaseHeight },
+            };
+            // Excel 밸브받침 배치값(J/Q열)이 미로드/누락(0)이면 B7/2 기본값 사용
+            double valveBasePlacement = dto.ValveBase.ValveBasePlacement != 0 ? dto.ValveBase.ValveBasePlacement : pr.B7 / 2;
             for (int i = 0; i < d.N; i++)
             {
                 var pedestal = new GenericModelPlacementDefinition
@@ -1899,7 +1904,7 @@ namespace DHBIMWATER.Application.Services
                     Origin = d.SelectedPumpingStationType == "Type2" ?
                              new Point3D(totalLength - pr.T3 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2, pl.B8 / 2 + (pl.B8 + pl.T5) * i, 0) :
                              new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2, pl.B8 / 2 + (pl.B8 + pl.T5) * i, 0),
-                    LevelName = "상부슬래브",
+                    LevelName = UpperSlabLevelName,
                     Rotation = -90, // 기본적으로 회전방향은 ccw.
                     ElementCode = "PED1",
                     Part = "콘크리트기초",
@@ -1913,17 +1918,18 @@ namespace DHBIMWATER.Application.Services
                 // 밸브받침 추가
                 var valveBase = new GenericModelPlacementDefinition
                 {
-                    SymbolName = pr.IsRectangularOpening ? "기초 콘크리트_사각형" : "기초 콘크리트_원형",
-                    Origin = d.SelectedPumpingStationType == "Type2" ?
-                         new Point3D(totalLength - pr.T3 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2, pl.B8 / 2 + (pl.B8 + pl.T5) * i, 0) :
-                         new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2, pl.B8 / 2 + (pl.B8 + pl.T5) * i, 0),
-                    LevelName = "상부슬래브",
+                    SymbolName = "DH_받침",
+                    // X = totalLength - T4(Type2는 T3) - B7 + ValveBasePlacement (J/Q열). Y/Z는 펌프 기초와 동일 열/레벨
+                    Origin = d.SelectedPumpingStationType == "Type2"
+                             ? new Point3D(totalLength - pr.T3 - pr.B7 + valveBasePlacement, pl.B8 / 2 + (pl.B8 + pl.T5) * i, 0)
+                             : new Point3D(totalLength - pr.T4 - pr.B7 + valveBasePlacement, pl.B8 / 2 + (pl.B8 + pl.T5) * i, 0),
+                    LevelName = ValveRoomLevelName,
                     Rotation = -90, // 기본적으로 회전방향은 ccw.
-                    ElementCode = "PED1",
+                    ElementCode = "PED2",
                     Part = "콘크리트기초",
-                    Zone = "펌프장",
+                    Zone = "밸브실",
 
-                    Parameters = pr.IsRectangularOpening ? recDict : circDict,
+                    Parameters = valveBaseDict,
                 };
 
                 defs.Add(valveBase);

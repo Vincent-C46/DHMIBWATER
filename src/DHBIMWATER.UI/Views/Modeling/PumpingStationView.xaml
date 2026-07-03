@@ -79,7 +79,6 @@
                                         <CheckBox IsChecked="{Binding HasCheckValve}" Margin="0,0,10,0" Content=" 추가역지밸브 적용" />
                                     </StackPanel>
 
-
                                     <Separator Margin="0,0,0,10"/>
 
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,15">

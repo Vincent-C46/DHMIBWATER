@@ -63,11 +63,13 @@
 	  <None Remove="Resources\PumpStationImages\TYPE-3_종단개요.png" />
 	  <None Remove="Resources\PumpStationImages\TYPE-3_종단제원.png" />
 	  <None Remove="Resources\Quantity\add.png" />
+	  <None Remove="Resources\Quantity\area.png" />
 	  <None Remove="Resources\Quantity\check.png" />
 	  <None Remove="Resources\Quantity\copy.png" />
 	  <None Remove="Resources\Quantity\delete.png" />
 	  <None Remove="Resources\Quantity\edit.png" />
 	  <None Remove="Resources\Quantity\excel.png" />
+	  <None Remove="Resources\Quantity\length.png" />
 	  <None Remove="Resources\Quantity\refresh-arrow_white.png" />
 	  <None Remove="Resources\Quantity\selection.png" />
 	</ItemGroup>
@@ -211,6 +213,9 @@
 		<Resource Include="Resources\Quantity\add.png">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Resource>
+		<Resource Include="Resources\Quantity\area.png">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Resource>
 		<Resource Include="Resources\Quantity\check.png">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Resource>
@@ -224,6 +229,9 @@
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Resource>
 		<Resource Include="Resources\Quantity\excel.png">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Resources\Quantity\length.png">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Resource>
 		<Resource Include="Resources\Quantity\refresh-arrow_white.png">

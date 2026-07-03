@@ -24,6 +24,8 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private IReadOnlyDictionary<string, List<string[]>>? _allSheets;
         private Dictionary<string, Dictionary<(double D, double HD), PumpManufacturerSpecDto>>? _manufacturerSpecs;
         private Dictionary<double, PumpValveExtensionDto>? _valveExtensions;
+        // HasCheckValve 여부에 따라 선택된 밸브받침 제원 (Excel 미로드/관경 미매칭 시 0 기본값)
+        private PumpValveDimensionDto _selectedValveBase = new(100, 100, 100, 0);
         private double _supportBlockWidth = 500;
         private double _supportBlockHeight = 100;
 
@@ -1012,6 +1014,8 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             if (_valveExtensions == null) return;
             if (!_valveExtensions.TryGetValue(D, out var ext)) return;
 
+            _selectedValveBase = HasCheckValve ? ext.WithCheckValve : ext.WithoutCheckValve;
+
             _b7Base = HasCheckValve
                 ? ext.TotalExtension + ext.ValveExtension + 2200
                 : ext.TotalExtension + 1200;
@@ -1023,7 +1027,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             profileSpecDto = new PumpProfileSpecDto(B1, B3, B4, B6, B7, H1, H5, H6, SelectedTheta, L1, L2, L3, L4, H3, H4, H7, OB1, OH1, NS, HB1, HH1, HS, T1, T2, T3, T4, T5Prime, GB1, GH1, B2, IsRectangularOpening, B5);
             planSpecDto = new PumpPlanSpecDto(B8, B9, L5, B10, T5, T6);
             //typeSelectionDto = new PumpTypeSelectionDto(T1, T2, T3, T4, T5, T6, GB1, GH1);
-            creationRequestDto = new PumpCreationRequestDto(designConditionDto, planSpecDto, profileSpecDto);
+            creationRequestDto = new PumpCreationRequestDto(designConditionDto, planSpecDto, profileSpecDto, _selectedValveBase);
 
             _ = _usageLogger.LogAsync();
             _createPumpingStationUseCase.Execute(creationRequestDto);

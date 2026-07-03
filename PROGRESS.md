@@ -125,7 +125,9 @@
 - [x] `IMeasurePickService` / `MeasureKind` / `MeasureResult` 추가 (`Application/Interfaces/Quantity`)
 - [x] `RevitMeasurePickService` 추가 (`Revit/Commands/Quantity`)
   - `ExternalEvent` + `TaskCompletionSource` 기반으로 길이/면적 측정 요청 처리
-  - 길이 측정은 `Selection.PickPoint()` 반복 + ESC 종료 방식으로 구현
+  - 길이 측정은 활성 뷰 종류로 분기: `View3D`는 면 선택으로 임시 작업기준면 설정 후 `PickPoint()`, 평면/단면/입면 등은 현재 뷰에서 바로 `PickPoint()`
+  - 3D 측정 종료 후 이전 작업평면 복원, 점 부족/비평면 면/면적 null은 `null` 반환으로 기존 값 유지
+  - 완료 안내 문구를 실제 동작 기준인 `ESC`로 정리
   - 면적 측정은 `Selection.PickObject(ObjectType.Face)` + `face.Area` → `m²` 변환
 - [x] `ManualQuantityViewModel` 확장
   - 선택적 측정 서비스 주입, `MeasureLengthCommand` / `MeasureAreaCommand`, `VariableInput.IsMeasuring` 추가
@@ -141,8 +143,29 @@
 - [x] 빌드/테스트 확인
   - `dotnet test tests/DHBIMWATER.UI.Tests/DHBIMWATER.UI.Tests.csproj -c Release` 통과
   - `dotnet build src/DHBIMWATER.Revit/DHBIMWATER.Revit.csproj -c Release` 오류 0
-- TODO: 실제 Revit 런타임에서 길이 측정 UX(`PickPoint` 반복 + ESC 종료)가 사용자 기대와 맞는지 확인 필요
-- TODO: 길이/면적 버튼 아이콘은 임시 텍스트(`↔`, `▱`) 사용 중 — 추후 프로젝트 아이콘 스타일로 교체 검토
+- [x] 길이/면적 버튼 아이콘 교체 (2026-07-03)
+  - `ManualQuantityView` 변수 카드의 임시 텍스트(`↔`, `▱`) → `Resources/Quantity/length.png` / `area.png` 이미지로 대체
+  - 기존 pack URI 패턴(`/DHBIMWATER.UI;component/Resources/Quantity/*.png`) 사용, PNG는 이미 csproj `<Resource>` 등록됨
+- TODO: `Enter`/`Space` 완료 지원이 필요하면 Revit 공개 Selection API 바깥의 별도 UX/입력 처리 방식 검토
+
+#### 밸브받침 제원 Excel 파싱 추가 (2026-07-03)
+- [x] `PumpValveExtensionDto` — `WithoutCheckValve`/`WithCheckValve`(각 `PumpValveDimensionDto`) 필드 추가
+  - `PumpValveDimensionDto(ValveBaseWidth, ValveBaseLength, ValveBaseHeight, ValveBasePlacement)` 신규 record
+  - 역지밸브 없음/있음 두 세트를 모두 DTO에 저장 → 소비 시점(`HasCheckValve`)에 선택하는 방식 (토글 시 재파싱 불필요)
+- [x] `ParseValveExtensionUseCase` — "밸브 연장" 시트에서 밸브받침 제원 파싱 추가
+  - 역지밸브 없음: G,H,I,J열(index 6~9), 역지밸브 있음: N,O,P,Q열(index 13~16)
+  - `ParseValveDimension(row, startCol)` 헬퍼로 연속 4개 컬럼 파싱
+- [x] 밸브받침 제원 소비 로직 연결
+  - `PumpCreationRequestDto`에 `ValveBase`(`PumpValveDimensionDto`) 필드 추가
+  - `PumpingStationViewModel`: `ApplyValveExtension()`에서 `HasCheckValve`로 세트 선택 → `_selectedValveBase` 저장, `CreatePumpingStation()`에서 DTO로 전달
+  - `PumpingStationGeometryCalculator.CalculateGenericModels()` 밸브받침("DH_받침"):
+    - 매개변수 `{ "B"=Width, "L"=Length, "H"=Height }` 설정 (`RevitGenericModelCommandRepo:72` 경로로 인스턴스 매개변수 Set)
+    - Origin.X = `totalLength - T4(Type2는 T3) - B7 + ValveBasePlacement`(J/Q열) 로 변경
+- [x] 밸브받침 배치값 누락 시 B7/2 기본값 처리
+  - `valveBasePlacement = ValveBasePlacement != 0 ? ValveBasePlacement : B7 / 2`
+  - 파싱값이 `0`이 되는 세 케이스(① Excel 미로드, ② 관경 D 미매칭, ③ J/Q 셀 비어있음)를 한 곳에서 커버
+  - 가정: `0`을 "누락"으로 판정 (배치 오프셋이 실제 0일 가능성 낮음). 실제 0이 유효하면 DTO 필드를 `double?`로 전환 필요
+
 #### PumpingStationViewModel 초기값 B7/NS1 미반영 버그 수정 (2026-07-01)
 - [x] `InitializeDerivedValues()` — `_h7` 계산 직후 `UpdateNS1()` 호출 추가
   - 기존엔 생성자에서 필드를 직접 대입(`_d = 800.0` 등)해서 `D`/`H6`/`HS1` 프로퍼티 setter의 `UpdateH7Calculation → UpdateNS1 → ApplyB7Final` 체인이 한 번도 실행되지 않음
@@ -287,4 +310,7 @@
 - [ ] 배수지 오프닝 배치 — `ReservoirGeometryCalculator.CalculateOpenings()` 추가 후 UseCase 연결
 - [ ] 배수지 단면뷰 작성 — `ReservoirGeometryCalculator.CalculateSectionViews()` 추가 후 UseCase 연결
 - [ ] 수량산출 결과 검증 로직 보강
+
+
+
 
