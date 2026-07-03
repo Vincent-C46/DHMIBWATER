@@ -36,14 +36,14 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
             ISharedParameterRepository sharedParameterRepo,
             ClassifyExteriorWallsUseCase classifyWallsUseCase)
         {
-            _tx                  = tx;
-            _dialogService       = dialogService;
-            _levelQueryRepo      = levelQueryRepo;
-            _levelCmdRepo        = levelCmdRepo;
-            _slabCmdRepo         = slabCmdRepo;
-            _wallCmdRepo         = wallCmdRepo;
-            _beamCmdRepo         = beamCmdRepo;
-            _columnCmdRepo       = columnCmdRepo;
+            _tx = tx;
+            _dialogService = dialogService;
+            _levelQueryRepo = levelQueryRepo;
+            _levelCmdRepo = levelCmdRepo;
+            _slabCmdRepo = slabCmdRepo;
+            _wallCmdRepo = wallCmdRepo;
+            _beamCmdRepo = beamCmdRepo;
+            _columnCmdRepo = columnCmdRepo;
             _sharedParameterRepo = sharedParameterRepo;
             _classifyWallsUseCase = classifyWallsUseCase;
         }
@@ -63,13 +63,13 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                     #endregion
 
                     #region 1. 레벨 생성
-                    var existingLevels      = _levelQueryRepo.GetExistingLevelNames();
-                    var existingPlanNames   = _levelQueryRepo.GetExistingPlanNames();
+                    var existingLevels = _levelQueryRepo.GetExistingLevelNames();
+                    var existingPlanNames = _levelQueryRepo.GetExistingPlanNames();
 
                     foreach (var lvl in ReservoirGeometryCalculator.CalculateLevels(dto))
                     {
                         var existing = existingLevels.FirstOrDefault(s => s.Contains(lvl.Name));
-                        int levelId;
+                        long levelId;
                         if (existing != null)
                             levelId = _levelCmdRepo.UpdateLevel(existing, lvl.Elevation);
                         else

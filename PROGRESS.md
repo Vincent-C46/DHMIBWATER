@@ -120,6 +120,18 @@
 
 ## 진행 중인 작업
 
+#### Revit Element DTO `ElementId` long 마이그레이션 (2026-07-03)
+- [x] `RevitElementDto` / `RevitWallDto` / `RevitColumnDto` / `RevitSlabDto` 의 `ElementId`를 `int` -> `long`으로 변경
+- [x] 회귀 방지 테스트 추가
+  - `tests/DHBIMWATER.UI.Tests/DTOs/Revit/Elements/RevitElementIdTypeTests.cs`
+  - 네 DTO의 `ElementId` 프로퍼티가 `long`인지 reflection으로 검증
+- [x] 테스트로 RED -> GREEN 확인
+  - 변경 전 `dotnet test tests/DHBIMWATER.UI.Tests/DHBIMWATER.UI.Tests.csproj --filter RevitElementIdTypeTests` 실패 (`Expected: long, Actual: int`)
+  - 변경 후 동일 테스트 통과
+- [ ] 전체 UI 테스트 프로젝트 단독 빌드 검증은 현재 환경 이슈로 보류
+  - `dotnet build tests/DHBIMWATER.UI.Tests/DHBIMWATER.UI.Tests.csproj` 실행 시 `src/DHBIMWATER.UI/obj/Debug/net8.0-windows/...*.g.cs` 누락으로 실패
+  - 이번 DTO 변경과 직접 관련된 타입 오류는 재현되지 않음
+
 #### 수동 수량 입력 — 변수 길이/면적 측정 연동 구현 완료 (2026-07-03)
 - [x] 목업 `docs/manual_quantity_view_v2.html` 기반 UI를 실제 WPF 변수 카드에 반영
 - [x] `IMeasurePickService` / `MeasureKind` / `MeasureResult` 추가 (`Application/Interfaces/Quantity`)

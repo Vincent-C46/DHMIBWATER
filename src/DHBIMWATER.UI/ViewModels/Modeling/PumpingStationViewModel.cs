@@ -25,7 +25,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private Dictionary<string, Dictionary<(double D, double HD), PumpManufacturerSpecDto>>? _manufacturerSpecs;
         private Dictionary<double, PumpValveExtensionDto>? _valveExtensions;
         // HasCheckValve 여부에 따라 선택된 밸브받침 제원 (Excel 미로드/관경 미매칭 시 0 기본값)
-        private PumpValveDimensionDto _selectedValveBase = new(100, 100, 100, 0);
+        private PumpValveDimensionDto _selectedValveBase = new(500, 500, 100, 0);
         private double _supportBlockWidth = 500;
         private double _supportBlockHeight = 100;
 

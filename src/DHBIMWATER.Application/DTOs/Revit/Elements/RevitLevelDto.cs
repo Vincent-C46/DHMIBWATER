@@ -8,7 +8,7 @@ namespace DHBIMWATER.Application.DTOs.Revit.Elements
         /// <summary>
         /// 레벨 ID
         /// </summary>
-        public int LevelId { get; set; }
+        public long LevelId { get; set; }
 
         /// <summary>
         /// 레벨 이름

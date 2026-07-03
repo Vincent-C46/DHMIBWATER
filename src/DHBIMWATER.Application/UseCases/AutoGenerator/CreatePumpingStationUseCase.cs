@@ -92,12 +92,14 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                     #region 1. 레벨 생성
                     var existingLevels = _levelQueryRepo.GetExistingLevelNames();
                     var existingEngineeringPlanNames = _levelQueryRepo.GetExistingPlanNames();
+                    var levels = new List<long>();
 
                     // Level 생성
                     foreach (var lvl in PumpingStationGeometryCalculator.CalculateLevels(dto))
                     {
                         var existLevel = existingLevels.FirstOrDefault(s => s.Contains(lvl.Name));
-                        int levelId;
+                        long levelId;
+
                         if (existLevel != null)
                         {
                             levelId = _levelCmdRepo.UpdateLevel(existLevel, lvl.Elevation);
@@ -106,6 +108,8 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                         {
                             levelId = _levelCmdRepo.CreateLevel(lvl.Name, lvl.Elevation);
                         }
+
+                        levels.Add(levelId);
 
                         if (lvl.Name.Contains("LWL") || lvl.Name.Contains("HWL")) continue;
 
@@ -181,7 +185,11 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                         {
                             _dialogService.Warn("Error", $"Failed to create section view '{viewDef.Name}': {ex.Message}");
                         }
-
+                    }
+                    // Level 3D 범위 최대화
+                    foreach(var levelId in levels)
+                    {
+                        _levelCmdRepo.Maximize3dExtents(levelId);
                     }
                     #endregion
 
