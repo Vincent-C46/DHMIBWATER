@@ -591,14 +591,6 @@ Tag="HB1" Text="{Binding HB1}" Width="100" Margin="10,0" VerticalAlignment="Cent
 Tag="HH1" Text="{Binding HH1}" Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                                 <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="50"/>
                                             </StackPanel>
-                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
-                                                <TextBlock Text="HS:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
-                                                <TextBlock Text="계단 높이" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
-                                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
-             Tag="HS" Text="{Binding HS}"
-             Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
-                                                <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="30"/>
-                                            </StackPanel>
 
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
                                                 <TextBlock Text="L1:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
@@ -643,6 +635,15 @@ Tag="HH1" Text="{Binding HH1}" Width="100" Margin="10,0" VerticalAlignment="Cent
              Tag="NS" Text="{Binding NS}" IsReadOnly="True" Background="LightGray"
              Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                                 <TextBlock Text="단" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="30"/>
+                                            </StackPanel>
+
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                                <TextBlock Text="HS:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
+                                                <TextBlock Text="계단 높이" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}"
+             Tag="HS" Text="{Binding HS}"
+             Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
+                                                <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="30"/>
                                             </StackPanel>
 
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,15">

@@ -69,7 +69,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private double _oh1 = 3000.0;
         private int _ns;
         private double _hs = 200;
-        private int _ns1;
+        private int _ns1;   // 밸브실 계단
         private double _hs1 = 200;
 
         private double _h5;
@@ -1026,7 +1026,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private void CreatePumpingStation(object? obj)
         {
             designConditionDto = new PumpDesignConditionDto(SelectedPumpingStationType, SelectedEntranceType, D, HD, H2, N, LWL, HWL, SupportBlockWidth, SupportBlockHeight);
-            profileSpecDto = new PumpProfileSpecDto(B1, B3, B4, B6, B7, H1, H5, H6, SelectedTheta, L1, L2, L3, L4, H3, H4, H7, OB1, OH1, NS, HB1, HH1, HS, T1, T2, T3, T4, T5Prime, GB1, GH1, B2, IsRectangularOpening, B5);
+            profileSpecDto = new PumpProfileSpecDto(B1, B3, B4, B6, B7, H1, H5, H6, SelectedTheta, L1, L2, L3, L4, H3, H4, H7, OB1, OH1, HB1, HH1, NS, HS, NS1, HS1, T1, T2, T3, T4, T5Prime, GB1, GH1, B2, IsRectangularOpening, B5);
             planSpecDto = new PumpPlanSpecDto(B8, B9, L5, B10, T5, T6);
             //typeSelectionDto = new PumpTypeSelectionDto(T1, T2, T3, T4, T5, T6, GB1, GH1);
             creationRequestDto = new PumpCreationRequestDto(designConditionDto, planSpecDto, profileSpecDto, _selectedValveBase);
@@ -1280,7 +1280,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 "B6" when type == "Type2" || type == "Type3"
                     => ("B6", "「KDS 67 30 25 양배수장 구조, P41, 4.3.1.3 흡입관의 설계」에 따라 설계펌프 중심에서 벽체 끝까지 1.5D와 토출관 접합을 위한 작업공간 700mm 중 큰 값 적용"),
                 "B7" when type == "Type2" || type == "Type3"
-                                   => ("B7", "1. 밸브 1만 적용 시\r\n밸브 + 관로 연장\r\n밸브 설치 및 유지관리를 위해 벽체에서 플랜지까지 600mm 공간확보 \n\n1. 밸브 1 + 2 적용 시\r\n밸브 + 관로 연장\r\n밸브 설치 및 유지관리를 위해 벽체에서 플랜지까지 600mm 공간확보\r\n밸브 1과 밸브 2사이 길이 1m의 관 설치 "),
+                                   => ("B7", "1. 단독밸브 설치시 : B7 = 600 + 밸브길이 + 600\r\n2. 역류방지밸브 추가 설치시 : B7 = 600 + 밸브길이 + 1000 + 역류방지밸브 길이 + 600\r\n  ※ 플랜지 설치 및 유지관리를 위한 작업 공간 600mm와 역류방지밸브 추가 설치시에는 두 밸브 사이에 1m의 관 설치가 필요"),
 
                 _ when _paramHints.TryGetValue(key, out var h) => h,
                 _ => (string.Empty, string.Empty)
@@ -1303,13 +1303,13 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             ["B4"] = ("B4", "펌프 유지관리 공간. 차량 진입 공간을 고려하여 최소 4.5m. 펌프받침폭 고려."),
             ["B5"] = ("B5", "펌프 INPUT DATA에서 추출"),
             ["B6"] = ("B6", "토출관 플랜지 접합 공간. 경제성 고려 700 적용."),
-            ["B7"] = ("B7", "1. 밸브 1만 적용 시\r\nMAX(밸브 + 관로 연장, 계단 설치 연장+1000) 적용\r\n밸브 설치 및 유지관리를 위해 벽체에서 플랜지까지 600mm 공간확보\r\n계단폭은 300mm로 고정, 계단 끝단 동선확보를 위한 1m 여유공간 적용.\n\n2. 밸브 1 + 2 적용 시\r\nMAX(밸브 + 관로 연장, 계단 설치 연장+1000) 적용\r\n밸브 설치 및 유지관리를 위해 벽체에서 플랜지까지 600mm 공간확보\r\n밸브 1과 밸브 2사이 길이 1m의 관 설치\r\n계단폭은 300mm로 고정, 계단 끝단 동선확보를 위한 1m 여유공간 적용"),
+            ["B7"] = ("B7", "'밸브실 연장\r\nB7 = MAX(B7L1,B7L2)\r\n  ● B7L1 : 밸브 + 관로 연장\r\n    1) 단독밸브 설치시 : B7L1 = 600 + 밸브길이 + 600\r\n    2) 역류방지밸브 추가 설치시 : B7L1 = 600 + 밸브길이 + 1000 + 역류방지밸브 길이 + 600\r\n     ※ 플랜지 설치 및 유지관리를 위한 작업 공간 600mm와 역류방지밸브 추가 설치시에는 두 밸브 사이에 1m의 관 설치가 필요\r\n  ● B7L2 : 계단설치 연장\r\n    B7L2 = NS1 x 300 + 1000\r\n     ※ 계단 1단의 폭 300mm, 계단 끝의 동선확보를 위해 1m의 여유공간을 설치하는 것으로 계획"),
 
             // 종단제원 — H
             ["H1"] = ("H1", "제진기 작동능력 취약 범위"),
             ["H2"] = ("H2", "유효저수높이(H.W.L - L.W.L)"),
             ["H3"] = ("H3", "여유고. 「빗물펌프장 수문 유지관리 및 설계요령(2023, 서울시), P111, 라. 펌프실」, \"펌프실은 옥내에 설치하여 침수 위험에 대비하여야 하며 계획 내 수위에 여유고(1m 이상)를 더한 표고보다 높은 위치에 설치해야 한다.\" 따라서, H.W.L + 1m = 펌프장 상부슬래브 상면 EL.이어야 하지만, 부지 계획고도 여유고가 적용되어야 하고 「KDS 61 45 00 펌프장시설 설계기준, P14, 9.펌프장」, \"펌프장 바닥은 구내의 지반면보다 적어도 15cm 높게 한다\"에 따라 20cm 단차 적용 ⇒ 1m + 0.2m - 상부슬래브 두께 + 전체 높이를 정치수화 하기 위한 치수 추가"),
-            ["H4"] = ("H4", "2024년 행안부 지침, 「240701 3.펌프 흡입관의 잠김 깊이와 펌프의 정지수위.pptx」, \"농어촌공사 기준을 준용하여 2.9D 이상\".정치수(roundup) 적용."),
+            ["H4"] = ("H4", "2024년 행안부 지침, 「240701 3.펌프 흡입관의 잠김 깊이와 펌프의 정지수위.pptx」, \"농어촌공사 기준을 준용하여 2.9D 이상\".정치수 적용."),
             ["H5"] = ("H5", "H2 + H3 + H4 − T1 로 자동 산정."),
             ["H6"] = ("H6", "밸브와 토출관 플랜지 접합 공간. 경제성 고려 600 적용."),
             ["H7"] = ("H7", "관보호공 미적용을 위한 최소 토피. 「도로설계요령(2020), 제2권 토공 및 배수, P726, 6.2.3 관형 암거의 설계」, \"토피가 1.0m 이하의 경우는 RC 2종 360° 콘크리트 기초도 비교 검토한다.\", 또한 밸브실 높이를 정치수화 하기 위한 치수 추가"),

@@ -11,6 +11,7 @@ namespace DHBIMWATER.Core.Structures
     {
         public string BaseLevelName { get; set; } = string.Empty;
         public string TopLevelName { get; set; } = string.Empty;
+        public double Width { get; set; }   // mm , 계단 참 폭
         public double BaseOffset { get; set; } // mm, 하부 레벨 기준 오프셋 (TODO: RevitStairCommandRepo에서 미반영 - 확인 필요)
         public double TopOffset { get; set; }  // mm, 상부 레벨 기준 오프셋 (TODO: RevitStairCommandRepo에서 미반영 - 확인 필요)
         public string TypeName { get; set; } = string.Empty; // 기존 StairsType 이름 (자동 생성 안 함, 없으면 실패)

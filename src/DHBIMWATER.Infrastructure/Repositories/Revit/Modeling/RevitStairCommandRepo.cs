@@ -57,6 +57,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             StairsType? stairsType = null;
             if (!string.IsNullOrEmpty(stairsDefinition.TypeName))
             {
+                // 아무 첫번째 계단 X
                 stairsType = new FilteredElementCollector(doc)
                     .OfClass(typeof(StairsType))
                     .Cast<StairsType>()
@@ -117,24 +118,33 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
 
             if (stairs == null) return 0;
 
-            // TODO: BaseOffset/TopOffset(mm) 반영 로직 확인 필요 - 현재 미반영
-            if (stairsType != null)
+            // StairsEditScope 종료 후에는 열려있는 Transaction이 없으므로(이 Repo는 단독 호출 전제),
+            // 타입 변경/파라미터 설정을 위한 Transaction을 별도로 연다.
+            using (Transaction postTx = new Transaction(doc, "Set Stair Type/Parameters"))
             {
-                try
-                {
-                    stairs.ChangeTypeId(stairsType.Id);
-                }
-                catch (Exception ex)
-                {
-                    _dialog.Warn("Warning", $"계단 유형 변경 실패: {ex.Message}");
-                }
-            }
+                postTx.Start();
 
-            stairs.LookupParameter("DH_ElementCode")?.Set(stairsDefinition.ElementCode);
-            stairs.LookupParameter("DH_Addin")?.Set("DHBIMWATER");
-            stairs.LookupParameter("DH_Category")?.Set(stairsDefinition.Category);
-            stairs.LookupParameter("DH_Part")?.Set(stairsDefinition.Part);
-            stairs.LookupParameter("DH_Zone")?.Set(stairsDefinition.Zone);
+                // TODO: BaseOffset/TopOffset(mm) 반영 로직 확인 필요 - 현재 미반영
+                if (stairsType != null)
+                {
+                    try
+                    {
+                        stairs.ChangeTypeId(stairsType.Id);
+                    }
+                    catch (Exception ex)
+                    {
+                        _dialog.Warn("Warning", $"계단 유형 변경 실패: {ex.Message}");
+                    }
+                }
+
+                stairs.LookupParameter("DH_ElementCode")?.Set(stairsDefinition.ElementCode);
+                stairs.LookupParameter("DH_Addin")?.Set("DHBIMWATER");
+                stairs.LookupParameter("DH_Category")?.Set(stairsDefinition.Category);
+                stairs.LookupParameter("DH_Part")?.Set(stairsDefinition.Part);
+                stairs.LookupParameter("DH_Zone")?.Set(stairsDefinition.Zone);
+
+                postTx.Commit();
+            }
 
             return (int)stairs.Id.Value;
         }

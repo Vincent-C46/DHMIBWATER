@@ -83,6 +83,17 @@
 - TODO: `StairsEditScope`는 Revit API 제약상 열려있는 Transaction 내부에서 Start/Commit 불가하나, 사용자 확인에 따라 Repo에서 별도 처리 안 함 → 호출하는 UseCase(예: `CreatePumpingStationUseCase`류)가 이미 트랜잭션을 연 상태에서 호출한다는 전제. 실제 Revit에서 예외 발생 시 트랜잭션 경계 재검토 필요
 - TODO: `CreateStair`를 사용하는 UseCase/ViewModel/Ribbon 연동 미작성 (이번 요청 범위 밖)
 
+#### 펌프장 샘플 계단 연동 (2026-07-06)
+- [x] `PumpingStationGeometryCalculator.CalculateStairs(dto)` 신설 — 샘플로 **밸브실 → 상부슬래브** 직선 Run 1개 반환
+  - 레벨 표고: `상부슬래브 = HWL*1000 + H3`, `밸브실 = 상부슬래브 - (H7+D+H6)`, 상승고 = `H7+D+H6`
+  - 수평 진행 길이 ≈ 2×상승고, 밸브실 사이벽 안쪽(`totalLength - T4 - B7`)에서 +X 방향, 폭 중앙 배치
+  - `TypeName` 빈 값 → 문서 기본 StairsType 사용, 메타데이터 `ST1`/`밸브실`/`밸브실 계단`
+  - 기존 주석 처리된 `CalculateStairs`(실제로는 펌프받침 복붙 코드)는 손대지 않고 그대로 둠
+- [x] `CreatePumpingStationUseCase`에 `IStairCommandRepo` 주입 + `Execute()`의 **메인 트랜잭션(`using(_tx)`) 종료 이후** 별도 단계(#11)로 `CreateStair` 호출 → StairsEditScope ↔ 트랜잭션 충돌 회피
+- [x] Application 프로젝트 빌드 확인 (오류 0). Revit 실행 중이라 Infrastructure DLL은 pdb 락으로 미빌드 — Revit 종료 후 전체 빌드 필요
+- TODO: 실제 Revit에서 계단 생성 동작 검증 미수행 (다음 세션에서 실행 확인)
+- TODO: NS1/HS1(단수·단높이) 기반 정식 리저 규칙, 조건부(Type1) 생성, 수평 위치 정밀화는 미반영 — 아래 의사결정 항목 참조
+
 ### 도면 (Sheets)
 - [x] `SheetUseCase` — 시트 생성/관리
 - [x] `WaterReservoirUseCase` — 저수조 도면 배치
@@ -109,7 +120,8 @@
 
 ## ⚠️ 의사결정 대기
 
-### 밸브실 계단 작성 (2026-07-03) — KEEP, 다음 세션 결정사항부터 재개
+### 밸브실 계단 작성 (2026-07-03) — 샘플 구현됨(2026-07-06), 정식 규칙은 미결
+> 2026-07-06 진행: 아래 5개 항목 중 **2(트랜잭션 경계)** 해결(트랜잭션 밖 별도 단계로 분리), **3·4** 는 샘플값으로 임시 확정(밸브실 사이벽 안쪽 +X, 기본 유형). **1(리저 균등/나머지 반영)·5(NS1/HS1 DTO 전달)** 는 여전히 미결 — 현재 샘플은 `CreateStraightRun` 균등 리저.
 요청 요약: 밸브실에 상부슬래브→밸브실로 내려오는 **Run 단독** 계단 작성.
 - **조건**: `SelectedPumpingStationType == "Type1"` 일 때만 생성
 - **단수**: `NS1` (ViewModel `UpdateNS1()`에 기존 구현: `total = H7 + D + H6`, 200 배수면 -1)

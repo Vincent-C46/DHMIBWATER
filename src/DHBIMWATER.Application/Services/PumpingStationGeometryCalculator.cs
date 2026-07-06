@@ -1859,7 +1859,9 @@ namespace DHBIMWATER.Application.Services
             var pr = dto.ProfileSpecDto;
             var pl = dto.PlanSpecDto;
             //var ts = dto.TypeSelectionDto;
-            var totalLength = d.SelectedPumpingStationType == "Type2" ? pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T3 : pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
+            var totalLength = d.SelectedPumpingStationType == "Type2"
+                ? pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T3
+                : pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
             var totalWidth = pr.T4 * 2 + (pl.B8 * d.N) + (pl.T5 * (d.N - 1));
             double x2 = d.SelectedPumpingStationType == "Type2" ? totalLength - pr.T3 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2 - pr.L4 - pr.L3 : totalLength - pr.T4 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2 - pr.L4 - pr.L3;
 
@@ -1907,7 +1909,7 @@ namespace DHBIMWATER.Application.Services
                     LevelName = UpperSlabLevelName,
                     Rotation = -90, // 기본적으로 회전방향은 ccw.
                     ElementCode = "PED1",
-                    Part = "콘크리트기초",
+                    Part = "펌프받침블럭",
                     Zone = "펌프장",
 
                     Parameters = pr.IsRectangularOpening ? recDict : circDict,
@@ -2145,88 +2147,61 @@ namespace DHBIMWATER.Application.Services
 
             return sectionViewDefs;
         }
-        // 계단 배치 로직 작성
-        //public static IReadOnlyList<StairsDefinition> CalculateStairs(PumpCreationRequestDto dto)
-        //{
-        //    var d = dto.DesignConditionDto;
-        //    var pr = dto.ProfileSpecDto;
-        //    var pl = dto.PlanSpecDto;
-        //    var totalLength = d.SelectedPumpingStationType == "Type2" ? pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T3 : pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
-        //    var totalWidth = pr.T4 * 2 + (pl.B8 * d.N) + (pl.T5 * (d.N - 1));
-        //    double x2 = d.SelectedPumpingStationType == "Type2" ? totalLength - pr.T3 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2 - pr.L4 - pr.L3 : totalLength - pr.T4 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2 - pr.L4 - pr.L3;
 
-        //    var defs = new List<GenericModelPlacementDefinition>();
+        /// <summary>
+        /// 계단(Revit Stairs 요소) 배치 정의를 계산한다.
+        /// 현재는 샘플로 "밸브실 → 상부슬래브" 직선 Run 1개만 생성한다.
+        /// </summary>
+        public static IReadOnlyList<StairsDefinition> CalculateStairs(PumpCreationRequestDto dto)
+        {
+            var d = dto.DesignConditionDto;
+            var pr = dto.ProfileSpecDto;
+            var pl = dto.PlanSpecDto;
 
-        //    double rec_d = d.SupportBlockWidth;
-        //    double rec_B = pr.B5 + rec_d * 2;
-        //    double rec_L = pr.B5 + rec_d * 2;
-        //    double rec_T = d.SupportBlockHeight;
+            var totalLength = d.SelectedPumpingStationType == "Type2"
+                ? pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T3
+                : pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
+            var totalWidth = pr.T4 * 2 + (pl.B8 * d.N) + (pl.T5 * (d.N - 1));
 
-        //    double circ_d = d.SupportBlockWidth;
-        //    double circ_R = pr.B5 / 2 + rec_d;
-        //    double circ_T = d.SupportBlockHeight;
+            // 레벨 표고(mm) — CalculateLevels와 동일 산식
+            double upperSlabElev = d.HWL * 1000 + pr.H3;
+            double valveRoomElev = upperSlabElev - pr.H7 - d.D - pr.H6;
+            int riseNum = pr.NS1;
+            double riseHeight = pr.HS1;
+            double treadDepth = 300;    // 발판 깊이
+            double rise = riseNum * riseHeight; // 상승고 (계단 총 높이)
+            var result = new List<StairsDefinition>();
 
-        //    var recDict = new Dictionary<string, object>
-        //    {
-        //        { "B", rec_B },
-        //        { "L", rec_L },
-        //        { "T", rec_T },
-        //        { "d", rec_d },
-        //    };
-        //    var circDict = new Dictionary<string, object>
-        //    {
-        //        { "R", circ_R },
-        //        { "T", circ_T },
-        //        { "d", circ_d },
-        //    };
-        //    // 밸브받침("DH_받침") 매개변수 — Excel "밸브 연장" 시트에서 파싱한 제원 (HasCheckValve 반영됨)
-        //    var valveBaseDict = new Dictionary<string, object>
-        //    {
-        //        { "B", dto.ValveBase.ValveBaseWidth },
-        //        { "L", dto.ValveBase.ValveBaseLength },
-        //        { "H", dto.ValveBase.ValveBaseHeight },
-        //    };
-        //    // Excel 밸브받침 배치값(J/Q열)이 미로드/누락(0)이면 B7/2 기본값 사용
-        //    double valveBasePlacement = dto.ValveBase.ValveBasePlacement != 0 ? dto.ValveBase.ValveBasePlacement : pr.B7 / 2;
-        //    for (int i = 0; i < d.N; i++)
-        //    {
-        //        var pedestal = new GenericModelPlacementDefinition
-        //        {
-        //            SymbolName = pr.IsRectangularOpening ? "기초 콘크리트_사각형" : "기초 콘크리트_원형",
-        //            Origin = d.SelectedPumpingStationType == "Type2" ?
-        //                     new Point3D(totalLength - pr.T3 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2, pl.B8 / 2 + (pl.B8 + pl.T5) * i, 0) :
-        //                     new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2, pl.B8 / 2 + (pl.B8 + pl.T5) * i, 0),
-        //            LevelName = UpperSlabLevelName,
-        //            Rotation = -90, // 기본적으로 회전방향은 ccw.
-        //            ElementCode = "PED1",
-        //            Part = "콘크리트기초",
-        //            Zone = "펌프장",
+            // TODO: 정식 배치 규칙 확정 시 위치/개수/유형(TypeName) 반영 필요.
+            double runLength = treadDepth * riseNum;
+            double upperX = totalLength - pr.T4 - pr.B7;
 
-        //            Parameters = pr.IsRectangularOpening ? recDict : circDict,
-        //        };
-
-        //        defs.Add(pedestal);
-
-        //        // 밸브받침 추가
-        //        var valveBase = new GenericModelPlacementDefinition
-        //        {
-        //            SymbolName = "DH_받침",
-        //            // X = totalLength - T4(Type2는 T3) - B7 + ValveBasePlacement (J/Q열). Y/Z는 펌프 기초와 동일 열/레벨
-        //            Origin = d.SelectedPumpingStationType == "Type2"
-        //                     ? new Point3D(totalLength - pr.T3 - pr.B7 + valveBasePlacement, pl.B8 / 2 + (pl.B8 + pl.T5) * i, 0)
-        //                     : new Point3D(totalLength - pr.T4 - pr.B7 + valveBasePlacement, pl.B8 / 2 + (pl.B8 + pl.T5) * i, 0),
-        //            LevelName = ValveRoomLevelName,
-        //            Rotation = -90, // 기본적으로 회전방향은 ccw.
-        //            ElementCode = "PED2",
-        //            Part = "콘크리트기초",
-        //            Zone = "밸브실",
-
-        //            Parameters = valveBaseDict,
-        //        };
-
-        //        defs.Add(valveBase);
-        //    }
-        //    return defs;
-        //}
+            for (int i = 0; i < d.N - 1; i++)
+            {
+                double y = -pl.T5 / 2 + (pl.B8 + pl.T5) * (i + 1);
+                var stairDef = new StairsDefinition
+                {
+                    BaseLevelName = ValveRoomLevelName,
+                    TopLevelName = UpperSlabLevelName,
+                    TypeName = string.Empty, // 비우면 기본 StairsType 사용
+                    ElementCode = "ST1",
+                    Category = "계단",
+                    Zone = "밸브실",
+                    Part = "밸브실 계단",
+                    Width = 800,
+                    Runs = new List<StairsRunDefinition>
+                    {
+                        new StairsRunDefinition
+                        {
+                            StartPoint = new Point3D(upperX + runLength, y, valveRoomElev),
+                            EndPoint   = new Point3D(upperX, y, valveRoomElev),
+                            Justification = StairJustification.Center,
+                        }
+                    },
+                };
+               result.Add(stairDef);
+            }
+            return result;
+        }
     }
 }

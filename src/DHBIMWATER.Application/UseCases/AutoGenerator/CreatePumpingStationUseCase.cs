@@ -21,6 +21,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
         private readonly IViewCommandRepo _viewCommandRepo;
         private readonly ISetParameterRepo _setParameterRepo;
         private readonly IGenericModelCommandRepo _genericModelCmdRepo;
+        private readonly IStairCommandRepo _stairCommandRepo;
         private readonly IExcelReader _excelReader;
         private readonly ClassifyExteriorWallsUseCase _classifyWallsUseCase;
         #endregion
@@ -43,6 +44,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                                            IViewCommandRepo viewCommandRepo,
                                            ISetParameterRepo setParameterRepo,
                                            IGenericModelCommandRepo genericModelCmdRepo,
+                                           IStairCommandRepo stairCommandRepo,
                                            IExcelReader excelReader,
                                            ClassifyExteriorWallsUseCase classifyWallsUseCase)
         {
@@ -58,6 +60,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
             _viewCommandRepo = viewCommandRepo;
             _setParameterRepo = setParameterRepo;
             _genericModelCmdRepo = genericModelCmdRepo;
+            _stairCommandRepo = stairCommandRepo;
             _excelReader = excelReader;
             _classifyWallsUseCase = classifyWallsUseCase;
 
@@ -146,7 +149,10 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                         _beamCmdRepo.CreateBeam(beamDef);
                     #endregion
 
-                    #region 5. 오프닝 배치
+                    #region 5. 계단 생성
+                    #endregion
+
+                    #region 6. 오프닝 배치
                     // 슬래브 오프닝 (사각형)
                     foreach (var openingDef in PumpingStationGeometryCalculator.CalculateRectangularSlabOpenings(dto))
                         _openingCmdRepo.CreateSlabOpening(openingDef);
@@ -161,16 +167,16 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                         _openingCmdRepo.CreateWallOpening(openingDef);
                     #endregion
 
-                    #region 6. 펌프받침 배치 (FamilyInstance)
+                    #region 7. 펌프받침 배치 (FamilyInstance)
                     foreach (var def in PumpingStationGeometryCalculator.CalculateGenericModels(dto))
                         _genericModelCmdRepo.PlaceInstance(def);
                     #endregion
 
-                    #region 7. 결합
+                    #region 8. 결합
                     // 보 작성 메서드 내부에서 상부 슬래브와 결합 (임시 조치)
                     #endregion
 
-                    #region 8. 뷰 작성                    
+                    #region 9. 뷰 작성                    
                     var existingSectionViewNames = _levelQueryRepo.GetExistingSectionNames();
                     var sectionViewDefs = PumpingStationGeometryCalculator.CalculateSectionViews(dto);
 
@@ -193,7 +199,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                     }
                     #endregion
 
-                    #region 9. 타입 설명 추가
+                    #region 10. 타입 설명 추가
                     _setParameterRepo.SetTypeParameter(dto);
                     #endregion
 
@@ -209,6 +215,20 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                     throw;
                 }
             }
+
+            #region 11. 계단 생성 (메인 트랜잭션 밖)
+            // StairsEditScope는 Revit API 제약상 "열린 Transaction 내부"에서 Start/Commit할 수 없고
+            // 내부적으로 자체 Transaction을 열고 닫는다. 따라서 위 _tx 커밋(using 블록 종료) 이후에 호출해야 한다.
+            try
+            {
+                foreach (var stairDef in PumpingStationGeometryCalculator.CalculateStairs(dto))
+                    _stairCommandRepo.CreateStair(stairDef);
+            }
+            catch (Exception ex)
+            {
+                _dialogService.Warn("Warning", $"계단 생성 실패: {ex.Message}");
+            }
+            #endregion
         }
 
         // 공유 매개변작성

@@ -59,7 +59,6 @@
 	  <None Remove="Resources\PumpStationImages\TYPE-1_평면제원-측면진입.png" />
 	  <None Remove="Resources\PumpStationImages\TYPE-2&amp;3_평면제원.png" />
 	  <None Remove="Resources\PumpStationImages\TYPE-2_종단개요.png" />
-	  <None Remove="Resources\PumpStationImages\TYPE-2_종단제원.png" />
 	  <None Remove="Resources\PumpStationImages\TYPE-3_종단개요.png" />
 	  <None Remove="Resources\PumpStationImages\TYPE-3_종단제원.png" />
 	  <None Remove="Resources\Quantity\add.png" />
@@ -88,9 +87,6 @@
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Resource>
 	  <Resource Include="Resources\PumpStationImages\TYPE-2_종단개요.png">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Resource>
-	  <Resource Include="Resources\PumpStationImages\TYPE-2_종단제원.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Resource>
 	  <Resource Include="Resources\PumpStationImages\TYPE-3_종단개요.png">
