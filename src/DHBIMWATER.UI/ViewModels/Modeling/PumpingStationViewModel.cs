@@ -1213,8 +1213,9 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         {
             if (_selectedPumpingStationType != "Type1") return;
             var total = H7 + D + H6;
-            var mod = total % _hs1;
-            NS1 = (int)Math.Floor(total / _hs1) - (mod < 0.001 ? 1 : 0);
+            //var mod = total % _hs1;
+            //NS1 = (int)Math.Floor(total / _hs1) - (mod < 0.001 ? 1 : 0);
+            NS1 = (int)Math.Floor(total / _hs1);
             ApplyB7Final();
         }
 
@@ -1318,8 +1319,8 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             // 종단제원 — L
             ["L1"] = ("L1", "300mm 고정. 구조적 최적설계."),
             ["L2"] = ("L2", "H1과 1:1 경사"),
-            ["L3"] = ("L3", "하부슬래브 단차와 경사(θ)에 대한 길이. 정치수(roundup) 적용"),
-            ["L4"] = ("L4", "θ = 30° 인 경우 3D, 45°의 경우 4.5D. 정치수(roundup) 적용"),
+            ["L3"] = ("L3", "하부슬래브 단차와 경사(θ)에 대한 길이. 정치수 적용"),
+            ["L4"] = ("L4", "θ = 30° 인 경우 3D, 45°의 경우 4.5D. 정치수 적용"),
 
             // 기초 경사부 기울기
             ["θ"] = ("θ", "「농업생산기반정비사업계획 설계기준-배수편(2012), P215, 다.흡입수조」 및 「빗물펌프장 수문 유지관리 및 설계요령(2023), P112, 9)흡입부의 크기 검토」 등에 30° 또는 45°를 적용하도록 규정하고 있으나, 45° 적용시 급한 경사로 인한 시공성 문제가 발생할 수 있으므로 30°를 권고안으로 적용"),
@@ -1328,7 +1329,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             ["T1"] = ("T1", "400mm 고정. 구조적 최적설계."),
             ["T2"] = ("T2", "벽체 두께 + 100mm. 구조적 최적설계."),
             ["T3"] = ("T3", "400mm 고정. 구조적 최적설계."),
-            ["T4"] = ("T4", "토압 높이의 10%의 정치수 반영(ROUNDUP). 구조적 최적설계."),
+            ["T4"] = ("T4", "토압 높이의 10%의 정치수 적용. 구조적 최적설계."),
             ["T5Prime"] = ("T6", "캔틸레버 길이 4m 이하는 400mm, 이후 500mm 증가시마다 50mm 증가"),
 
             // 종단제원 — 기타

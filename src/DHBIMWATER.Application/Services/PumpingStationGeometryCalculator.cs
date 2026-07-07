@@ -1,4 +1,4 @@
-﻿using DHBIMWATER.Application.DTOs.Revit.PumpingStation;
+using DHBIMWATER.Application.DTOs.Revit.PumpingStation;
 using DHBIMWATER.Core.Geometry;
 using DHBIMWATER.Core.Structures;
 using System.Diagnostics;
@@ -2166,29 +2166,35 @@ namespace DHBIMWATER.Application.Services
             // 레벨 표고(mm) — CalculateLevels와 동일 산식
             double upperSlabElev = d.HWL * 1000 + pr.H3;
             double valveRoomElev = upperSlabElev - pr.H7 - d.D - pr.H6;
-            int riseNum = pr.NS1;
-            double riseHeight = pr.HS1;
+            int riserNum = pr.NS1;   // 챌판 수
+            int treadNum = riserNum - 1;
+            double riserHeight = pr.HS1;
             double treadDepth = 300;    // 발판 깊이
-            double rise = riseNum * riseHeight; // 상승고 (계단 총 높이)
+            double stairWidth = 800;    // 계단 폭
+            double rise = treadNum * riserHeight; // 상승고 (계단 총 높이)
             var result = new List<StairsDefinition>();
 
             // TODO: 정식 배치 규칙 확정 시 위치/개수/유형(TypeName) 반영 필요.
-            double runLength = treadDepth * riseNum;
+            double runLength = treadDepth * treadNum;
             double upperX = totalLength - pr.T4 - pr.B7;
 
+            if (d.SelectedPumpingStationType == "Type2" || d.SelectedPumpingStationType == "Type3") return result;
+
             for (int i = 0; i < d.N - 1; i++)
-            {
+            {   
                 double y = -pl.T5 / 2 + (pl.B8 + pl.T5) * (i + 1);
                 var stairDef = new StairsDefinition
                 {
                     BaseLevelName = ValveRoomLevelName,
                     TopLevelName = UpperSlabLevelName,
-                    TypeName = string.Empty, // 비우면 기본 StairsType 사용
+                    TypeName = "현장타설", // 비우면 기본 StairsType 사용
                     ElementCode = "ST1",
                     Category = "계단",
                     Zone = "밸브실",
                     Part = "밸브실 계단",
-                    Width = 800,
+                    TreadDepth = treadDepth,
+                    MaxRiserHeight = riserHeight,
+                    RisersNumber = riserNum,
                     Runs = new List<StairsRunDefinition>
                     {
                         new StairsRunDefinition
@@ -2196,6 +2202,7 @@ namespace DHBIMWATER.Application.Services
                             StartPoint = new Point3D(upperX + runLength, y, valveRoomElev),
                             EndPoint   = new Point3D(upperX, y, valveRoomElev),
                             Justification = StairJustification.Center,
+                            Width = stairWidth,
                         }
                     },
                 };

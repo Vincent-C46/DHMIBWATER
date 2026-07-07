@@ -213,6 +213,7 @@
                                                          Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                         <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="30"/>
                                     </StackPanel>
+
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,15" Visibility="{Binding B4Visibility}">
                                         <TextBlock Text="B4:" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
                                         <TextBlock Text="펌프 유지관리 공간 폭" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
@@ -698,7 +699,7 @@ Tag="HH1" Text="{Binding HH1}" Width="100" Margin="10,0" VerticalAlignment="Cent
 
                                             <StackPanel Orientation="Horizontal" Margin="0,0,0,15" Visibility="{Binding T5PrimeVisibility}">
                                                 <TextBlock Text="T6':" Style="{StaticResource LabelTextBlockStyle}" Width="30" VerticalAlignment="Center"/>
-                                                <TextBlock Text="중간슬래브 두께" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
+                                                <TextBlock Text="밸브실 하부슬래브 두께" Style="{StaticResource LabelTextBlockStyle}" Width="150" VerticalAlignment="Center"/>
                                                 <TextBox Style="{StaticResource ReservoirTextBoxStyle}"
              Tag="T5Prime" Text="{Binding T5Prime}" Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                                 <TextBlock Text="mm" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center" Width="50"/>

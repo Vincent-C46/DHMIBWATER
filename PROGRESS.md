@@ -372,3 +372,23 @@
 
 
 
+
+---
+
+## 2026-07-06
+
+### 계단 원하는 챌판 수 내장 파라미터 설정
+- [x] RevitStairCommandRepo에서 기존 StairsDefinition.RisersNumber 값을 BuiltInParameter.STAIRS_DESIRED_NUMBER_OF_RISERS에 직접 설정하도록 보강.
+- [x] UpdateNS1 계산식은 요청에 따라 변경하지 않음.
+- 검증: dotnet build DHBIMWATER.sln -c Release 종료 코드 0. dotnet build DHBIMWATER.sln Debug 빌드는 DHBIMWATER.Core.pdb 파일 잠금으로 실패.
+
+---
+
+## 2026-07-06
+
+### 계단 유형 최대 챌판 높이 / 최소 디딤판 깊이 설정
+- [x] StairsDefinition.MaxRiserHeight 추가.
+- [x] 펌프장 밸브실 계단 생성 정의에서 HS1을 최대 챌판 높이로 전달.
+- [x] RevitStairCommandRepo에서 기존 StairsType을 DHBIMWATER 전용 이름으로 복사/재사용하고, STAIRS_ATTR_MAX_RISER_HEIGHT, STAIRS_ATTR_MINIMUM_TREAD_DEPTH를 설정하도록 보강.
+- [x] 생성 중인 계단에 복사 타입을 Run 생성 전에 적용하고, 생성 후에도 동일 타입을 재적용.
+- 검증: dotnet build src\DHBIMWATER.Infrastructure\DHBIMWATER.Infrastructure.csproj -c Release 종료 코드 0, dotnet build DHBIMWATER.sln -c Release 종료 코드 0. 기존 nullable/MSB3277 경고 및 Revit/Visual Studio 파일 잠금으로 인한 Addins 복사 경고는 남음.
