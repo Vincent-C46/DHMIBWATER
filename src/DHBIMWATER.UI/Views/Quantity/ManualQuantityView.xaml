@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="clr-namespace:DHBIMWATER.UI.Controls"
         xmlns:vm="clr-namespace:DHBIMWATER.UI.ViewModels.Quantity"
+        xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance vm:ManualQuantityViewModel, IsDesignTimeCreatable=False}"
         Title="{Binding Title}"
@@ -173,7 +174,7 @@
                                                     Height="24"
                                                     FontSize="11"
                                                     ToolTip="길이 측정: 점을 연속 클릭하고 ESC로 완료">
-                                                <Image Source="/DHBIMWATER.UI;component/Resources/Quantity/length.png" Width="20" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                <iconPacks:PackIconFontAwesome Kind="RulerHorizontalSolid" Width="20" Height="20"/>
                                             </Button>
                                             <Button Grid.Column="4"
                                                     Command="{Binding DataContext.MeasureAreaCommand, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -184,7 +185,7 @@
                                                     Height="24"
                                                     FontSize="11"
                                                     ToolTip="면적 측정: 면을 선택하세요">
-                                                <Image Source="/DHBIMWATER.UI;component/Resources/Quantity/area.png" Width="20" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                <iconPacks:Material Kind="TextureBox" Width="20" Height="20"/>
                                             </Button>
                                         </Grid>
                                     </Border>

@@ -392,3 +392,64 @@
 - [x] RevitStairCommandRepo에서 기존 StairsType을 DHBIMWATER 전용 이름으로 복사/재사용하고, STAIRS_ATTR_MAX_RISER_HEIGHT, STAIRS_ATTR_MINIMUM_TREAD_DEPTH를 설정하도록 보강.
 - [x] 생성 중인 계단에 복사 타입을 Run 생성 전에 적용하고, 생성 후에도 동일 타입을 재적용.
 - 검증: dotnet build src\DHBIMWATER.Infrastructure\DHBIMWATER.Infrastructure.csproj -c Release 종료 코드 0, dotnet build DHBIMWATER.sln -c Release 종료 코드 0. 기존 nullable/MSB3277 경고 및 Revit/Visual Studio 파일 잠금으로 인한 Addins 복사 경고는 남음.
+
+---
+
+## 2026-07-07
+
+### 계단 첫 생성 시 단수 오류(첫 계단만 챌판 13개) 수정
+- 증상: 빌드 후 첫 계단만 실제 챌판 수 13개, 2번째 이후는 정상 12개.
+- 원인: `RevitStairCommandRepo.CreateStair()`에서 `TOP_OFFSET`(-100mm 등 → 유효높이 2500→2400)과 `STAIRS_DESIRED_NUMBER_OF_RISERS` 확정을 **단일 `doc.Regenerate()`** 로 처리. 첫 계단만 높이 축소가 챌판 수 확정보다 늦게 반영되어, 전체높이 2500 기준 208.33mm > 최대 챌판높이(200)가 되고 Revit이 단수를 12→13으로 늘림.
+- [x] `TOP_OFFSET` 설정 직후 `doc.Regenerate()`로 **유효높이(2400)를 먼저 확정**한 뒤 `DESIRED_NUMBER_OF_RISERS` 설정 + 최종 `Regenerate()`로 분리(2단계 재생성). 파일: `src/DHBIMWATER.Infrastructure/Repositories/Revit/Modeling/RevitStairCommandRepo.cs`.
+- [x] `GetOrCreateConfiguredStairsType` 내 `typeTx.Commit()` 직전 `doc.Regenerate()` 추가(새 타입 파라미터 즉시 반영). 사용자가 트랜잭션 밖에 넣어 "no open transaction" 났던 것 → 트랜잭션 안으로 이동.
+- [x] **Run 생성 전** 빈 계단에 `ChangeTypeId`+`ActualTreadDepth` 먼저 적용(→ Run이 올바른 타입으로 생성, 기본 타입 오염 방지) → `Regenerate` → Run 생성 → `TOP_OFFSET`/`DESIRED_NUMBER_OF_RISERS`는 Run 후 적용. **결과: 첫 계단 챌판 수 13→12로 수정 확인됨.**
+- [~] 첫 계단만 실제 챌판높이가 어긋나는(2500/13=192.3mm) 잔여 문제 대응 시도: 계단 커밋 후 postTx(안정된 컨텍스트)에서 `TOP_OFFSET`(유효높이 2400) + `DESIRED_NUMBER_OF_RISERS` 재확정. **→ 실테스트 결과 실패(첫 계단 여전히 192.3mm). 미해결.**
+- **⚠️ 미해결 인계 문서: [`docs/BUGFIX_계단_첫생성_챌판높이_현황.md`](docs/BUGFIX_계단_첫생성_챌판높이_현황.md)** — 증상/근본원인/시도 이력/다음 단계(진단 로그) 정리. 다른 세션에서 이 문서부터 확인.
+- 검증: dotnet build src\DHBIMWATER.Infrastructure\DHBIMWATER.Infrastructure.csproj --no-dependencies 종료 코드 0(오류 0). Revit이 애드인 DLL/pdb 로드 중이면 CS2012/MSB3030 파일 잠금 발생 → 배포 빌드는 Revit 종료 후.
+- 참고(별건, 미수정): `PumpingStationGeometryCalculator`의 `rise = treadNum*riserHeight`(11칸)와 Repo의 `actualStairHeight = MaxRiserHeight*RisersNumber`(12칸) 높이 개념 불일치 존재.
+
+---
+
+## 2026-07-07
+
+### 계단 첫 생성 챌판높이 잔여 문제 진단 로그 추가
+- [x] `RevitStairCommandRepo.CreateStair()`에 `STAIR_DIAG` 진단 로그 추가.
+  - 기록 위치: `%LOCALAPPDATA%\DHBIMWATER\Logs\DHBIMWATER.log`
+  - 단계: 입력값, 전용 `StairsType` 준비 직후, Run 생성 전 타입/디딤판 적용 후, Run 생성 후, 편집 스코프 내부 `TOP_OFFSET`/단수 설정 후, `StairsEditScope.Commit()` 후, postTx 재확정 후.
+  - 기록값: 계단 생성 순번(seq), 레벨 높이(mm), 목표 높이/TopOffset(mm), 타입 ID/이름/최대 챌판높이/최소 디딤판깊이/최소 폭, 계단 ID/typeId, `STAIRS_TOP_OFFSET`, `STAIRS_DESIRED_NUMBER_OF_RISERS`, `ActualRisersNumber`, `ActualRiserHeight`, `ActualTreadDepth`.
+- 목적: 첫 번째 계단과 두 번째 계단의 실제 Revit 파라미터 차이를 데이터로 확인해, 새 `StairsType` 첫 사용 문제인지 `TOP_OFFSET` 반영 문제인지 분리.
+- 검증: `dotnet build src\DHBIMWATER.Infrastructure\DHBIMWATER.Infrastructure.csproj --no-dependencies` 오류 0개. 기존 nullable/MSB3277 경고는 남음.
+
+---
+
+## 2026-07-07
+
+### 계단 첫 생성 챌판높이 로그 분석 및 Height 직접 세팅 실험
+- 로그 분석 결과:
+  - 첫 계단(`seq=1`)도 전용 타입, `topOffsetMm=-100`, `desiredRisers=12`, `actualRisers=12`는 정상 반영됨.
+  - 문제는 첫 계단만 `actualRiserHeightMm=192.308`이 `TOP_OFFSET`/단수 재설정 후에도 유지되는 것.
+  - 두 번째 계단(`seq=2`)은 동일 단계에서 `actualRiserHeightMm=200`으로 정상 재계산됨.
+  - 결론: `TOP_OFFSET` Set 실패가 아니라 첫 계단 Run 생성 시 계산된 실제 챌판높이가 이후 재계산되지 않는 문제로 판단.
+- [x] `RevitStairCommandRepo`에서 Run 생성 후 `STAIRS_TOP_OFFSET` 적용 다음에 `Stairs.Height = actualStairHeight`를 직접 설정하도록 실험 코드 추가.
+  - edit scope 내부와 postTx 양쪽에 적용.
+  - `STAIR_DIAG` 로그에 `heightMm` 추가.
+- 검증:
+  - `dotnet build src\DHBIMWATER.Infrastructure\DHBIMWATER.Infrastructure.csproj --no-dependencies`는 Debug PDB 파일 잠금(CS2012)으로 실패.
+  - `dotnet build src\DHBIMWATER.Infrastructure\DHBIMWATER.Infrastructure.csproj --no-dependencies -c Release` 오류 0개. 기존 nullable/MSB3277 경고는 남음.
+- 다음 확인: Revit에서 다시 첫 생성 실행 후 `STAIR_DIAG seq=1`의 `04b-after-edit-height`, `05-after-edit-final-regenerate`, `10-after-post-commit`에서 `actualRiserHeightMm=200`인지 확인.
+
+---
+
+## 2026-07-07
+
+### 계단 첫 생성 챌판높이 warm-up 우회 적용
+- 사용자 Revit 오류 확인: `The stairs top level is not "None", so the height cannot be set independently`.
+  - 원인: 상부 레벨이 지정된 계단은 `Stairs.Height`를 독립 설정할 수 없음.
+  - 조치: `Stairs.Height = actualStairHeight` 실험 코드는 제거.
+- [x] 새 전용 `StairsType`을 처음 생성한 경우에만 warm-up 계단을 1개 생성 후 삭제하도록 `RevitStairCommandRepo` 수정.
+  - `GetOrCreateConfiguredStairsType()`가 `(StairsType, Created)`를 반환하도록 변경.
+  - `Created == true`일 때 `WarmUpNewStairsType()` 실행.
+  - warm-up 계단은 동일 타입/디딤판/Run/TopOffset/DesiredRisers 설정 후 `StairsEditScope.Commit()`하고, 별도 Transaction으로 즉시 삭제.
+  - 목적: Revit 내부 계단 타입/solver 첫 사용 상태를 더미 계단에서 먼저 소모하고 실제 첫 계단이 두 번째 계단처럼 계산되도록 우회.
+- 검증: `dotnet build src\DHBIMWATER.Infrastructure\DHBIMWATER.Infrastructure.csproj --no-dependencies -c Release` 오류 0개. 기존 nullable/MSB3277 경고는 남음.
+- 다음 확인: Revit에서 타입이 없는 새 모델/문서 상태로 다시 생성 후 `STAIR_DIAG seq=1`의 실제 계단이 `actualRiserHeightMm=200`인지 확인.
