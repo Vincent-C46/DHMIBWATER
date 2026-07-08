@@ -130,7 +130,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
                                 new XYZ(UC.MmToFt(run.EndPoint.X), UC.MmToFt(run.EndPoint.Y), UC.MmToFt(run.EndPoint.Z)));
 
                             StairsRun createdRun = StairsRun.CreateStraightRun(doc, stairsId, locationLine, ToRevitJustification(run.Justification));
-                            //createdRun.EndsWithRiser = false;   //챌판 끝남 체크 해제?
+                            //createdRun.EndsWithRiser = false;   //    챌판 끝남 체크 해제?
 
                             if (run.Width > 0)
                                 createdRun.ActualRunWidth = UC.MmToFt(run.Width);
@@ -220,7 +220,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
                     doc.Regenerate();
                     LogStairDiagnostic(sequence, "08-after-post-top-offset", doc, stairsDefinition, stairs, configuredStairsType, baseLevel, topLevel);
 
-
+                        
                     stairs.get_Parameter(BuiltInParameter.STAIRS_DESIRED_NUMBER_OF_RISERS)?.Set(stairsDefinition.RisersNumber);
                     doc.Regenerate();
                     LogStairDiagnostic(sequence, "09-after-post-desired-risers", doc, stairsDefinition, stairs, configuredStairsType, baseLevel, topLevel);
