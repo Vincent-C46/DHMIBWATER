@@ -101,19 +101,23 @@ namespace DHBIMWATER.UI.ViewModels.Documentation.Sheets
         // 값이 null이거나 빈 배열이면 해당 속성은 필터링 없이 전체 허용
         private static readonly Dictionary<string, (IList<string> Codes, IList<string> Parts)> ViewTagFilters = new()
         {
-            ["상부슬래브"]      = (new[] { "SO1", "SO2", "WO1", "WO2", "G1" },            null),
-            ["기초(유입부)"]    = (new[] { "SO1", "SO2", "WO1", "WO2", "AVW" },           null),
-            ["A"]               = (new[] { "SO1", "SO2", "WO1", "WO2", "G1" , "AVW" },    null),
-            ["B"]               = (new[] { "SO1", "SO2", "WO1", "WO2", "G1", "W3-1" },    null),
-            ["C"]               = (new[] { "SO1", "SO2", "WO1", "WO2"},                   null),
-            ["D"]               = (new[] { "SO1", "SO2", "WO1", "WO2"},                   null),
-            ["E"]               = (new[] { "SO1", "SO2", "WO1", "WO2"},                   null),
-            ["F"]               = (new[] { "SO1", "SO2", "WO1", "WO2"},                   null),
-            ["G"]               = (new[] { "G1"                      },                   null),
-            ["H"]               = (new[] { "SO1", "SO2", "WO1", "WO2"},                   null),
-            ["I"]               = (Array.Empty<string>(),                                 Array.Empty<string>()),
-            ["J"]               = (null,                                                  new[] { "와류방지벽" }),
-            ["K"]               = (null,                                                  new[] { "와류방지벽" })
+            //Array.Empty<string>())
+            //(new[] { "G1" }
+            //null
+
+            ["상부슬래브"]      = (new[] { "SO1", "SO2", "WO1", "WO2", "G1" , "PED1"         },    null),
+            ["기초(유입부)"]    = (new[] { "SO1", "SO2", "WO1", "WO2", "AVW"                 },    null),
+            ["A"]               = (new[] { "SO1", "SO2", "WO1", "WO2", "G1" , "AVW" , "PED1" },    null),
+            ["B"]               = (new[] { "SO1", "SO2", "WO1", "WO2", "G1", "W3-1"          },    null),
+            ["C"]               = (new[] { "SO1", "SO2", "WO1", "WO2"                        },    null),
+            ["D"]               = (new[] { "SO1", "SO2", "WO1", "WO2"                        },    null),
+            ["E"]               = (new[] { "SO1", "SO2", "WO1", "WO2"                        },    null),
+            ["F"]               = (new[] { "SO1", "SO2", "WO1", "WO2"                        },    null),
+            ["G"]               = (new[] { "G1"                                              },    null),
+            ["H"]               = (new[] { "SO1", "SO2", "WO1", "WO2"                        },    null),
+            ["I"]               = (new[] { "PED1"                                            },    Array.Empty<string>()),
+            ["J"]               = (null,                                                           new[] { "와류방지벽" }),
+            ["K"]               = (null,                                                           new[] { "와류방지벽" })
         };
 
         private string PlaceAnnotates()
