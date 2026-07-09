@@ -348,10 +348,25 @@
     - DefaultRuleSet: 콘크리트·거푸집·철근 등 모든 구조물 공통
     - ProjectRuleSet: 지수판 등 프로젝트별 추가 공종 (없으면 빈 리스트로 처리)
 
-### 거푸집 종류 설정창 연동
-- [ ] 설정창 UI — 부재별·FaceType별 거푸집 종류 선택
-- [ ] `IFormworkSettingRepo` 인터페이스 + DataStorage 구현체
-- [ ] 설정값 → 프로젝트 RuleSet의 거푸집 Specification에 반영
+### 수량산출 설정창 (거푸집 + 면적 공제 + 철근비 + 할증률) — 기획 확정 2026-07-09
+- 기획 문서: `docs/07_수량설정창기획.md` / 목업: `docs/07_수량설정창목업.html`
+- [ ] Core: `DeductionSettings`, `RebarRatioSettings`, `LossRateSettings` 추가, `ProjectSettings` 확장
+- [ ] Application: `IQuantitySettingsRepository` + Load/Save UseCase
+- [ ] Infrastructure: `RevitQuantitySettingsRepo` (DataStorage, `QuantitySettingsSchema` 활용) + DI 등록
+- [ ] `DefaultRuleSet.Create(ProjectSettings)` 파라미터화 — 거푸집 하드코딩 제거
+- [ ] `RevitIntersectingElementFinder` 공제 매트릭스 연동 + 오프닝 최소 체적(1m³) 임계값
+- [ ] 철근(개략) 병행 산출 — RC 콘크리트 체적 × 카테고리별 kg/m³
+- [ ] 할증률: 집계·Excel에 할증 반영량 열 추가 (정미량은 유지)
+- [ ] UI: `QuantitySettingsView` (탭 4개) + QuantityView ⚙버튼 + ExternalEvent + .dhcfg 내보내기/가져오기
+
+### 수량산출 추가 기능 로드맵 — 기획 확정 2026-07-09
+- 기획 문서: `docs/08_수량산출_추가기능_기획.md` (우선순위 순)
+- [ ] 1. 산출근거서 출력 — Excel에 RenderedFormula·공제내역 시트 추가
+- [ ] 2. 산출 누락 진단 리포트 — 스킵 요소·사유 수집 및 표시
+- [ ] 3. 방수·방식 면적 산출 — 수조 내부 wet face 판별 (HWL 설정)
+- [ ] 4. 수량 증감 비교 — 스냅샷 DataStorage 저장 + diff 뷰/증감표
+- [ ] 5. 층별/구역별 집계 + 요소 역추적 (하이라이트/줌)
+- ❌ 토공량(터파기/되메우기/버림콘크리트) — Civil3D에서 산출, 애드인 범위 영구 제외
 
 ### 프로젝트 RuleSet
 - [ ] 지수판 길이 등 프로젝트 특화 공종 정의
@@ -453,3 +468,28 @@
   - 목적: Revit 내부 계단 타입/solver 첫 사용 상태를 더미 계단에서 먼저 소모하고 실제 첫 계단이 두 번째 계단처럼 계산되도록 우회.
 - 검증: `dotnet build src\DHBIMWATER.Infrastructure\DHBIMWATER.Infrastructure.csproj --no-dependencies -c Release` 오류 0개. 기존 nullable/MSB3277 경고는 남음.
 - 다음 확인: Revit에서 타입이 없는 새 모델/문서 상태로 다시 생성 후 `STAIR_DIAG seq=1`의 실제 계단이 `actualRiserHeightMm=200`인지 확인.
+
+---
+
+## 2026-07-09
+
+### 수량산출 설정창 기획 (거푸집 / 면적 공제 / 철근비)
+- [x] 기획 문서 작성: `docs/07_수량설정창기획.md`
+  - 저장: DataStorage 기본 + `.dhcfg` 내보내기/가져오기 (기존 `DhcfgRepo`·`QuantitySettingsSchema` 재활용)
+  - 철근비: 카테고리별 kg/m³, 실물 철근과 무관하게 "철근(개략)" 항목 항상 병행 산출
+  - 공제: 호스트×인접 카테고리 매트릭스 + 오프닝 최소 체적 임계값(기본 1m³, 기존 예정 규칙 통합)
+- [x] UI 목업 작성: `docs/07_수량설정창목업.html` (브라우저에서 열어 확인)
+- 미결: 철근비 기본값 숫자 확정(기초 80/슬래브 100/벽 110/보 130/기둥 150은 가안), 계단 거푸집은 1차 범위 제외
+
+### 수량산출 추가 기능 로드맵 확정 (같은 날 후속)
+- [x] 설정창에 **할증률 탭** 추가 결정 → 문서 07에 `LossRateSettings`(§3-4) 반영, 목업에 탭 4번째 추가
+  - 원칙: 정미량 유지, 집계·Excel에서만 할증 반영량 병기. 기본값(콘크리트 2/철근 3/거푸집 5/강재 3%)은 가안
+- [x] 후속 기능 로드맵 문서 작성: `docs/08_수량산출_추가기능_기획.md`
+  - 순서: 산출근거서 → 누락 진단 → 방수·방식 → 증감 비교 → 층별 집계·역추적
+- [x] **토공량은 영구 제외** — Civil3D에서 산출하기로 결정
+- [x] **철근 할증률 확정: 직경 구분 없이 일괄 3%** (2026-07-09) — 표준품셈은 이형철근 3%/원형철근 5%,
+  교량 등 복잡구조물 주철근 6~7% 조정 가능하지만, 본 애드인은 직경 구간별 세분화 없이 단일 3% 값으로 단순화.
+  `LossRateSettings.RatePercent["철근"] = 3.0` 단일 항목으로 충분 — 문서 07 §3-4·목업 반영 완료.
+- **다음 세션 시작점**: 문서 07 §7 구현 순서 1번부터 착수.
+  Core에 `DeductionSettings`, `RebarRatioSettings`, `LossRateSettings` 추가 → `ProjectSettings` 확장.
+  (`RebarSettings`는 겹이음/정착길이용으로 이미 존재하니 혼동 주의 — 할증률은 신규 `LossRateSettings`)

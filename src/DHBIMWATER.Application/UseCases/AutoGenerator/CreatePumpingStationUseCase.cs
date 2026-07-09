@@ -91,7 +91,6 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                     var defs = GetPumpSharedParameterDefinitions();
                     _sharedParameterRepo.EnsureParameters(defs);
                     #endregion
-
                     #region 1. 레벨 생성
                     var existingLevels = _levelQueryRepo.GetExistingLevelNames();
                     var existingEngineeringPlanNames = _levelQueryRepo.GetExistingPlanNames();
@@ -123,7 +122,6 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                         }
                     }
                     #endregion
-
                     #region 2. 슬래브 생성
                     foreach (var slabDef in PumpingStationGeometryCalculator.CalculateSlabs(dto))
                         _slabCmdRepo.CreateSlab(slabDef);
@@ -132,7 +130,6 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                     var dsDefs = PumpingStationGeometryCalculator.CalculateSolids(dto);
                     var ids = _dsCmdRepo.CreateDirectShapes(dsDefs);
                     #endregion
-
                     #region 3. 벽체 생성
                     foreach (var linearWallDef in PumpingStationGeometryCalculator.CalculateLinearWalls(dto))
                         _wallCmdRepo.CreateLinearWall(linearWallDef);
@@ -143,16 +140,11 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                     var hullStr = string.Join("\n", hull.Select((p, i) => $"[{i}] X={p.X:F0}  Y={p.Y:F0}"));
                     //_dialogService.Info("DEBUG - Hull 꼭짓점 (mm)", hullStr);
                     #endregion
-
                     #region 4. 보 생성
                     foreach (var beamDef in PumpingStationGeometryCalculator.CalculateBeams(dto))
                         _beamCmdRepo.CreateBeam(beamDef);
                     #endregion
-
-                    #region 5. 계단 생성
-                    #endregion
-
-                    #region 6. 오프닝 배치
+                    #region 5. 오프닝 배치
                     // 슬래브 오프닝 (사각형)
                     foreach (var openingDef in PumpingStationGeometryCalculator.CalculateRectangularSlabOpenings(dto))
                         _openingCmdRepo.CreateSlabOpening(openingDef);
@@ -166,17 +158,14 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                     foreach (var openingDef in PumpingStationGeometryCalculator.CalculateCircularWallOpenings(dto))
                         _openingCmdRepo.CreateWallOpening(openingDef);
                     #endregion
-
-                    #region 7. 펌프받침 배치 (FamilyInstance)
+                    #region 6. 펌프받침 배치 (FamilyInstance)
                     foreach (var def in PumpingStationGeometryCalculator.CalculateGenericModels(dto))
                         _genericModelCmdRepo.PlaceInstance(def);
                     #endregion
-
-                    #region 8. 결합
+                    #region 7. 결합
                     // 보 작성 메서드 내부에서 상부 슬래브와 결합 (임시 조치)
                     #endregion
-
-                    #region 9. 뷰 작성                    
+                    #region 8. 뷰 작성                    
                     var existingSectionViewNames = _levelQueryRepo.GetExistingSectionNames();
                     var sectionViewDefs = PumpingStationGeometryCalculator.CalculateSectionViews(dto);
 
@@ -198,14 +187,11 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                         _levelCmdRepo.Maximize3dExtents(levelId);
                     }
                     #endregion
-
-                    #region 10. 타입 설명 추가
+                    #region 9. 타입 설명 추가
                     _setParameterRepo.SetTypeParameter(dto);
                     #endregion
-
                     // 트랜잭션 커밋
                     _tx.Commit();
-
                     _dialogService.Info("Success", "펌프장 작성 완료");
                 }
                 catch (Exception ex)
