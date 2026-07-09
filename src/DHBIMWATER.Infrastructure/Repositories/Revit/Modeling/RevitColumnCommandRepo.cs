@@ -21,14 +21,19 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             var doc = _doc();
             if (doc == null) return 0;
 
-            var level = new FilteredElementCollector(doc)
+            var baseLevel = new FilteredElementCollector(doc)
                 .OfClass(typeof(Level))
                 .Cast<Level>()
-                .FirstOrDefault(l => l.Name == def.LevelName);
+                .FirstOrDefault(l => l.Name == def.BaseLevelName);
 
-            if (level == null)
+            var topLevel = new FilteredElementCollector(doc)
+                .OfClass(typeof(Level))
+                .Cast<Level>()
+                .FirstOrDefault(l => l.Name == def.TopLevelName);
+
+            if (baseLevel == null || topLevel == null)
             {
-                TaskDialog.Show("Error", $"기둥 레벨을 찾을 수 없습니다: {def.LevelName}");
+                TaskDialog.Show("Error", $"기둥 레벨을 찾을 수 없습니다: {def.BaseLevelName} or {def.TopLevelName}");
                 return 0;
             }
 
@@ -51,13 +56,14 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             }
 
             var basePt = new XYZ(UC.MmToFt(def.Position.X), UC.MmToFt(def.Position.Y), UC.MmToFt(def.Position.Z));
-            var col = doc.Create.NewFamilyInstance(basePt, colType, level, StructuralType.Column);
+            var col = doc.Create.NewFamilyInstance(basePt, colType, baseLevel, StructuralType.Column);
 
+            col.get_Parameter(BuiltInParameter.FAMILY_TOP_LEVEL_PARAM)?.Set(topLevel.Id);
+            col.get_Parameter(BuiltInParameter.FAMILY_TOP_LEVEL_OFFSET_PARAM)?.Set(UC.MmToFt(def.TopOffset));
             col.LookupParameter("DH_ElementCode")?.Set(def.ElementCode);
             col.LookupParameter("DH_Addin")?.Set("DHBIMWATER");
             col.LookupParameter("DH_Part")?.Set(def.Part);
             col.LookupParameter("DH_Zone")?.Set(def.Zone);
-            col.LookupParameter("DH_Category")?.Set(def.Category);
 
             return (int)col.Id.Value;   
         }

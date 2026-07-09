@@ -91,7 +91,6 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                     #region 3. 벽체 생성
                     foreach (var wallDef in ReservoirGeometryCalculator.CalculateLinearWalls(dto))
                         _wallCmdRepo.CreateLinearWall(wallDef);
-
                     _classifyWallsUseCase.Execute();
                     #endregion
 

@@ -327,7 +327,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
 
                         if (warmupStairs != null)
                         {
-                            double actualStairHeight = UC.MmToFt(stairsDefinition.MaxRiserHeight * stairsDefinition.RisersNumber);
+                            double actualStairHeight = UC.MmToFt(stairsDefinition.MaxRiserHeight * stairsDefinition.RisersNumber);  // 챌판 높이 * 단수 → 목표 계단 높이
                             double levelHeight = topLevel.Elevation - baseLevel.Elevation;
                             warmupStairs.get_Parameter(BuiltInParameter.STAIRS_TOP_OFFSET)?.Set(actualStairHeight - levelHeight);
                             doc.Regenerate();
