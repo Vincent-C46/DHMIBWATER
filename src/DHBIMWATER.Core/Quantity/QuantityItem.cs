@@ -17,7 +17,7 @@ namespace DHBIMWATER.Core.Quantity
     {
         // 필수
         public string WorkType { get; init; } = string.Empty;      // 공종: 콘크리트, 거푸집
-        public string Unit { get; init; } = string.Empty;          // 단위: m³, m², 무단위
+        public string Unit { get; init; } = string.Empty;          // 단위: m³, m², 무단위. Enum 으로 변경 필요
 
         public long ElementId { get; init; }                       // ElementId
         public long? HostElementId { get; init; } = null;          // 호스트객체 ID: 철근·오프닝 등 종속 객체에 활용
@@ -38,5 +38,18 @@ namespace DHBIMWATER.Core.Quantity
         public bool HasDeductions => Deductions != null && Deductions.Count > 0;
 
         public double? GrossValue { get; init; } = null;
+
+        public string ElementGroupLabel
+        {
+            get
+            {
+                if (WorkType == "철근")
+                    return string.IsNullOrEmpty(ElementCode) ? "(코드 없음)" : ElementCode;
+
+                return string.IsNullOrEmpty(ElementCode)
+                    ? $"(Id: {ElementId})"
+                    : $"{ElementCode} (Id: {ElementId})";
+            }
+        }
     }
 }

@@ -1,0 +1,192 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI','Malgun Gothic',sans-serif;font-size:13px}
+.win{background:#F4F7F9;border-radius:12px;width:520px;margin:0 auto;border:0.5px solid var(--border);overflow:hidden}
+.titlebar{background:#E8ECF0;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid var(--border)}
+.titlebar span{font-size:12px;font-weight:500;color:var(--text-secondary)}
+.titlebar-btns{display:flex;gap:6px}
+.tbtn{width:12px;height:12px;border-radius:50%;background:var(--border-strong)}
+.content{padding:16px 20px}
+.section-label{font-size:10px;font-weight:500;color:#888780;margin:10px 0 8px}
+.row2{display:grid;grid-template-columns:1fr 12px 120px;margin-bottom:12px}
+.field-label{font-size:11px;color:#888780;margin-bottom:4px}
+.input{height:32px;border:1px solid #E2E8F0;border-radius:6px;padding:0 10px;background:#fff;width:100%;font-size:12px;color:var(--text-primary)}
+select.input{background:#fff}
+.formula-box{background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;padding:10px;margin-bottom:8px}
+.formula-box input{border:none;background:transparent;font-family:Consolas,monospace;font-size:13px;width:100%;color:var(--text-primary);height:28px}
+.formula-hint{font-size:10px;color:#888780;margin-top:4px}
+.var-section{background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;padding:10px;margin-bottom:8px}
+.var-label{font-size:10px;font-weight:500;color:#888780;margin-bottom:8px}
+.var-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.var-card{background:#fff;border:1px solid #E2E8F0;border-radius:6px;padding:7px 8px}
+.var-card.measuring{border-color:#85B7EB;background:#F0F7FF}
+
+/* 5열: 변수명 | 값 입력 | 단위 | 길이버튼 | 면적버튼 */
+.var-inner{display:grid;grid-template-columns:28px 1fr 24px 22px 22px;align-items:center;gap:3px}
+.var-name{font-family:Consolas,monospace;font-size:12px;font-weight:500;color:#888780}
+.var-name.active{color:#185FA5}
+.var-input{border:none;background:transparent;font-size:12px;width:100%;color:var(--text-primary);padding:2px 0;min-width:0}
+/* 단위는 고정값이 아니라 측정 타입에 따라 동적: 길이측정→m, 면적측정→m², 미측정→빈칸 */
+.var-unit{font-size:10px;color:#888780;text-align:center}
+
+.mbtn{width:22px;height:22px;border-radius:4px;border:1px solid #E2E8F0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .12s,border-color .12s;flex-shrink:0;padding:0}
+.mbtn:hover{background:#EEF4FC;border-color:#85B7EB}
+.mbtn:hover i{color:#185FA5}
+.mbtn i{font-size:12px;color:#aaa;transition:color .12s}
+.mbtn.active{background:#185FA5;border-color:#185FA5}
+.mbtn.active i{color:#fff}
+
+.measuring-hint{background:#E6F1FB;border:1px solid #85B7EB;border-radius:6px;padding:7px 10px;margin-top:8px;display:flex;align-items:center;gap:8px}
+.measuring-hint i{color:#185FA5;font-size:14px;flex-shrink:0}
+.measuring-hint span{font-size:11px;color:#0C447C}
+.dot{width:6px;height:6px;border-radius:50%;background:#185FA5;flex-shrink:0;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.preview-box{background:#E6F1FB;border:1px solid #85B7EB;border-radius:6px;padding:8px 10px;margin-bottom:12px}
+.preview-label{font-size:10px;color:#185FA5;margin-bottom:3px}
+.preview-val{font-family:Consolas,monospace;font-size:12px;color:#0C447C}
+
+.sep{border:none;border-top:1px solid #E2E8F0;margin:4px 0 12px}
+.opt-box{border:1px solid #E2E8F0;border-radius:8px;padding:12px;margin-bottom:12px}
+.opt-row{display:grid;grid-template-columns:1fr 12px 1fr;margin-bottom:10px}
+.opt-row:last-child{margin-bottom:0}
+.footer{border-top:1px solid #E2E8F0;background:#F8FAFC;padding:12px 20px;display:flex;justify-content:flex-end;gap:8px}
+.btn-cancel{height:32px;padding:0 16px;border:1px solid #E2E8F0;border-radius:6px;background:#fff;font-size:12px;cursor:pointer;color:var(--text-secondary)}
+.btn-primary{height:32px;padding:0 16px;border-radius:6px;background:#185FA5;border:none;color:#fff;font-size:12px;cursor:pointer;font-weight:500}
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.30.0/dist/tabler-icons.min.css">
+
+<div class="win">
+  <div class="titlebar">
+    <span>수동 수량 입력</span>
+    <div class="titlebar-btns">
+      <div class="tbtn"></div><div class="tbtn"></div>
+      <div class="tbtn" style="background:#ccc"></div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="section-label">필수 항목</div>
+
+    <div class="row2">
+      <div>
+        <div class="field-label">공종 *</div>
+        <input class="input" value="시스템 비계" />
+      </div>
+      <div></div>
+      <div>
+        <div class="field-label">단위 *</div>
+        <select class="input"><option>m²</option><option>m³</option><option>m</option><option>EA</option></select>
+      </div>
+    </div>
+
+    <div style="margin-bottom:8px">
+      <div class="field-label">산출식 *</div>
+      <div class="formula-box">
+        <input value="A1 + L1 * H1" />
+        <div class="formula-hint">영문+숫자 조합으로 변수 입력 (예: A1, L1, H1)</div>
+      </div>
+    </div>
+
+    <div class="var-section">
+      <div class="var-label">변수 입력</div>
+      <div class="var-grid">
+
+        <!-- A1 — 면적 측정값 입력된 상태 -->
+        <div class="var-card">
+          <div class="var-inner">
+            <span class="var-name">A1</span>
+            <input class="var-input" value="32.840" />
+            <span class="var-unit">m²</span>
+            <button class="mbtn" title="길이 측정 (점 연속 클릭 · ESC/Enter/Space로 완료)" aria-label="A1 길이 측정">
+              <i class="ti ti-ruler-measure" aria-hidden="true"></i>
+            </button>
+            <button class="mbtn" title="면적 측정 (면 선택)" aria-label="A1 면적 측정">
+              <i class="ti ti-square-rotated" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- L1 — 길이 버튼 활성(폴리라인 측정 중) 상태 -->
+        <div class="var-card measuring">
+          <div class="var-inner">
+            <span class="var-name active">L1</span>
+            <input class="var-input" value="" placeholder="측정 중..." style="color:#888780" />
+            <span class="var-unit" style="color:#185FA5">m</span>
+            <button class="mbtn active" title="측정 완료 (ESC/Enter/Space)" aria-label="L1 길이 측정 중">
+              <i class="ti ti-ruler-measure" aria-hidden="true"></i>
+            </button>
+            <button class="mbtn" title="면적 측정 (면 선택)" aria-label="L1 면적 측정">
+              <i class="ti ti-square-rotated" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- H1 -->
+        <div class="var-card">
+          <div class="var-inner">
+            <span class="var-name">H1</span>
+            <input class="var-input" value="6.200" />
+            <span class="var-unit">m</span>
+            <button class="mbtn" title="길이 측정 (점 연속 클릭 · ESC/Enter/Space로 완료)" aria-label="H1 길이 측정">
+              <i class="ti ti-ruler-measure" aria-hidden="true"></i>
+            </button>
+            <button class="mbtn" title="면적 측정 (면 선택)" aria-label="H1 면적 측정">
+              <i class="ti ti-square-rotated" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- 빈 카드 자리 유지 -->
+        <div></div>
+
+      </div>
+
+      <!-- 측정 중 힌트 (L1 길이 측정 활성 — 폴리라인) -->
+      <div class="measuring-hint">
+        <div class="dot"></div>
+        <i class="ti ti-hand-click" aria-hidden="true"></i>
+        <span>Revit 뷰에서 <strong>점을 연속 클릭</strong>하세요 — 각 구간 길이가 L1에 합산됩니다 (<strong>ESC·Enter·Space</strong>로 완료)</span>
+      </div>
+    </div>
+
+    <!-- 산출 미리보기 -->
+    <div class="preview-box">
+      <div class="preview-label">산출 미리보기</div>
+      <div class="preview-val">32.840 + L1 × 6.200 = L1 측정 후 계산</div>
+    </div>
+
+    <hr class="sep"/>
+    <div class="section-label">선택 항목</div>
+    <div class="opt-box">
+      <div class="opt-row">
+        <div>
+          <div class="field-label">카테고리</div>
+          <input class="input" placeholder="예: 가설공사" />
+        </div>
+        <div></div>
+        <div>
+          <div class="field-label">ElementCode</div>
+          <input class="input" />
+        </div>
+      </div>
+      <div class="opt-row">
+        <div>
+          <div class="field-label">규격</div>
+          <input class="input" />
+        </div>
+        <div></div>
+        <div>
+          <div class="field-label">규격2</div>
+          <input class="input" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <button class="btn-cancel">취소</button>
+    <button class="btn-primary">저장</button>
+  </div>
+</div>

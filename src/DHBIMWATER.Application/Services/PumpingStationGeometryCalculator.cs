@@ -1,11 +1,7 @@
-﻿using DHBIMWATER.Application.DTOs.Revit.PumpingStation;
+using DHBIMWATER.Application.DTOs.Revit.PumpingStation;
 using DHBIMWATER.Core.Geometry;
 using DHBIMWATER.Core.Structures;
 using System.Diagnostics;
-using System.Net;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Runtime.Intrinsics.Arm;
 
 namespace DHBIMWATER.Application.Services
 {
@@ -72,17 +68,7 @@ namespace DHBIMWATER.Application.Services
                 Part = "밸브실슬래브",
             };
             // 상부슬래브 오프닝 추가
-            if (d.SelectedPumpingStationType == "Type2")
-            {
-                upperSlabDef.SubPoints = new List<Point2D>()
-                {
-                    new Point2D(totalLength - pr.T3 - pr.B7, 0),
-                    new Point2D(totalLength - pr.T3, 0),
-                    new Point2D(totalLength - pr.T3, totalWidth - pr.T4*2),
-                    new Point2D(totalLength - pr.T3 - pr.B7, totalWidth - pr.T4*2),
-                };
-            }
-            else
+            if (d.SelectedPumpingStationType == "Type1")
             {
                 upperSlabDef.SubPoints = new List<Point2D>()
                 {
@@ -1684,7 +1670,7 @@ namespace DHBIMWATER.Application.Services
 
             for (int i = 0; i < d.N; i++)
             {
-
+                // 펌프 오프닝
                 if (pr.IsRectangularOpening)
                 {
                     var pumpOpening = new RectangularSlabOpeningDefinition
@@ -1699,6 +1685,7 @@ namespace DHBIMWATER.Application.Services
                         Name = "",
                         HostElementCode = "S1",
                         Part = "OPEN",
+                        ElementCode = "SO2",
                     };
                     openings.Add(pumpOpening);
                 }
@@ -1714,7 +1701,7 @@ namespace DHBIMWATER.Application.Services
                     Name = "",
                     HostElementCode = "S1",
                     Part = "OPEN",
-
+                    ElementCode = "SO1",
                 };
                 openings.Add(screenOpening);
             }
@@ -1760,7 +1747,7 @@ namespace DHBIMWATER.Application.Services
                         Name = "",
                         HostElementCode = "S1",
                         Part = "OPEN",
-
+                        ElementCode = "SO2",
                     };
                     openings.Add(pumpOpening);
                 }
@@ -1791,6 +1778,7 @@ namespace DHBIMWATER.Application.Services
                 HostElementCode = "W3",
                 OffsetZ = 0,
                 Part = "OPEN",
+                ElementCode = "WO2",
             };
             openings.Add(innerWallOpening);
 
@@ -1808,6 +1796,7 @@ namespace DHBIMWATER.Application.Services
                 HostElementCode = "W5",
                 OffsetZ = 0,
                 Part = "OPEN",
+                ElementCode = "WO3",
             };
             openings.Add(partitionWall);
 
@@ -1840,7 +1829,7 @@ namespace DHBIMWATER.Application.Services
                     HostElementCode = "W2",
                     OffsetZ = pr.H6,
                     Part = "OPEN",
-
+                    ElementCode = "WO1",
                 };
                 openings.Add(wallOpening);
             }
@@ -1857,7 +1846,7 @@ namespace DHBIMWATER.Application.Services
                     HostElementCode = "W4",
                     OffsetZ = pr.H6,
                     Part = "OPEN",
-
+                    ElementCode = "WO1",
                 };
                 openings.Add(wallOpening);
             }
@@ -1870,7 +1859,9 @@ namespace DHBIMWATER.Application.Services
             var pr = dto.ProfileSpecDto;
             var pl = dto.PlanSpecDto;
             //var ts = dto.TypeSelectionDto;
-            var totalLength = d.SelectedPumpingStationType == "Type2" ? pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T3 : pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
+            var totalLength = d.SelectedPumpingStationType == "Type2"
+                ? pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T3
+                : pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
             var totalWidth = pr.T4 * 2 + (pl.B8 * d.N) + (pl.T5 * (d.N - 1));
             double x2 = d.SelectedPumpingStationType == "Type2" ? totalLength - pr.T3 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2 - pr.L4 - pr.L3 : totalLength - pr.T4 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2 - pr.L4 - pr.L3;
 
@@ -1898,6 +1889,15 @@ namespace DHBIMWATER.Application.Services
                 { "T", circ_T },
                 { "d", circ_d },
             };
+            // 밸브받침("DH_받침") 매개변수 — Excel "밸브 연장" 시트에서 파싱한 제원 (HasCheckValve 반영됨)
+            var valveBaseDict = new Dictionary<string, object>
+            {
+                { "B", dto.ValveBase.ValveBaseWidth },
+                { "L", dto.ValveBase.ValveBaseLength },
+                { "H", dto.ValveBase.ValveBaseHeight },
+            };
+            // Excel 밸브받침 배치값(J/Q열)이 미로드/누락(0)이면 B7/2 기본값 사용
+            double valveBasePlacement = dto.ValveBase.ValveBasePlacement != 0 ? dto.ValveBase.ValveBasePlacement : pr.B7 / 2;
             for (int i = 0; i < d.N; i++)
             {
                 var pedestal = new GenericModelPlacementDefinition
@@ -1906,16 +1906,35 @@ namespace DHBIMWATER.Application.Services
                     Origin = d.SelectedPumpingStationType == "Type2" ?
                              new Point3D(totalLength - pr.T3 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2, pl.B8 / 2 + (pl.B8 + pl.T5) * i, 0) :
                              new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3 - pr.B6 - pr.B5 / 2, pl.B8 / 2 + (pl.B8 + pl.T5) * i, 0),
-                    LevelName = "상부슬래브",
+                    LevelName = UpperSlabLevelName,
                     Rotation = -90, // 기본적으로 회전방향은 ccw.
                     ElementCode = "PED1",
-                    Part = "콘크리트기초",
+                    Part = "펌프받침블럭",
                     Zone = "펌프장",
 
                     Parameters = pr.IsRectangularOpening ? recDict : circDict,
                 };
 
                 defs.Add(pedestal);
+
+                // 밸브받침 추가
+                var valveBase = new GenericModelPlacementDefinition
+                {
+                    SymbolName = "DH_받침",
+                    // X = totalLength - T4(Type2는 T3) - B7 + ValveBasePlacement (J/Q열). Y/Z는 펌프 기초와 동일 열/레벨
+                    Origin = d.SelectedPumpingStationType == "Type2"
+                             ? new Point3D(totalLength - pr.T3 - pr.B7 + valveBasePlacement, pl.B8 / 2 + (pl.B8 + pl.T5) * i, 0)
+                             : new Point3D(totalLength - pr.T4 - pr.B7 + valveBasePlacement, pl.B8 / 2 + (pl.B8 + pl.T5) * i, 0),
+                    LevelName = ValveRoomLevelName,
+                    Rotation = -90, // 기본적으로 회전방향은 ccw.
+                    ElementCode = "PED2",
+                    Part = "콘크리트기초",
+                    Zone = "밸브실",
+
+                    Parameters = valveBaseDict,
+                };
+
+                defs.Add(valveBase);
             }
             return defs;
         }
@@ -1937,8 +1956,8 @@ namespace DHBIMWATER.Application.Services
                 Min = new Point3D(-offset, pl.B8 / 2, d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
                 Max = new Point3D(totalLength + pl.B10 + offset, pl.B8 / 2 + offset, d.HWL * 1000 + pr.H3 + pr.T1 + offset),
 
-                BasisX = d.SelectedEntranceType == "좌안부" ? new Vector3D(-1, 0, 0) : new Vector3D(1, 0, 0),
-                BasisZ = d.SelectedEntranceType == "좌안부" ? new Vector3D(0, -1, 0) : new Vector3D(0, 1, 0),
+                BasisX = new Vector3D(1, 0, 0),
+                BasisZ = new Vector3D(0, 1, 0),
                 //Flip = true
             });
 
@@ -1948,8 +1967,8 @@ namespace DHBIMWATER.Application.Services
                 Min = new Point3D(-offset, pl.B8 - 100, d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
                 Max = new Point3D(totalLength + pl.B10 + offset, pl.B8 + pl.T5 + 100, d.HWL * 1000 + pr.H3 + pr.T1 + offset),
 
-                BasisX = d.SelectedEntranceType == "좌안부" ? new Vector3D(-1, 0, 0) : new Vector3D(1, 0, 0),
-                BasisZ = d.SelectedEntranceType == "좌안부" ? new Vector3D(0, -1, 0) : new Vector3D(0, 1, 0),
+                BasisX = new Vector3D(1, 0, 0),
+                BasisZ = new Vector3D(0, 1, 0),
                 //Flip = true
             });
 
@@ -1996,22 +2015,23 @@ namespace DHBIMWATER.Application.Services
                 sectionViewDefs.Add(new SectionViewDefinition
                 {
                     Name = "C",
-                    Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - pl.B10 - offset, (totalWidth - pr.T4) - (-pl.T5 - pl.B9 + 100), d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
-                    Max = new Point3D(totalLength + pl.B10 + offset, (totalWidth - pr.T4) - (-pl.T5 - pl.B9 + offset), d.HWL * 1000 + pr.H3 + pr.T1 + offset),
+                    Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - pl.B10 - offset, (totalWidth - pr.T4 * 2) + pl.T5 + pl.B9 - 100, d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
+                    Max = new Point3D(totalLength + pl.B10 + offset, (totalWidth - pr.T4) + pl.T5 + pl.B9 + 100, d.HWL * 1000 + pr.H3 + pr.T1 + offset),
 
-                    BasisX = new Vector3D(-1, 0, 0),
-                    BasisZ = new Vector3D(0, -1, 0),
+                    BasisX = new Vector3D(1, 0, 0),
+                    BasisZ = new Vector3D(0, 1, 0),
                     //Flip = true
                 });
 
                 sectionViewDefs.Add(new SectionViewDefinition
                 {
                     Name = "D",
-                    Min = new Point3D(totalLength - pr.T4 * 2 - pl.L5 - pl.B10 - offset, (totalWidth - pr.T4) - (-pl.T5 - offset), d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
-                    Max = new Point3D(totalLength + pl.B10 + offset, (totalWidth - pr.T4) - (-pl.T5 + offset), d.HWL * 1000 + pr.H3 + pr.T1 + offset),
 
-                    BasisX = new Vector3D(-1, 0, 0),
-                    BasisZ = new Vector3D(0, -1, 0),
+                    Min = new Point3D(-offset, (totalWidth - pr.T4) - (pr.T4 + offset), d.LWL * 1000 - (pr.H4 + pr.T2 + 100 + offset)),
+                    Max = new Point3D(totalLength + pl.B10 + offset, (totalWidth - pr.T4) + offset, d.HWL * 1000 + pr.H3 + pr.T1 + offset),
+
+                    BasisX = new Vector3D(1, 0, 0),
+                    BasisZ = new Vector3D(0, 1, 0),
                     //Flip = true
                 });
 
@@ -2023,7 +2043,7 @@ namespace DHBIMWATER.Application.Services
 
                     BasisX = new Vector3D(-1, 0, 0),
                     BasisZ = new Vector3D(0, 0, -1),
-                    //Flip = true
+                    //Flip = true       
                 });
             }
 
@@ -2126,6 +2146,69 @@ namespace DHBIMWATER.Application.Services
 
 
             return sectionViewDefs;
+        }
+
+        /// <summary>
+        /// 계단(Revit Stairs 요소) 배치 정의를 계산한다.
+        /// 현재는 샘플로 "밸브실 → 상부슬래브" 직선 Run 1개만 생성한다.
+        /// </summary>
+        public static IReadOnlyList<StairsDefinition> CalculateStairs(PumpCreationRequestDto dto)
+        {
+            var d = dto.DesignConditionDto;
+            var pr = dto.ProfileSpecDto;
+            var pl = dto.PlanSpecDto;
+
+            var totalLength = d.SelectedPumpingStationType == "Type2"
+                ? pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T3
+                : pr.B1 + pr.B2 + pr.B3 + pr.B4 + pr.B5 + pr.B6 + pr.T3 + pr.B7 + pr.T4;
+            var totalWidth = pr.T4 * 2 + (pl.B8 * d.N) + (pl.T5 * (d.N - 1));
+
+            // 레벨 표고(mm) — CalculateLevels와 동일 산식
+            double upperSlabElev = d.HWL * 1000 + pr.H3;
+            double valveRoomElev = upperSlabElev - pr.H7 - d.D - pr.H6;
+            int riserNum = pr.NS1;   // 챌판 수
+            int treadNum = riserNum - 1;
+            double riserHeight = pr.HS1;
+            double treadDepth = 300;    // 발판 깊이
+            double stairWidth = 800;    // 계단 폭
+            double rise = treadNum * riserHeight; // 상승고 (계단 총 높이)
+            var result = new List<StairsDefinition>();
+
+            // TODO: 정식 배치 규칙 확정 시 위치/개수/유형(TypeName) 반영 필요.
+            double runLength = treadDepth * treadNum;
+            double upperX = totalLength - pr.T4 - pr.B7;
+
+            if (d.SelectedPumpingStationType == "Type2" || d.SelectedPumpingStationType == "Type3") return result;
+
+            for (int i = 0; i < d.N - 1; i++)
+            {   
+                double y = -pl.T5 / 2 + (pl.B8 + pl.T5) * (i + 1);
+                var stairDef = new StairsDefinition
+                {
+                    BaseLevelName = ValveRoomLevelName,
+                    TopLevelName = UpperSlabLevelName,
+                    TypeName = "현장타설", // 비우면 기본 StairsType 사용
+                    ElementCode = "ST1",
+                    Category = "계단",
+                    Zone = "밸브실",
+                    Part = "밸브실 계단",
+                    TreadDepth = treadDepth,
+                    MaxRiserHeight = riserHeight,
+                    RisersNumber = riserNum,
+                    Runs = new List<StairsRunDefinition>
+                    {
+                        new StairsRunDefinition
+                        {
+                            StartPoint = new Point3D(upperX + runLength, y, valveRoomElev),
+                            EndPoint   = new Point3D(upperX, y, valveRoomElev),
+                            Justification = StairJustification.Center,
+                            Width = stairWidth,
+                        }
+                    },
+                };
+               result.Add(stairDef);
+            }
+            return result;
         }
     }
 }

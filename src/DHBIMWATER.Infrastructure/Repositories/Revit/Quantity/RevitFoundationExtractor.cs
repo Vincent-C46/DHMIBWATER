@@ -78,16 +78,21 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                              FamilyInstanceHelper.FindParameter(fnd, "기초 두께") ??
                              FamilyInstanceHelper.FindParameter(fnd, "Height") ?? 0);
 
+            double volume = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(fnd).Sum(s => s.Volume));
+
             var varDict = new Dictionary<string, double>
             {
-                ["B"] = b,
-                ["D"] = d,
-                ["H"] = h,
+                ["B"]            = b,
+                ["D"]            = d,
+                ["H"]            = h,
+                ["Vol"]          = volume,
+                ["A_side_gross"] = refFaceDict.GetValueOrDefault(FaceType.Side, 0),
+                ["A_side_net"]   = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.Side),
             };
 
             const string concFormula = "B x D x H";
             string? concRendered = FormulaCalculator.Render(concFormula, varDict);
-            double concValue = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(fnd).Sum(s => s.Volume));
+            double concValue = volume;
             string workType = materialName.Contains("무근") || h < 0.15 ? "무근콘크리트" : "철근콘크리트";
 
             quantityItems.Add(new QuantityItem
@@ -116,7 +121,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 var rawFormula = QuantityExtractorHelper.GetDeductionRawFormula(refFaceDict, deductionByFaceType, faceType);
                 var renderedFormula = QuantityExtractorHelper.GetDeductionRenderedFormula(refFaceDict, deductionByFaceType, faceType);
 
-                var spec = workType == "무근콘크리트" ? "합판6회" : "합판4회";
+                var formwork = workType == "무근콘크리트" ? FormworkType.Plywood6 : FormworkType.Plywood4;
+                var spec = formwork.ToSpecification();
 
                 var formworkItem = new QuantityItem
                 {

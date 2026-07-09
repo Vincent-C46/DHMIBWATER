@@ -49,12 +49,22 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             var quantityItems = new List<QuantityItem>();
 
-            string materialName = string.Empty;
-            var materialId = FamilyInstanceHelper.GetMaterialId(stair);
-            if (materialId != null && materialId != ElementId.InvalidElementId)
-                materialName = (doc.GetElement(materialId) as Material)?.Name ?? string.Empty;
+            var materialId = stair.GetMaterialIds(false).FirstOrDefault();
+            var material = (materialId != null && materialId != ElementId.InvalidElementId)
+                ? doc.GetElement(materialId) as Material
+                : null;
 
-            var materialClass = FamilyInstanceHelper.GetStructuralAssetClass(stair);
+            string materialName = material?.Name ?? string.Empty;
+
+            StructuralAssetClass? materialClass = null;
+            if (material != null)
+            {
+                var assetId = material.StructuralAssetId;
+                if (assetId != null && assetId != ElementId.InvalidElementId)
+                    materialClass = (doc.GetElement(assetId) as PropertySetElement)
+                                        ?.GetStructuralAsset()?.StructuralAssetClass;
+            }
+
             var workType = materialClass switch
             {
                 StructuralAssetClass.Concrete => "철근콘크리트",
@@ -163,5 +173,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             return quantityItems;
         }
+
     }
 }

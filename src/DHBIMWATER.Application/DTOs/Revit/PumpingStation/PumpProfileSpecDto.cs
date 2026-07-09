@@ -26,18 +26,20 @@ namespace DHBIMWATER.Application.DTOs.Revit.PumpingStation
         double H7,
         double OB1,
         double OH1,
-        int NS,
         double HB1,
         double HH1,
 
+        int NS,
         double HS,
+        int NS1,
+        double HS1,
 
         double T1,
         double T2,
         double T3,
         double T4,
         double T5Prime,
-                
+
         double GB1,
         double GH1,
 

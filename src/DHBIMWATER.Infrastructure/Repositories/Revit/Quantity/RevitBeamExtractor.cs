@@ -57,7 +57,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var refFaceDict = _classifier.GetFaceAreas(elementId);
             var deductionByFaceType = QuantityExtractorHelper.GroupDeductions(_finder.FindContactAreas(elementId));
 
-            // 객체 추출값
+            #region 보 정보 추출
             var length = UC.FtToM(beam.get_Parameter(BuiltInParameter.INSTANCE_LENGTH_PARAM)?.AsDouble() ?? 0);
             var b = UC.FtToM(FamilyInstanceHelper.FindParameter(beam, "b") ?? FamilyInstanceHelper.FindParameter(beam, "width") ?? FamilyInstanceHelper.FindParameter(beam, "폭") ?? 0);
             var h = UC.FtToM(FamilyInstanceHelper.FindParameter(beam, "h") ?? FamilyInstanceHelper.FindParameter(beam, "d") ?? FamilyInstanceHelper.FindParameter(beam, "높이") ?? FamilyInstanceHelper.FindParameter(beam, "Height") ?? 0);
@@ -96,6 +96,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 materialName = (doc.GetElement(materialId) as Material).Name;
 
             var materialClass = FamilyInstanceHelper.GetStructuralAssetClass(beam);
+            #endregion
+
+
             var workType = materialClass switch
             {
                 StructuralAssetClass.Concrete => "철근콘크리트",
@@ -110,30 +113,27 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 && actualCrossSection > 0
                 && Math.Abs(b * h - actualCrossSection) / actualCrossSection < tolerance;
 
-            string concFormula;
-            Dictionary<string, double> varDict;
+            double volume = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(beam).Sum(s => s.Volume));
 
-            if (useDimensions)
+            var varDict = new Dictionary<string, double>
             {
-                concFormula = "B x D x L";
-                varDict = new Dictionary<string, double>
-                {
-                    ["B"] = b,
-                    ["D"] = h,
-                    ["L"] = effectiveLength,
-                };
-            }
-            else
-            {
-                concFormula = "A x L";
-                varDict = new Dictionary<string, double>
-                {
-                    ["A"] = actualCrossSection,
-                    ["L"] = effectiveLength,
-                };
-            }
+                ["Vol"]            = volume,
+                ["L"]              = effectiveLength,
+                ["B"]              = b,
+                ["D"]              = h,
+                ["A"]              = actualCrossSection,
+                ["A_cs"]           = actualCrossSection,
+                ["A_bottom_gross"] = refFaceDict.GetValueOrDefault(FaceType.Bottom, 0),
+                ["A_left_gross"]   = refFaceDict.GetValueOrDefault(FaceType.Left,   0),
+                ["A_right_gross"]  = refFaceDict.GetValueOrDefault(FaceType.Right,  0),
+                ["A_end_gross"]    = refFaceDict.GetValueOrDefault(FaceType.End,    0),
+                ["A_bottom_net"]   = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.Bottom),
+                ["A_left_net"]     = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.Left),
+                ["A_right_net"]    = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.Right),
+                ["A_end_net"]      = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.End),
+            };
 
-            double volumeM3 = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(beam).Sum(s => s.Volume));
+            string concFormula = useDimensions ? "B x D x L" : "A x L";
             string concRendered = FormulaCalculator.Render(concFormula, varDict);
 
             switch (workType)
@@ -148,7 +148,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                         Specification = materialName,
                         RawFormula = concFormula,
                         RenderedFormula = concRendered,
-                        Value = volumeM3,
+                        Value = volume,
                         Unit = "m³"
                     };
                     quantityItems.Add(concreteItem);
@@ -165,14 +165,15 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                         var rawFormula = QuantityExtractorHelper.GetDeductionRawFormula(refFaceDict, deductionByFaceType, faceType);
                         var renderedFormula = QuantityExtractorHelper.GetDeductionRenderedFormula(refFaceDict, deductionByFaceType, faceType);
 
-                        var spec = faceType switch
+                        var formwork = faceType switch
                         {
-                            FaceType.Bottom => "합판4회",      // 추후 세팅값으로 연동
-                            FaceType.Left => "합판3회",
-                            FaceType.Right => "합판3회",
-                            FaceType.End => "합판3회",
+                            FaceType.Bottom => FormworkType.Plywood4,
+                            FaceType.Left   => FormworkType.Plywood3,
+                            FaceType.Right  => FormworkType.Plywood3,
+                            FaceType.End    => FormworkType.Plywood3,
                             _ => throw new ArgumentOutOfRangeException(),
                         };
+                        var spec = formwork.ToSpecification();
 
                         var formworkItem = new QuantityItem
                         {
@@ -204,7 +205,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                         Specification = materialName,
                         RawFormula = steelFormula,
                         RenderedFormula = FormulaCalculator.Render(steelFormula, steelVarDict),
-                        Value = volumeM3 * 7.850,
+                        Value = volume * 7.850,
                         Unit = "ton"
                     };
                     quantityItems.Add(steelItem);
@@ -219,7 +220,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                         Specification = materialName,
                         RawFormula = concFormula,
                         RenderedFormula = concRendered,
-                        Value = volumeM3,
+                        Value = volume,
                         Unit = "m³"
                     });
                     break;

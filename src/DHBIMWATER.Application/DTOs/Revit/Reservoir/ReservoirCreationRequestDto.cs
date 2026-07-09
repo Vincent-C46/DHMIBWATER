@@ -1,4 +1,4 @@
-﻿using DHBIMWATER.Application.DTOs.Common;
+using DHBIMWATER.Application.DTOs.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +12,6 @@ namespace DHBIMWATER.Application.DTOs.Revit.Reservoir
         ReservoirDesignConditionDto DesignConditionDto,
         ReservoirTankDto TankDto,
         ReservoirValveDto ValveDto,
-        ReservoirSelectedTypeIdDto TypeIdDto
+        ReservoirTypeThicknessDto ThicknessDto
     );
 }

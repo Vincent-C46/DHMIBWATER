@@ -9,13 +9,14 @@ namespace DHBIMWATER.UI.Views.Quantity
     public partial class ManualQuantityView : Window
     {
         private static readonly Regex _validNumericRegex = new(@"^-?[0-9]*\.?[0-9]*$", RegexOptions.Compiled);
-        private static readonly Regex _integerRegex      = new(@"^-?[0-9]*$",           RegexOptions.Compiled);
+        private static readonly Regex _integerRegex = new(@"^-?[0-9]*$", RegexOptions.Compiled);
+
         public ManualQuantityView(ManualQuantityViewModel vm)
         {
             InitializeComponent();
             DataContext = vm;
 
-            vm.CloseRequested += result => DialogResult = result;
+            vm.CloseRequested += _ => Close();
         }
         private void VariableTextBox_GotFocus(object sender, RoutedEventArgs e)
         {

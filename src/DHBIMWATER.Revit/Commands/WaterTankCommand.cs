@@ -3,6 +3,7 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using DHBIMWATER.Revit.DependencyInjection;
 using DHBIMWATER.UI.Views.Modeling;
+using System.Windows.Interop;
 
 namespace DHBIMWATER.Revit.Commands
 {
@@ -12,6 +13,7 @@ namespace DHBIMWATER.Revit.Commands
         protected override Result ExecuteInternal(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             var view = ServiceContainer.GetService<WaterTankView>();
+            new WindowInteropHelper(view).Owner = commandData.Application.MainWindowHandle;
             view.ShowDialog();
             return Result.Succeeded;
         }

@@ -25,17 +25,29 @@ namespace DHBIMWATER.UI.Views.Modeling
         {
             InitializeComponent();
             DataContext = pumpingStationViewModel;
+            pumpingStationViewModel.CloseAction = Close;
             ContentRendered += (s, e) =>
             {
                 SizeToContent = SizeToContent.Manual;
-                SizeToContent = SizeToContent.WidthAndHeight;
+                SizeToContent = SizeToContent.Height;
             };
         }
         private void OnParameterFocused(object sender, RoutedEventArgs e)
         {
-            if (e.OriginalSource is TextBox tb && tb.Tag is string key &&
-                DataContext is PumpingStationViewModel vm)
-                vm.SetHint(key);
+            if (DataContext is not PumpingStationViewModel vm) return;
+
+            // 포커스 받은 요소에서 시각 트리를 따라 올라가며 string Tag(힌트 키)를 찾음
+            // → TextBox 뿐 아니라 ComboBox(θ 등)도 호환
+            var element = e.OriginalSource as DependencyObject;
+            while (element != null)
+            {
+                if (element is FrameworkElement fe && fe.Tag is string key && !string.IsNullOrEmpty(key))
+                {
+                    vm.SetHint(key);
+                    return;
+                }
+                element = VisualTreeHelper.GetParent(element);
+            }
         }
     }
 }

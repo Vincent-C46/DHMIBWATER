@@ -10,20 +10,25 @@ namespace DHBIMWATER.Infrastructure.Repositories.Mock
 {
     internal class MockLevelCommandRepo : ILevelCommandRepo
     {
-        public int CreateLevel(string levelName, double elevation)
+        public long CreateLevel(string levelName, double elevation)
         {
             MessageBox.Show($"MockLevelCommandRepo - CreateLevel\nLevel Name: {levelName} \nElevation: {elevation}m");
             return 0;
         }
 
-        public int UpdateLevel(string levelName, double elevation)
+        public long UpdateLevel(string levelName, double elevation)
         {
             MessageBox.Show($"MockLevelCommandRepo - UpdateLevel\nLevel Name: {levelName} \nNew Elevation: {elevation}m");
             return 0;
         }
-        public void CreatePlan(int levelId)
+        public void CreatePlan(long levelId)
         {
             MessageBox.Show($"MockLevelCommandRepo - CreatePlan\nLevel Id: {levelId}");
+        }
+
+        public void Maximize3dExtents(long levelId)
+        {
+            MessageBox.Show($"MockLevelCommandRepo - Maximize3dExtents\nLevel Id: {levelId}");
         }
     }
 }

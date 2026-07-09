@@ -6,7 +6,6 @@ namespace DHBIMWATER.Revit.UI
 {
     internal class RibbonBuilder
     {
-
         internal static void CreateRibbonPanel(UIControlledApplication app)
         {
             bool isUserValid = DidasUsageTracker.TryGetUserInfo(out _, out _);
@@ -24,7 +23,7 @@ namespace DHBIMWATER.Revit.UI
                 new ModelingRibbonModule(),
                 new QuantityRibbonModule(),
                 new DocumentationRibbonModule(),
-                //new UtilityRibbonModule()
+                new UtilityRibbonModule()
             };
 
             // 각 모듈별로 빌드 호출

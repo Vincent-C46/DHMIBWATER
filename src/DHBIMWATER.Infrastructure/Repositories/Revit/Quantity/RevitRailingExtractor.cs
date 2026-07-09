@@ -1,10 +1,7 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Architecture;
-using Autodesk.Revit.UI;
 using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Core.Quantity;
-using System.Diagnostics;
-using System.Windows.Media;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
@@ -113,4 +110,4 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             return quantityItems;
         }
     }
-}
+}   

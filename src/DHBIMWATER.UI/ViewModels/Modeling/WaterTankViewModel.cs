@@ -3,7 +3,8 @@ using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Application.UseCases.AutoGenerator;
 using DHBIMWATER.UI.Base;
 using DHBIMWATER.UI.Commands;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Input;
 
 namespace DHBIMWATER.UI.ViewModels.Modeling
@@ -11,107 +12,81 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
     public class WaterTankViewModel : ViewModelBase
     {
         #region Fields
-        private IDialogService _dialogService;
+        private readonly IDialogService _dialogService;
         private readonly CreateReservoirUseCase _createReservoirUseCase;
-        private readonly IElementTypeQueryRepo _elementTypeQueryRepo;
+        private readonly IElementTypeQueryRepo _typeQueryRepo;
 
         // 설계조건
-        private double _q = 5000;
-        private double _rt = 12;
-        private int _n = 2;
+        private double _q   = 5000;
+        private double _rt  = 12;
+        private int    _n   = 2;
         private double _lwl = 0;
+        private double _hwl = 4.5;     // HWL (m)
 
-        // 수조부
-        private double _he = 4.5;
-        private double _hf = 0.3;
-        private double _hm = 0.15;
-        private double _w = 25;
-        private double _l = 30;
-        private double _m1 = 4;
-        private double _m2 = 4;
-        private double _m3 = 4;
-        private double _m4 = 4;
-        private double _wh = 2.5;
-        private double _lh = 2.5;
-        private double _hh = 2.0;
-        private double _ltt = 0;
-        private double _slv = 1.0;
+        // 수조부 — 단위: mm (He 제외)
+        private double _hf  = 300;     // 여유고 (mm)
+        private double _hm  = 150;     // 바닥~LWL (mm)
+        private double _w   = 25000;   // 지 폭 (mm)
+        private double _l   = 30000;   // 지 길이 (mm)
+        private double _m1  = 4000;
+        private double _m2  = 4000;
+        private double _m3  = 4000;
+        private double _m4  = 4000;
+        private double _wh  = 2500;    // Hopper 폭 (mm)
+        private double _lh  = 2500;    // Hopper 길이 (mm)
+        private double _hh  = 2000;    // Hopper 깊이 (mm)
+        private double _ltt = 0;       // 기초 Toe (mm)
+        private double _slv = 1.0;     // 사면경사 (무차원)
         private double _crt;
 
-        // 밸브실
-        private double _h1f = 4.0;
-        private double _lv = 30.0;
-        private double _wv = 5.0;
-        private double _lvt = 0;
-        private double _we = 2.5;
-        private double _trOff = 0.1;
-        private double _wp = 1.0;
-        private double _hp = 1.0;
-        private double _wpThk = 0.3;
-        private double _spThk = 0.3;
-        private double _slp = 1.0;
+        // 밸브실 — 단위: mm
+        private double _h1f   = 4000;
+        private double _lv    = 30000;
+        private double _wv    = 5000;
+        private double _lvt   = 0;
+        private double _we    = 2500;
+        private double _trOff = 100;
+        private double _wp    = 1000;
+        private double _hp    = 1000;
+        private double _wpThk = 300;
+        private double _spThk = 300;
+        private double _slp   = 1000;
 
-        // Con'c 단면
-        private string _selectedTankUpperSlabType;
-        private string _selectedTankFoundSlabType;
-        private string _selectedTankOuterWallType;
-        private string _selectedTankInnerWallType;
-        private string _selectedHopperWallType;
-        private string _selectedTankColumnType;
-        private string _selectedTankBeamType;
-
-        private string _selectedValveUpperSlabType;
-        private string _selectedValveMidSlabType;
-        private string _selectedValveFoundSlabType;
-        private string _selectedValveOuterWallType;
-        private string _selectedValveInnerWallType;
-
-        private string _selectedSubSlabType;
-        private string _selectedHaunchType;
+        // 단면 두께 (mm)
+        private double _stuThk = 300;
+        private double _stbThk = 500;
+        private double _svuThk = 300;
+        private double _svmThk = 300;
+        private double _svbThk = 500;
+        private double _wteThk = 350;
+        private double _wtiThk = 350;
+        private double _whThk  = 300;
+        private double _wveThk = 300;
+        private double _wviThk = 300;
+        private double _lcThk  = 100;
+        private string _columnTypeName = string.Empty;
+        private string _beamTypeName   = string.Empty;
         #endregion
 
         #region Properties
         public ICommand CreateWTankCommand { get; }
+        public Action? CloseAction { get; set; }
 
         // 설계조건
         public double Q
         {
             get => _q;
-            set
-            {
-                if (_q != value)
-                {
-                    _q = value;
-                    OnPropertyChanged(nameof(Q));
-                    UpdateCRT();
-                }
-            }
+            set { if (_q != value) { _q = value; OnPropertyChanged(nameof(Q)); UpdateCRT(); } }
         }
         public double RT
         {
             get => _rt;
-            set
-            {
-                if (_rt != value)
-                {
-                    _rt = value;
-                    OnPropertyChanged(nameof(RT));
-                    OnPropertyChanged(nameof(RTCheck));
-                }
-            }
+            set { if (_rt != value) { _rt = value; OnPropertyChanged(nameof(RT)); OnPropertyChanged(nameof(RTCheck)); } }
         }
         public int N
         {
             get => _n;
-            set
-            {
-                if (_n != value)
-                {
-                    _n = value;
-                    OnPropertyChanged(nameof(N));
-                    UpdateCRT();
-                }
-            }
+            set { if (_n != value) { _n = value; OnPropertyChanged(nameof(N)); UpdateCRT(); } }
         }
         public double LWL
         {
@@ -122,76 +97,51 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                 {
                     _lwl = value;
                     OnPropertyChanged(nameof(LWL));
-                }
-            }
-        }
-
-        // 수조부
-        public double He
-        {
-            get => _he;
-            set
-            {
-                if (_he != value)
-                {
-                    _he = value;
                     OnPropertyChanged(nameof(He));
                     OnPropertyChanged(nameof(H2F));
                     UpdateCRT();
                 }
             }
         }
+        public double HWL
+        {
+            get => _hwl;
+            set
+            {
+                if (_hwl != value)
+                {
+                    _hwl = value;
+                    OnPropertyChanged(nameof(HWL));
+                    OnPropertyChanged(nameof(He));
+                    OnPropertyChanged(nameof(H2F));
+                    UpdateCRT();
+                }
+            }
+        }
+
+        // 수조부
+        /// <summary>유효수심 (m) = HWL - LWL. 계산값, 입력 불가.</summary>
+        public double He => HWL - LWL;
+
         public double Hf
         {
             get => _hf;
-            set
-            {
-                if (_hf != value)
-                {
-                    _hf = value;
-                    OnPropertyChanged(nameof(Hf));
-                    OnPropertyChanged(nameof(H2F));
-                }
-            }
+            set { if (_hf != value) { _hf = value; OnPropertyChanged(nameof(Hf)); OnPropertyChanged(nameof(H2F)); } }
         }
         public double Hm
         {
             get => _hm;
-            set
-            {
-                if (_hm != value)
-                {
-                    _hm = value;
-                    OnPropertyChanged(nameof(Hm));
-                    OnPropertyChanged(nameof(H2F));
-                }
-            }
+            set { if (_hm != value) { _hm = value; OnPropertyChanged(nameof(Hm)); OnPropertyChanged(nameof(H2F)); } }
         }
         public double W
         {
             get => _w;
-            set
-            {
-                if (_w != value)
-                {
-                    _w = value;
-                    OnPropertyChanged(nameof(W));
-                    UpdateCRT();
-                }
-            }
+            set { if (_w != value) { _w = value; OnPropertyChanged(nameof(W)); UpdateCRT(); } }
         }
         public double L
         {
             get => _l;
-            set
-            {
-                if (_l != value)
-                {
-                    _l = value;
-                    OnPropertyChanged(nameof(L));
-                    UpdateCRT();
-                }
-            }
+            set { if (_l != value) { _l = value; OnPropertyChanged(nameof(L)); UpdateCRT(); } }
         }
         public double M1
         {
@@ -226,15 +176,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         public double Hh
         {
             get => _hh;
-            set
-            {
-                if (_hh != value)
-                {
-                    _hh = value;
-                    OnPropertyChanged(nameof(Hh));
-                    OnPropertyChanged(nameof(H2F));
-                }
-            }
+            set { if (_hh != value) { _hh = value; OnPropertyChanged(nameof(Hh)); OnPropertyChanged(nameof(H2F)); } }
         }
         public double Ltt
         {
@@ -249,15 +191,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         public double CRT
         {
             get => _crt;
-            private set
-            {
-                if (_crt != value)
-                {
-                    _crt = value;
-                    OnPropertyChanged(nameof(CRT));
-                    OnPropertyChanged(nameof(RTCheck));
-                }
-            }
+            private set { if (_crt != value) { _crt = value; OnPropertyChanged(nameof(CRT)); OnPropertyChanged(nameof(RTCheck)); } }
         }
         public string RTCheck => CRT >= RT ? "O.K" : "N.G";
 
@@ -265,18 +199,10 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         public double H1F
         {
             get => _h1f;
-            set
-            {
-                if (_h1f != value)
-                {
-                    _h1f = value;
-                    OnPropertyChanged(nameof(H1F));
-                    OnPropertyChanged(nameof(H2F));
-                }
-            }
+            set { if (_h1f != value) { _h1f = value; OnPropertyChanged(nameof(H1F)); OnPropertyChanged(nameof(H2F)); } }
         }
-        // Hh + He + Hf + Hm = 수조부 전체 내부 높이, 슬래브 두께는 추후 반영
-        public double H2F => Hh + He + Hf + Hm - H1F;
+        /// <summary>밸브실 2F 순높이 (mm) = Hh + He*1000 + Hf + Hm - H1F</summary>
+        public double H2F => Hh + He * 1000 + Hf + Hm - H1F;
 
         public double Lv
         {
@@ -329,241 +255,52 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             set { if (_slp != value) { _slp = value; OnPropertyChanged(nameof(SLp)); } }
         }
 
-        // Con'c 단면
-        public ObservableCollection<string> SlabTypes { get; set; } = new ObservableCollection<string>();
-        public ObservableCollection<string> WallTypes { get; set; } = new ObservableCollection<string>();
-        public ObservableCollection<string> ColumnTypes { get; set; } = new ObservableCollection<string>();
-        public ObservableCollection<string> BeamTypes { get; set; } = new ObservableCollection<string>();
+        // 단면 두께 (mm)
+        public double StuThk { get => _stuThk; set { if (_stuThk != value) { _stuThk = value; OnPropertyChanged(nameof(StuThk)); } } }
+        public double StbThk { get => _stbThk; set { if (_stbThk != value) { _stbThk = value; OnPropertyChanged(nameof(StbThk)); } } }
+        public double SvuThk { get => _svuThk; set { if (_svuThk != value) { _svuThk = value; OnPropertyChanged(nameof(SvuThk)); } } }
+        public double SvmThk { get => _svmThk; set { if (_svmThk != value) { _svmThk = value; OnPropertyChanged(nameof(SvmThk)); } } }
+        public double SvbThk { get => _svbThk; set { if (_svbThk != value) { _svbThk = value; OnPropertyChanged(nameof(SvbThk)); } } }
+        public double WteThk { get => _wteThk; set { if (_wteThk != value) { _wteThk = value; OnPropertyChanged(nameof(WteThk)); } } }
+        public double WtiThk { get => _wtiThk; set { if (_wtiThk != value) { _wtiThk = value; OnPropertyChanged(nameof(WtiThk)); } } }
+        public double WhThk  { get => _whThk;  set { if (_whThk  != value) { _whThk  = value; OnPropertyChanged(nameof(WhThk));  } } }
+        public double WveThk { get => _wveThk; set { if (_wveThk != value) { _wveThk = value; OnPropertyChanged(nameof(WveThk)); } } }
+        public double WviThk { get => _wviThk; set { if (_wviThk != value) { _wviThk = value; OnPropertyChanged(nameof(WviThk)); } } }
+        public double LcThk  { get => _lcThk;  set { if (_lcThk  != value) { _lcThk  = value; OnPropertyChanged(nameof(LcThk));  } } }
 
-        public string SelectedTankUpperSlabType
-        {
-            get => _selectedTankUpperSlabType;
-            set
-            {
-                if (_selectedTankUpperSlabType != value)
-                {
-                    _selectedTankUpperSlabType = value;
-                    OnPropertyChanged(nameof(SelectedTankUpperSlabType));
-                }
-            }
-        }
-        public string SelectedTankFoundSlabType
-        {
-            get => _selectedTankFoundSlabType;
-            set
-            {
-                if (_selectedTankFoundSlabType != value)
-                {
-                    _selectedTankFoundSlabType = value;
-                    OnPropertyChanged(nameof(SelectedTankFoundSlabType));
-                }
-            }
-        }
-        public string SelectedTankOuterWallType
-        {
-            get => _selectedTankOuterWallType;
-            set
-            {
-                if (_selectedTankOuterWallType != value)
-                {
-                    _selectedTankOuterWallType = value;
-                    OnPropertyChanged(nameof(SelectedTankOuterWallType));
-                }
-            }
-        }
-        public string SelectedTankInnerWallType
-        {
-            get => _selectedTankInnerWallType;
-            set
-            {
-                if (_selectedTankInnerWallType != value)
-                {
-                    _selectedTankInnerWallType = value;
-                    OnPropertyChanged(nameof(SelectedTankInnerWallType));
-                }
-            }
-        }
-        public string SelectedHopperWallType
-        {
-            get => _selectedHopperWallType;
-            set
-            {
-                if (_selectedHopperWallType != value)
-                {
-                    _selectedHopperWallType = value;
-                    OnPropertyChanged(nameof(SelectedHopperWallType));
-                }
-            }
-        }
-        public string SelectedTankColumnType
-        {
-            get => _selectedTankColumnType;
-            set
-            {
-                if (_selectedTankColumnType != value)
-                {
-                    _selectedTankColumnType = value;
-                    OnPropertyChanged(nameof(SelectedTankColumnType));
-                }
-            }
-        }
-        public string SelectedTankBeamType
-        {
-            get => _selectedTankBeamType;
-            set
-            {
-                if (_selectedTankBeamType != value)
-                {
-                    _selectedTankBeamType = value;
-                    OnPropertyChanged(nameof(SelectedTankBeamType));
-                }
-            }
-        }
-        public string SelectedValveUpperSlabType
-        {
-            get => _selectedValveUpperSlabType;
-            set
-            {
-                if (_selectedValveUpperSlabType != value)
-                {
-                    _selectedValveUpperSlabType = value;
-                    OnPropertyChanged(nameof(SelectedValveUpperSlabType));
-                }
-            }
-        }
-        public string SelectedValveMidSlabType
-        {
-            get => _selectedValveMidSlabType;
-            set
-            {
-                if (_selectedValveMidSlabType != value)
-                {
-                    _selectedValveMidSlabType = value;
-                    OnPropertyChanged(nameof(SelectedValveMidSlabType));
-                }
-            }
-        }
-        public string SelectedValveFoundSlabType
-        {
-            get => _selectedValveFoundSlabType;
-            set
-            {
-                if (_selectedValveFoundSlabType != value)
-                {
-                    _selectedValveFoundSlabType = value;
-                    OnPropertyChanged(nameof(SelectedValveFoundSlabType));
-                }
-            }
-        }
-        public string SelectedValveOuterWallType
-        {
-            get => _selectedValveOuterWallType;
-            set
-            {
-                if (_selectedValveOuterWallType != value)
-                {
-                    _selectedValveOuterWallType = value;
-                    OnPropertyChanged(nameof(SelectedValveOuterWallType));
-                }
-            }
-        }
-        public string SelectedValveInnerWallType
-        {
-            get => _selectedValveInnerWallType;
-            set
-            {
-                if (_selectedValveInnerWallType != value)
-                {
-                    _selectedValveInnerWallType = value;
-                    OnPropertyChanged(nameof(SelectedValveInnerWallType));
-                }
-            }
-        }
-        public string SelectedSubSlabType
-        {
-            get => _selectedSubSlabType;
-            set
-            {
-                if (_selectedSubSlabType != value)
-                {
-                    _selectedSubSlabType = value;
-                    OnPropertyChanged(nameof(SelectedSubSlabType));
-                }
-            }
-        }
-        public string SelectedHaunchType
-        {
-            get => _selectedHaunchType;
-            set
-            {
-                if (_selectedHaunchType != value)
-                {
-                    _selectedHaunchType = value;
-                    OnPropertyChanged(nameof(SelectedHaunchType));
-                }
-            }
-        }
+        public IReadOnlyList<string> ColumnTypeNames { get; private set; } = new List<string>();
+        public IReadOnlyList<string> BeamTypeNames   { get; private set; } = new List<string>();
 
-        // DTO
-        public ReservoirDesignConditionDto designConditionDto { get; set; }
-        public ReservoirTankDto tankDto { get; set; }
-        public ReservoirValveDto valveDto { get; set; }
-        public ReservoirSelectedTypeIdDto typeSelectionDto { get; set; }
-        public ReservoirCreationRequestDto reservoirCreationRequestDto { get; set; }
+        public string ColumnTypeName
+        {
+            get => _columnTypeName;
+            set { if (_columnTypeName != value) { _columnTypeName = value; OnPropertyChanged(nameof(ColumnTypeName)); } }
+        }
+        public string BeamTypeName
+        {
+            get => _beamTypeName;
+            set { if (_beamTypeName != value) { _beamTypeName = value; OnPropertyChanged(nameof(BeamTypeName)); } }
+        }
         #endregion
 
         #region Constructor
-        public WaterTankViewModel(CreateReservoirUseCase useCase, IDialogService dialogService, IElementTypeQueryRepo elementTypeQueryRepo)
+        public WaterTankViewModel(CreateReservoirUseCase useCase, IDialogService dialogService, IElementTypeQueryRepo typeQueryRepo)
         {
             _createReservoirUseCase = useCase;
-            _dialogService = dialogService;
-            _elementTypeQueryRepo = elementTypeQueryRepo;
+            _dialogService          = dialogService;
+            _typeQueryRepo          = typeQueryRepo;
 
-            LoadElementTypes();
+            LoadTypeNames();
             UpdateCRT();
-
             CreateWTankCommand = new RelayCommand(CreateWaterTank);
         }
 
-        private void LoadElementTypes()
+        private void LoadTypeNames()
         {
-            SlabTypes.Clear();
-            WallTypes.Clear();
-            ColumnTypes.Clear();
-            BeamTypes.Clear();
-
-            foreach (var slabTypeName in _elementTypeQueryRepo.GetSlabTypeNames())
-                SlabTypes.Add(slabTypeName);
-
-            foreach (var wallTypeName in _elementTypeQueryRepo.GetWallTypeNames())
-                WallTypes.Add(wallTypeName);
-
-            foreach (var columnTypeName in _elementTypeQueryRepo.GetColumnTypeNames())
-                ColumnTypes.Add(columnTypeName);
-
-            foreach (var beamTypeName in _elementTypeQueryRepo.GetBeamTypeNames())
-                BeamTypes.Add(beamTypeName);
-
-            SelectedTankUpperSlabType = SlabTypes.FirstOrDefault(st => st.Contains("300mm")) ?? SlabTypes.FirstOrDefault();
-            SelectedTankFoundSlabType = SlabTypes.FirstOrDefault(st => st.Contains("500mm")) ??
-                                        SlabTypes.FirstOrDefault(st => st.Contains("300mm")) ??
-                                        SlabTypes.FirstOrDefault();
-            SelectedTankOuterWallType = WallTypes.FirstOrDefault(wt => wt.Contains("300mm")) ?? WallTypes.FirstOrDefault();
-            SelectedTankInnerWallType = WallTypes.FirstOrDefault(wt => wt.Contains("300mm")) ?? WallTypes.FirstOrDefault();
-            SelectedHopperWallType = WallTypes.FirstOrDefault(wt => wt.Contains("300mm")) ?? WallTypes.FirstOrDefault();
-            SelectedTankColumnType = ColumnTypes.FirstOrDefault(ct => ct.Contains("450 x 600")) ?? ColumnTypes.FirstOrDefault();
-            SelectedTankBeamType = BeamTypes.FirstOrDefault(bt => bt.Contains("600mm")) ?? BeamTypes.FirstOrDefault();
-
-            SelectedValveUpperSlabType = SlabTypes.FirstOrDefault(st => st.Contains("300mm")) ?? SlabTypes.FirstOrDefault();
-            SelectedValveMidSlabType = SlabTypes.FirstOrDefault(st => st.Contains("300mm")) ?? SlabTypes.FirstOrDefault();
-            SelectedValveFoundSlabType = SlabTypes.FirstOrDefault(st => st.Contains("500mm")) ?? SlabTypes.FirstOrDefault();
-            SelectedValveOuterWallType = WallTypes.FirstOrDefault(wt => wt.Contains("300mm")) ?? WallTypes.FirstOrDefault();
-            SelectedValveInnerWallType = WallTypes.FirstOrDefault(wt => wt.Contains("300mm")) ?? WallTypes.FirstOrDefault();
-
-            SelectedSubSlabType = SlabTypes.FirstOrDefault(st => st.Contains("100mm")) ?? SlabTypes.FirstOrDefault();
-            SelectedHaunchType = BeamTypes.FirstOrDefault(bt => bt.Contains("헌치")) ??
-                                 BeamTypes.FirstOrDefault(bt => bt.Contains("Haunch")) ??
-                                 BeamTypes.FirstOrDefault();
+            ColumnTypeNames  = _typeQueryRepo.GetColumnTypeNames().ToList();
+            BeamTypeNames    = _typeQueryRepo.GetBeamTypeNames().ToList();
+            _columnTypeName  = ColumnTypeNames.FirstOrDefault() ?? string.Empty;
+            _beamTypeName    = BeamTypeNames.FirstOrDefault()   ?? string.Empty;
         }
         #endregion
 
@@ -571,18 +308,23 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private void UpdateCRT()
         {
             if (_q > 0)
-                CRT = (W * L * He * N) / Q * 24;
+                CRT = (W / 1000.0 * L / 1000.0 * He * N) / Q * 24;
         }
 
         private void CreateWaterTank(object? obj)
         {
-            designConditionDto = new ReservoirDesignConditionDto(Q, RT, N, LWL);
-            tankDto = new ReservoirTankDto(He, Hf, Hm, W, L, M1, M2, M3, M4, Wh, Lh, Hh, Ltt);
-            valveDto = new ReservoirValveDto(H1F, Lv, Wv, Lvt);
-            typeSelectionDto = new ReservoirSelectedTypeIdDto("a", "a", "a", "a", "a", "a", "a", "a", "a", "a", "a");
+            // He(m)는 HWL-LWL 계산값; 나머지 치수는 mm 단위로 DTO에 직접 전달
+            var designConditionDto = new ReservoirDesignConditionDto(Q, RT, N, LWL);
+            var tankDto    = new ReservoirTankDto(He, Hf, Hm, W, L, M1, M2, M3, M4, Wh, Lh, Hh, Ltt);
+            var valveDto   = new ReservoirValveDto(H1F, Lv, Wv, Lvt, We, TrOff, Wp, Hp, WpThk, SpThk, SLp);
+            var thicknessDto = new ReservoirTypeThicknessDto(
+                StuThk, StbThk, SvuThk, SvmThk, SvbThk,
+                WteThk, WtiThk, WhThk, WveThk, WviThk, LcThk,
+                ColumnTypeName, BeamTypeName);
 
-            reservoirCreationRequestDto = new ReservoirCreationRequestDto(designConditionDto, tankDto, valveDto, typeSelectionDto);
-            _createReservoirUseCase.Execute(reservoirCreationRequestDto);
+            var requestDto = new ReservoirCreationRequestDto(designConditionDto, tankDto, valveDto, thicknessDto);
+            _createReservoirUseCase.Execute(requestDto);
+            CloseAction?.Invoke();
         }
         #endregion
     }

@@ -106,12 +106,10 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var b = UC.FtToM(FamilyInstanceHelper.FindParameter(column, "b") ?? 0);
             var d = UC.FtToM(FamilyInstanceHelper.FindParameter(column, "d") ??
                              FamilyInstanceHelper.FindParameter(column, "h") ??
-                             FamilyInstanceHelper.FindParameter(column, "b") ??
-                             b);
+                             FamilyInstanceHelper.FindParameter(column, "b") ?? b);
             var r = UC.FtToM(FamilyInstanceHelper.FindParameter(column, "r") ??
                              FamilyInstanceHelper.FindParameter(column, "d") / 2 ??
-                             FamilyInstanceHelper.FindParameter(column, "b") / 2 ??
-                             0);
+                             FamilyInstanceHelper.FindParameter(column, "b") / 2 ?? 0);
 
             string typeName = column.get_Parameter(BuiltInParameter.ELEM_TYPE_PARAM).AsValueString() ?? string.Empty;
             string familyName = column.Symbol.FamilyName;
@@ -122,44 +120,34 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             // 매개변수 계산값이 실제 단면적 A와 5% 이내 일치할 때만 매개변수 공식 사용
             const double tolerance = 0.05;
-            string concFormula;
-            Dictionary<string, double> varDict;
+
+            double volumeM3 = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(column).Sum(s => s.Volume));
+
+            var varDict = new Dictionary<string, double>
+            {
+                ["Vol"] = volumeM3,
+                ["L"] = effectiveLength,
+                ["B"] = b,
+                ["D"] = d,
+                ["R"] = r,
+                ["A"] = actualCrossSection,
+                ["A_cs"] = actualCrossSection,
+                ["A_side_gross"] = refFaceDict.GetValueOrDefault(FaceType.Side, 0),
+                ["A_side_net"] = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.Side),
+            };
 
             bool circularMatches = isCircular && r > 0 && actualCrossSection > 0
                 && Math.Abs(Math.PI * r * r - actualCrossSection) / actualCrossSection < tolerance;
             bool rectMatches = !isCircular && b > 0 && d > 0 && actualCrossSection > 0
                 && Math.Abs(b * d - actualCrossSection) / actualCrossSection < tolerance;
 
+            string concFormula;
             if (circularMatches)
-            {
                 concFormula = "PI x R^2 x L";
-                varDict = new Dictionary<string, double>
-                {
-                    ["R"] = r,
-                    ["L"] = effectiveLength,
-                };
-            }
             else if (rectMatches)
-            {
                 concFormula = "B x D x L";
-                varDict = new Dictionary<string, double>
-                {
-                    ["B"] = b,
-                    ["D"] = d,
-                    ["L"] = effectiveLength,
-                };
-            }
             else
-            {
                 concFormula = "A x L";
-                varDict = new Dictionary<string, double>
-                {
-                    ["A"] = actualCrossSection,
-                    ["L"] = effectiveLength,
-                };
-            }
-
-            double volumeM3 = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(column).Sum(s => s.Volume));
 
             switch (workType)
             {
@@ -189,11 +177,12 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                         var rawFormula = QuantityExtractorHelper.GetDeductionRawFormula(refFaceDict, deductionByFaceType, faceType);
                         var renderedFormula = QuantityExtractorHelper.GetDeductionRenderedFormula(refFaceDict, deductionByFaceType, faceType);
 
-                        var spec = faceType switch
+                        var formwork = faceType switch
                         {
-                            FaceType.Side => "합판3회",      // 추후 세팅값으로 연동
+                            FaceType.Side => FormworkType.Plywood3,
                             _ => throw new ArgumentOutOfRangeException(),
                         };
+                        var spec = formwork.ToSpecification();
 
                         var formworkItem = new QuantityItem
                         {
@@ -213,7 +202,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                         if (formworkItem.Value > 1e-6) quantityItems.Add(formworkItem);
                     }
                     break;
-
                 case "강재":
                     var steelFormula = concFormula + " x UW";
                     var steelVarDict = new Dictionary<string, double>(varDict) { ["UW"] = 7.850 };
@@ -230,7 +218,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                         Unit = "ton"
                     });
                     break;
-
                 default:
                     quantityItems.Add(new QuantityItem
                     {
@@ -246,7 +233,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                     });
                     break;
             }
-
             return quantityItems;
         }
 

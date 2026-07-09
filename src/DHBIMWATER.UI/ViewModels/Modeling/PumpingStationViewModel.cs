@@ -24,6 +24,8 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private IReadOnlyDictionary<string, List<string[]>>? _allSheets;
         private Dictionary<string, Dictionary<(double D, double HD), PumpManufacturerSpecDto>>? _manufacturerSpecs;
         private Dictionary<double, PumpValveExtensionDto>? _valveExtensions;
+        // HasCheckValve 여부에 따라 선택된 밸브받침 제원 (Excel 미로드/관경 미매칭 시 0 기본값)
+        private PumpValveDimensionDto _selectedValveBase = new(500, 500, 100, 0);
         private double _supportBlockWidth = 500;
         private double _supportBlockHeight = 100;
 
@@ -67,7 +69,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private double _oh1 = 3000.0;
         private int _ns;
         private double _hs = 200;
-        private int _ns1;
+        private int _ns1;   // 밸브실 계단
         private double _hs1 = 200;
 
         private double _h5;
@@ -147,6 +149,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
                     OnPropertyChanged(nameof(PlanImagePath));
                     OnPropertyChanged(nameof(T5Visibility));
                     OnPropertyChanged(nameof(B9Visibility));
+                    OnPropertyChanged(nameof(L5Visibility));
                     UpdateTypeDependents();
                     RefreshHint();
                 }
@@ -215,6 +218,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
 
         // 가시성
         public string B4Visibility => SelectedPumpingStationType == "Type1" ? "Visible" : "Collapsed";
+        public string L5Visibility => SelectedEntranceType == "측면부" ? "Collapsed" : "Visible";
         public string T6Visibility => SelectedPumpingStationType == "Type1" ? "Visible" : "Collapsed";
         public string B9Visibility => SelectedEntranceType == "측면부" ? "Collapsed" : "Visible";
         public string T5Visibility => SelectedEntranceType == "측면부" ? "Collapsed" : "Visible";
@@ -930,6 +934,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         #region Commands
         public ICommand CreatePumpingStationCommand { get; }
         public ICommand ImportExcelCommand { get; }
+        public Action? CloseAction { get; set; }
         #endregion
 
         #region Constructor
@@ -1011,6 +1016,8 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             if (_valveExtensions == null) return;
             if (!_valveExtensions.TryGetValue(D, out var ext)) return;
 
+            _selectedValveBase = HasCheckValve ? ext.WithCheckValve : ext.WithoutCheckValve;
+
             _b7Base = HasCheckValve
                 ? ext.TotalExtension + ext.ValveExtension + 2200
                 : ext.TotalExtension + 1200;
@@ -1019,13 +1026,14 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         private void CreatePumpingStation(object? obj)
         {
             designConditionDto = new PumpDesignConditionDto(SelectedPumpingStationType, SelectedEntranceType, D, HD, H2, N, LWL, HWL, SupportBlockWidth, SupportBlockHeight);
-            profileSpecDto = new PumpProfileSpecDto(B1, B3, B4, B6, B7, H1, H5, H6, SelectedTheta, L1, L2, L3, L4, H3, H4, H7, OB1, OH1, NS, HB1, HH1, HS, T1, T2, T3, T4, T5Prime, GB1, GH1, B2, IsRectangularOpening, B5);
+            profileSpecDto = new PumpProfileSpecDto(B1, B3, B4, B6, B7, H1, H5, H6, SelectedTheta, L1, L2, L3, L4, H3, H4, H7, OB1, OH1, HB1, HH1, NS, HS, NS1, HS1, T1, T2, T3, T4, T5Prime, GB1, GH1, B2, IsRectangularOpening, B5);
             planSpecDto = new PumpPlanSpecDto(B8, B9, L5, B10, T5, T6);
             //typeSelectionDto = new PumpTypeSelectionDto(T1, T2, T3, T4, T5, T6, GB1, GH1);
-            creationRequestDto = new PumpCreationRequestDto(designConditionDto, planSpecDto, profileSpecDto);
+            creationRequestDto = new PumpCreationRequestDto(designConditionDto, planSpecDto, profileSpecDto, _selectedValveBase);
 
             _ = _usageLogger.LogAsync();
             _createPumpingStationUseCase.Execute(creationRequestDto);
+            CloseAction?.Invoke();
         }
         // 프로퍼티 업데이트
         // 생성시 초기화 메서드
@@ -1047,6 +1055,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             }
             _h3 = 1200 + Math.Ceiling((H2 + _h4) / 100) * 100 - (H2 + _h4);
             _h7 = 1000 + (Math.Ceiling((_h6 + _d) / 100.0) * 100 - (_h6 + _d));
+            UpdateNS1(); // NS1 → B7(ApplyB7Final) 연쇄 계산
             _ns = (int)Math.Floor((_h4 - _h1) / _hs);
             _h5 = H2 + _h3 + _h4 - T1;
 
@@ -1193,7 +1202,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         }
         private void UpdateB6Calculation()
         {
-            B6 = _selectedPumpingStationType == "Type1" ? 700 : D * 1.5 - B5 / 2;
+            B6 = _selectedPumpingStationType == "Type1" ? 700 : Math.Max(D * 1.5 - B5 / 2, 700);
         }
         private void UpdateH7Calculation()
         {
@@ -1204,16 +1213,20 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         {
             if (_selectedPumpingStationType != "Type1") return;
             var total = H7 + D + H6;
-            var mod = total % _hs1;
-            NS1 = (int)Math.Floor(total / _hs1) - (mod < 0.001 ? 1 : 0);
+            //var mod = total % _hs1;
+            //NS1 = (int)Math.Floor(total / _hs1) - (mod < 0.001 ? 1 : 0);
+            NS1 = (int)Math.Floor(total / _hs1);
             ApplyB7Final();
         }
 
         private void ApplyB7Final()
         {
-            var effective = _selectedPumpingStationType == "Type1"
-                ? Math.Max(_b7Base, _ns1 * 300 + 1000)
+            var baseValue = _selectedPumpingStationType == "Type1"
+                ? Math.Max(_b7Base, _ns1 * 300 + 1000)  // 계단 폭 300mm 고정
                 : _b7Base;
+
+            // B7 최종값은 100mm 단위로 올림
+            var effective = Math.Ceiling(baseValue / 100.0) * 100;
 
             if (_b7 != effective)
             {
@@ -1259,14 +1272,16 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
 
             return key switch
             {
+                "B3" when type == "Type2" || type == "Type3"
+                  => ("B3", "제진기, 컨베이어벨트 설치 및 유지관리 공간. 제진기, 컨베이어벨트 설치 공간 4m와 유지관리 공간 3m 고려하여 7.0m 적용"),
                 "B4" when type == "Type1" && ent == "측면부"
-                    => ("B4", "펌프 유지관리 공간. 최소 3.0m. 펌프받침폭 고려."),
-
+                    => ("B4", "펌프 유지관리 공간. 차량 진입 폭 및 펌프받침폭 고려하여 최소 4.5m 적용"),
+                "B4" when type == "Type1" && (ent == "좌안부" || ent == "우안부")
+                    => ("B4", "펌프 유지관리 공간. 펌프받침폭 고려하여 최소 3.0m 적용"),    
                 "B6" when type == "Type2" || type == "Type3"
-                    => ("B6", "KDS 67 30 25 양배수장 구조, P41, 4.3.1.3 흡입관의 설계\"에 따라 설계펌프 중심에서 벽체 끝까지 1.5D 확보. "),
-
+                    => ("B6", "「KDS 67 30 25 양배수장 구조, P41, 4.3.1.3 흡입관의 설계」에 따라 설계펌프 중심에서 벽체 끝까지 1.5D와 토출관 접합을 위한 작업공간 700mm 중 큰 값 적용"),
                 "B7" when type == "Type2" || type == "Type3"
-                                   => ("B7", "1. 밸브 1만 적용 시\r\n밸브 + 관로 연장\r\n밸브 설치 및 유지관리를 위해 벽체에서 플랜지까지 600mm 공간확보 \n\n1. 밸브 1 + 2 적용 시\r\n밸브 + 관로 연장\r\n밸브 설치 및 유지관리를 위해 벽체에서 플랜지까지 600mm 공간확보\r\n밸브 1과 밸브 2사이 길이 1m의 관 설치 "),
+                                   => ("B7", "1. 단독밸브 설치시 : B7 = 600 + 밸브길이 + 600\r\n2. 역류방지밸브 추가 설치시 : B7 = 600 + 밸브길이 + 1000 + 역류방지밸브 길이 + 600\r\n  ※ 플랜지 설치 및 유지관리를 위한 작업 공간 600mm와 역류방지밸브 추가 설치시에는 두 밸브 사이에 1m의 관 설치가 필요"),
 
                 _ when _paramHints.TryGetValue(key, out var h) => h,
                 _ => (string.Empty, string.Empty)
@@ -1289,13 +1304,13 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             ["B4"] = ("B4", "펌프 유지관리 공간. 차량 진입 공간을 고려하여 최소 4.5m. 펌프받침폭 고려."),
             ["B5"] = ("B5", "펌프 INPUT DATA에서 추출"),
             ["B6"] = ("B6", "토출관 플랜지 접합 공간. 경제성 고려 700 적용."),
-            ["B7"] = ("B7", "1. 밸브 1만 적용 시\r\nMAX(밸브 + 관로 연장, 계단 설치 연장+1000) 적용\r\n밸브 설치 및 유지관리를 위해 벽체에서 플랜지까지 600mm 공간확보\r\n계단폭은 300mm로 고정, 계단 끝단 동선확보를 위한 1m 여유공간 적용.\n\n2. 밸브 1 + 2 적용 시\r\nMAX(밸브 + 관로 연장, 계단 설치 연장+1000) 적용\r\n밸브 설치 및 유지관리를 위해 벽체에서 플랜지까지 600mm 공간확보\r\n밸브 1과 밸브 2사이 길이 1m의 관 설치\r\n계단폭은 300mm로 고정, 계단 끝단 동선확보를 위한 1m 여유공간 적용"),
+            ["B7"] = ("B7", "'밸브실 연장\r\nB7 = MAX(B7L1,B7L2)\r\n  ● B7L1 : 밸브 + 관로 연장\r\n    1) 단독밸브 설치시 : B7L1 = 600 + 밸브길이 + 600\r\n    2) 역류방지밸브 추가 설치시 : B7L1 = 600 + 밸브길이 + 1000 + 역류방지밸브 길이 + 600\r\n     ※ 플랜지 설치 및 유지관리를 위한 작업 공간 600mm와 역류방지밸브 추가 설치시에는 두 밸브 사이에 1m의 관 설치가 필요\r\n  ● B7L2 : 계단설치 연장\r\n    B7L2 = NS1 x 300 + 1000\r\n     ※ 계단 1단의 폭 300mm, 계단 끝의 동선확보를 위해 1m의 여유공간을 설치하는 것으로 계획"),
 
             // 종단제원 — H
             ["H1"] = ("H1", "제진기 작동능력 취약 범위"),
             ["H2"] = ("H2", "유효저수높이(H.W.L - L.W.L)"),
             ["H3"] = ("H3", "여유고. 「빗물펌프장 수문 유지관리 및 설계요령(2023, 서울시), P111, 라. 펌프실」, \"펌프실은 옥내에 설치하여 침수 위험에 대비하여야 하며 계획 내 수위에 여유고(1m 이상)를 더한 표고보다 높은 위치에 설치해야 한다.\" 따라서, H.W.L + 1m = 펌프장 상부슬래브 상면 EL.이어야 하지만, 부지 계획고도 여유고가 적용되어야 하고 「KDS 61 45 00 펌프장시설 설계기준, P14, 9.펌프장」, \"펌프장 바닥은 구내의 지반면보다 적어도 15cm 높게 한다\"에 따라 20cm 단차 적용 ⇒ 1m + 0.2m - 상부슬래브 두께 + 전체 높이를 정치수화 하기 위한 치수 추가"),
-            ["H4"] = ("H4", "2024년 행안부 지침, 「240701 3.펌프 흡입관의 잠김 깊이와 펌프의 정지수위.pptx」, \"농어촌공사 기준을 준용하여 2.9D 이상\".정치수(roundup) 적용."),
+            ["H4"] = ("H4", "2024년 행안부 지침, 「240701 3.펌프 흡입관의 잠김 깊이와 펌프의 정지수위.pptx」, \"농어촌공사 기준을 준용하여 2.9D 이상\".정치수 적용."),
             ["H5"] = ("H5", "H2 + H3 + H4 − T1 로 자동 산정."),
             ["H6"] = ("H6", "밸브와 토출관 플랜지 접합 공간. 경제성 고려 600 적용."),
             ["H7"] = ("H7", "관보호공 미적용을 위한 최소 토피. 「도로설계요령(2020), 제2권 토공 및 배수, P726, 6.2.3 관형 암거의 설계」, \"토피가 1.0m 이하의 경우는 RC 2종 360° 콘크리트 기초도 비교 검토한다.\", 또한 밸브실 높이를 정치수화 하기 위한 치수 추가"),
@@ -1304,14 +1319,17 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             // 종단제원 — L
             ["L1"] = ("L1", "300mm 고정. 구조적 최적설계."),
             ["L2"] = ("L2", "H1과 1:1 경사"),
-            ["L3"] = ("L3", "하부슬래브 단차와 경사(θ)에 대한 길이. 정치수(roundup) 적용"),
-            ["L4"] = ("L4", "θ = 30° 인 경우 3D, 45°의 경우 4.5D. 정치수(roundup) 적용"),
+            ["L3"] = ("L3", "하부슬래브 단차와 경사(θ)에 대한 길이. 정치수 적용"),
+            ["L4"] = ("L4", "θ = 30° 인 경우 3D, 45°의 경우 4.5D. 정치수 적용"),
+
+            // 기초 경사부 기울기
+            ["θ"] = ("θ", "「농업생산기반정비사업계획 설계기준-배수편(2012), P215, 다.흡입수조」 및 「빗물펌프장 수문 유지관리 및 설계요령(2023), P112, 9)흡입부의 크기 검토」 등에 30° 또는 45°를 적용하도록 규정하고 있으나, 45° 적용시 급한 경사로 인한 시공성 문제가 발생할 수 있으므로 30°를 권고안으로 적용"),
 
             // 종단제원 — T
             ["T1"] = ("T1", "400mm 고정. 구조적 최적설계."),
             ["T2"] = ("T2", "벽체 두께 + 100mm. 구조적 최적설계."),
             ["T3"] = ("T3", "400mm 고정. 구조적 최적설계."),
-            ["T4"] = ("T4", "토압 높이의 10%의 정치수 반영(ROUNDUP). 구조적 최적설계."),
+            ["T4"] = ("T4", "토압 높이의 10%의 정치수 적용. 구조적 최적설계."),
             ["T5Prime"] = ("T6", "캔틸레버 길이 4m 이하는 400mm, 이후 500mm 증가시마다 50mm 증가"),
 
             // 종단제원 — 기타
@@ -1325,7 +1343,7 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             ["HS1"] = ("HS1", "밸브실 내 계단 높이 200mm 고정. 나머지 발생시 최하단에서 나머지 반영한 높이 적용"),
 
             // 평면제원
-            ["B8"] = ("B8", "「KDS 67 30 25 양배수장 구조 설계, P41, 4.3.1.3 흡입관의 설계」. 정치수(roundup) 적용"),
+            ["B8"] = ("B8", "「KDS 67 30 25 양배수장 구조 설계, P41, 4.3.1.3 흡입관의 설계」. 정치수 적용"),
             ["B9"] = ("B9", "계단 및 지배수펌프 개구부(1.0m)와 유지관리차량 진입 및 여유동선(3.5m) 고려."),
             ["B10"] = ("B10", "직접기초시 부력키 불필요. 말뚝기초시 하부슬래브 두께와 동일폭 적용권장."),
             ["L5"] = ("L5", "유입부측 끝이 하부슬래브 경사부를 침범하지 않는 위치까지의 연장."),

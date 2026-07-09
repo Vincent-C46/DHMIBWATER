@@ -1,9 +1,12 @@
 using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Application.Interfaces.Geometry;
 using DHBIMWATER.Application.Interfaces.Quantity;
+using DHBIMWATER.Application.Interfaces.Settings;
+using DHBIMWATER.Application.Services;
 using DHBIMWATER.Application.Interfaces.Storage;
 using DHBIMWATER.Core.Parameters;
 using DHBIMWATER.Infrastructure.Repositories.DB;
+using DHBIMWATER.Infrastructure.Repositories.FileSystem;
 using DHBIMWATER.Infrastructure.Repositories.Mock;
 using DHBIMWATER.Infrastructure.Repositories.Mock.Quantity;
 using DHBIMWATER.Infrastructure.Repositories.Revit.Storage;
@@ -41,8 +44,10 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IWallCommandRepo, RevitWallCommandRepo>();
         services.AddTransient<IGenericModelCommandRepo, RevitGenericModelCommandRepo>();
         services.AddTransient<IBeamCommandRepo, RevitBeamCommandRepo>();
+        services.AddTransient<IColumnCommandRepo, RevitColumnCommandRepo>();
         services.AddTransient<ISlabCommandRepo, RevitSlabCommandRepo>();
         services.AddTransient<IOpeningCommandRepo, RevitOpeningCommandRepo>();
+        services.AddTransient<IStairCommandRepo, RevitStairCommandRepo>();
         services.AddTransient<IDirectShapeCommandRepo, RevitDirectShapeCommandRepo>();
         services.AddTransient<IViewCommandRepo, RevitViewCommandRepo>();
         services.AddTransient<ISetParameterRepo, RevitSetParameterRepo>();
@@ -53,23 +58,28 @@ public static class ServiceCollectionExtensions
         #endregion
 
         #region Quantity 관련
-        services.AddTransient<IQuantityExtractor, RevitBeamExtractor>();
-        services.AddTransient<IQuantityExtractor, RevitColumnExtractor>();
-        services.AddTransient<IQuantityExtractor, RevitFloorExtractor>();
-        services.AddTransient<IQuantityExtractor, RevitFoundationExtractor>();
+        // IQuantityExtractor 경로 (Rule Engine 미적용 카테고리)
         services.AddTransient<IQuantityExtractor, RevitGenericModelExtractor>();
-        services.AddTransient<IQuantityExtractor, RevitRebarExtractor>();
         services.AddTransient<IQuantityExtractor, RevitStairsExtractor>();
-        services.AddTransient<IQuantityExtractor, RevitWallExtractor>();
         services.AddTransient<IQuantityExtractor, RevitRailingExtractor>();
         services.AddTransient<IQuantityExtractor, RevitDirectShapeExtractor>();
+
+        // IElementMeasurementExtractor + Rule Engine 경로
+        services.AddTransient<IElementMeasurementExtractor, RevitWallMeasurementExtractor>();
+        services.AddTransient<IElementMeasurementExtractor, RevitColumnMeasurementExtractor>();
+        services.AddTransient<IElementMeasurementExtractor, RevitBeamMeasurementExtractor>();
+        services.AddTransient<IElementMeasurementExtractor, RevitFloorMeasurementExtractor>();
+        services.AddTransient<IElementMeasurementExtractor, RevitFoundationMeasurementExtractor>();
+        services.AddTransient<IElementMeasurementExtractor, RevitRebarMeasurementExtractor>();
+        services.AddSingleton<QuantityRuleEngine>();
+
+        services.AddTransient<IQuantityRuleRepository, RevitQuantityRuleRepo>();
         services.AddTransient<IFaceClassifier, RevitFaceClassifier>();
-        services.AddTransient<IExcelExporter, ClosedXmlExcelWriter>();
         services.AddTransient<IExcelExporter, ClosedXmlExcelWriter>();
         services.AddTransient<IElementQuantityRepo, ElementQuantityRepo>();
         services.AddTransient<IManualQuantityRepo, ManualQuantityRepo>();
-
         services.AddTransient<IExcelReader, ExcelReader>();
+        services.AddTransient<IProjectSettingsRepository, DhcfgRepo>();
         #endregion
         #region Service 등록
         services.AddTransient<IFileDialogService, WpfFileDialogService>();

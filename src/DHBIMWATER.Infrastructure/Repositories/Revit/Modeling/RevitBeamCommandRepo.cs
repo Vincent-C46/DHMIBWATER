@@ -1,11 +1,9 @@
-using DHBIMWATER.Application.Interfaces;
 using Autodesk.Revit.DB;
-using DHBIMWATER.Core.Structures;
 using Autodesk.Revit.DB.Structure;
-using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
-using System.Windows.Controls;
 using Autodesk.Revit.UI;
-using DocumentFormat.OpenXml.Drawing.Diagrams;
+using DHBIMWATER.Application.Interfaces;
+using DHBIMWATER.Core.Structures;
+using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
 {
@@ -33,11 +31,25 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
                     .OfCategory(BuiltInCategory.OST_StructuralFraming)
                     .WhereElementIsElementType()
                     .Cast<FamilySymbol>()
-                    .FirstOrDefault(s => s.Name.Contains("헌치") || s.Name.Contains("haunch"));
+                    .FirstOrDefault(s => s.Name.Contains("헌치") || s.Name.Contains("haunch") || s.FamilyName.Contains("헌치") || s.FamilyName.Contains("haunch"));
 
                 if (beamType == null)
                 {
-                    TaskDialog.Show("Error", "헌치 패밀리 심볼을 찾을 수 없습니다.");
+                    //TaskDialog.Show("Error", "헌치 패밀리 심볼을 찾을 수 없습니다.");
+                    return 0;
+                }
+            }
+            else if (!string.IsNullOrEmpty(beamDef.TypeName))
+            {
+                beamType = new FilteredElementCollector(doc)
+                    .OfCategory(BuiltInCategory.OST_StructuralFraming)
+                    .WhereElementIsElementType()
+                    .Cast<FamilySymbol>()
+                    .FirstOrDefault(fs => fs.Name == beamDef.TypeName);
+
+                if (beamType == null)
+                {
+                    TaskDialog.Show("Error", $"보 유형을 찾을 수 없습니다: {beamDef.TypeName}");
                     return 0;
                 }
             }

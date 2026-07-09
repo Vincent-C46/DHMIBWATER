@@ -11,7 +11,7 @@ namespace DHBIMWATER.Application.DTOs.Revit.Elements
         /// <summary>
         /// 요소 ID
         /// </summary>
-        public int ElementId { get; set; }
+        public long ElementId { get; set; }
 
         /// <summary>
         /// 기둥 이름

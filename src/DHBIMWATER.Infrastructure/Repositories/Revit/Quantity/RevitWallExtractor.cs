@@ -3,6 +3,8 @@ using DHBIMWATER.Application.Interfaces.Geometry;
 using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Core.Quantity;
 using DHBIMWATER.Infrastructure.Helpers;
+using System.ComponentModel.DataAnnotations;
+using System.Windows.Controls;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
@@ -50,6 +52,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var refFaceDict = _classifier.GetFaceAreas(elementId);
             var deductionByFaceType = QuantityExtractorHelper.GroupDeductions(_finder.FindContactAreas(elementId));
 
+            #region 벽체 정보 추출
             var cs = wall.WallType.GetCompoundStructure();
             var area = UC.Ft2ToM2(wall.get_Parameter(BuiltInParameter.HOST_AREA_COMPUTED).AsDouble());
             double thickness = UC.FtToM(cs.GetLayers()
@@ -63,62 +66,54 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var lc = wall.Location as LocationCurve;
             double wallLength = lc != null ? UC.FtToM(lc.Curve.Length) : 0;
             double wallHeight = UC.FtToM(wall.get_Parameter(BuiltInParameter.WALL_USER_HEIGHT_PARAM)?.AsDouble() ?? 0);
+            int concreteJointNum = 1;   // 시공이음 개수
+            double volume = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(wall).Sum(s => s.Volume)); //M3
+
+            Dictionary<string, double> varDict = new Dictionary<string, double>
+            {
+                ["V"]   = volume,
+                ["H"]   = wallHeight,
+                ["L"]   = wallLength,
+                ["A"]   = area,
+                ["Thk"] = thickness,
+                ["CJ"]  = concreteJointNum,
+            };
 
             // H x L 이 A 와 5% 이내 일치하면 치수 수식, 아니면 A x Thk
             const double tolerance = 0.05;
             bool useDimensions = wallHeight > 0 && wallLength > 0
                 && area > 0
                 && Math.Abs(wallHeight * wallLength - area) / area < tolerance;
+            #endregion
 
-            string concFormula;
-            Dictionary<string, double> varDict;
-
-            if (useDimensions)
-            {
-                concFormula = "H x L x Thk";
-                varDict = new Dictionary<string, double>
-                {
-                    ["H"] = wallHeight,
-                    ["L"] = wallLength,
-                    ["Thk"] = thickness,
-                };
-            }
-            else
-            {
-                concFormula = "A x Thk";
-                varDict = new Dictionary<string, double>
-                {
-                    ["A"] = area,
-                    ["Thk"] = thickness,
-                };
-            }
+            #region 콘크리트
+            string concFormula = useDimensions ? "H x L x Thk" : "A x Thk";
 
             string? concRendered = FormulaCalculator.Render(concFormula, varDict);
-            double volumeM3 = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(wall).Sum(s => s.Volume));
-
             var materialClass = FamilyInstanceHelper.GetStructuralAssetClass(wall);
-            var workType = materialClass switch
+            var matWorkType = materialClass switch
             {
                 StructuralAssetClass.Concrete => "철근콘크리트",
                 StructuralAssetClass.Metal => "강재",
                 StructuralAssetClass.Generic => "기타",
                 _ => "철근콘크리트"
             };
-
             quantityItems.Add(new QuantityItem
             {
                 ElementId = elementId,
                 Category = wall.Category.Name ?? string.Empty,
                 ElementCode = wall.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
-                WorkType = workType,
+                WorkType = matWorkType,
                 Specification = materialName,
                 RawFormula = concFormula,
                 RenderedFormula = concRendered,
-                Value = volumeM3,
+                Value = volume,
                 Unit = "m³"
             });
+            #endregion
 
-            if (workType == "철근콘크리트")
+            #region 거푸집 및 스페이서
+            if (matWorkType == "철근콘크리트")
             {
                 // DH_IsExterior: 1 = 외측벽, 0 = 내측벽
                 bool isExterior = wall.LookupParameter("DH_IsExterior")?.AsInteger() == 1;
@@ -137,15 +132,16 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                     var rawFormula = QuantityExtractorHelper.GetDeductionRawFormula(refFaceDict, deductionByFaceType, faceType);
                     var renderedFormula = QuantityExtractorHelper.GetDeductionRenderedFormula(refFaceDict, deductionByFaceType, faceType);
 
-                    var spec = (isExterior, faceType) switch
+                    var formwork = (isExterior, faceType) switch
                     {
-                        (true,  FaceType.Right) => "유로폼(외측)",  // 외벽 외측면
-                        (true,  FaceType.Left)  => "유로폼(내측)",  // 외벽 내측면
-                        (false, FaceType.Left)  => "유로폼",
-                        (false, FaceType.Right) => "유로폼",
-                        (_,     FaceType.End)   => "합판3회",
+                        (true,  FaceType.Right) => FormworkType.Euroform,
+                        (true,  FaceType.Left)  => FormworkType.Euroform,
+                        (false, FaceType.Left)  => FormworkType.Euroform,
+                        (false, FaceType.Right) => FormworkType.Euroform,
+                        (_,     FaceType.End)   => FormworkType.Plywood3,
                         _ => throw new ArgumentOutOfRangeException(),
                     };
+                    var spec = formwork.ToSpecification();
 
                     var formworkItem = new QuantityItem
                     {
@@ -203,7 +199,26 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
                 quantityItems.Add(rightSpacer);
             }
+            #endregion
 
+            #region 벽체 길이 기반
+            var lenFormula = "L x CJ";
+            string? lenRendered = FormulaCalculator.Render(lenFormula, varDict);
+            var lenValue = FormulaCalculator.Calculate(lenFormula, varDict);
+
+            quantityItems.Add(new QuantityItem
+            {
+                ElementId = elementId,
+                Category = wall.Category.Name ?? string.Empty,
+                ElementCode = wall.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty,
+                WorkType = "벽체 길이",
+                Specification = "벽체 길이",
+                RawFormula = lenFormula,
+                RenderedFormula = lenRendered,
+                Value = lenValue,
+                Unit = "m"
+            });
+            #endregion
             return quantityItems;
         }
     }

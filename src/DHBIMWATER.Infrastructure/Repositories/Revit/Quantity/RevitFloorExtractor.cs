@@ -66,10 +66,17 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
             var material = doc.GetElement(structureLayer?.MaterialId) as Material;
             var materialName = material?.Name ?? string.Empty;
 
+            double volume = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(floor).Sum(s => s.Volume));
+
             var varDict = new Dictionary<string, double>
             {
-                ["A"] = area,
-                ["Thk"] = thickness,
+                ["A"]              = area,
+                ["Thk"]            = thickness,
+                ["Vol"]            = volume,
+                ["A_bottom_gross"] = refFaceDict.GetValueOrDefault(FaceType.Bottom, 0),
+                ["A_side_gross"]   = refFaceDict.GetValueOrDefault(FaceType.Side,   0),
+                ["A_bottom_net"]   = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.Bottom),
+                ["A_side_net"]     = QuantityExtractorHelper.GetNetArea(refFaceDict, deductionByFaceType, FaceType.Side),
             };
 
             // 콘크리트
@@ -78,8 +85,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
 
             var concFormula = "A x Thk";
             string? concRendered = FormulaCalculator.Render(concFormula, varDict);
-            //double concValue = FormulaCalculator.Calculate(concFormula, varDict);
-            double concValue = UC.Ft3ToM3(RevitGeometryHelper.GetSolids(floor).Sum(s => s.Volume)); // 실제값은 Solid 체적으로 대체
+            double concValue = volume;
             string concWorkType = (thickness < 0.15 || materialName.Contains("무근")) ? plainConcreteName : reinforcedConcreteName;
 
             var concreteItem = new QuantityItem
@@ -112,7 +118,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 Value = spacerValue,
                 Unit = "m²"
             };
-
             // 무근콘크리트가 아니면 스페이서 산출
             if (concWorkType != plainConcreteName) quantityItems.Add(spacerItem);
 
@@ -136,14 +141,15 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Quantity
                 var rawFormula = QuantityExtractorHelper.GetDeductionRawFormula(refFaceDict, deductionByFaceType, faceType);
                 var renderedFormula = QuantityExtractorHelper.GetDeductionRenderedFormula(refFaceDict, deductionByFaceType, faceType);
 
-                var spec = (isPlain, faceType) switch
+                var formwork = (isPlain, faceType) switch
                 {
-                    (true,  FaceType.Side)   => "합판6회",
+                    (true,  FaceType.Side)   => FormworkType.Plywood6,
                     // 무근콘크리트 하부 거푸집 산출 필요 없음 (확실?)
-                    (false, FaceType.Bottom) => "합판4회",
-                    (false, FaceType.Side)   => "합판3회",
+                    (false, FaceType.Bottom) => FormworkType.Plywood4,
+                    (false, FaceType.Side)   => FormworkType.Plywood3,
                     _ => throw new ArgumentOutOfRangeException(),
                 };
+                var spec = formwork.ToSpecification();
 
                 var formworkItem = new QuantityItem
                 {

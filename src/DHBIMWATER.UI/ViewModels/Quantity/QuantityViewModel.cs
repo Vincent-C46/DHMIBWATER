@@ -1,4 +1,5 @@
-﻿using DHBIMWATER.Application.Interfaces;
+using DHBIMWATER.Application.Interfaces;
+using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Application.UseCases.QuantityCalculator;
 using DHBIMWATER.Core.Quantity;
 using DHBIMWATER.UI.Base;
@@ -44,7 +45,6 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
                 {
                     _selectedItem = value;
                     OnPropertyChanged();
-                    // Command CanExecute 재평가
                     CommandManager.InvalidateRequerySuggested();
                 }
             }
@@ -59,10 +59,11 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
                 OnPropertyChanged();
             }
         }
-        public int AutoCount     => QuantityItems.Count(i => i.Status == QuantityStatus.Auto);
+        public int AutoCount => QuantityItems.Count(i => i.Status == QuantityStatus.Auto);
         public int ModifiedCount => QuantityItems.Count(i => i.Status == QuantityStatus.Modified);
-        public int ManualCount   => QuantityItems.Count(i => i.Status == QuantityStatus.Manual);
-        public int TotalCount    => QuantityItems.Count;
+        public int ManualCount => QuantityItems.Count(i => i.Status == QuantityStatus.Manual);
+        public int TotalCount => QuantityItems.Count;
+        public IMeasurePickService? MeasureService { get; private set; }
 
         public bool IsSelectedInRevit
         {
@@ -97,21 +98,15 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         #endregion
 
         #region Events
-        /// <summary>
-        /// 수동 입력 다이얼로그 열기 요청
-        /// </summary>
         public event EventHandler<QuantityItem?> ManualInputRequested = delegate { };
-        /// <summary>
-        /// 항목 수정 요청 (기존 항목, 원본 인덱스 전달)
-        /// </summary>
         public event EventHandler<(QuantityItem item, int index)> EditItemRequested = delegate { };
         #endregion
 
         #region Commands
-        public ICommand ExtractCommand       { get; }
+        public ICommand ExtractCommand { get; }
         public ICommand AddManualItemCommand { get; }
-        public ICommand CopyItemCommand      { get; }
-        public ICommand EditItemCommand      { get; }
+        public ICommand CopyItemCommand { get; }
+        public ICommand EditItemCommand { get; }
         public ICommand DeleteItemCommand { get; }
         public ICommand ExportToExcelCommand { get; }
         public ICommand SelectInRevitCommand { get; }
@@ -126,35 +121,30 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         {
             _calculateQuantityUseCase = calculateQuantityUseCase;
             _dialogService = dialogService;
-            _fileDialogService = fileDialogService; 
+            _fileDialogService = fileDialogService;
             _exportQuantityUseCase = exportQuantityUseCase;
 
             var items = _calculateQuantityUseCase.Execute();
             QuantityItems = new ObservableCollection<QuantityItem>(items);
             UpdateSummary();
 
-            ExtractCommand       = new RelayCommand(GetCalculateQuantity);
+            ExtractCommand = new RelayCommand(GetCalculateQuantity);
             ExportToExcelCommand = new RelayCommand(_ => OnExportToExcel());
             AddManualItemCommand = new RelayCommand(_ => ManualInputRequested.Invoke(this, null));
-            CopyItemCommand      = new RelayCommand(_ => OnCopyItem(),   _ => SelectedItem != null);
-            EditItemCommand      = new RelayCommand(_ => OnEditItem(),   _ => SelectedItem != null);
-            DeleteItemCommand       = new RelayCommand(_ => OnDeleteItem(),    _ => _currentSelectedItems.Count > 0);
-            SelectInRevitCommand   = new RelayCommand(_ => OnSelectInRevit(), _ => _currentSelectedItems.Count > 0);
+            CopyItemCommand = new RelayCommand(_ => OnCopyItem(), _ => SelectedItem != null);
+            EditItemCommand = new RelayCommand(_ => OnEditItem(), _ => SelectedItem != null);
+            DeleteItemCommand = new RelayCommand(_ => OnDeleteItem(), _ => _currentSelectedItems.Count > 0);
+            SelectInRevitCommand = new RelayCommand(_ => OnSelectInRevit(), _ => _currentSelectedItems.Count > 0);
         }
         #endregion
 
         #region Methods
-        /// <summary>
-        /// ManualQuantityView 확인 시 호출. 수동 항목 추가 후 집계 갱신.
-        /// </summary>
         public void AddItem(QuantityItem item)
         {
             QuantityItems.Add(item);
             UpdateSummary();
         }
-        /// <summary>
-        /// DataGrid 다중 선택 변경 시 그룹 집계 갱신
-        /// </summary>
+
         public void UpdateSelectedItems(IList<QuantityItem> items)
         {
             _currentSelectedItems = items.ToList();
@@ -170,19 +160,19 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             var categories = items.Select(i => i.Category).Distinct().ToList();
             rows.Add(new GroupSummaryItem
             {
-                Name         = "카테고리",
+                Name = "카테고리",
                 ValueDisplay = categories.Count == 1 ? categories[0] : "다양함",
-                Unit         = string.Empty
+                Unit = string.Empty
             });
 
             var workTypeRows = items
                 .GroupBy(i => new { i.WorkType, i.Specification, i.SubSpecification, i.Unit })
                 .Select(g => new GroupSummaryItem
                 {
-                    Name         = g.Key.WorkType,
-                    Spec         = FormatSpec(g.Key.Specification, g.Key.SubSpecification),
+                    Name = g.Key.WorkType,
+                    Spec = FormatSpec(g.Key.Specification, g.Key.SubSpecification),
                     ValueDisplay = g.Sum(i => i.Value).ToString("F1"),
-                    Unit         = g.Key.Unit
+                    Unit = g.Key.Unit
                 });
 
             rows.AddRange(workTypeRows);
@@ -191,16 +181,14 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         }
         private static string FormatSpec(string spec, string subSpec)
         {
-            var hasSpec    = !string.IsNullOrWhiteSpace(spec);
+            var hasSpec = !string.IsNullOrWhiteSpace(spec);
             var hasSubSpec = !string.IsNullOrWhiteSpace(subSpec);
             if (!hasSpec && !hasSubSpec) return string.Empty;
             if (!hasSubSpec) return spec;
-            if (!hasSpec)    return subSpec;
+            if (!hasSpec) return subSpec;
             return $"{spec} / {subSpec}";
         }
-        /// <summary>
-        /// 항목 수정 후 기존 항목 Replace
-        /// </summary>
+
         public void ReplaceItem(int index, QuantityItem newItem)
         {
             if (index >= 0 && index < QuantityItems.Count)
@@ -215,13 +203,12 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         private void OnCopyItem()
         {
             if (SelectedItem == null) return;
-            
-            // 선택된 아이템을 복사해서 Manual 상태로 추가
-            var copiedItem = SelectedItem with 
-            { 
-                Status = QuantityStatus.Manual 
+
+            var copiedItem = SelectedItem with
+            {
+                Status = QuantityStatus.Manual
             };
-            
+
             QuantityItems.Add(copiedItem);
             UpdateSummary();
         }
@@ -246,15 +233,10 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         private void GetCalculateQuantity(object? obj)
         {
             _extractAction?.Invoke();
-            //// 수동 입력 항목은 재산출 후에도 유지
-            //var manualItems = QuantityItems.Where(i => i.Status == QuantityStatus.Manual).ToList();
-            //var items = _calculateQuantityUseCase.Execute();    // 이게 Revit API
-            //QuantityItems = new ObservableCollection<QuantityItem>(items.Concat(manualItems));
-            //OnPropertyChanged(nameof(QuantityItems));
-            //UpdateSummary();
         }
         public void SetExtractAction(Action action) => _extractAction = action;
         public void SetSelectAction(Action<IList<long>> action) => _selectAction = action;
+        public void SetMeasureService(IMeasurePickService service) => MeasureService = service;
 
         private void OnSelectInRevit()
         {
@@ -275,7 +257,6 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             UpdateSummary();
         }
 
-        // 해당 단어 포함된 공종 순으로 Sorting
         private static readonly List<string> WorkTypeOrder = new()
         {
             "콘크리트",
@@ -294,11 +275,10 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             var result = new List<QuantitySummaryItem>();
 
             var byWorkType = QuantityItems.GroupBy(i => i.WorkType)
-                .OrderBy(g => GetWorkTypeOrder(g.Key));         // IGrouping<string, QuantityItem> 의 집합. 여기서 string은 그룹핑한 WorkType
+                .OrderBy(g => GetWorkTypeOrder(g.Key));
 
             foreach (var workTypeGroup in byWorkType)
             {
-                // 규격별 소계
                 var details = workTypeGroup
                     .GroupBy(i => new { i.Specification, i.SubSpecification, i.Unit })
                     .Select(g => new QuantitySummaryItem
@@ -311,7 +291,6 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
                     });
                 result.AddRange(details);
 
-                // 공종별 합계
                 result.Add(new QuantitySummaryItem
                 {
                     WorkType = workTypeGroup.Key,
@@ -339,7 +318,7 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         }
         private void OnExportToExcel()
         {
-            var filePath = _fileDialogService.SaveFile("Export to Excel","Excel Files|*.xlsx", $"QuantityItems" );
+            var filePath = _fileDialogService.SaveFile("Export to Excel", "Excel Files|*.xlsx", $"QuantityItems");
             if (string.IsNullOrEmpty(filePath)) return;
             _exportQuantityUseCase.Execute(filePath, SummaryItems, QuantityItems);
         }

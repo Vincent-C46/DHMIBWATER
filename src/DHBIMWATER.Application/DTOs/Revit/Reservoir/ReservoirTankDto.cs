@@ -20,6 +20,6 @@ namespace DHBIMWATER.Application.DTOs.Revit.Reservoir
         double Wh,
         double Lh,
         double Hh,
-        double Lt
+        double Ltt
     );
 }
