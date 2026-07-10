@@ -118,6 +118,7 @@ namespace DHBIMWATER.Application.UseCases.Sheets
                 _sheetUseCase.RecenterViewportToSheetCenter(sheet.Id, placedId);
                 _sheetUseCase.ApplyViewFormProfile(placedId, "일반도");
                 _sheetUseCase.UpdateViewCategory(placedId, "출력");
+                _sheetUseCase.ApplyViewBorderAndTitle(placedId, sheet.SheetName);
 
                 result.PlacedCount++;
             }
@@ -131,6 +132,7 @@ namespace DHBIMWATER.Application.UseCases.Sheets
 
         public int DeletePumpingStationSheets()
         {
+            ActivateSafeView();
             int count = DeletePumpingStationSheetsOnly();
             _sheetUseCase.DeleteReservoirViews();
             return count;
@@ -138,6 +140,7 @@ namespace DHBIMWATER.Application.UseCases.Sheets
 
         public int DeletePumpingStationSheetsOnly()
         {
+            ActivateSafeView();
             var sheets = _sheetUseCase.GetSheets();
             int count = 0;
 
@@ -159,7 +162,27 @@ namespace DHBIMWATER.Application.UseCases.Sheets
 
         public void DeletePumpingStationViewsOnly()
         {
+            ActivateSafeView();
             _sheetUseCase.DeleteReservoirViews();
+        }
+
+        // 삭제 전 활성 시트/뷰가 삭제 대상이면 오류 발생 → 안전한 뷰로 전환
+        private void ActivateSafeView()
+        {
+            try
+            {
+                var activeViewId = _sheetUseCase.GetActiveViewId();
+                var views = _sheetUseCase.GetViews();
+                var safeView = views.FirstOrDefault(v =>
+                    v.ViewType == "3D" || v.ViewType == "ThreeD" || v.ViewName == "{3D}");
+
+                safeView ??= views.FirstOrDefault(v =>
+                    v.ViewType != "DrawingSheet" && v.ViewId != activeViewId);
+
+                if (safeView != null && safeView.ViewId != activeViewId)
+                    _sheetUseCase.ActivateView(safeView.ViewId);
+            }
+            catch { }
         }
 
         public void PlacePumpingStationDimensions(string dimensionTypeName)
@@ -196,12 +219,16 @@ namespace DHBIMWATER.Application.UseCases.Sheets
             _sheetUseCase.ApplyPumpingStationAnnotations();
         }
 
-        public void ApplyDHTags(IList<string> selectedFamilyIds)
+        public void ApplyDHTags(IList<string> selectedFamilyIds, IDictionary<string, (IList<string> Codes, IList<string> Parts)> viewFilters = null)
         {
-            _sheetUseCase.ApplyDHTags(selectedFamilyIds);
+            _sheetUseCase.ApplyDHTags(selectedFamilyIds, viewFilters);
         }
 
         public IList<TagFamilyDto> GetAvailableTagFamilies() => _sheetUseCase.GetAvailableTagFamilies();
+
+        public IList<string> GetAvailableDHElementCodes() => _sheetUseCase.GetAvailableDHElementCodes();
+
+        public IList<string> GetAvailableDHParts() => _sheetUseCase.GetAvailableDHParts();
 
         public IList<TitleBlockDto> GetTitleBlocks() => _sheetUseCase.GetTitleBlocks();
     }

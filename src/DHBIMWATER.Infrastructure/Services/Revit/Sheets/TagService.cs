@@ -13,10 +13,68 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
         private const double MinTagSpacingRatio = 0.28;
 
         private readonly Document _doc;
+        private ElementId _arrowheadId;
 
         public TagService(Document doc)
         {
             _doc = doc;
+        }
+
+        private readonly HashSet<long> _styledTagTypeIds = new();
+
+        private void ApplyTagLeaderStyle(IndependentTag tag)
+        {
+            try
+            {
+                if (_arrowheadId == null)
+                {
+                    var allTypes = new FilteredElementCollector(_doc)
+                        .OfClass(typeof(ElementType))
+                        .Cast<ElementType>()
+                        .ToList();
+
+                    var match = allTypes.FirstOrDefault(e =>
+                            e.Name.Contains("채워진 화살표 15", StringComparison.OrdinalIgnoreCase)) ??
+                        allTypes.FirstOrDefault(e =>
+                            e.Name.Contains("Filled Arrow 15", StringComparison.OrdinalIgnoreCase));
+
+                    _arrowheadId = match?.Id ?? ElementId.InvalidElementId;
+                }
+
+                // 태그 타입에 화살촉 설정 (타입당 1번만)
+                var typeId = tag.GetTypeId();
+                if (typeId != ElementId.InvalidElementId && _styledTagTypeIds.Add(typeId.Value))
+                {
+                    var tagType = _doc.GetElement(typeId);
+                    if (tagType != null && _arrowheadId != ElementId.InvalidElementId)
+                    {
+                        // 여러 파라미터 시도
+                        var param = tagType.get_Parameter(BuiltInParameter.LEADER_ARROWHEAD)
+                                 ?? tagType.LookupParameter("지시 표현 화살촉")
+                                 ?? tagType.LookupParameter("Leader Arrowhead");
+                        if (param != null && !param.IsReadOnly)
+                            param.Set(_arrowheadId);
+                    }
+                }
+
+                // 지시선: 직선 (꺾임 제거)
+                if (tag.HasLeader)
+                {
+                    try { tag.LeaderEndCondition = LeaderEndCondition.Free; } catch { }
+                    try
+                    {
+                        var refs = tag.GetTaggedReferences();
+                        if (refs.Count > 0)
+                        {
+                            var leaderEnd = tag.GetLeaderEnd(refs.First());
+                            if (leaderEnd != null)
+                                tag.SetLeaderElbow(refs.First(), leaderEnd);
+                        }
+                    }
+                    catch { }
+                }
+            }
+            catch { }
         }
 
         private XYZ GetTagPoint(Element element, View view)
@@ -237,6 +295,7 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
                     }
 
                     tag.HasLeader = hasLeader;
+                    ApplyTagLeaderStyle(tag);
                 }
 
                 return tag != null;
@@ -500,6 +559,16 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             return $"CATEGORY|{element.Category.Id.Value}|{elementCode}";
         }
 
+        private const string ReservoirSpotElevPlanType = "평면도(프로젝트)";
+
+        private static readonly BuiltInCategory[] FloorCategories =
+        {
+            BuiltInCategory.OST_Floors,
+            BuiltInCategory.OST_StructuralFoundation,
+            BuiltInCategory.OST_Roofs,
+            BuiltInCategory.OST_GenericModel,
+        };
+
         public void ApplyReservoirTags(string sheetId)
         {
             if (!long.TryParse(sheetId, out var sid))
@@ -508,6 +577,17 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             var sheet = _doc.GetElement(new ElementId(sid)) as ViewSheet;
             if (sheet == null)
                 return;
+
+            var allSpotTypes = new FilteredElementCollector(_doc)
+                .OfClass(typeof(SpotDimensionType))
+                .Cast<SpotDimensionType>()
+                .ToList();
+
+            var spotType = allSpotTypes
+                .FirstOrDefault(t => t.Name.Equals(ReservoirSpotElevPlanType, StringComparison.OrdinalIgnoreCase))
+                ?? allSpotTypes.FirstOrDefault(t =>
+                    t.Name.Contains("평면", StringComparison.OrdinalIgnoreCase) &&
+                    t.Name.Contains("프로젝트", StringComparison.OrdinalIgnoreCase));
 
             foreach (var vpId in sheet.GetAllViewports())
             {
@@ -527,7 +607,106 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
                     continue;
 
                 ApplyTagsToAllOnView(view);
+
+                if (view is ViewPlan && spotType != null)
+                    PlaceReservoirSpotElevations(view, spotType);
             }
+        }
+
+        private void PlaceReservoirSpotElevations(View view, SpotDimensionType symbol)
+        {
+            var elems = new List<Element>();
+            foreach (var cat in FloorCategories)
+            {
+                try
+                {
+                    elems.AddRange(
+                        new FilteredElementCollector(_doc, view.Id)
+                            .OfCategory(cat)
+                            .WhereElementIsNotElementType()
+                            .ToElements());
+                }
+                catch { }
+            }
+
+            using var tx = new Transaction(_doc, "Place Reservoir Spot Elevations");
+            tx.Start();
+
+            // 기존 지정점 제거 (재실행 시 누적 방지)
+            var existingSpots = new FilteredElementCollector(_doc, view.Id)
+                .OfClass(typeof(SpotDimension))
+                .Cast<SpotDimension>()
+                .Where(sd => sd.GetTypeId() == symbol.Id)
+                .Select(sd => sd.Id)
+                .ToList();
+            if (existingSpots.Count > 0)
+                _doc.Delete(existingSpots);
+
+            foreach (var elem in elems.GroupBy(e => e.Id).Select(g => g.First()))
+            {
+                var faceInfos = GetTopFaceInfos(elem);
+                foreach (var (faceRef, facePt) in faceInfos)
+                {
+                    try
+                    {
+                        var spot = _doc.Create.NewSpotElevation(
+                            view, faceRef, facePt, facePt, facePt, facePt, false);
+                        if (spot != null)
+                            spot.ChangeTypeId(symbol.Id);
+                    }
+                    catch { }
+                }
+            }
+
+            tx.Commit();
+        }
+
+        private static List<(Reference FaceRef, XYZ FaceCenter)> GetTopFaceInfos(Element elem)
+        {
+            var result = new List<(Reference, XYZ)>();
+            var opt = new Options { ComputeReferences = true };
+            var geo = elem.get_Geometry(opt);
+            if (geo == null) return result;
+
+            void ProcessSolid(Solid solid, Transform transform)
+            {
+                if (solid == null || solid.Faces.IsEmpty) return;
+                foreach (Face face in solid.Faces)
+                {
+                    if (face is not PlanarFace pf || pf.Reference == null) continue;
+                    var n = pf.FaceNormal.Normalize();
+                    var worldNormal = transform != null ? transform.OfVector(n).Normalize() : n;
+                    if (worldNormal.DotProduct(XYZ.BasisZ) < 0.9) continue;
+
+                    var bb2 = pf.GetBoundingBox();
+                    var uvMid = (bb2.Min + bb2.Max) * 0.5;
+                    var localPt = pf.Evaluate(uvMid);
+                    var worldPt = transform != null ? transform.OfPoint(localPt) : localPt;
+                    result.Add((pf.Reference, worldPt));
+                }
+            }
+
+            foreach (var obj in geo)
+            {
+                if (obj is Solid solid)
+                    ProcessSolid(solid, null);
+                else if (obj is GeometryInstance gi)
+                {
+                    var instGeo = gi.GetInstanceGeometry();
+                    var tf = gi.Transform;
+                    foreach (var inner in instGeo)
+                        if (inner is Solid s) ProcessSolid(s, tf);
+                }
+            }
+
+            var distinct = new List<(Reference, XYZ)>();
+            foreach (var item in result)
+            {
+                if (!distinct.Any(d => Math.Abs(d.Item2.Z - item.Item2.Z) < 0.001 / 0.3048 &&
+                                       d.Item2.DistanceTo(item.Item2) < 0.1))
+                    distinct.Add(item);
+            }
+            return distinct;
         }
 
         private class TagTarget

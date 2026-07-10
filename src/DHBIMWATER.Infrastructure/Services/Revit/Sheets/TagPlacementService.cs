@@ -46,12 +46,20 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             return map;
         }
 
+        private const string DhElementCodeParameterName = "DH_ElementCode";
+        private const string DhPartParameterName = "DH_Part";
+
         public TagPlacementService(Document doc)
         {
             _doc = doc;
         }
 
-        public void Apply(IList<string> selectedFamilyIds = null)
+        // 단면 뷰(A, B, C...)처럼 개별 키가 없을 때 공통으로 적용할 기본 필터 키
+        public const string DefaultSectionFilterKey = "*";
+
+        // viewFilters: 뷰 이름(예: "상부슬래브", "기초(유입부)", "A", "B"...) → (허용 ElementCode 목록, 허용 Part 목록)
+        // 특정 뷰가 딕셔너리에 없으면 DefaultSectionFilterKey("*") 항목을 찾고, 그것도 없으면 필터 없이 전체 허용
+        public void Apply(IList<string> selectedFamilyIds = null, IDictionary<string, (IList<string> Codes, IList<string> Parts)> viewFilters = null)
         {
             var allTagTypes = GetTagFamilySymbols();
             var tagTypes = selectedFamilyIds != null
@@ -67,13 +75,60 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             RemoveExistingTags(views, allTagTypes);
 
             foreach (var view in views)
-                ProcessView(view, tagTypes);
+            {
+                (IList<string> Codes, IList<string> Parts) filter = (null, null);
+                var baseName = GetBaseViewName(view);
+                if (viewFilters == null || !viewFilters.TryGetValue(baseName, out filter))
+                    viewFilters?.TryGetValue(DefaultSectionFilterKey, out filter);
+
+                // null = 필터 없음(전체 허용), 빈 배열([])이면 아무것도 매칭 안 됨(전체 차단)
+                var codeSet = filter.Codes != null ? new HashSet<string>(filter.Codes, StringComparer.OrdinalIgnoreCase) : null;
+                var partSet = filter.Parts != null ? new HashSet<string>(filter.Parts, StringComparer.OrdinalIgnoreCase) : null;
+
+                ProcessView(view, tagTypes, codeSet, partSet);
+            }
 
             tx.Commit();
         }
 
+        // 뷰에 배치된 대상 카테고리 요소들 중 DH_ElementCode/DH_Part 값의 고유 목록 조회 (필터 UI 구성용)
+        public List<string> GetAvailableElementCodes() => GetDistinctParameterValues(DhElementCodeParameterName);
+        public List<string> GetAvailableParts() => GetDistinctParameterValues(DhPartParameterName);
+
+        private List<string> GetDistinctParameterValues(string parameterName)
+        {
+            var elemCats = TagCategoryMap.Values.Distinct().ToList();
+            var views = GetAllPumpingStationViews();
+            var values = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var view in views)
+            {
+                foreach (var elemCat in elemCats)
+                {
+                    IList<Element> elems;
+                    try
+                    {
+                        elems = new FilteredElementCollector(_doc, view.Id)
+                            .OfCategory(elemCat)
+                            .WhereElementIsNotElementType()
+                            .ToElements();
+                    }
+                    catch { continue; }
+
+                    foreach (var elem in elems)
+                    {
+                        var val = elem.LookupParameter(parameterName)?.AsString();
+                        if (!string.IsNullOrWhiteSpace(val))
+                            values.Add(val);
+                    }
+                }
+            }
+
+            return values.OrderBy(v => v, StringComparer.OrdinalIgnoreCase).ToList();
+        }
+
         // 현재 활성 뷰에 선택한 태그 패밀리만 배치 (targetElementIds가 있으면 해당 요소만 대상)
-        public void ApplyToCurrentView(IList<string> selectedFamilyIds, IList<string> targetElementIds = null)
+        public void ApplyToCurrentView(IList<string> selectedFamilyIds, IList<string> targetElementIds = null, IList<string> allowedElementCodes = null, IList<string> allowedParts = null)
         {
             var view = _doc.ActiveView;
             if (view == null) return;
@@ -96,13 +151,16 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
                 if (targetIds.Count == 0) return;
             }
 
+            var codeSet = allowedElementCodes != null ? new HashSet<string>(allowedElementCodes, StringComparer.OrdinalIgnoreCase) : null;
+            var partSet = allowedParts != null ? new HashSet<string>(allowedParts, StringComparer.OrdinalIgnoreCase) : null;
+
             using var tx = new Transaction(_doc, "DH 태그 배치");
             tx.Start();
 
             RemoveExistingTags(new List<View> { view }, allTagTypes);
 
             foreach (var tagType in tagTypes)
-                TryPlaceTag(view, tagType, targetIds);
+                TryPlaceTag(view, tagType, targetIds, codeSet, partSet);
 
             tx.Commit();
         }
@@ -146,13 +204,13 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
                 .ToList();
         }
 
-        private void ProcessView(View view, List<FamilySymbol> tagTypes)
+        private void ProcessView(View view, List<FamilySymbol> tagTypes, HashSet<string> allowedCodes = null, HashSet<string> allowedParts = null)
         {
             foreach (var tagType in tagTypes)
-                TryPlaceTag(view, tagType, targetIds: null);
+                TryPlaceTag(view, tagType, targetIds: null, allowedCodes, allowedParts);
         }
 
-        private void TryPlaceTag(View view, FamilySymbol tagType, HashSet<long> targetIds = null)
+        private void TryPlaceTag(View view, FamilySymbol tagType, HashSet<long> targetIds = null, HashSet<string> allowedCodes = null, HashSet<string> allowedParts = null)
         {
             if (tagType.Category?.Id == null) return;
             if (!TagCategoryMap.TryGetValue(tagType.Category.Id, out var elemCat)) return;
@@ -170,6 +228,22 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
 
                 if (targetIds != null)
                     elems = elems.Where(e => targetIds.Contains(e.Id.Value)).ToList();
+
+                // DH_ElementCode 또는 DH_Part 둘 중 하나라도 허용 목록에 매칭되면 대상 (OR)
+                // 두 파라미터 자체가 없는 요소(예: 레벨)는 필터 대상이 아니므로 항상 통과
+                if (allowedCodes != null || allowedParts != null)
+                {
+                    elems = elems.Where(e =>
+                    {
+                        var codeParam = e.LookupParameter(DhElementCodeParameterName);
+                        var partParam = e.LookupParameter(DhPartParameterName);
+                        if (codeParam == null && partParam == null) return true;
+
+                        var codeMatch = allowedCodes != null && codeParam != null && allowedCodes.Contains(codeParam.AsString() ?? string.Empty);
+                        var partMatch = allowedParts != null && partParam != null && allowedParts.Contains(partParam.AsString() ?? string.Empty);
+                        return codeMatch || partMatch;
+                    }).ToList();
+                }
             }
             catch { return; }
 
@@ -230,6 +304,15 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
                 .Cast<View>()
                 .Where(v => !v.IsTemplate && IsPumpingStationView(v))
                 .ToList();
+
+        // "상부슬래브_시트" → "상부슬래브", "A_시트" → "A" 처럼 뷰 필터 키로 쓰는 기본 이름 추출
+        private string GetBaseViewName(View view)
+        {
+            var name = view.Name;
+            return name.EndsWith("_시트", StringComparison.OrdinalIgnoreCase)
+                ? name[..^"_시트".Length]
+                : name;
+        }
 
         private bool IsPumpingStationView(View view)
         {

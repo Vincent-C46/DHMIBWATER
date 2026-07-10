@@ -251,14 +251,29 @@ namespace DHBIMWATER.Application.UseCases.Sheets
             _gateway.ApplyPumpingStationAnnotations();
         }
 
-        public void ApplyDHTags(IList<string> selectedFamilyIds)
+        public void ApplyDHTags(IList<string> selectedFamilyIds, IDictionary<string, (IList<string> Codes, IList<string> Parts)> viewFilters = null)
         {
-            _gateway.ApplyDHTags(selectedFamilyIds);
+            _gateway.ApplyDHTags(selectedFamilyIds, viewFilters);
         }
 
         public IList<TagFamilyDto> GetAvailableTagFamilies()
         {
             return _gateway.GetAvailableTagFamilies();
+        }
+
+        public IList<string> GetAvailableDHElementCodes()
+        {
+            return _gateway.GetAvailableDHElementCodes();
+        }
+
+        public IList<string> GetAvailableDHParts()
+        {
+            return _gateway.GetAvailableDHParts();
+        }
+
+        public void ApplyViewBorderAndTitle(string viewId, string titleText)
+        {
+            _gateway.ApplyViewBorderAndTitle(viewId, titleText);
         }
     }
 }

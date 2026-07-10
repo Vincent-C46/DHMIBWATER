@@ -11,8 +11,8 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
         private readonly Document    _doc;
         private readonly UIDocument  _uidoc;
 
-        private const double SegmentOffset = 2.5;   // ft
-        private const double OverallOffset  = 5.0;   // ft
+        private const double SegmentOffset = 5.25;   // ft
+        private const double OverallOffset = 6.89;   // ft
 
         public PumpingStationDimensionService(Document doc, UIDocument uidoc)
         {
@@ -216,79 +216,79 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
         private static readonly (string Type, string Section, string Top, string Bottom, string Left, string Right)[] CodeTable =
         {
             // ── TYPE1_좌안부 ──────────────────────────────────────────────────
-            ("TYPE1_좌안부", "상부슬래브",    "W1-1,W1-2W,W1-3,W2,G1",  "W1,W2,W4,G1",               "W1,W1-1,W1-2,W1-3,W3",  "W1,W1-3,W2,W5,"            ),
-            ("TYPE1_좌안부", "기초(유입부)",  "W1-1,W1-2W,W1-3,W2,F2",  "W1,W2,AVW",                 "W1,W1-1,W3",            "W1,W1-3,W5,AVW"            ),
-            ("TYPE1_좌안부", "A",             "S1,W2,W4,G1",            "W2,F1,F2,AVW",              "S1,W2,MS1,F1,F2",       "S1,G1,F1,F2"               ),
-            ("TYPE1_좌안부", "B",             "S1,G1,F1,F2",            "F1,F2,W3-1",                "S1,MS1,F1,F2",          "S1,F1,F2,G1"               ),
-            ("TYPE1_좌안부", "C",             "S1,W1-2,W1-3,W2",        "F1,F2,W1-2,W1-3,W2",        "S1,F1,F2,W1-3,W2",      "S1,F1,F2,W1-2,W1-3"        ),
-            ("TYPE1_좌안부", "D",             "S1,W1-2,W2,G1,MS1",      "F1,F2,W1-2,W2,MS1",         "S1,F1,F2,W2,MS1",       "S1,F1,F2,G1,MS1"           ),
-            ("TYPE1_좌안부", "E",             "F1,F2,W1-2,W1-3,W2",     "F2,W5,W1-2,W2",             "F2,W1-1,W1-2,W1-3",     "F2,W1-3,W2,W5"             ),
-            ("TYPE1_좌안부", "F",             "S1,W1,W1-1,W3",          "F1,F2,W1,W1-1,W3",          "S1,W1-1,F1,F2",         "S1,W1,F1,F2"               ),
-            ("TYPE1_좌안부", "G",             "S1,W1,W1-1,W3,G1",       "F1,F2,W1,W1-1,W3",          "S1,G1,W1-1,F1,F2",      "S1,G1,W1,F1,F2"            ),
-            ("TYPE1_좌안부", "H",             "S1,W1,W1-3,W3,W5,G1",    "W1,W1-3,F1,F2",             "S1,W1-3,F1,F2",         "S1,W1,W3,F1,F2,G1"         ),
-            ("TYPE1_좌안부", "I",             "S1,W1,W1-3,W3,W5",       "S1,W1,W1-3,W3,W5",          "S1,W1-3,F1,F2",         "S1,W1,F1,F2"               ),
-            ("TYPE1_좌안부", "J",             "S1,W1,W1-3,W3,W5",       "F1,F1,W1,W1-3,W3,W5,AVW",   "S1,W1-3,F1,F2,MS1",     "S1,W1,AVW,F1,F2,MS1"       ),
-            ("TYPE1_좌안부", "K",             "S1,W1,W1-3,W5",          "F1,F2,W1,W1-3,W3-1,W5,AVW", "S1,F1,F2,W1-3",         "S1,F1,F2,W1,MS1"           ),
+            ("TYPE1_좌안부", "상부슬래브",    "W1-1,W1-2,W1-3,W2,G1",     "W1,W2,W4,G1,SO1,SO2",         "W1,W1-1,W1-2,W1-3,W3",    "W1,W1-3,W2,W5,WO1"         ),
+            ("TYPE1_좌안부", "기초(유입부)",  "W1-1,W1-2,W1-3,W2,F2,WO3", "W1,W2,AVW,WO2",               "W1,W1-1,W3",              "W1,W1-3,W5,AVW"            ),
+            ("TYPE1_좌안부", "A",             "S1,W2,W4,G1,S01,S02",      "W2,F1,F2,AVW",                "S1,W2,MS1,F1,F2,WO1",     "S1,G1,F1,F2"               ),
+            ("TYPE1_좌안부", "B",             "S1,G1,F1,F2,SO1",          "F1,F2,W3-1,WO2",              "S1,MS1,F1,F2",            "S1,F1,F2,G1"               ),
+            ("TYPE1_좌안부", "C",             "S1,W1-2,W1-3,W2",          "F1,F2,W1-2,W1-3,W2",          "S1,F1,F2,W1-3,W2",        "S1,F1,F2,W1-2,W1-3"        ),
+            ("TYPE1_좌안부", "D",             "S1,W1-2,W2,G1,MS1",        "F1,F2,W1-2,W2,MS1",           "S1,F1,F2,W2,MS1",         "S1,F1,F2,G1,MS1"           ),
+            ("TYPE1_좌안부", "E",             "F1,F2,W1-2,W1-3,W2,WO3",   "F2,W5,W1-2,W2,WO3",           "F2,W1-1,W1-2,W1-3",       "F2,W1-3,W2,W5"             ),
+            ("TYPE1_좌안부", "F",             "S1,W1,W1-1,W3",            "F1,F2,W1,W1-1,W3",            "S1,W1-1,F1,F2",           "S1,W1,F1,F2"               ),
+            ("TYPE1_좌안부", "G",             "S1,W1,W1-1,W3,G1",         "F1,F2,W1,W1-1,W3",            "S1,G1,W1-1,F1,F2,SO1",    "S1,G1,W1,F1,F2,SO1"        ),
+            ("TYPE1_좌안부", "H",             "S1,W1,W1-3,W3,W5,G1",      "W1,W1-3,F1,F2,WO3",           "S1,W1-3,F1,F2,WO3",       "S1,W1,W3,F1,F2,G1,WO2"     ),
+            ("TYPE1_좌안부", "I",             "S1,W1,W1-3,W3,W5,SO2",     "S1,W1,W1-3,W3,W5",            "S1,W1-3,F1,F2,WO3",       "S1,W1,F1,F2"               ),
+            ("TYPE1_좌안부", "J",             "S1,W1,W1-3,W3,W5,WO1",     "F1,F1,W1,W1-3,W3,W5,AVW",     "S1,W1-3,F1,F2,MS1",       "S1,W1,AVW,F1,F2,MS1"       ),
+            ("TYPE1_좌안부", "K",             "S1,W1,W1-3,W5,WO1",        "F1,F2,W1,W1-3,W3-1,W5,AVW",   "S1,F1,F2,W1-3",           "S1,F1,F2,W1,MS1"           ),
 
             // ── TYPE1_우안부 ──────────────────────────────────────────────────
-            ("TYPE1_우안부", "상부슬래브",    "S1,W1,W2,W4,G1",         "W1-2,W1-3,W2",              "S1,W1,W1-1,W3 ",        "S1,W1,W1-3,W3,W5"          ),
-            ("TYPE1_우안부", "기초(유입부)",  "F1,F2,W1,W2,AVW",        "F2,F1,W1-1,W1-2,W1-3,W2",   "F1,F2,W1,W1-1,W3",      "F1,F2,W1,W1-3,W3,W5,AVW"   ),
-            ("TYPE1_우안부", "A",             "S1,G1,W2,W4,MS1",        "F1,F2,W2,W3,AVW",           "S1,F1,F2",              "S1,W2,F1,F2,MS1"           ),
-            ("TYPE1_우안부", "B",             "S1,G1,W2,W4,MS1",        "F1,F2,W2,W3,AVW",           "S1,F1,F2",              "S1,W2,F1,F2MS1"            ),
-            ("TYPE1_우안부", "C",             "S1,W1-2,W2",             "F1,F2,W1-2,W2",             "W1-2,S1,F1,F2",         "W2,S1,F1,F2"               ),
-            ("TYPE1_우안부", "D",             "S1,W1-2,W2,W5,G1,MS1",   "F1,F2,W1-2,B5",             "S1,F1,F2,W1-2,G1,W5",   "S1,F1,F2,W2,W5,MS1"        ),
-            ("TYPE1_우안부", "E",             "W5,W1-2,W2,W4",          "W1-2,W1-3,W2",              "W1-1,W1-2,W1-3,W5",     "W2,W1-3,W5"                ),
-            ("TYPE1_우안부", "F",             "S1,W1,W1-1,W3",          "F1,F2,W1,W1-1,W3",          "S1,W1,F1,F2",           "S1,W1-1,F1,F2"             ),
-            ("TYPE1_우안부", "G",             "S1,W1,W1-1,W3",          "F1,F2,W1,W1-1,W3",          "S1,G1,W1,F1,F2",        "S1,G1,W1-1,F1,F2"          ),
-            ("TYPE1_우안부", "H",             "S1,W1,W1-3,W3,W5,G1",    "W1,W1-3,F1,F2",             "S1,W1,F1,F2,G1",        "S1,W1-3,F1,F2,G1"          ),
-            ("TYPE1_우안부", "I",             "S1,W1-3,W3,W5",          "F1,F2,W1-3,W3,W5",          "S1,F1,F2,W1",           "S1,F1,F2,W1-3"             ),
-            ("TYPE1_우안부", "J",             "S1,W1,W1-3,W3,W5",       "F1,F2,W1,W1-3,W3,W5,AVW",   "S1,F1,F2,MS1,W1",       "S1,F1,F2,W1-3"             ),
-            ("TYPE1_우안부", "K",             "S1,W1,W1-3,W5",          "F1,F2,W1,W1-3,W5,W3-1,AVW", "S1,F1,F2,MS1,W1",       "S1,F1,F2,W1-3"             ),
+            ("TYPE1_우안부", "상부슬래브",    "S1,W2,W4,G1,SO1,SO2",      "W1-2,W1-3,W2",                "S1,W1,W1-1,W3 ",          "S1,W1,W1-3,W3,W5,WO1"      ),
+            ("TYPE1_우안부", "기초(유입부)",  "F1,F2,W1,W2,AVW,WO2",      "F2,F1,W1-1,W1-2,W1-3,W2,WO3", "F1,F2,W1,W1-1,W3",        "F1,F2,W1,W1-3,W3,W5,AVW"   ),
+            ("TYPE1_우안부", "A",             "S1,G1,W2,W4,MS1,SO1,SO2",  "F1,F2,W2,W3,AVW",             "S1,F1,F2",                "S1,W2,F1,F2,MS1,WO1"       ),
+            ("TYPE1_우안부", "B",             "S1,G1,W2,W4,MS1,SO1",      "F1,F2,W2,W3,AVW,WO2",         "S1,F1,F2",                "W2,W3,W3-1,F1,F2,WO2"      ),
+            ("TYPE1_우안부", "C",             "S1,W1-2,W2",               "F1,F2,W1-2,W2",               "W1-2,S1,F1,F2",           "W2,S1,F1,F2"               ),
+            ("TYPE1_우안부", "D",             "S1,W1-2,W2,W5,G1,MS1",     "F1,F2,W1-2,B5,WO3",           "S1,F1,F2,W1-2,G1,W5,WO3", "S1,F1,F2,W2,W5,MS1"        ),
+            ("TYPE1_우안부", "E",             "W5,W1-2,W2,W4,WO3",        "W1-2,W1-3,W2",                "W1-1,W1-2,W1-3,W5",       "W2,W1-3,W5"                ),
+            ("TYPE1_우안부", "F",             "S1,W1,W1-1,W3",            "F1,F2,W1,W1-1,W3",            "S1,W1,F1,F2",             "S1,W1-1,F1,F2"             ),
+            ("TYPE1_우안부", "G",             "S1,W1,W1-1,W3",            "F1,F2,W1,W1-1,W3",            "S1,G1,W1,F1,F2,SO1",      "S1,G1,W1-1,F1,F2,SO1"      ),
+            ("TYPE1_우안부", "H",             "S1,W1,W1-3,W3,W5,G1",      "W1,W1-3,F1,F2",               "S1,W1,F1,F2,G1,WO2",      "S1,W1-3,F1,F2,G1,WO3"      ),
+            ("TYPE1_우안부", "I",             "S1,W1-3,W3,W5,SO3",        "F1,F2,W1-3,W3,W5",            "S1,F1,F2,W1",             "S1,F1,F2,W1-3,WO3"         ),
+            ("TYPE1_우안부", "J",             "S1,W1,W1-3,W3,W5,WO1",     "F1,F2,W1,W1-3,W3,W5,AVW",     "S1,F1,F2,MS1,W1",         "S1  ,F1,F2,W1-3"           ),
+            ("TYPE1_우안부", "K",             "S1,W1,W1-3,W5,WO1",        "F1,F2,W1,W1-3,W5,W3-1,AVW",   "S1,F1,F2,MS1,W1",         "S1,F1,F2,W1-3"             ),
 
             // ── TYPE1_측면부 ──────────────────────────────────────────────────
-            ("TYPE1_측면부", "상부슬래브",    "S1,W1,W2,W4,G1",         "S1,W1,W2,W4,G1",            "S1,W1,W3",              "S1,W1,W2,W3"               ),
-            ("TYPE1_측면부", "기초(유입부)",  "F1,F2,W1,W2,AVW",        "F1,F2,W1,W2,AVW",           "F1,F2,W1,W3",           "F1,F2,W1,W3-1,AVW"         ),
-            ("TYPE1_측면부", "A",             "S1,G1,W2,W4,MS1",        "F1,F2,W2,AVW",              "S1,F1,F2,G1",           "S1,F1,F2,MS1,AVW"          ),
-            ("TYPE1_측면부", "B",             "S1,G1,W2,W4",            "F1,F2,W2",                  "S1,F1,F2,",             "S1,F1,F2,MS1"              ),
-            ("TYPE1_측면부", "C",             "",                       "",                          "",                      ""                          ),
-            ("TYPE1_측면부", "D",             "",                       "",                          "",                      ""                          ),
-            ("TYPE1_측면부", "E",             "",                       "",                          "",                      ""                          ),
-            ("TYPE1_측면부", "F",             "S1,W1,W3",               "F1,F2,W1,W3",               "S1,F1,F2,W1",           "S1,F1,F2,W1"               ),
-            ("TYPE1_측면부", "G",             "S1,W1,W3,G1",            "F1,F2,W1,W3",               "S1,F1,F2,W1,G1",        "S1,F1,F2,W1,G1"            ),
-            ("TYPE1_측면부", "H",             "S1,W1,W3",               "F1,F2,W1",                  "S1,F1,F2,W1,W3",        "S1,F1,F2,W1,W3"            ),
-            ("TYPE1_측면부", "I",             "S1,W1,W3",               "F1,F2,W1,W3",               "S1,F1,F2,W1",           "S1,F1,F2,W1"               ),
-            ("TYPE1_측면부", "J",             "S1,W1,W3,",              "F1,F2,W1,W3,AVW",           "S1,F1,F2,W1,MS1",       "S1,F1,F2,W1,MS1"           ),
-            ("TYPE1_측면부", "K",             "S1,W1",                  "F1,F2,W1,W3-1,AVW",         "S1,F1,F2,MS1",          "S1,F1,F2,MS1"              ),
+            ("TYPE1_측면부", "상부슬래브",    "S1,W1,W2,W4,G1,SO1,SO2",   "S1,W1,W2,W4,G1,SO1,SO2",      "S1,W1,W3",                "S1,W1,W2,W3,WO1"           ),
+            ("TYPE1_측면부", "기초(유입부)",  "F1,F2,W1,W2,AVW,WO2",      "F1,F2,W1,W2,AVW,WO2",         "F1,F2,W1,W3",             "F1,F2,W1,W3-1,AVW"         ),
+            ("TYPE1_측면부", "A",             "S1,G1,W2,W4,MS1,SO1,SO2",  "F1,F2,W2,AVW",                "S1,F1,F2,G1",             "S1,F1,F2,MS1,AVW,WO1"      ),
+            ("TYPE1_측면부", "B",             "S1,G1,W2,W4,SO1",          "F1,F2,W2,WO2",                "S1,F1,F2,",               "S1,F1,F2,MS1"              ),
+            ("TYPE1_측면부", "C",             "S1,W1,W3",                 "F1,F2,W1,W3",                 "S1,F1,F2,W1",             "S1,F1,F2,W1"               ),
+            ("TYPE1_측면부", "D",             "S1,W1,W3,G1",              "F1,F2,W1,W3",                 "S1,F1,F2,W1,G1,SO1",      "S1,F1,F2,W1,G1,SO1"        ),
+            ("TYPE1_측면부", "E",             "S1,W1,W3",                 "F1,F2,W1",                    "S1,F1,F2,W1,W3,WO2",      "S1,F1,F2,W1,W3,WO2"        ),
+            ("TYPE1_측면부", "F",             "S1,W1,W3,SO2",             "F1,F2,W1,W3",                 "S1,F1,F2,W1",             "S1,F1,F2,W1"               ),
+            ("TYPE1_측면부", "G",             "S1,W1,W3,WO1",             "F1,F2,W1,W3,AVW",             "S1,F1,F2,W1,MS1",         "S1,F1,F2,W1,MS"            ),
+            ("TYPE1_측면부", "H",             "S1,W1,WO1",                "F1,F2,W1,W3-1,AVW",           "S1,F1,F2,MS1",            "S1,F1,F2,MS1"              ),
+            ("TYPE1_측면부", "I",             "",                         "",                            "",                        ""                          ),             
+            ("TYPE1_측면부", "J",             "",                         "",                            "",                        ""                          ),
+            ("TYPE1_측면부", "K",             "",                         "",                            "",                        ""                          ),
 
             // ── TYPE2_측면부 ──────────────────────────────────────────────────
-            ("TYPE2_측면부", "상부슬래브",    "",                       "",                          "",                      ""                          ),
-            ("TYPE2_측면부", "기초(유입부)",  "",                       "",                          "",                      ""                          ),
-            ("TYPE2_측면부", "A",             "",                       "",                          "",                      ""                          ),
-            ("TYPE2_측면부", "B",             "",                       "",                          "",                      ""                          ),
-            ("TYPE2_측면부", "C",             "",                       "",                          "",                      ""                          ),
-            ("TYPE2_측면부", "D",             "",                       "",                          "",                      ""                          ),
-            ("TYPE2_측면부", "E",             "",                       "",                          "",                      ""                          ),
-            ("TYPE2_측면부", "F",             "",                       "",                          "",                      ""                          ),
-            ("TYPE2_측면부", "G",             "",                       "",                          "",                      ""                          ),
-            ("TYPE2_측면부", "H",             "",                       "",                          "",                      ""                          ),
-            ("TYPE2_측면부", "I",             "",                       "",                          "",                      ""                          ),
-            ("TYPE2_측면부", "J",             "",                       "",                          "",                      ""                          ),
-            ("TYPE2_측면부", "K",             "",                       "",                          "",                      ""                          ),
+            ("TYPE2_측면부", "상부슬래브",    "S1,G1,W2,W4,SO1,SO2",      "S1,G1,W2,W4,SO1",             "S1,W1,W3",                "S1,W1-1,W3,WO1"            ),
+            ("TYPE2_측면부", "기초(유입부)",  "F1,F2,W1,W4-1,WO2",        "F1,F2,W1,W4-1,WO2",           "F1,F2,W1,W3,",            "F1,F2,W1,W3"               ),
+            ("TYPE2_측면부", "A",             "S1,G1,W2,W4",              "F1,F2,W4-1,W2,MS1",           "S1,F1,F2,G1",             "S1,G1,W2,W4-1,MS1,WO1"     ),
+            ("TYPE2_측면부", "B",             "S1,W2,W4,G1,SO1",          "F1,F2,W2,W4-1,MS1,WO1",       "S1,F1,F2,G1",             "S1,F1,F2,G1,W2,MS1,WO1"    ),
+            ("TYPE2_측면부", "C",             "S1,W1,W3",                 "F1,F2,W1,W3",                 "S1,F1,F2,W1",             "S1,F1,F2,W1"               ),
+            ("TYPE2_측면부", "D",             "S1,W1,W3,SO1",             "F1,F2,W1,W3",                 "S1,W1,F1,F2,G1",          "S1,W1,F1,F2,G1"            ),
+            ("TYPE2_측면부", "E",             "S1,W1,W3",                 "F1,F2,W1,WO2",                "S1,F1,F2,W1,W3,WO1",      "S1,F1,F2,W1,W3,WO1"        ),
+            ("TYPE2_측면부", "F",             "S1,SO2,W1,W3",             "F1,F2,W1,W3",                 "S1,F1,F2,W1",             "S1,F1,F2,W1"               ),
+            ("TYPE2_측면부", "G",             "S1,W1,W3,SO2",             "F1,F2,W1,W3",                 "S1,F1,F2,W1,W4-1,WO1",    "S1,F1,F2,W1,W4-1,WO1"      ),
+            ("TYPE2_측면부", "H",             "S1,W1-1,WO1",              "MS1,W1-1,WO1",                "S1,MS1,W1-1,WO1",         "S1,MS1,W1-1,WO1"           ),
+            ("TYPE2_측면부", "I",             "",                         "",                            "",                        ""                          ),  
+            ("TYPE2_측면부", "J",             "",                         "",                            "",                        ""                          ),
+            ("TYPE2_측면부", "K",             "",                         "",                            "",                        ""                          ),
 
             // ── TYPE3_측면부 ──────────────────────────────────────────────────
-            ("TYPE3_측면부", "상부슬래브",    "",                       "",                          "",                      ""                          ),
-            ("TYPE3_측면부", "기초(유입부)",  "",                       "",                          "",                      ""                          ),
-            ("TYPE3_측면부", "A",             "",                       "",                          "",                      ""                          ),
-            ("TYPE3_측면부", "B",             "",                       "",                          "",                      ""                          ),
-            ("TYPE3_측면부", "C",             "",                       "",                          "",                      ""                          ),
-            ("TYPE3_측면부", "D",             "",                       "",                          "",                      ""                          ),
-            ("TYPE3_측면부", "E",             "",                       "",                          "",                      ""                          ),
-            ("TYPE3_측면부", "F",             "",                       "",                          "",                      ""                          ),
-            ("TYPE3_측면부", "G",             "",                       "",                          "",                      ""                          ),
-            ("TYPE3_측면부", "H",             "",                       "",                          "",                      ""                          ),
-            ("TYPE3_측면부", "I",             "",                       "",                          "",                      ""                          ),
-            ("TYPE3_측면부", "J",             "",                       "",                          "",                      ""                          ),
-            ("TYPE3_측면부", "K",             "",                       "",                          "",                      ""                          ),
+            ("TYPE3_측면부", "상부슬래브",    "S1,G1,W1,W2,W4,SO1,SO2",   "S1,W1,W2,W4,G1,SO1,SO2",      "S1,W1,W3",                "S1,W1,W2,W3,WO1"           ),
+            ("TYPE3_측면부", "기초(유입부)",  "F1,F2,W2,W4-1,WO2",        "F1,F2,W2,W4-1,WO2",           "F1,F2,W1,W3",             "F1,F2,W1,W2,W3"            ),
+            ("TYPE3_측면부", "A",             "S1,G1,SO1,SO2,W2,W4",      "F1,F2,W2,W4-1",               "S1,F1,F2,G1",             "S1,F1,F2,MS1,WO1"          ),
+            ("TYPE3_측면부", "B",             "S1,G1,W2,W4,MS1,SO1",      "F1,F2,W2,W4-1,WO2",           "S1,G1,F1,F2",             "S1,G1,F1,F2,W2,MS1"        ),
+            ("TYPE3_측면부", "C",             "S1,W1,W3",                 "F1,F2,W1,W3",                 "S1,W1,F1,F2",             "S1,W1,F1,F2"               ),
+            ("TYPE3_측면부", "D",             "S1,W1,W3,SO1",             "F1,F2,W1,W3",                 "S1,G1,W1,F1,F2",          "S1,G1,W1,F1,F2"            ),
+            ("TYPE3_측면부", "E",             "S1,W1,W3",                 "F1,F2,W1,W3",                 "S1,F1,F2,W1,W3,WO2",      "S1,F1,F2,W1,W3,WO2"        ),
+            ("TYPE3_측면부", "F",             "S1,SO2,W1,W3",             "F1,F2,W1,W3",                 "S1,F1,F2,W1",             "S1,F1,F2,W1"               ),
+            ("TYPE3_측면부", "G",             "S1,W1,W3,WO1",             "F1,F2,W1,W3",                 "S1,F1,F2,W1",             "S1,F1,F2,W1"               ),
+            ("TYPE3_측면부", "H",             "S1,W1,WO1,MS1",            "F1,F2,W1",                    "S1,F1,F2,MS1",            "S1,F1,F2,MS1"              ),
+            ("TYPE3_측면부", "I",             "",                         "",                            "",                        ""                          ),
+            ("TYPE3_측면부", "J",             "",                         "",                            "",                        ""                          ),
+            ("TYPE3_측면부", "K",             "",                         "",                            "",                        ""                          ),
         };
 
         private static readonly Dictionary<string, ViewDimensionPreset> Presets;
@@ -429,9 +429,60 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
             var minRC = new List<FaceRef>(); var maxRC = new List<FaceRef>();
             var minUC = new List<FaceRef>(); var maxUC = new List<FaceRef>();
 
+            var solids = EnumerateSolids(geo).ToList();
+
+            if (solids.Count > 0)
+            {
+                var code = e.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty;
+                var eid  = e.Id.Value;
+                CollectAlignedFaceRefs(solids, right, up, elemMinR, elemMaxR, elemMinU, elemMaxU,
+                    dirTol, areaTol, bboxTol, code, eid, minRC, maxRC, minUC, maxUC);
+            }
+
+            // 자체 지오메트리가 없거나(순수 Void), 있어도 유효한 축을 하나도 못 찾았으면
+            // 이 요소가 실제로 뚫고 있는 호스트를 찾아 그 면(터널 벽면/구멍 edge)을 대신 사용
+            if (minRC.Count == 0 && maxRC.Count == 0 && minUC.Count == 0 && maxUC.Count == 0)
+            {
+                CollectHoleBoundaryRefs(view, e, right, up, elemMinR, elemMaxR, elemMinU, elemMaxU,
+                    dirTol, bboxTol, minRC, maxRC, minUC, maxUC);
+            }
+
+            minRight = minRC.OrderByDescending(x => x.Area).ThenBy(x => x.StableKey).FirstOrDefault();
+            maxRight = maxRC.OrderByDescending(x => x.Area).ThenBy(x => x.StableKey).FirstOrDefault();
+            minUp    = minUC.OrderByDescending(x => x.Area).ThenBy(x => x.StableKey).FirstOrDefault();
+            maxUp    = maxUC.OrderByDescending(x => x.Area).ThenBy(x => x.StableKey).FirstOrDefault();
+        }
+
+        // FamilyInstance는 get_Geometry()가 최상위에서 GeometryInstance(심볼 지오메트리 래퍼)를 반환하므로
+        // 그 안의 실제 Solid까지 재귀적으로 풀어서 꺼낸다 (호스트 객체는 바로 Solid가 나오므로 영향 없음)
+        private static IEnumerable<Solid> EnumerateSolids(GeometryElement geo)
+        {
             foreach (var obj in geo)
             {
-                if (obj is not Solid solid || solid.Faces.IsEmpty) continue;
+                switch (obj)
+                {
+                    case Solid solid when !solid.Faces.IsEmpty:
+                        yield return solid;
+                        break;
+                    case GeometryInstance gi:
+                        foreach (var s in EnumerateSolids(gi.GetInstanceGeometry()))
+                            yield return s;
+                        break;
+                }
+            }
+        }
+
+        // Void 자체 지오메트리(elemMinR/elemMaxR/elemMinU/elemMaxU 위치)와 일치하는 평면을
+        // 대상 Solid 목록에서 찾아 face ref로 수집한다. 사각형 개구부를 절단하면 구멍의 "터널 벽면"이
+        // 캡 면과 별개인 독립 PlanarFace로 생기므로, 호스트 Solid에도 그대로 재사용 가능하다.
+        private void CollectAlignedFaceRefs(
+            IEnumerable<Solid> solids, XYZ right, XYZ up,
+            double elemMinR, double elemMaxR, double elemMinU, double elemMaxU,
+            double dirTol, double areaTol, double bboxTol, string code, long eid,
+            List<FaceRef> minRC, List<FaceRef> maxRC, List<FaceRef> minUC, List<FaceRef> maxUC)
+        {
+            foreach (var solid in solids)
+            {
                 foreach (Face f in solid.Faces)
                 {
                     if (f is not PlanarFace pf || pf.Reference == null || pf.Area < areaTol) continue;
@@ -446,8 +497,6 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
                     var pr  = pt.DotProduct(right);
                     var pu  = pt.DotProduct(up);
                     var key = pf.Reference.ConvertToStableRepresentation(_doc);
-                    var code = e.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty;
-                    var eid  = e.Id.Value;
 
                     if (alignedRight)
                     {
@@ -461,11 +510,98 @@ namespace DHBIMWATER.Infrastructure.Services.Revit.Sheets
                     }
                 }
             }
+        }
 
-            minRight = minRC.OrderByDescending(x => x.Area).ThenBy(x => x.StableKey).FirstOrDefault();
-            maxRight = maxRC.OrderByDescending(x => x.Area).ThenBy(x => x.StableKey).FirstOrDefault();
-            minUp    = minUC.OrderByDescending(x => x.Area).ThenBy(x => x.StableKey).FirstOrDefault();
-            maxUp    = maxUC.OrderByDescending(x => x.Area).ThenBy(x => x.StableKey).FirstOrDefault();
+        // Void 요소가 실제로 뚫고 있는 호스트를 찾아 그 지오메트리에서 face ref를 대신 수집한다.
+        // 1차: 구멍의 터널 벽면(독립 PlanarFace)을 직접 매칭 — 사각형 개구부의 일반적인 경우
+        // 2차: 그래도 못 찾으면 캡 면의 내부 edge loop(구멍 테두리)에서 좌표가 일치하는 변을 사용
+        private void CollectHoleBoundaryRefs(
+            View view, Element voidElem, XYZ right, XYZ up,
+            double elemMinR, double elemMaxR, double elemMinU, double elemMaxU,
+            double dirTol, double bboxTol,
+            List<FaceRef> minRC, List<FaceRef> maxRC, List<FaceRef> minUC, List<FaceRef> maxUC)
+        {
+            var host = FindCutHost(voidElem);
+            if (host == null) return;
+
+            var opt = new Options { View = view, ComputeReferences = true };
+            var hostGeo = host.get_Geometry(opt);
+            if (hostGeo == null) return;
+
+            var code = voidElem.LookupParameter("DH_ElementCode")?.AsString() ?? string.Empty;
+            var eid  = voidElem.Id.Value;
+            const double areaTol = 1e-4;
+            var hostSolids = EnumerateSolids(hostGeo).ToList();
+
+            CollectAlignedFaceRefs(hostSolids, right, up, elemMinR, elemMaxR, elemMinU, elemMaxU,
+                dirTol, areaTol, bboxTol, code, eid, minRC, maxRC, minUC, maxUC);
+
+            // 1차에서 한쪽 축(R 또는 U)만 찾았을 수 있으므로, 어느 하나라도 성공했다고 해서
+            // 폴백을 완전히 건너뛰지 않고 항상 시도한다 (누락된 축을 마저 채워준다).
+            foreach (var solid in hostSolids)
+            {
+                foreach (Face f in solid.Faces)
+                {
+                    if (f is not PlanarFace pf || pf.Area < areaTol) continue;
+
+                    var edgeLoops = pf.EdgeLoops;
+                    // 0번은 면의 외곽 루프, 1번부터는 내부 루프(구멍)
+                    for (int li = 1; li < edgeLoops.Size; li++)
+                    {
+                        var loop = edgeLoops.get_Item(li);
+
+                        double loopMinR = double.MaxValue, loopMaxR = double.MinValue;
+                        double loopMinU = double.MaxValue, loopMaxU = double.MinValue;
+                        foreach (Edge edge in loop)
+                        {
+                            var c = edge.AsCurve();
+                            foreach (var pt in new[] { c.GetEndPoint(0), c.GetEndPoint(1) })
+                            {
+                                var r = pt.DotProduct(right); var u = pt.DotProduct(up);
+                                if (r < loopMinR) loopMinR = r; if (r > loopMaxR) loopMaxR = r;
+                                if (u < loopMinU) loopMinU = u; if (u > loopMaxU) loopMaxU = u;
+                            }
+                        }
+
+                        bool bboxMatches =
+                            Math.Abs(loopMinR - elemMinR) <= bboxTol && Math.Abs(loopMaxR - elemMaxR) <= bboxTol &&
+                            Math.Abs(loopMinU - elemMinU) <= bboxTol && Math.Abs(loopMaxU - elemMaxU) <= bboxTol;
+                        if (!bboxMatches) continue;
+
+                        foreach (Edge edge in loop)
+                        {
+                            if (edge.AsCurve() is not Line line || edge.Reference == null) continue;
+                            var mid  = line.Evaluate(0.5, true);
+                            var pr   = mid.DotProduct(right);
+                            var pu   = mid.DotProduct(up);
+                            var dir  = (line.GetEndPoint(1) - line.GetEndPoint(0)).Normalize();
+                            var alongUp    = Math.Abs(Math.Abs(dir.DotProduct(up))    - 1.0) < dirTol; // 좌/우측 변
+                            var alongRight = Math.Abs(Math.Abs(dir.DotProduct(right)) - 1.0) < dirTol; // 상/하측 변
+                            var key = edge.Reference.ConvertToStableRepresentation(_doc);
+
+                            if (alongUp)
+                            {
+                                if (Math.Abs(pr - elemMinR) <= bboxTol) minRC.Add(new FaceRef(edge.Reference, pr, line.Length, key, code, eid));
+                                if (Math.Abs(pr - elemMaxR) <= bboxTol) maxRC.Add(new FaceRef(edge.Reference, pr, line.Length, key, code, eid));
+                            }
+                            if (alongRight)
+                            {
+                                if (Math.Abs(pu - elemMinU) <= bboxTol) minUC.Add(new FaceRef(edge.Reference, pu, line.Length, key, code, eid));
+                                if (Math.Abs(pu - elemMaxU) <= bboxTol) maxUC.Add(new FaceRef(edge.Reference, pu, line.Length, key, code, eid));
+                            }
+                        }
+                        return; // 매칭되는 구멍을 찾았으므로 종료
+                    }
+                }
+            }
+        }
+
+        // RevitOpeningCommandRepo가 NewFamilyInstance(location, symbol, host, level, ...)로 호스트 기반 배치를 하므로,
+        // 이 void가 뚫고 있는 호스트는 InstanceVoidCutUtils(별도 Cut Geometry 관계)가 아니라
+        // FamilyInstance.Host 속성에 바로 들어있다.
+        private static Element FindCutHost(Element voidElem)
+        {
+            return (voidElem as FamilyInstance)?.Host;
         }
 
         // ── ref 정렬 / 병합 ───────────────────────────────────────────────────

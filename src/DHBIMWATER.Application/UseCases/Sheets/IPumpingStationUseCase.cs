@@ -17,8 +17,10 @@ namespace DHBIMWATER.Application.UseCases.Sheets
         void CreateOrUpdateWaterLevels(string hwl, string lwl);
         (string hwl, string lwl) GetWaterLevels();
         void ApplyPumpingStationAnnotations();
-        void ApplyDHTags(IList<string> selectedFamilyIds);
+        void ApplyDHTags(IList<string> selectedFamilyIds, IDictionary<string, (IList<string> Codes, IList<string> Parts)> viewFilters = null);
         IList<TagFamilyDto> GetAvailableTagFamilies();
+        IList<string> GetAvailableDHElementCodes();
+        IList<string> GetAvailableDHParts();
         IList<TitleBlockDto> GetTitleBlocks();
     }
 
