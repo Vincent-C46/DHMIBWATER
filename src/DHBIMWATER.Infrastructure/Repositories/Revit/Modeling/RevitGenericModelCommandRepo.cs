@@ -66,6 +66,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             instance.LookupParameter("DH_Addin")?.Set("DHBIMWATER");
             instance.LookupParameter("DH_Category")?.Set(def.Category);
             instance.LookupParameter("DH_ElementCode")?.Set(def.ElementCode);
+            if (!string.IsNullOrEmpty(def.Class))
+                instance.LookupParameter("DH_Class")?.Set(def.Class);
             instance.LookupParameter("DH_Part")?.Set(def.Part);
             instance.LookupParameter("DH_Zone")?.Set(def.Zone);
 
@@ -76,9 +78,10 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
 
                 switch (value)
                 {
-                    case string s: param.Set(s); break;
-                    case double d: param.Set(UC.MmToFt(d)); break;
-                    case int i:    param.Set(i); break;
+                    case string s:       param.Set(s); break;
+                    case Dimensionless n: param.Set(n.Value); break;
+                    case double d:       param.Set(UC.MmToFt(d)); break;
+                    case int i:          param.Set(i); break;
                     default: break;
                 }
             }
@@ -86,3 +89,4 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
         }
     }
 }
+

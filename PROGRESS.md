@@ -380,6 +380,10 @@
 - 주의: 기존 line 161 "공종 → 규격1 → 규격2" 정렬을 ElementCode 우선으로 되돌리는 변경
 
 ### 기타
+- [x] 배수지 일반 패밀리 배치(단차버림 `L3` / PIT `P1`) 복원 + 설정 CSV 내보내기/가져오기 — 지시서 `docs/09_배수지_일반패밀리배치_지시서.md` 기준 구현 완료 (2026-07-10)
+  - 완료: `SLv` DTO 연결, `Dimensionless` 값 타입, `GenericModelPlacementDefinition.Class`, `RevitGenericModelCommandRepo` 무차원/`DH_Class` 세팅, `ReservoirGeometryCalculator.CalculateGenericModels()`, `CreateReservoirUseCase` 배치 단계, `WaterTankViewModel` CSV Export/Import + XAML 버튼
+  - 검증: `dotnet test tests\DHBIMWATER.UI.Tests\DHBIMWATER.UI.Tests.csproj` 통과, `dotnet build DHBIMWATER.sln /p:DebugType=None /p:DebugSymbols=false` 컴파일 오류 0
+  - 미결: Revit 실행 중 애드인 DLL/PDB 잠금으로 일반 `dotnet build DHBIMWATER.sln`의 복사/PDB 단계는 실패/경고 발생. Revit 종료 후 일반 빌드 및 L3/P1 실제 배치 위치/패밀리 매개변수 육안 확인 필요
 - [ ] 배수지 오프닝 배치 — `ReservoirGeometryCalculator.CalculateOpenings()` 추가 후 UseCase 연결
 - [ ] 배수지 단면뷰 작성 — `ReservoirGeometryCalculator.CalculateSectionViews()` 추가 후 UseCase 연결
 - [ ] 수량산출 결과 검증 로직 보강
@@ -493,3 +497,25 @@
 - **다음 세션 시작점**: 문서 07 §7 구현 순서 1번부터 착수.
   Core에 `DeductionSettings`, `RebarRatioSettings`, `LossRateSettings` 추가 → `ProjectSettings` 확장.
   (`RebarSettings`는 겹이음/정착길이용으로 이미 존재하니 혼동 주의 — 할증률은 신규 `LossRateSettings`)
+
+
+---
+
+## 2026-07-13
+
+### WaterTankViewModel 대형 치수 입력 단위 m 전환
+- [x] `WaterTankViewModel`의 대형 수조/밸브실 치수 기본값을 m 단위로 변경.
+  - 대상: `W`, `L`, `M1`~`M4`, `Wh`, `Lh`, `Hh`, `Ltt`, `H1F`, `Lv`, `Wv`, `Lvt`, `We`, `Wp`, `Hp`.
+  - `Hf`, `Hm`, `TrOff`, `WpThk`, `SpThk`, 단면 두께류는 mm 유지.
+- [x] 내부 `ReservoirGeometryCalculator` 기준은 mm로 유지하고, DTO 생성 직전 m 입력값을 mm로 환산하도록 `BuildCreationRequestDto()` 분리.
+- [x] `H2F`와 `CRT` 계산식을 m 입력 기준으로 보정.
+- [x] WaterTank XAML/CSV 내보내기 단위 표시를 m/mm 기준에 맞게 정리.
+- [x] `WaterTankViewModelTests` 추가: 기본 m 입력값 및 DTO mm 환산 검증.
+
+### B4/L4 바닥 Y축 50mm 돌출 수정
+- [x] 원인 확인: `ReservoirGeometryCalculator.CalculateSlabs()`의 B4/L4 Y 방향 외곽 계산에서 밸브실 외벽두께(`WveThk=300`) 대신 수조부 외벽두께(`WteThk=350`)가 섞여 기본값 기준 50mm 과대 돌출됨.
+- [x] 수정: B4/L4 Y 길이 산정식을 `2 * WveThk + Wv + Lvt` 기준으로 변경.
+- [x] 회귀 테스트 추가: `CalculateSlabs_UsesValveExteriorWallThicknessForB4AndL4YExtent`에서 B4/L4 Y 최소/최대 좌표 검증.
+- 검증:
+  - `dotnet test tests\DHBIMWATER.UI.Tests\DHBIMWATER.UI.Tests.csproj` 통과: 11/11.
+  - `dotnet build DHBIMWATER.sln` 오류 0개. 기존 Revit Addins 복사 잠금 경고 및 기존 참조/nullable 경고는 남음.

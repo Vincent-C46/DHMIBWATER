@@ -19,6 +19,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
         private readonly IWallCommandRepo _wallCmdRepo;
         private readonly IBeamCommandRepo _beamCmdRepo;
         private readonly IColumnCommandRepo _columnCmdRepo;
+        private readonly IGenericModelCommandRepo _genericModelCmdRepo;
         private readonly ISharedParameterRepository _sharedParameterRepo;
         private readonly ClassifyExteriorWallsUseCase _classifyWallsUseCase;
         #endregion
@@ -33,6 +34,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
             IWallCommandRepo wallCmdRepo,
             IBeamCommandRepo beamCmdRepo,
             IColumnCommandRepo columnCmdRepo,
+            IGenericModelCommandRepo genericModelCmdRepo,
             ISharedParameterRepository sharedParameterRepo,
             ClassifyExteriorWallsUseCase classifyWallsUseCase)
         {
@@ -44,6 +46,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
             _wallCmdRepo = wallCmdRepo;
             _beamCmdRepo = beamCmdRepo;
             _columnCmdRepo = columnCmdRepo;
+            _genericModelCmdRepo = genericModelCmdRepo;
             _sharedParameterRepo = sharedParameterRepo;
             _classifyWallsUseCase = classifyWallsUseCase;
         }
@@ -104,6 +107,11 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                         _beamCmdRepo.CreateBeam(beamDef);
                     #endregion
 
+                    #region 6. 일반 패밀리 배치 (단차버림 Con'c, PIT)
+                    foreach (var def in ReservoirGeometryCalculator.CalculateGenericModels(dto))
+                        _genericModelCmdRepo.PlaceInstance(def);
+                    #endregion
+
                     // TODO: 오프닝 배치 (파이프 관통 슬리브 등) — ReservoirGeometryCalculator.CalculateOpenings() 추가 후 구현
                     // TODO: 단면뷰 작성 — ReservoirGeometryCalculator.CalculateSectionViews() 추가 후 구현
 
@@ -152,3 +160,4 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
         #endregion
     }
 }
+
