@@ -78,6 +78,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IExcelExporter, ClosedXmlExcelWriter>();
         services.AddTransient<IElementQuantityRepo, ElementQuantityRepo>();
         services.AddTransient<IManualQuantityRepo, ManualQuantityRepo>();
+        services.AddTransient<IQuantitySettingsRepository, RevitQuantitySettingsRepo>();
         services.AddTransient<IExcelReader, ExcelReader>();
         services.AddTransient<IProjectSettingsRepository, DhcfgRepo>();
         #endregion

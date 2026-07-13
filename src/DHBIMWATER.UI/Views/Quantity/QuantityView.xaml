@@ -128,6 +128,14 @@
                             <TextBlock Text="수정" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
+                    <Button Width="80" Command="{Binding OpenSettingsCommand}"
+                            Padding="14,6" Margin="8,0,0,0" Style="{StaticResource ExportButtonStyle}"
+                            BorderThickness="2" ToolTip="수량산출 설정 (거푸집 / 면적 공제 / 철근비 / 할증률)">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#x2699;" FontSize="16" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="설정" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Grid.Column="1" HorizontalAlignment="Right">

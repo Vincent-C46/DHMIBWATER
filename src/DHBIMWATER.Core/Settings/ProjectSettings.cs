@@ -10,5 +10,8 @@ namespace DHBIMWATER.Core.Settings
         public FormworkSettings Formwork { get; set; } = new();
         public RebarSettings Rebar { get; set; } = new();
         public QuantitySettings Quantity { get; set; } = new();
+        public DeductionSettings Deduction { get; set; } = new();
+        public RebarRatioSettings RebarRatio { get; set; } = new();
+        public LossRateSettings LossRate { get; set; } = new();
     }
 }

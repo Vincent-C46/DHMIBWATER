@@ -16,6 +16,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ClassifyExteriorWallsUseCase>();
         services.AddTransient<CalculateQuantityUseCase>();
         services.AddTransient<ExportQuantityUseCase>();
+        services.AddTransient<SaveQuantitySettingsUseCase>();
 
         return services;
     }

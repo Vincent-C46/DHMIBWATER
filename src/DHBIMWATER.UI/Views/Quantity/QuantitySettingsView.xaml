@@ -1,0 +1,366 @@
+<Window x:Class="DHBIMWATER.UI.Views.Quantity.QuantitySettingsView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:DHBIMWATER.UI.Controls"
+        xmlns:vm="clr-namespace:DHBIMWATER.UI.ViewModels.Quantity"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance vm:QuantitySettingsViewModel, IsDesignTimeCreatable=False}"
+        Title="수량산출 설정"
+        Width="600" Height="680"
+        WindowStartupLocation="CenterScreen"
+        Background="#F4F7F9"
+        WindowStyle="None"
+        AllowsTransparency="False"
+        FontFamily="Segoe UI, Malgun Gothic"
+        ResizeMode="NoResize">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/DHBIMWATER.UI;component/Styles/Generic.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- 탭 패널 공통 DataGrid 스타일 -->
+            <Style x:Key="SettingsGridStyle" TargetType="DataGrid">
+                <Setter Property="AutoGenerateColumns" Value="False"/>
+                <Setter Property="CanUserAddRows" Value="False"/>
+                <Setter Property="CanUserDeleteRows" Value="False"/>
+                <Setter Property="CanUserResizeRows" Value="False"/>
+                <Setter Property="CanUserReorderColumns" Value="False"/>
+                <Setter Property="HeadersVisibility" Value="Column"/>
+                <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+                <Setter Property="HorizontalGridLinesBrush" Value="#EEF1F4"/>
+                <Setter Property="BorderBrush" Value="#E2E8F0"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Background" Value="White"/>
+                <Setter Property="RowBackground" Value="White"/>
+                <Setter Property="SelectionMode" Value="Single"/>
+                <Setter Property="SelectionUnit" Value="Cell"/>
+                <Setter Property="IsReadOnly" Value="False"/>
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="ColumnHeaderHeight" Value="32"/>
+                <Setter Property="RowHeight" Value="34"/>
+            </Style>
+
+            <Style x:Key="SettingsHeaderStyle" TargetType="DataGridColumnHeader">
+                <Setter Property="Background" Value="#F5F6F8"/>
+                <Setter Property="Foreground" Value="#444"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="Padding" Value="8,0"/>
+                <Setter Property="BorderBrush" Value="#D9D9D9"/>
+                <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+            </Style>
+
+            <Style x:Key="CellTextStyle" TargetType="TextBlock">
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="Margin" Value="8,0"/>
+            </Style>
+
+            <Style x:Key="HintTextStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="11"/>
+                <Setter Property="Foreground" Value="#888"/>
+                <Setter Property="TextWrapping" Value="Wrap"/>
+                <Setter Property="Margin" Value="2,10,2,0"/>
+                <Setter Property="LineHeight" Value="18"/>
+            </Style>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="0"
+                      CornerRadius="12"
+                      GlassFrameThickness="0"
+                      ResizeBorderThickness="0"
+                      UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <controls:TitleBar Grid.Row="0"/>
+
+        <TabControl Grid.Row="1"
+                    Style="{StaticResource PrimaryTabControlStyle}"
+                    Margin="16,10,16,0">
+
+            <!-- ═══ 탭 1: 거푸집 ═══ -->
+            <TabItem Header="거푸집">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <DataGrid Grid.Row="0"
+                              ItemsSource="{Binding FormworkRows}"
+                              Style="{StaticResource SettingsGridStyle}"
+                              ColumnHeaderStyle="{StaticResource SettingsHeaderStyle}">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="부재" Width="90" IsReadOnly="True">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Member}" FontWeight="SemiBold"
+                                                   Style="{StaticResource CellTextStyle}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="적용 면" Width="130" IsReadOnly="True">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Face}" Foreground="#777"
+                                                   Style="{StaticResource CellTextStyle}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="거푸집 종류" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox ItemsSource="{Binding Options}"
+                                                  DisplayMemberPath="Display"
+                                                  SelectedValuePath="Value"
+                                                  SelectedValue="{Binding Selected, UpdateSourceTrigger=PropertyChanged}"
+                                                  Width="140" Height="30"
+                                                  HorizontalAlignment="Left"
+                                                  Margin="8,4"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <TextBlock Grid.Row="1" Style="{StaticResource HintTextStyle}"
+                               Text="※ 벽 오프닝 측면·기둥 상단 등 나머지 면은 마구리/옆면 설정을 따릅니다.&#x0a;※ 계단 거푸집은 1차 범위 제외 — 추후 탭 확장 예정."/>
+                </Grid>
+            </TabItem>
+
+            <!-- ═══ 탭 2: 면적 공제 ═══ -->
+            <TabItem Header="면적 공제">
+                <StackPanel>
+                    <TextBlock Text="카테고리 간 접합부 공제" FontWeight="SemiBold"
+                               Foreground="#2b579a" Margin="2,0,0,6"/>
+                    <DataGrid ItemsSource="{Binding DeductionRows}"
+                              Style="{StaticResource SettingsGridStyle}"
+                              ColumnHeaderStyle="{StaticResource SettingsHeaderStyle}">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="호스트 ＼ 인접" Width="*" IsReadOnly="True">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Label}" FontWeight="SemiBold"
+                                                   Style="{StaticResource CellTextStyle}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="벽" Width="70">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding Wall, UpdateSourceTrigger=PropertyChanged}"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="슬래브" Width="70">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding Floor, UpdateSourceTrigger=PropertyChanged}"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="기둥" Width="70">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding Column, UpdateSourceTrigger=PropertyChanged}"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="보" Width="70">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding Beam, UpdateSourceTrigger=PropertyChanged}"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="기초" Width="70">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding Foundation, UpdateSourceTrigger=PropertyChanged}"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <TextBlock Style="{StaticResource HintTextStyle}"
+                               Text="체크된 조합만 호스트 부재의 면적에서 인접 부재 접촉면을 공제합니다."/>
+
+                    <TextBlock Text="오프닝 공제 임계값" FontWeight="SemiBold"
+                               Foreground="#2b579a" Margin="2,18,0,6"/>
+                    <CheckBox Content="최소 체적 미만 오프닝은 공제하지 않음"
+                              IsChecked="{Binding UseOpeningMinVolume}"
+                              Margin="2,0,0,8"/>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
+                                IsEnabled="{Binding UseOpeningMinVolume}">
+                        <TextBlock Text="최소 체적:" VerticalAlignment="Center" Margin="2,0,8,0"/>
+                        <TextBox Text="{Binding OpeningMinVolumeM3, UpdateSourceTrigger=LostFocus, StringFormat=0.0#}"
+                                 Width="70" Height="28" VerticalContentAlignment="Center"
+                                 TextAlignment="Right"/>
+                        <TextBlock Text="m³" VerticalAlignment="Center" Margin="6,0,0,0" Foreground="#888"/>
+                    </StackPanel>
+                    <TextBlock Style="{StaticResource HintTextStyle}"
+                               Text="개구부(문/창/슬리브 등) 체적이 이 값 미만이면 콘크리트·거푸집 공제에서 제외됩니다."/>
+                </StackPanel>
+            </TabItem>
+
+            <!-- ═══ 탭 3: 철근비 ═══ -->
+            <TabItem Header="철근비">
+                <StackPanel>
+                    <Border Background="#F5F8FF" BorderBrush="#D6E2F5" BorderThickness="1"
+                            CornerRadius="4" Padding="10,8" Margin="0,0,0,12">
+                        <CheckBox IsChecked="{Binding RebarEnabled}">
+                            <TextBlock Text="철근(개략) 항목 산출 사용" FontWeight="SemiBold"/>
+                        </CheckBox>
+                    </Border>
+
+                    <TextBlock Text="카테고리별 철근비" FontWeight="SemiBold"
+                               Foreground="#2b579a" Margin="2,0,0,6"/>
+                    <DataGrid ItemsSource="{Binding RebarRows}"
+                              IsEnabled="{Binding RebarEnabled}"
+                              Style="{StaticResource SettingsGridStyle}"
+                              ColumnHeaderStyle="{StaticResource SettingsHeaderStyle}">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="카테고리" Width="150" IsReadOnly="True">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Label}" FontWeight="SemiBold"
+                                                   Style="{StaticResource CellTextStyle}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="철근비" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0">
+                                            <TextBox Text="{Binding KgPerM3, UpdateSourceTrigger=LostFocus}"
+                                                     Width="80" Height="28" VerticalContentAlignment="Center"
+                                                     TextAlignment="Right"/>
+                                            <TextBlock Text="kg/m³" VerticalAlignment="Center"
+                                                       Margin="8,0,0,0" Foreground="#888"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <TextBlock Style="{StaticResource HintTextStyle}"
+                               Text="※ 철근콘크리트 요소별로 콘크리트 체적 × 철근비 ÷ 1000 = 철근(개략)[ton] 항목을 생성합니다.&#x0a;※ 실물 배근(Rebar) 산출량과 별도 공종으로 병행 표시되며 합계에 함께 더해지지 않습니다.&#x0a;※ 기본값은 개략치이므로 프로젝트 기준에 맞게 조정하세요."/>
+                </StackPanel>
+            </TabItem>
+
+            <!-- ═══ 탭 4: 할증률 ═══ -->
+            <TabItem Header="할증률">
+                <StackPanel>
+                    <Border Background="#F5F8FF" BorderBrush="#D6E2F5" BorderThickness="1"
+                            CornerRadius="4" Padding="10,8" Margin="0,0,0,12">
+                        <CheckBox IsChecked="{Binding LossEnabled}">
+                            <TextBlock Text="집계표·Excel에 할증 반영량 표시" FontWeight="SemiBold"/>
+                        </CheckBox>
+                    </Border>
+
+                    <TextBlock Text="공종별 할증률" FontWeight="SemiBold"
+                               Foreground="#2b579a" Margin="2,0,0,6"/>
+                    <DataGrid ItemsSource="{Binding LossRows}"
+                              IsEnabled="{Binding LossEnabled}"
+                              Style="{StaticResource SettingsGridStyle}"
+                              ColumnHeaderStyle="{StaticResource SettingsHeaderStyle}">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="공종" Width="130" IsReadOnly="True">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding WorkType}" FontWeight="SemiBold"
+                                                   Style="{StaticResource CellTextStyle}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="할증률" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0">
+                                            <TextBox Text="{Binding Percent, UpdateSourceTrigger=LostFocus}"
+                                                     Width="60" Height="28" VerticalContentAlignment="Center"
+                                                     TextAlignment="Right"/>
+                                            <TextBlock Text="%" VerticalAlignment="Center"
+                                                       Margin="6,0,0,0" Foreground="#888"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="비고" Width="*" IsReadOnly="True">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Note}" Foreground="#777"
+                                                   Style="{StaticResource CellTextStyle}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <TextBlock Style="{StaticResource HintTextStyle}"
+                               Text="※ 산출 수량(정미량)은 그대로 유지되며, 집계표와 Excel 내보내기에서 할증 반영량(정미량 × (1 + 할증률))이 별도 열로 표시됩니다.&#x0a;※ 산출근거서는 항상 정미량 기준입니다. 철근 할증률은 직경 구분 없이 일괄 3%로 확정."/>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+
+        <!-- 하단 버튼 -->
+        <Border Grid.Row="2"
+                BorderBrush="#E2E8F0"
+                BorderThickness="0,1,0,0"
+                Background="#F8FAFC"
+                Padding="16,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <Button Content="가져오기…"
+                            Command="{Binding ImportCommand}"
+                            Style="{StaticResource CancelButtonStyle}"
+                            Padding="14,8" Margin="0,0,6,0" FontSize="12"
+                            ToolTip=".dhcfg 파일에서 설정 불러오기"/>
+                    <Button Content="내보내기…"
+                            Command="{Binding ExportCommand}"
+                            Style="{StaticResource CancelButtonStyle}"
+                            Padding="14,8" FontSize="12"
+                            ToolTip="현재 설정을 .dhcfg 파일로 저장"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button Content="취소"
+                            Command="{Binding CancelCommand}"
+                            Style="{StaticResource CancelButtonStyle}"
+                            Padding="16,8" Margin="0,0,8,0" FontSize="12"/>
+                    <Button Content="저장"
+                            Command="{Binding SaveCommand}"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Padding="20,8" FontSize="12"
+                            ToolTip="Revit 프로젝트(DataStorage)에 저장"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

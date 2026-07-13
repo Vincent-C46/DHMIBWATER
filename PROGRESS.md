@@ -512,6 +512,35 @@
 - [x] WaterTank XAML/CSV 내보내기 단위 표시를 m/mm 기준에 맞게 정리.
 - [x] `WaterTankViewModelTests` 추가: 기본 m 입력값 및 DTO mm 환산 검증.
 
+### 수량산출 설정창 View/ViewModel 작성 (UI 셸 + 콜백)
+- 기획/목업 기준: `docs/07_수량설정창기획.md` §7 구현순서 1번 + `docs/07_수량설정창목업.html`
+- [x] Core 데이터 모델 3개 추가 + `ProjectSettings` 확장
+  - `DeductionSettings` (CategoryMatrix `Dictionary<RevitCategory, List<RevitCategory>>` + OpeningMinVolumeM3 + UseOpeningMinVolume) — 기본 매트릭스는 현재 하드코딩과 동일
+  - `RebarRatioSettings` (Enabled + 카테고리별 kg/m³ 기본 가안: 기초80/슬래브100/벽110/보130/기둥150)
+  - `LossRateSettings` (Enabled + 공종별 % 기본: 철근콘크리트2/무근콘크리트2/철근3/거푸집5/강재3)
+  - `ProjectSettings`에 `Deduction`/`RebarRatio`/`LossRate` 프로퍼티 추가
+- [x] `QuantitySettingsViewModel` (`ViewModels/Quantity/`) — 탭 4개 바인딩
+  - 거푸집: `FormworkRowVm` 12행, 선택값은 주입된 `FormworkSettings`에 write-through / `FormworkOption`(enum+한글)
+  - 면적 공제: `DeductionRowVm` 5행(벽/슬래브/기둥/보/계단) × 5열 체크박스 + 오프닝 임계값
+  - 철근비/할증률: `RebarRatioRowVm`/`LossRateRowVm` + Enabled 토글
+  - `SaveCommand`/`CancelCommand`/`ImportCommand`/`ExportCommand`, 이벤트 `CloseRequested`/`SaveRequested`/`ImportRequested`/`ExportRequested`
+  - `ApplyToSettings()`로 각 탭 상태를 주입 `ProjectSettings`에 반영
+- [x] `QuantitySettingsView.xaml` + code-behind (`Views/Quantity/`)
+  - 기존 `TitleBar` + `PrimaryTabControlStyle` + `Generic.xaml` 재사용, DataGrid 4개로 목업 레이아웃 반영
+  - `ManualQuantityView`와 동일한 모드리스 패턴(`CloseRequested += Close`)
+- 검증: `dotnet build src\DHBIMWATER.UI\DHBIMWATER.UI.csproj -c Release` 오류 0개(기존 경고만), `dotnet test tests\DHBIMWATER.UI.Tests` 11/11 통과
+
+### 수량산출 설정창 배선 (Repo + ExternalEvent + ⚙버튼) — 문서 07 §7 2·3·8
+- [x] Application: `IQuantitySettingsRepository`(DataStorage용 Load/Save) + `SaveQuantitySettingsUseCase`(ITransactionContext) + DI 등록
+  - 파일 기반 `IProjectSettingsRepository`(.dhcfg)와 이름 분리 — 충돌 없음
+- [x] Infrastructure: `RevitQuantitySettingsRepo` — `ManualQuantityRepo` 패턴, 미사용이던 `QuantitySettingsSchema` 활용, ProjectSettings 단일 JSON 저장(`JsonStringEnumConverter`로 `RevitCategory` enum 키 직렬화) + DI 등록
+- [x] UI: `QuantityViewModel`에 `OpenSettingsCommand` + `SetSettingsAction` 추가, `QuantityView.xaml` 툴바에 ⚙ 설정 버튼 추가
+- [x] Revit: `QuantitySettingsRequest`/`QuantitySettingsRequestHandler`(ExternalEvent) 신규 — Open=DataStorage 로드 후 UI스레드에서 창 오픈, Save=UseCase 트랜잭션 저장
+  - `QuantityCommand.WireSettings()`/`WireSettingsVm()`: ⚙→로드 이벤트, 저장→DataStorage, 가져오기/내보내기→`DhcfgRepo`(.dhcfg) 파일 다이얼로그, 가져오기 시 VM 재생성+재바인딩
+- 검증: `dotnet build src\DHBIMWATER.Revit\DHBIMWATER.Revit.csproj -c Release` 오류 0개, `dotnet test` 11/11 통과
+- 미결/다음: Revit 실물 동작 검증(로드/저장/`.dhcfg` 입출력 육안 확인), 소비지점 연동 — 아직 저장만 되고 산출엔 미반영. 철근비 기본값 숫자 확정(가안)
+- ▶ **소비지점 연동은 codex용 지시서로 분리 발주**: [`docs/10_수량설정_소비지점연동_지시서.md`](docs/10_수량설정_소비지점연동_지시서.md) (거푸집 `DefaultRuleSet` 파라미터화 / 공제 매트릭스+오프닝 임계값 / 철근개략 / 할증률 열, 문서 07 §7 4~7)
+
 ### B4/L4 바닥 Y축 50mm 돌출 수정
 - [x] 원인 확인: `ReservoirGeometryCalculator.CalculateSlabs()`의 B4/L4 Y 방향 외곽 계산에서 밸브실 외벽두께(`WveThk=300`) 대신 수조부 외벽두께(`WteThk=350`)가 섞여 기본값 기준 50mm 과대 돌출됨.
 - [x] 수정: B4/L4 Y 길이 산정식을 `2 * WveThk + Wv + Lvt` 기준으로 변경.
