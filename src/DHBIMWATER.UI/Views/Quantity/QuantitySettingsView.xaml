@@ -129,9 +129,9 @@
                                                   DisplayMemberPath="Display"
                                                   SelectedValuePath="Value"
                                                   SelectedValue="{Binding Selected, UpdateSourceTrigger=PropertyChanged}"
-                                                  Width="140" Height="30"
+                                                  Width="140" Height="27"
                                                   HorizontalAlignment="Left"
-                                                  Margin="8,4"/>
+                                                  Margin="1,1"/>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
@@ -253,7 +253,7 @@
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0">
                                             <TextBox Text="{Binding KgPerM3, UpdateSourceTrigger=LostFocus}"
-                                                     Width="80" Height="28" VerticalContentAlignment="Center"
+                                                     Width="80" Height="32" VerticalContentAlignment="Center"
                                                      TextAlignment="Right"/>
                                             <TextBlock Text="kg/m³" VerticalAlignment="Center"
                                                        Margin="8,0,0,0" Foreground="#888"/>
@@ -299,7 +299,7 @@
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="8,0">
                                             <TextBox Text="{Binding Percent, UpdateSourceTrigger=LostFocus}"
-                                                     Width="60" Height="28" VerticalContentAlignment="Center"
+                                                     Width="60" Height="32" VerticalContentAlignment="Center"
                                                      TextAlignment="Right"/>
                                             <TextBlock Text="%" VerticalAlignment="Center"
                                                        Margin="6,0,0,0" Foreground="#888"/>
