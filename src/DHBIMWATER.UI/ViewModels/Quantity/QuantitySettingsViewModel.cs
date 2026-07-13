@@ -71,7 +71,7 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         };
 
         public ObservableCollection<DeductionRowVm> DeductionRows { get; } = [];
-
+        
         private bool _useOpeningMinVolume = true;
         public bool UseOpeningMinVolume
         {

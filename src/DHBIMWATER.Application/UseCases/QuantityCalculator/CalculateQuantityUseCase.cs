@@ -4,6 +4,7 @@ using DHBIMWATER.Application.Interfaces.Storage;
 using DHBIMWATER.Application.Services;
 using DHBIMWATER.Core.Quantity;
 using DHBIMWATER.Core.Quantity.RuleSets;
+using DHBIMWATER.Core.Settings;
 
 namespace DHBIMWATER.Application.UseCases.QuantityCalculator
 {
@@ -18,6 +19,7 @@ namespace DHBIMWATER.Application.UseCases.QuantityCalculator
         private readonly IEnumerable<IElementMeasurementExtractor> _measurementExtractors;
         private readonly QuantityRuleEngine _ruleEngine;
         private readonly IQuantityRuleRepository _ruleRepo;
+        private readonly IQuantitySettingsRepository _settingsRepo;
         #endregion
 
         #region Constructor
@@ -28,7 +30,8 @@ namespace DHBIMWATER.Application.UseCases.QuantityCalculator
                                         IEnumerable<IQuantityExtractor> extractors,
                                         IEnumerable<IElementMeasurementExtractor> measurementExtractors,
                                         QuantityRuleEngine ruleEngine,
-                                        IQuantityRuleRepository ruleRepo)
+                                        IQuantityRuleRepository ruleRepo,
+                                        IQuantitySettingsRepository settingsRepo)
         {
             _tx = tx;
             _dialogService = dialogService;
@@ -38,6 +41,7 @@ namespace DHBIMWATER.Application.UseCases.QuantityCalculator
             _measurementExtractors = measurementExtractors;
             _ruleEngine = ruleEngine;
             _ruleRepo = ruleRepo;
+            _settingsRepo = settingsRepo;
         }
         #endregion
 
@@ -46,6 +50,9 @@ namespace DHBIMWATER.Application.UseCases.QuantityCalculator
         {
             var quantityItems = new List<QuantityItem>();
             var manualItems = _manualQuantityRepo.LoadAll();
+
+            // 저장된 수량산출 설정 로드 (없으면 기본값). 거푸집·철근비에 반영.
+            var settings = _settingsRepo.Load() ?? new ProjectSettings();
 
             // 기존 IQuantityExtractor 경로 (벽체 제외 카테고리)
             foreach (var extractor in _extractors)
@@ -58,7 +65,8 @@ namespace DHBIMWATER.Application.UseCases.QuantityCalculator
             }
 
             // Rule Engine 경로 (DefaultRuleSet 항상 적용 + 프로젝트 특화 규칙 추가)
-            var rules = DefaultRuleSet.Create().Rules
+            // 거푸집 종류는 설정창(FormworkSettings)에서 주입.
+            var rules = DefaultRuleSet.Create(settings.Formwork).Rules
                 .Concat(_ruleRepo.GetProjectRuleSet()?.Rules ?? [])
                 .ToList();
             foreach (var measExtractor in _measurementExtractors)
@@ -72,6 +80,10 @@ namespace DHBIMWATER.Application.UseCases.QuantityCalculator
                     quantityItems.AddRange(_ruleEngine.Apply(measurements, rules));
                 }
             }
+
+            // 철근(개략) 병행 산출 — RC 콘크리트 체적 × 카테고리별 철근비.
+            quantityItems.AddRange(
+                RebarApproximationCalculator.Create(quantityItems.ToList(), settings.RebarRatio));
 
             using (_tx)
             {

@@ -32,6 +32,7 @@ namespace DHBIMWATER.Application.Services
                 {
                     ElementId      = measurements.ElementId,
                     HostElementId  = measurements.HostElementId,
+                    CategoryId     = measurements.CategoryId,
                     Category       = measurements.Category,
                     ElementCode    = measurements.Parameters.GetValueOrDefault("DH_ElementCode", ""),
                     WorkType       = rule.WorkType,

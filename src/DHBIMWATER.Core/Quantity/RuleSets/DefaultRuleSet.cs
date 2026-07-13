@@ -1,3 +1,5 @@
+using DHBIMWATER.Core.Settings;
+
 namespace DHBIMWATER.Core.Quantity.RuleSets
 {
     // 모든 프로젝트에 공통 적용되는 기본 수량 규칙 (콘크리트, 거푸집, 스페이서)
@@ -11,16 +13,26 @@ namespace DHBIMWATER.Core.Quantity.RuleSets
         // 기본 규칙 세트의 고정 ID: DataStorage 조회 시 항상 동일한 키로 식별하기 위해 하드코딩
         public static readonly Guid Id = Guid.Parse("00000000-0000-0000-0000-000000000001");
 
-        public static RuleSet Create() => new RuleSet
+        // 거푸집 종류를 기본값으로 사용 (하위호환).
+        public static RuleSet Create() => Create(new FormworkSettings());
+
+        // 거푸집 종류를 설정창(FormworkSettings)에서 주입받아 규칙을 생성한다.
+        public static RuleSet Create(FormworkSettings formwork) => new RuleSet
         {
             Id = Id,
             Name = "기본",
             Description = "콘크리트, 거푸집, 스페이서 공통 수량",
-            Rules = BuildRules().ToList()
+            Rules = BuildRules(formwork ?? new FormworkSettings()).ToList()
         };
 
-        private static IEnumerable<QuantityRule> BuildRules()
+        private static IEnumerable<QuantityRule> BuildRules(FormworkSettings fw)
         {
+            var w  = fw.Walls;
+            var c  = fw.Columns;
+            var b  = fw.Beams;
+            var f  = fw.Floors;
+            var fo = fw.Foundation;
+
             // ── 철근콘크리트 ────────────────────────────────────────────────
             // Specification 빈 string → 엔진이 Parameters["MaterialName"]으로 채움
             yield return Rc("철근콘크리트", "", "A x Thk", "m³", [Walls], [IsRc]);
@@ -52,34 +64,35 @@ namespace DHBIMWATER.Core.Quantity.RuleSets
             yield return Rc("무근콘크리트", "", "Vol",      "m³", [Foundation], [IsPlain]);
 
             // ── 거푸집: 벽체 ─────────────────────────────────────────────────
-            yield return Fw(FormworkType.Euroform, "A_right_net", Walls, [IsRc, IsExterior]);
-            yield return Fw(FormworkType.Euroform, "A_left_net",  Walls, [IsRc, IsExterior]);
-            yield return Fw(FormworkType.Euroform, "A_right_net", Walls, [IsRc, IsInterior]);
-            yield return Fw(FormworkType.Euroform, "A_left_net", Walls, [IsRc, IsInterior]);
-            yield return Fw(FormworkType.Plywood3, "A_end_net",          Walls, [IsRc]);
-            yield return Fw(FormworkType.Plywood3, "A_opening_side_net", Walls, [IsRc]);
+            // 오프닝 측면(A_opening_side_net)은 마구리(End) 설정을 따름 (설정창 힌트 참조)
+            yield return Fw(w.Exterior, "A_right_net", Walls, [IsRc, IsExterior]);
+            yield return Fw(w.Exterior, "A_left_net",  Walls, [IsRc, IsExterior]);
+            yield return Fw(w.Interior, "A_right_net", Walls, [IsRc, IsInterior]);
+            yield return Fw(w.Interior, "A_left_net", Walls, [IsRc, IsInterior]);
+            yield return Fw(w.End, "A_end_net",          Walls, [IsRc]);
+            yield return Fw(w.End, "A_opening_side_net", Walls, [IsRc]);
 
             // ── 거푸집: 기둥 ─────────────────────────────────────────────────
-            yield return Fw(FormworkType.Plywood3, "A_side_net", Columns, [IsRc]);
+            yield return Fw(c.Side, "A_side_net", Columns, [IsRc]);
 
             // ── 거푸집: 보 ───────────────────────────────────────────────────
             // A_bottom_net(Framing) 제거: 보 하부면 거푸집은 슬래브 하부 거푸집에 포함
-            yield return Fw(FormworkType.Plywood3, "A_left_net",   Framing, [IsRc]);
-            yield return Fw(FormworkType.Plywood3, "A_right_net",  Framing, [IsRc]);
-            yield return Fw(FormworkType.Plywood3, "A_end_net",    Framing, [IsRc]);
+            yield return Fw(b.Side, "A_left_net",   Framing, [IsRc]);
+            yield return Fw(b.Side, "A_right_net",  Framing, [IsRc]);
+            yield return Fw(b.End,  "A_end_net",    Framing, [IsRc]);
 
             // ── 거푸집: 슬래브 ───────────────────────────────────────────────
-            // 철근
-            yield return Fw(FormworkType.Plywood4, "A_bottom_net",       Floors, [IsRc]);
-            yield return Fw(FormworkType.Plywood3, "A_side_net",         Floors, [IsRc]);
-            yield return Fw(FormworkType.Plywood3, "A_opening_side_net", Floors, [IsRc]);
+            // 철근 (오프닝 측면은 옆면(SideRc) 설정을 따름)
+            yield return Fw(f.Bottom, "A_bottom_net",       Floors, [IsRc]);
+            yield return Fw(f.SideRc, "A_side_net",         Floors, [IsRc]);
+            yield return Fw(f.SideRc, "A_opening_side_net", Floors, [IsRc]);
             // 무근
-            yield return Fw(FormworkType.Plywood6, "A_side_net",         Floors, [IsPlain]);
-            yield return Fw(FormworkType.Plywood6, "A_opening_side_net", Floors, [IsPlain]);
+            yield return Fw(f.SidePlain, "A_side_net",         Floors, [IsPlain]);
+            yield return Fw(f.SidePlain, "A_opening_side_net", Floors, [IsPlain]);
 
             // ── 거푸집: 기초 ─────────────────────────────────────────────────
-            yield return Fw(FormworkType.Plywood4, "A_side_net", Foundation, [IsRc]);
-            yield return Fw(FormworkType.Plywood6, "A_side_net", Foundation, [IsPlain]);
+            yield return Fw(fo.SideRc,    "A_side_net", Foundation, [IsRc]);
+            yield return Fw(fo.SidePlain, "A_side_net", Foundation, [IsPlain]);
 
             // ── 스페이서: 벽체 ───────────────────────────────────────────────
             yield return Spacer("수직", "A_left_net",  Walls, [IsRc]);

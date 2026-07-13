@@ -99,6 +99,7 @@
                     </Grid.RowDefinitions>
 
                     <DataGrid Grid.Row="0"
+                              RowHeight="38"
                               ItemsSource="{Binding FormworkRows}"
                               Style="{StaticResource SettingsGridStyle}"
                               ColumnHeaderStyle="{StaticResource SettingsHeaderStyle}">

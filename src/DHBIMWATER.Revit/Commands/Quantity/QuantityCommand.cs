@@ -59,9 +59,14 @@ namespace DHBIMWATER.Revit.Commands.Quantity
         private void WireSettings()
         {
             var settingsRepo = ServiceContainer.GetService<IQuantitySettingsRepository>();
+            // 모델리스 창이라 커맨드 반환 후 CommandBase.finally에서 ServiceContainer가 Dispose된다.
+            // 저장 시점에 지연 resolve하면 "ServiceContainer is not built" 예외가 나므로,
+            // 다른 서비스처럼 미리 resolve해 캡처한다. (SaveUseCase의 트랜잭션 컨텍스트는
+            // Execute 후 내부 Transaction이 null로 초기화되어 재저장에도 재사용 안전)
+            var saveUseCase = ServiceContainer.GetService<SaveQuantitySettingsUseCase>();
             var settingsHandler = new QuantitySettingsRequestHandler(
                 settingsRepo,
-                () => ServiceContainer.GetService<SaveQuantitySettingsUseCase>());
+                () => saveUseCase);
             var settingsEvent = ExternalEvent.Create(settingsHandler);
 
             var fileDialog = ServiceContainer.GetService<IFileDialogService>();

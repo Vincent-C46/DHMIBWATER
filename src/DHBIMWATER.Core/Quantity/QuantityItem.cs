@@ -21,6 +21,7 @@ namespace DHBIMWATER.Core.Quantity
 
         public long ElementId { get; init; }                       // ElementId
         public long? HostElementId { get; init; } = null;          // 호스트객체 ID: 철근·오프닝 등 종속 객체에 활용
+        public int CategoryId { get; init; }                       // BuiltInCategory int 값 (로케일 무관, 철근비 등 카테고리별 후처리에 사용)
         public string Category { get; init; } = string.Empty;      // 카테고리: 보, 벽, 헌치 등
         public string ElementCode { get; init; } = string.Empty;   // 코드: G1, W1 (중복가능)
 

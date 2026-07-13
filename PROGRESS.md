@@ -156,6 +156,27 @@
 
 ## 진행 중인 작업
 
+#### 수량산출 설정 → 산출 파이프라인 연동 Phase 1+2 (2026-07-13)
+- 배경: 설정창 저장/로드는 되지만 저장값이 산출에 반영 안 됨(`CalculateQuantityUseCase`가 `DefaultRuleSet.Create()`를 인자 없이 호출). 테스트(`QuantitySettingsConsumerTests`)가 미구현 API를 참조하는 TDD 스펙 상태였음.
+- **Phase 1 — 순수 소비 로직 (Core/Application)**
+  - [x] `QuantityItem.CategoryId`(int) 추가 + `QuantityRuleEngine.Apply`에서 `measurements.CategoryId` 전파 (철근비 카테고리 조회용)
+  - [x] `DefaultRuleSet.Create(FormworkSettings)` 오버로드 — 거푸집 규칙을 설정값으로 생성. 기존 `Create()`는 `Create(new FormworkSettings())`에 위임(하위호환, 기본값=기존 하드코딩과 동일)
+    - 벽 오프닝측면→마구리(End), 슬래브 오프닝측면(RC)→SideRc, (무근)→SidePlain 매핑
+  - [x] `RebarApproximationCalculator.Create(items, RebarRatioSettings)` 신규 — RC 콘크리트 → `철근(개략)`[ton] (V×ρ÷1000)
+  - [x] `LossRateCalculator.Calculate(net, workType, LossRateSettings)` 신규 — 정미량×(1+할증률/100)
+- **Phase 2 — 산출 파이프라인 연동**
+  - [x] `CalculateQuantityUseCase`에 `IQuantitySettingsRepository` 주입 → `settings.Formwork`로 규칙 생성 + `settings.RebarRatio`로 철근(개략) 병행 생성
+- 변경 파일: `QuantityItem.cs`, `QuantityRuleEngine.cs`, `DefaultRuleSet.cs`, `RebarApproximationCalculator.cs`(신규), `LossRateCalculator.cs`(신규), `CalculateQuantityUseCase.cs`
+- 검증: 솔루션 빌드 오류 0, 테스트 16개 전부 통과 (`QuantitySettingsConsumerTests` 5개 포함)
+- 남은 작업(범위 밖): Phase 3 할증률 export 연동, Phase 4 면적공제 매트릭스+오프닝 임계값(`RevitIntersectingElementFinder`, geometry)
+
+#### 수량산출 설정창 저장 시 "ServiceContainer is not built" 예외 수정 (2026-07-13)
+- 원인: `QuantityCommand`가 모델리스 창(`_view.Show()`)을 여는데 `CommandBase.Execute`의 `finally`에서 `ServiceContainer.Dispose()`가 즉시 실행됨. 저장 시점에 `SaveQuantitySettingsUseCase`를 팩토리로 지연 resolve(`() => ServiceContainer.GetService<...>()`)하다 파기된 컨테이너를 건드려 예외 발생. (열기/내보내기/가져오기/산출은 서비스를 미리 캡처해 정상)
+- [x] `QuantityCommand.WireSettings()` — `SaveQuantitySettingsUseCase`를 미리 resolve해 캡처(`() => saveUseCase`)로 변경. `RevitTransactionContext`는 Execute 후 내부 Transaction이 null로 초기화되어 재저장에도 재사용 안전함을 확인.
+- 변경 파일: `src/DHBIMWATER.Revit/Commands/Quantity/QuantityCommand.cs`
+- 빌드: 오류 0 (pdb 잠금 회피 위해 `-p:DebugType=none`로 검증 — Revit 실행 중이면 pdb 잠김)
+- 참고(별개 미완 항목): 저장된 `ProjectSettings`가 아직 산출 파이프라인에 소비되지 않음 — `CalculateQuantityUseCase.cs:61`이 `DefaultRuleSet.Create()`를 인자 없이 호출. 아래 "수량산출 설정창" 체크리스트의 소비 연동 항목 참조.
+
 #### 레벨 3D 범위 최대화 API + `ILevelCommandRepo` long 마이그레이션 마무리 (2026-07-03)
 - [x] `ILevelCommandRepo.Maximize3dExtents(long levelId)` 추가 — 우클릭 "3D 범위 최대화"의 API 버전(`DatumPlane.Maximize3DExtents()`)
 - [x] `RevitLevelCommandRepo.Maximize3dExtents` 구현 (Transaction은 UseCase에서 관리 전제, API 호출만)
@@ -353,10 +374,10 @@
 - [ ] Core: `DeductionSettings`, `RebarRatioSettings`, `LossRateSettings` 추가, `ProjectSettings` 확장
 - [ ] Application: `IQuantitySettingsRepository` + Load/Save UseCase
 - [ ] Infrastructure: `RevitQuantitySettingsRepo` (DataStorage, `QuantitySettingsSchema` 활용) + DI 등록
-- [ ] `DefaultRuleSet.Create(ProjectSettings)` 파라미터화 — 거푸집 하드코딩 제거
+- [x] `DefaultRuleSet.Create(FormworkSettings)` 파라미터화 — 거푸집 하드코딩 제거 (2026-07-13)
 - [ ] `RevitIntersectingElementFinder` 공제 매트릭스 연동 + 오프닝 최소 체적(1m³) 임계값
-- [ ] 철근(개략) 병행 산출 — RC 콘크리트 체적 × 카테고리별 kg/m³
-- [ ] 할증률: 집계·Excel에 할증 반영량 열 추가 (정미량은 유지)
+- [x] 철근(개략) 병행 산출 — RC 콘크리트 체적 × 카테고리별 kg/m³ (2026-07-13)
+- [ ] 할증률: 집계·Excel에 할증 반영량 열 추가 (정미량은 유지) — 계산기(`LossRateCalculator`)만 구현됨, export 연동 미완
 - [ ] UI: `QuantitySettingsView` (탭 4개) + QuantityView ⚙버튼 + ExternalEvent + .dhcfg 내보내기/가져오기
 
 ### 수량산출 추가 기능 로드맵 — 기획 확정 2026-07-09
