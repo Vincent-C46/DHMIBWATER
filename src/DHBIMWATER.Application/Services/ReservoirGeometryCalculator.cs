@@ -339,7 +339,7 @@ namespace DHBIMWATER.Application.Services
                     walls.Add(Wall("W6", wtiThk, TankFoundLevelName, tankWallH,
                         new Point3D(wxCenter, lh, 0), new Point3D(wxCenter, l, 0), "수조부", "내벽"));
                     walls.Add(Wall("W6", wtiThk, TankFoundLevelName, tankWallH,
-                        new Point3D(wxCenter, 0, 0), new Point3D(wxCenter, -lh, 0), "수조부", "내벽"));
+                        new Point3D(wxCenter, 0, 0), new Point3D(wxCenter, lh, 0), "수조부", "내벽"));
                 }
                 else
                 {
@@ -444,6 +444,7 @@ namespace DHBIMWATER.Application.Services
             double lh = t.Lh;  // mm
             double wh = t.Wh;  // mm
             double wtiThk = th.WtiThk;
+            double stuThk = th.StuThk;
 
             var (tfE, tuE, _, _) = LevelElevations(dto);
             double beamZ = tuE;
@@ -510,7 +511,7 @@ namespace DHBIMWATER.Application.Services
                     beams.Add(Beam("H2", beamType, TankFoundLevelName, fndPts[i], fndPts[i + 1], "수조부", "HAUNCH"));
 
                 // H1: 상부 헌치
-                var upperPts = BuildUpperHaunchPoints(xOff, w, l, m1, m2, m3, m4, rowOff, colOff, rowNum, colNum, beamZ);
+                var upperPts = BuildUpperHaunchPoints(xOff, w, l, m1, m2, m3, m4, rowOff, colOff, rowNum, colNum, beamZ - stuThk);
                 for (int i = 0; i < upperPts.Count - 1; i++)
                     beams.Add(Beam("H1", beamType, TankUpperLevelName, upperPts[i], upperPts[i + 1], "수조부", "HAUNCH"));
             }

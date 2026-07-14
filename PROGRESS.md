@@ -587,3 +587,9 @@
 - 검증: `dotnet build src\DHBIMWATER.Revit\DHBIMWATER.Revit.csproj -c Release` 오류 0개(기존 MSB3277/MSB3270 경고만), `dotnet test tests\DHBIMWATER.UI.Tests\DHBIMWATER.UI.Tests.csproj` 17/17 통과
 - 미결: Revit 실물에서 리본 "수량산출 설정" 버튼 단독 클릭 → 설정창 로드/저장/`.dhcfg` 가져오기·내보내기 동작 육안 확인 필요 (이번 세션은 빌드/유닛테스트만 수행)
 - 커밋: 계획 문서의 Task별 `git commit` 단계는 미수행 — 사용자 명시 요청 시 진행
+
+### 수량산출 설정창 철근비·할증률 입력창 하단 잘림 수정 (2026-07-14)
+- [x] `QuantitySettingsView.xaml`의 철근비·할증률 DataGrid에만 `RowHeight="38"` 지정 — 32px 텍스트 박스와 셀 경계 사이 여유 확보.
+- [x] 회귀 테스트 추가: `QuantitySettingsLayoutTests`가 두 탭의 입력 Grid 행 높이를 검증.
+- 검증: `dotnet test tests\DHBIMWATER.UI.Tests\DHBIMWATER.UI.Tests.csproj -c Release --no-build --filter FullyQualifiedName~QuantitySettingsLayoutTests` 통과(1/1), `dotnet build src\DHBIMWATER.UI\DHBIMWATER.UI.csproj -c Release --no-restore` 오류 0개.
+- 미결: Revit에서 두 탭을 열어 실제 표시를 육안 확인해야 함.

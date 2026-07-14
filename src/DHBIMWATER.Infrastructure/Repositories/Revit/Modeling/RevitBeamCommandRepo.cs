@@ -78,7 +78,9 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             StructuralFramingUtils.DisallowJoinAtEnd(beam, 0);
             StructuralFramingUtils.DisallowJoinAtEnd(beam, 1);
 
-            beam.get_Parameter(BuiltInParameter.Z_JUSTIFICATION).Set(beamDef.ZJustification);
+            if (beamDef.Part == "HAUNCH")           
+                beam.get_Parameter(BuiltInParameter.Z_JUSTIFICATION).Set(beamDef.ZJustification);
+
             JoinWithSlab(beam);
 
             beam.LookupParameter("DH_ElementCode")?.Set(beamDef.ElementCode);
@@ -86,6 +88,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             beam.LookupParameter("DH_Part")?.Set(beamDef.Part);
             beam.LookupParameter("DH_Zone")?.Set(beamDef.Zone);
             beam.LookupParameter("DH_Category")?.Set(beamDef.Part == "HAUNCH" ? "헌치" : beamDef.Category);
+
+            //haunch.get_Parameter(BuiltInParameter.Z_JUSTIFICATION).Set(2);  // Z맞춤: 상단(0), 중심(1), 원점 (2), 하단(3)
 
             return (int)beam.Id.Value;
         }

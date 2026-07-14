@@ -11,7 +11,7 @@ namespace DHBIMWATER.Revit.UI.Modules
         {
             RibbonPanel panel = app.CreateRibbonPanel(ribbonTabName, "Quantity");
 
-            PushButtonData quantitySettingsBtn = new PushButtonData("QuantitySettingCommand", "수량산출 설정", Assembly.GetExecutingAssembly().Location, RevitCommandType<QuantitySettingCommand>.FullName);
+            PushButtonData quantitySettingsBtn = new PushButtonData("QuantitySettingCommand", "수량산출\n설정", Assembly.GetExecutingAssembly().Location, RevitCommandType<QuantitySettingCommand>.FullName);
             quantitySettingsBtn.LargeImage = RibbonButtonImages.GetIcon("Quantity.png");
 
             PushButtonData quantityBtn = new PushButtonData("QuantityCommand", "수량산출", Assembly.GetExecutingAssembly().Location, RevitCommandType<QuantityCommand>.FullName);

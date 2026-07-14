@@ -237,6 +237,7 @@
                                Foreground="#2b579a" Margin="2,0,0,6"/>
                     <DataGrid ItemsSource="{Binding RebarRows}"
                               IsEnabled="{Binding RebarEnabled}"
+                              RowHeight="38"
                               Style="{StaticResource SettingsGridStyle}"
                               ColumnHeaderStyle="{StaticResource SettingsHeaderStyle}">
                         <DataGrid.Columns>
@@ -283,6 +284,7 @@
                                Foreground="#2b579a" Margin="2,0,0,6"/>
                     <DataGrid ItemsSource="{Binding LossRows}"
                               IsEnabled="{Binding LossEnabled}"
+                              RowHeight="38"
                               Style="{StaticResource SettingsGridStyle}"
                               ColumnHeaderStyle="{StaticResource SettingsHeaderStyle}">
                         <DataGrid.Columns>
