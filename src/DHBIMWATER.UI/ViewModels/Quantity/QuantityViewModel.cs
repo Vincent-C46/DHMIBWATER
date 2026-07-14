@@ -19,7 +19,6 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         private readonly ExportQuantityUseCase _exportQuantityUseCase;
         private Action? _extractAction;
         private Action<IList<long>>? _selectAction;
-        private Action? _settingsAction;
         private bool _isSelectedInRevit;
 
         private List<QuantityItem> _currentSelectedItems = new();
@@ -111,7 +110,6 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         public ICommand DeleteItemCommand { get; }
         public ICommand ExportToExcelCommand { get; }
         public ICommand SelectInRevitCommand { get; }
-        public ICommand OpenSettingsCommand { get; }
         #endregion
 
         #region Constructor
@@ -137,7 +135,6 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             EditItemCommand = new RelayCommand(_ => OnEditItem(), _ => SelectedItem != null);
             DeleteItemCommand = new RelayCommand(_ => OnDeleteItem(), _ => _currentSelectedItems.Count > 0);
             SelectInRevitCommand = new RelayCommand(_ => OnSelectInRevit(), _ => _currentSelectedItems.Count > 0);
-            OpenSettingsCommand = new RelayCommand(_ => _settingsAction?.Invoke());
         }
         #endregion
 
@@ -239,7 +236,6 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         }
         public void SetExtractAction(Action action) => _extractAction = action;
         public void SetSelectAction(Action<IList<long>> action) => _selectAction = action;
-        public void SetSettingsAction(Action action) => _settingsAction = action;
         public void SetMeasureService(IMeasurePickService service) => MeasureService = service;
 
         private void OnSelectInRevit()
