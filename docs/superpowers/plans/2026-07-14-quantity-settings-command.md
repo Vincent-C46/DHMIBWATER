@@ -29,7 +29,7 @@
 - Consumes: no settings-specific service or callback.
 - Produces: `QuantityViewModel` exposes only commands used by the quantity-calculation window.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `QuantityViewModelTests.cs` and document the remaining public command contract using the existing constructor dependencies:
 
@@ -45,13 +45,13 @@ public void QuantityViewModel_ExposesQuantityWorkflowCommands()
 }
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `dotnet test tests\\DHBIMWATER.UI.Tests\\DHBIMWATER.UI.Tests.csproj --filter "FullyQualifiedName~QuantityViewModel_ExposesQuantityWorkflowCommands"`
 
 Expected: FAIL because `OpenSettingsCommand` still exists.
 
-- [ ] **Step 3: Write the minimal implementation**
+- [x] **Step 3: Write the minimal implementation**
 
 Remove the settings action field, command declaration, constructor assignment, and setter from `QuantityViewModel`:
 
@@ -69,13 +69,13 @@ public void SetSelectAction(Action<IList<long>> action) => _selectAction = actio
 
 Delete the `OpenSettingsCommand` button from the `QuantityView.xaml` toolbar, including its tooltip and inner `StackPanel`.
 
-- [ ] **Step 4: Run the focused test to verify it passes**
+- [x] **Step 4: Run the focused test to verify it passes**
 
 Run: `dotnet test tests\\DHBIMWATER.UI.Tests\\DHBIMWATER.UI.Tests.csproj --filter "FullyQualifiedName~QuantityViewModel_ExposesQuantityWorkflowCommands"`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 5: Commit** (보류 — 사용자 명시 요청 시 커밋)
 
 ```powershell
 git add src/DHBIMWATER.UI/Views/Quantity/QuantityView.xaml src/DHBIMWATER.UI/ViewModels/Quantity/QuantityViewModel.cs tests/DHBIMWATER.UI.Tests/ViewModels/Quantity/QuantityViewModelTests.cs
@@ -92,7 +92,7 @@ git commit -m "refactor: remove quantity view settings action"
 - Consumes: `IQuantitySettingsRepository`, `SaveQuantitySettingsUseCase`, `IFileDialogService`, `IProjectSettingsRepository`, `QuantitySettingsRequestHandler`, and `QuantitySettingsViewModel`.
 - Produces: `[Transaction(TransactionMode.Manual)] public class QuantitySettingCommand : CommandBase`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Because the Revit command assembly has no isolated test project and requires Revit API assemblies, add a compile-time contract check by temporarily referencing the intended type in `QuantityRibbonModule`:
 
@@ -100,13 +100,13 @@ Because the Revit command assembly has no isolated test project and requires Rev
 RevitCommandType<QuantitySettingCommand>.FullName
 ```
 
-- [ ] **Step 2: Run the build to verify it fails**
+- [x] **Step 2: Run the build to verify it fails**
 
 Run: `dotnet build src\\DHBIMWATER.Revit\\DHBIMWATER.Revit.csproj -c Release`
 
 Expected: FAIL with a missing `QuantitySettingCommand` type.
 
-- [ ] **Step 3: Write the minimal implementation**
+- [x] **Step 3: Write the minimal implementation**
 
 Create `QuantitySettingCommand` by moving `WireSettings` and `WireSettingsVm` unchanged from `QuantityCommand`; replace the QuantityView owner with the Revit main window handle:
 
@@ -142,13 +142,13 @@ public class QuantitySettingCommand : CommandBase
 
 Retain the existing `WireSettingsVm` logic in the new class. Remove `WireSettings`, `WireSettingsVm`, settings usings, and `WireSettings();` from `QuantityCommand`.
 
-- [ ] **Step 4: Run the Revit build to verify it passes**
+- [x] **Step 4: Run the Revit build to verify it passes**
 
 Run: `dotnet build src\\DHBIMWATER.Revit\\DHBIMWATER.Revit.csproj -c Release`
 
 Expected: build succeeds with zero compilation errors. Existing nullable/reference or deployment-copy warnings may remain.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 5: Commit** (보류 — 사용자 명시 요청 시 커밋)
 
 ```powershell
 git add src/DHBIMWATER.Revit/Commands/Quantity/QuantityCommand.cs src/DHBIMWATER.Revit/Commands/Quantity/QuantitySettingCommand.cs
@@ -165,7 +165,7 @@ git commit -m "feat: add standalone quantity settings command"
 - Consumes: `QuantitySettingCommand` from Task 2.
 - Produces: `QuantitySettingCommand` ribbon item launches the standalone command.
 
-- [ ] **Step 1: Write the failing compile-time reference**
+- [x] **Step 1: Write the failing compile-time reference**
 
 Change only the ribbon command type:
 
@@ -173,13 +173,13 @@ Change only the ribbon command type:
 RevitCommandType<QuantitySettingCommand>.FullName
 ```
 
-- [ ] **Step 2: Run the build to verify the pre-implementation failure**
+- [x] **Step 2: Run the build to verify the pre-implementation failure**
 
 Run: `dotnet build src\\DHBIMWATER.Revit\\DHBIMWATER.Revit.csproj -c Release`
 
 Expected: before Task 2, FAIL for missing `QuantitySettingCommand`; after Task 2, use this step as the routing verification.
 
-- [ ] **Step 3: Write the minimal implementation**
+- [x] **Step 3: Write the minimal implementation**
 
 Keep the button identifiers and labels unchanged; only use the new command type:
 
@@ -192,7 +192,7 @@ PushButtonData quantitySettingsBtn = new PushButtonData(
 
 Append a dated `PROGRESS.md` entry listing the command extraction, removed QuantityView button/callback, ribbon routing, verification result, and the remaining manual Revit check for settings load/save/import/export.
 
-- [ ] **Step 4: Run final verification**
+- [x] **Step 4: Run final verification**
 
 Run:
 
@@ -203,7 +203,7 @@ dotnet build src\\DHBIMWATER.Revit\\DHBIMWATER.Revit.csproj -c Release
 
 Expected: UI tests pass and Revit project has zero compilation errors.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 5: Commit** (보류 — 사용자 명시 요청 시 커밋)
 
 ```powershell
 git add src/DHBIMWATER.Revit/UI/Modules/QuantityRibbonModule.cs PROGRESS.md

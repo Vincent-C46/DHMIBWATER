@@ -569,3 +569,21 @@
 - 검증:
   - `dotnet test tests\DHBIMWATER.UI.Tests\DHBIMWATER.UI.Tests.csproj` 통과: 11/11.
   - `dotnet build DHBIMWATER.sln` 오류 0개. 기존 Revit Addins 복사 잠금 경고 및 기존 참조/nullable 경고는 남음.
+
+---
+
+## 2026-07-14
+
+### 수량산출 설정창을 독립 리본 커맨드로 분리 (`QuantitySettingCommand`)
+- 계획/설계 문서: `docs/superpowers/specs/2026-07-14-quantity-settings-command-design.md`, `docs/superpowers/plans/2026-07-14-quantity-settings-command.md`
+- 배경: 기존엔 `QuantityView` 툴바 ⚙ 버튼으로 설정창을 열었는데, 계획대로 산출창과 설정창을 완전히 분리하기로 확정. 진행 중 `QuantityViewModel.SetSettingsAction`이 이미 제거된 상태에서 `QuantityCommand.WireSettings()`가 여전히 이를 호출해 빌드 오류(CS1061류) 발생 → 이를 계기로 나머지 Task 마무리.
+- [x] `QuantitySettingCommand.cs` 신규 (`Revit/Commands/Quantity/`) — `QuantityCommand`의 `WireSettings`/`WireSettingsVm`을 그대로 이동
+  - 설정창 owner를 기존 `_view`(QuantityView) 대신 `commandData.Application.MainWindowHandle`(`WindowInteropHelper`)로 변경 — 독립 커맨드라 QuantityView 인스턴스가 없어도 동작
+  - `IQuantitySettingsRepository`/`SaveQuantitySettingsUseCase`/`IFileDialogService`/`IProjectSettingsRepository`를 `ExecuteInternal` 진입 시 미리 resolve해 캡처(모델리스 창 특성상 지연 resolve 시 파기된 ServiceContainer 접근 문제 재발 방지, 기존 패턴 유지)
+- [x] `QuantityCommand.cs` — `WireSettings`/`WireSettingsVm`/`WireSettings();` 호출 및 관련 using 제거. 산출/선택/수동수량만 담당하도록 축소
+- [x] `QuantityRibbonModule.cs` — `quantitySettingsBtn`이 `RevitCommandType<QuantitySettingCommand>`를 가리키도록 라우팅 (버튼 ID/라벨은 유지)
+- [x] `QuantityViewModel`/`QuantityView.xaml`의 설정 관련 멤버(`OpenSettingsCommand`, `SetSettingsAction`)는 이번 세션 이전에 이미 제거된 상태였음(확인만)
+- [x] 회귀 테스트: `tests/DHBIMWATER.UI.Tests/ViewModels/Quantity/QuantityViewModelTests.cs` — `QuantityViewModel`이 `ExtractCommand`/`SelectInRevitCommand`만 노출하고 `OpenSettingsCommand` 프로퍼티는 없음을 리플렉션으로 검증
+- 검증: `dotnet build src\DHBIMWATER.Revit\DHBIMWATER.Revit.csproj -c Release` 오류 0개(기존 MSB3277/MSB3270 경고만), `dotnet test tests\DHBIMWATER.UI.Tests\DHBIMWATER.UI.Tests.csproj` 17/17 통과
+- 미결: Revit 실물에서 리본 "수량산출 설정" 버튼 단독 클릭 → 설정창 로드/저장/`.dhcfg` 가져오기·내보내기 동작 육안 확인 필요 (이번 세션은 빌드/유닛테스트만 수행)
+- 커밋: 계획 문서의 Task별 `git commit` 단계는 미수행 — 사용자 명시 요청 시 진행
