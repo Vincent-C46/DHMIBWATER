@@ -156,6 +156,25 @@
 
 ## 진행 중인 작업
 
+#### 밸브실 모델링 입력 UI 목업 (2026-07-15)
+- 배경: 밸브실 자동 모델링 로직 착수. 사용자 입력 항목 정의를 위한 입력창 목업 선작성.
+- [x] `docs/08_밸브실모델링입력목업.html` — WPF 룩앤필 입력창 목업(기존 `07_수량설정창목업.html` 스타일 준용)
+  - 입력 그룹: **층 구성**(층 개수 → 층별 층고 동적 테이블), **구조 두께**(버림/기초/외벽/벽체/상부슬래브/중간슬래브), **보 배치**(X·Y축 보 개수), **부재 유형**(기둥/보 패밀리 타입 드롭다운)
+  - JS: 층 개수 변경 시 층고 입력 행 자동 증감(기존값 캐시), 하단 요약 배너(총 층수·전체 층고 합계) 갱신
+  - 가정: 외벽=외곽 콘크리트/벽체=내부 칸막이 구분, 두께 단위 mm, 중간슬래브는 2층↑에서만 사용
+- [x] `docs/08_밸브실모델링입력목업_v2.html` — 종류 선택 + 탭 구조 도입 (범용 스타일)
+  - 최상단 **밸브실 종류** 드롭다운(이토/제수/공기) → 선택 시 평면·높이·중간벽 프리셋 자동 세팅
+  - **탭 2개**: `부재 유형`(기둥/보 유형 + 버림/기초/외벽/벽체/상부슬래브 두께) · `형상·배치`(내부 폭·길이·높이 + 중간벽 개수 + 보 X/Y 개수)
+  - **층 구성 제거**(단층 전제) → 대신 내부 높이(H) 필드 추가, 중간슬래브 두께 제외
+  - **중간벽 두께 = 벽체 두께 공용**(별도 필드 제거), 중간벽 방향은 종류별 고정(입력 제거)
+  - 결정: **중간벽은 이토밸브실에 있음**(제수·공기 없음). ※ 앞선 v1 가정(제수=중간벽)에서 정정됨
+- [x] `docs/08_밸브실모델링입력목업_v3.html` — **PumpingStationView 룩앤필 적용** (진행 채택본)
+  - 실제 스타일 소스에서 값 이식: `Styles/Colors.xaml`(Primary `#2196F3`, bg `#F4F7F9`, 섹션 `#EEF2F7`, 헤더 `#4A6FA5`), `Controls/TitleBar.xaml`(`#2C3E50` + 물방울 아이콘), `Styles/TabControls.xaml`(밑줄형 탭)
+  - 입력 행 관용구 = 펌프뷰와 동일 `코드 | 설명 | [입력] | 단위` (예: `To 외벽 두께 [ ] mm`)
+  - 코드(Tb/Tf/To/Tw/Ts/W/L/H/NW/NBx/NBy)는 목업용 임시 명칭 → DTO 정의 시 확정
+- 가정값(도면 확정 후 교체): 이토 2500×4000×2500·중간벽1 / 제수 2000×3000×2500·중간벽0 / 공기 1500×1800×2000·중간벽0
+- 남은 작업: **v3 기준으로 진행 + 한 차례 더 수정 예정** → 도면 수령 후 프리셋 실치수·중간벽 고정 규칙 확정 → 입력 DTO 정의 → `ValveRoomGeometryCalculator`(WIP, 현재 펌프장 복붙 상태) 재작성 → 모델 생성 로직
+
 #### 수량산출 설정 → 산출 파이프라인 연동 Phase 1+2 (2026-07-13)
 - 배경: 설정창 저장/로드는 되지만 저장값이 산출에 반영 안 됨(`CalculateQuantityUseCase`가 `DefaultRuleSet.Create()`를 인자 없이 호출). 테스트(`QuantitySettingsConsumerTests`)가 미구현 API를 참조하는 TDD 스펙 상태였음.
 - **Phase 1 — 순수 소비 로직 (Core/Application)**
@@ -593,3 +612,14 @@
 - [x] 회귀 테스트 추가: `QuantitySettingsLayoutTests`가 두 탭의 입력 Grid 행 높이를 검증.
 - 검증: `dotnet test tests\DHBIMWATER.UI.Tests\DHBIMWATER.UI.Tests.csproj -c Release --no-build --filter FullyQualifiedName~QuantitySettingsLayoutTests` 통과(1/1), `dotnet build src\DHBIMWATER.UI\DHBIMWATER.UI.csproj -c Release --no-restore` 오류 0개.
 - 미결: Revit에서 두 탭을 열어 실제 표시를 육안 확인해야 함.
+
+### 면적 공제 탭 체크박스 재산출 미반영 버그 수정 (2026-07-14)
+- 배경: 사용자 보고 — `QuantitySettingsView` "면적공제" 탭 체크박스를 바꿔도 `QuantityView` 재산출 결과에 반영 안 됨.
+  원인 조사 결과 [`docs/10_수량설정_소비지점연동_지시서.md`](docs/10_수량설정_소비지점연동_지시서.md) Task 2(면적 공제 매트릭스 + 오프닝 임계값)가 미착수 상태였음 확인.
+  Task 1(거푸집 파라미터화)·Task 3(철근개략)은 이미 `CalculateQuantityUseCase`에 반영되어 있었음(기 완료 확인). Task 4(할증률 열)는 `LossRateCalculator`만 존재하고 UI/Excel 미연동 — 이번 범위 밖.
+- [x] **매트릭스 연동**: `RevitIntersectingElementFinder` 생성자에 `IQuantitySettingsRepository` 주입, `DeductionSettings.CategoryMatrix`를 캐시해 `GetTargetCategories`가 하드코딩 switch 대신 매트릭스를 조회하도록 변경. 매트릭스에 없는 카테고리는 기존 `FallbackCategories` 유지, 특정 호스트의 체크박스를 전부 끄면 해당 호스트는 공제 없음으로 정확히 반영.
+- [x] **오프닝 최소 체적 임계값**: 조사 결과 `CategoryMatrix`/`FindContactAreas`와 무관하고, `RevitFaceClassifier.ClassifyWall/ClassifyFloor`의 EdgeLoop 기반 `FaceType.OpeningSide` 판별부가 실제 지점임을 확인(사용자 확인 후 진행). 벽/슬래브 솔리드의 내부 루프(홀)마다 두께만큼 돌출시켜 근사 체적(m³)을 구하고, `OpeningMinVolumeM3` 미만이면 `FaceType.None`으로 분류해 `GetFaceAreas`에서 제외(거푸집 OpeningSide 면적에서만 제외, 콘크리트 체적/Left·Right·Top·Bottom 겉면적은 기존과 동일하게 Revit 지오메트리 그대로 사용 — 사용자가 선택한 범위).
+  - 접촉면 공제 태깅용 `RevitFaceClassifier.Classify(elem, face)`(static, `RevitIntersectingElementFinder`에서 호출)는 임계값 미적용 오버로드로 분리해 기존 동작 100% 유지.
+- 변경 파일: `Infrastructure/Repositories/Revit/Geometry/RevitIntersectingElementFinder.cs`, `Infrastructure/Repositories/Revit/Geometry/RevitFaceClassifier.cs`
+- 검증: `dotnet build DHBIMWATER.sln -p:DebugType=none` 오류 0개(Revit 실행 중이라 Addins 폴더 복사 경고만 발생, 컴파일은 정상), `dotnet test tests\DHBIMWATER.UI.Tests` 18/18 통과.
+- 미결: 두 클래스 모두 Revit API 지오메트리(Solid/Face)에 의존해 순수 유닛테스트 불가 — Revit 실물에서 (1) 면적공제 탭 체크박스 변경 → 재산출 반영, (2) 작은 오프닝 임계값 미만 시 거푸집 OpeningSide 면적 감소 확인 필요. Task 4(할증률 열)는 미착수로 남음.

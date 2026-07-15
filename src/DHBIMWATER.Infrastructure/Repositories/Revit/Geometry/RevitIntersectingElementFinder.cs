@@ -1,6 +1,8 @@
 using Autodesk.Revit.DB;
 using DHBIMWATER.Application.Interfaces.Geometry;
+using DHBIMWATER.Application.Interfaces.Storage;
 using DHBIMWATER.Core.Quantity;
+using DHBIMWATER.Core.Settings;
 using DHBIMWATER.Infrastructure.Helpers;
 using System.Diagnostics;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
@@ -10,11 +12,14 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
     public class RevitIntersectingElementFinder : IIntersectingElementFinder
     {
         private readonly Func<Document?> _doc;
+        private readonly Dictionary<RevitCategory, List<RevitCategory>> _categoryMatrix;
         private const double Epsilon = 0.01; // feet 단위 0.01ft = 약 3mm
         private const double SolidThk = 0.01;
-        public RevitIntersectingElementFinder(Func<Document?> doc)
+        public RevitIntersectingElementFinder(Func<Document?> doc, IQuantitySettingsRepository settingsRepo)
         {
             _doc = doc;
+            _categoryMatrix = settingsRepo.Load()?.Deduction.CategoryMatrix
+                ?? new DeductionSettings().CategoryMatrix;
         }
 
         public IReadOnlyList<FaceDeduction> FindContactAreas(long refElemId)
@@ -43,6 +48,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
 
             var refCategory = (BuiltInCategory)refElem.Category.Id.Value;
             var targetCategories = GetTargetCategories(refCategory);
+            if (targetCategories.Count == 0) return new List<FaceDeduction>();
 
             // 1차 필터링: 확장된 BBox와 카테고리로 후보군 추출
             var candidates = new FilteredElementCollector(doc)
@@ -183,45 +189,12 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
             BuiltInCategory.OST_StructuralFoundation,
             BuiltInCategory.OST_GenericModel,
         };
-        private static ICollection<BuiltInCategory> GetTargetCategories(BuiltInCategory refCategory) =>
-            refCategory switch
-            {
-                BuiltInCategory.OST_Walls => new[]
-                {
-                    BuiltInCategory.OST_Walls,
-                    BuiltInCategory.OST_Floors,
-                    BuiltInCategory.OST_StructuralColumns,
-                    BuiltInCategory.OST_StructuralFraming,
-                },
-                BuiltInCategory.OST_Floors => new[]
-                {
-                    BuiltInCategory.OST_Walls,
-                    BuiltInCategory.OST_Floors,
-                    BuiltInCategory.OST_StructuralFoundation,
-                },
-                BuiltInCategory.OST_StructuralColumns => new[]
-                {
-                    BuiltInCategory.OST_Walls,
-                    BuiltInCategory.OST_Floors,
-                    BuiltInCategory.OST_StructuralFraming,
-                    BuiltInCategory.OST_StructuralFoundation,
-                },
-                BuiltInCategory.OST_StructuralFraming => new[]
-                {
-                    BuiltInCategory.OST_Walls,
-                    BuiltInCategory.OST_Floors,
-                    BuiltInCategory.OST_StructuralColumns,
-                    BuiltInCategory.OST_StructuralFraming,
-                },
-                BuiltInCategory.OST_Stairs => new[]
-{
-                    BuiltInCategory.OST_Walls,
-                    BuiltInCategory.OST_Floors,
-                    BuiltInCategory.OST_StructuralColumns,
-                    BuiltInCategory.OST_StructuralFraming,
-                },
-                _ => FallbackCategories,
-            };
+        // 설정창(면적 공제 탭)의 CategoryMatrix에서 호스트별 인접 카테고리를 조회.
+        // 매트릭스에 없는 카테고리(GenericModel 등 참조 대상)는 FallbackCategories 사용.
+        private ICollection<BuiltInCategory> GetTargetCategories(BuiltInCategory refCategory) =>
+            _categoryMatrix.TryGetValue((RevitCategory)(int)refCategory, out var adjacent)
+                ? adjacent.Select(c => (BuiltInCategory)(int)c).ToList()
+                : FallbackCategories;
         private static Solid CreateExtrusionSolid(Face face, double thickness)
         {
             var curveLoops = face.GetEdgesAsCurveLoops().FirstOrDefault();

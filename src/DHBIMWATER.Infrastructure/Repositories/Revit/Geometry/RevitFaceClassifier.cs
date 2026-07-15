@@ -1,7 +1,9 @@
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Architecture;
 using DHBIMWATER.Application.Interfaces.Geometry;
+using DHBIMWATER.Application.Interfaces.Storage;
 using DHBIMWATER.Core.Quantity;
+using DHBIMWATER.Core.Settings;
 using DHBIMWATER.Infrastructure.Helpers;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
@@ -10,10 +12,15 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
     public class RevitFaceClassifier : IFaceClassifier
     {
         private readonly Func<Document?> _doc;
+        private readonly bool _useOpeningMinVolume;
+        private readonly double _openingMinVolumeM3;
 
-        public RevitFaceClassifier(Func<Document?> doc)
+        public RevitFaceClassifier(Func<Document?> doc, IQuantitySettingsRepository settingsRepo)
         {
             _doc = doc;
+            var deduction = settingsRepo.Load()?.Deduction ?? new DeductionSettings();
+            _useOpeningMinVolume = deduction.UseOpeningMinVolume;
+            _openingMinVolumeM3 = deduction.OpeningMinVolumeM3;
         }
 
         public IReadOnlyDictionary<FaceType, double> GetFaceAreas(long elementId)
@@ -24,21 +31,27 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
             var elem = doc.GetElement(new ElementId(elementId));
             if (elem == null) return new Dictionary<FaceType, double>();
 
+            double? openingThreshold = _useOpeningMinVolume ? _openingMinVolumeM3 : null;
+
             var result = new Dictionary<FaceType, double>();
             foreach (var face in RevitGeometryHelper.GetFaces(elem).OfType<PlanarFace>())
             {
-                var faceType = Classify(elem, face);
+                var faceType = Classify(elem, face, openingThreshold);
+                if (faceType == FaceType.None) continue; // 최소 체적 미만 오프닝 — 거푸집 면적에서 제외
                 result[faceType] = result.GetValueOrDefault(faceType) + UC.Ft2ToM2(face.Area);
             }
             return result;
         }
 
-        internal static FaceType Classify(Element elem, PlanarFace face) =>
+        /// <summary>접촉면 공제(FindContactAreas) 태깅용 — 오프닝 최소 체적 임계값 미적용.</summary>
+        internal static FaceType Classify(Element elem, PlanarFace face) => Classify(elem, face, null);
+
+        private static FaceType Classify(Element elem, PlanarFace face, double? openingMinVolumeM3) =>
             (BuiltInCategory)elem.Category.Id.Value switch
             {
                 BuiltInCategory.OST_StructuralFraming    => ClassifyBeam(elem, face.FaceNormal),
-                BuiltInCategory.OST_Walls                => ClassifyWall(elem, face),
-                BuiltInCategory.OST_Floors               => ClassifyFloor(elem, face),
+                BuiltInCategory.OST_Walls                => ClassifyWall(elem, face, openingMinVolumeM3),
+                BuiltInCategory.OST_Floors               => ClassifyFloor(elem, face, openingMinVolumeM3),
                 BuiltInCategory.OST_StructuralFoundation => ClassifyFoundation(face.FaceNormal),
                 BuiltInCategory.OST_StructuralColumns    => ClassifyColumn(face.FaceNormal),
                 BuiltInCategory.OST_Stairs               => ClassifyStairs(elem, face.FaceNormal),
@@ -58,7 +71,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
             return normal.DotProduct(right) >= 0 ? FaceType.Right : FaceType.Left;
         }
 
-        private static FaceType ClassifyWall(Element elem, PlanarFace face)
+        private static FaceType ClassifyWall(Element elem, PlanarFace face, double? openingMinVolumeM3)
         {
             var normal = face.FaceNormal;
             if (normal.Z > 0.9) return FaceType.Top;
@@ -68,17 +81,18 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
             var dot = normal.DotProduct(wall.Orientation);
             if (Math.Abs(dot) > 0.9) return dot > 0 ? FaceType.Right : FaceType.Left;
 
-            // 벽 방향(길이 방향) 법선 → End vs OpeningSide
+            // 벽 방향(길이 방향) 법선 → End vs OpeningSide vs 최소 체적 미만 오프닝(제외)
             // Left/Right 메인면의 내부 EdgeLoop 엣지와 공유 여부로 판별
             try
             {
                 foreach (var solid in RevitGeometryHelper.GetSolids(wall))
                 {
-                    var innerEdges = GetInnerLoopEdges(solid,
-                        f => f is PlanarFace pf && Math.Abs(pf.FaceNormal.DotProduct(wall.Orientation)) > 0.9);
+                    var (large, small) = GetInnerLoopEdges(solid,
+                        f => f is PlanarFace pf && Math.Abs(pf.FaceNormal.DotProduct(wall.Orientation)) > 0.9,
+                        wall.Width, openingMinVolumeM3);
 
-                    if (innerEdges.Count == 0) continue;
-                    if (SharesEdgeWith(face, innerEdges)) return FaceType.OpeningSide;
+                    if (SharesEdgeWith(face, large)) return FaceType.OpeningSide;
+                    if (SharesEdgeWith(face, small)) return FaceType.None;
                 }
             }
             catch { }
@@ -86,7 +100,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
             return FaceType.End;
         }
 
-        private static FaceType ClassifyFloor(Element elem, PlanarFace face)
+        private static FaceType ClassifyFloor(Element elem, PlanarFace face, double? openingMinVolumeM3)
         {
             var normal = face.FaceNormal;
             if (normal.Z > 0.9) return FaceType.Top;
@@ -97,16 +111,24 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
             {
                 foreach (var solid in RevitGeometryHelper.GetSolids(elem))
                 {
-                    var innerEdges = GetInnerLoopEdges(solid,
-                        f => f is PlanarFace pf && Math.Abs(pf.FaceNormal.Z) > 0.9);
+                    var (large, small) = GetInnerLoopEdges(solid,
+                        f => f is PlanarFace pf && Math.Abs(pf.FaceNormal.Z) > 0.9,
+                        GetFloorThicknessFt(elem), openingMinVolumeM3);
 
-                    if (innerEdges.Count == 0) continue;
-                    if (SharesEdgeWith(face, innerEdges)) return FaceType.OpeningSide;
+                    if (SharesEdgeWith(face, large)) return FaceType.OpeningSide;
+                    if (SharesEdgeWith(face, small)) return FaceType.None;
                 }
             }
             catch { }
 
             return FaceType.Side;
+        }
+
+        private static double GetFloorThicknessFt(Element elem)
+        {
+            if (elem is not Floor floor) return 0;
+            var cs = floor.FloorType?.GetCompoundStructure();
+            return cs?.GetLayers().Sum(l => l.Width) ?? 0;
         }
 
         // Foundation은 오프닝 분리 미적용
@@ -136,18 +158,44 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
             return FaceType.Side;
         }
 
-        // 기준면의 내부 EdgeLoop(1+) 엣지를 수집
-        private static HashSet<Edge> GetInnerLoopEdges(Solid solid, Func<Face, bool> isFaceMatch)
+        // 기준면의 내부 EdgeLoop(1+, 오프닝)을 체적 기준으로 large(공제 대상)/small(임계값 미만, 제외) 로 분리
+        private static (HashSet<Edge> large, HashSet<Edge> small) GetInnerLoopEdges(
+            Solid solid, Func<Face, bool> isFaceMatch, double thicknessFt, double? openingMinVolumeM3)
         {
-            var result = new HashSet<Edge>();
+            var large = new HashSet<Edge>();
+            var small = new HashSet<Edge>();
+
             foreach (Face f in solid.Faces)
             {
-                if (!isFaceMatch(f) || f.EdgeLoops.Size <= 1) continue;
+                if (!isFaceMatch(f) || f.EdgeLoops.Size <= 1 || f is not PlanarFace planar) continue;
+
+                var curveLoops = planar.GetEdgesAsCurveLoops();
                 for (int i = 1; i < f.EdgeLoops.Size; i++)
+                {
+                    bool isSmall = openingMinVolumeM3.HasValue && i < curveLoops.Count
+                        && ComputeLoopVolumeM3(curveLoops[i], planar.FaceNormal, thicknessFt) < openingMinVolumeM3.Value;
+
+                    var target = isSmall ? small : large;
                     foreach (Edge e in f.EdgeLoops.get_Item(i))
-                        result.Add(e);
+                        target.Add(e);
+                }
             }
-            return result;
+            return (large, small);
+        }
+
+        // 오프닝 루프를 두께만큼 돌출시켜 근사 체적(m³) 계산 — 실패 시 큰 오프닝으로 간주(기존 동작 유지)
+        private static double ComputeLoopVolumeM3(CurveLoop loop, XYZ normal, double thicknessFt)
+        {
+            if (thicknessFt <= 1e-6) return double.MaxValue;
+            try
+            {
+                var solid = GeometryCreationUtilities.CreateExtrusionGeometry(new[] { loop }, normal, thicknessFt);
+                return UC.Ft3ToM3(solid.Volume);
+            }
+            catch
+            {
+                return double.MaxValue;
+            }
         }
 
         // 면의 EdgeLoop 중 innerEdges와 공유되는 엣지가 있는지 확인
