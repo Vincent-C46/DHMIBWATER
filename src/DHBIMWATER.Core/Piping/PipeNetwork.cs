@@ -20,7 +20,7 @@ public sealed class PipeNetwork
     public void AddInlineFitting(Guid edgeId, string typeKey) => new PipeTopologyBuilder(this).AddInlineFitting(edgeId, typeKey);
     public void RemoveInlineFitting(Guid edgeId, Guid fittingId) => new PipeTopologyBuilder(this).RemoveInlineFitting(edgeId, fittingId);
     public void Clear() { _nodes.Clear(); _edges.Clear(); }
-    public PipeNetworkDefinition ToDefinition(double diameterMm, PipeOutputMode outputMode)
+    public PipeNetworkDefinition ToDefinition(double diameterMm, PipeOutputMode outputMode, Point2D referencePoint)
     {
         var nodes = _nodes.Select(x => new PipeNodeDefinition(x.Id, x.Position, x.NodeKind)).ToList();
         var edges = _edges.Select(x =>
@@ -37,7 +37,7 @@ public sealed class PipeNetwork
                                     start.Position.Y + (end.Position.Y - start.Position.Y) * fitting.T);
             return new FittingPlacementDefinition(fitting.Id, fitting.TypeKey, point, Elevation, edge.Id);
         })).ToList();
-        return new PipeNetworkDefinition(nodes, edges, fittings, Elevation, diameterMm, outputMode);
+        return new PipeNetworkDefinition(nodes, edges, fittings, Elevation, diameterMm, outputMode, referencePoint);
     }
 
     internal PipeNode AddNode(Point2D position) { var node = new PipeNode(Guid.NewGuid(), position); _nodes.Add(node); return node; }

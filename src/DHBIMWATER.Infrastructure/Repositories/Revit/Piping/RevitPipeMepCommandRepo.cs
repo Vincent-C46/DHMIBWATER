@@ -25,7 +25,7 @@ internal sealed class RevitPipeMepCommandRepo : IPipeCommandRepo
         var pipes = new Dictionary<Guid, Pipe>();
         foreach (var edge in network.Edges)
         {
-            var pipe = Pipe.Create(document, systemType.Id, pipeType.Id, level.Id, ToXyz(edge.Start, edge.Elevation), ToXyz(edge.End, edge.Elevation));
+            var pipe = Pipe.Create(document, systemType.Id, pipeType.Id, level.Id, ToXyz(edge.Start, edge.Elevation, network.ReferencePoint), ToXyz(edge.End, edge.Elevation, network.ReferencePoint));
             pipe.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM)?.Set(UC.MmToFt(network.DiameterMm));
             pipes.Add(edge.Id, pipe);
         }
@@ -34,7 +34,7 @@ internal sealed class RevitPipeMepCommandRepo : IPipeCommandRepo
 
     private static void ConnectNode(Document document, PipeNodeDefinition node, PipeNetworkDefinition network, IReadOnlyDictionary<Guid, Pipe> pipes)
     {
-        var connected = network.Edges.Where(x => IsAt(x.Start, node.Position) || IsAt(x.End, node.Position)).Select(x => FindConnector(pipes[x.Id], node.Position, x.Elevation)).Where(x => x is not null).Cast<Connector>().ToList();
+        var connected = network.Edges.Where(x => IsAt(x.Start, node.Position) || IsAt(x.End, node.Position)).Select(x => FindConnector(pipes[x.Id], node.Position, x.Elevation, network.ReferencePoint)).Where(x => x is not null).Cast<Connector>().ToList();
         try
         {
             switch (node.NodeKind)
@@ -51,11 +51,11 @@ internal sealed class RevitPipeMepCommandRepo : IPipeCommandRepo
         }
     }
 
-    private static Connector? FindConnector(Pipe pipe, DHBIMWATER.Core.Geometry.Point2D point, double elevation)
+    private static Connector? FindConnector(Pipe pipe, DHBIMWATER.Core.Geometry.Point2D point, double elevation, DHBIMWATER.Core.Geometry.Point2D referencePoint)
     {
-        var target = ToXyz(point, elevation);
+        var target = ToXyz(point, elevation, referencePoint);
         return pipe.ConnectorManager.Connectors.Cast<Connector>().OrderBy(x => x.Origin.DistanceTo(target)).FirstOrDefault();
     }
     private static bool IsAt(DHBIMWATER.Core.Geometry.Point2D point, DHBIMWATER.Core.Geometry.Point2D node) => point.DistanceTo(node) <= 0.01;
-    private static XYZ ToXyz(DHBIMWATER.Core.Geometry.Point2D point, double elevation) => new(UC.MmToFt(point.X), UC.MmToFt(point.Y), UC.MmToFt(elevation));
+    private static XYZ ToXyz(DHBIMWATER.Core.Geometry.Point2D point, double elevation, DHBIMWATER.Core.Geometry.Point2D referencePoint) => new(UC.MmToFt(point.X + referencePoint.X), UC.MmToFt(point.Y + referencePoint.Y), UC.MmToFt(elevation));
 }

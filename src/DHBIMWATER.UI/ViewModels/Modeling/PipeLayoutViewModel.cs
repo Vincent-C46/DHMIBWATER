@@ -16,6 +16,7 @@ public sealed class PipeLayoutViewModel : ViewModelBase
     private string _selectedFittingType = "밸브";
     private string _status = "캔버스를 클릭하여 배관 시작점을 지정하세요.";
     private double _elevation;
+    private double _referenceX, _referenceY;
     private double _diameterMm = 100;
     private PipeOutputMode _outputMode = PipeOutputMode.MepPipe;
     private bool _useAngleSnap = true, _isPreviewVisible;
@@ -49,6 +50,10 @@ public sealed class PipeLayoutViewModel : ViewModelBase
     public Action? CloseAction { get; set; }
     public Action<PipeNetworkDefinition>? CreateModelAction { get; set; }
     public double Elevation { get => _elevation; set { if (SetProperty(ref _elevation, value)) _network.Elevation = value; } }
+    public double ReferenceX { get => _referenceX; set => SetProperty(ref _referenceX, value); }
+    public double ReferenceY { get => _referenceY; set => SetProperty(ref _referenceY, value); }
+    public double ReferenceScreenX => Transform.PanOrigin.X;
+    public double ReferenceScreenY => Transform.PanOrigin.Y;
     public double DiameterMm { get => _diameterMm; set => SetProperty(ref _diameterMm, value); }
     public PipeOutputMode OutputMode { get => _outputMode; set => SetProperty(ref _outputMode, value); }
     public Array OutputModes { get; } = Enum.GetValues(typeof(PipeOutputMode));
@@ -71,14 +76,15 @@ public sealed class PipeLayoutViewModel : ViewModelBase
     {
         if (_segmentStart is null)
         {
-            _segmentStart = point;
-            PreviewX1 = PreviewX2 = point.X; PreviewY1 = PreviewY2 = point.Y; IsPreviewVisible = true;
+            var snappedStart = SnapForDrawing(Transform.ToModel(point));
+            _segmentStart = Transform.ToScreen(snappedStart);
+            PreviewX1 = PreviewX2 = _segmentStart.Value.X; PreviewY1 = PreviewY2 = _segmentStart.Value.Y; IsPreviewVisible = true;
             Status = "끝점을 클릭하면 배관이 확정됩니다.";
             return;
         }
         var start = Transform.ToModel(_segmentStart.Value);
         var raw = Transform.ToModel(point);
-        var snapped = _network.SnapPoint(raw);
+        var snapped = SnapForDrawing(raw);
         var end = raw.DistanceTo(snapped) > 0.001 ? snapped : Constrain(start, raw);
         _network.AddSegment(start, end);
         _segmentStart = null; IsPreviewVisible = false;
@@ -89,7 +95,7 @@ public sealed class PipeLayoutViewModel : ViewModelBase
     public void HandleCanvasMove(Point point)
     {
         if (_segmentStart is null) return;
-        var start = Transform.ToModel(_segmentStart.Value); var raw = Transform.ToModel(point); var snapped = _network.SnapPoint(raw);
+        var start = Transform.ToModel(_segmentStart.Value); var raw = Transform.ToModel(point); var snapped = SnapForDrawing(raw);
         var end = raw.DistanceTo(snapped) > 0.001 ? snapped : Constrain(start, raw);
         var screen = Transform.ToScreen(end);
         PreviewX1 = _segmentStart.Value.X; PreviewY1 = _segmentStart.Value.Y; PreviewX2 = screen.X; PreviewY2 = screen.Y; IsPreviewVisible = true;
@@ -102,6 +108,21 @@ public sealed class PipeLayoutViewModel : ViewModelBase
         if (length < double.Epsilon) return end;
         var angle = Math.Round(Math.Atan2(dy, dx) / (Math.PI / 4)) * Math.PI / 4;
         return new(start.X + length * Math.Cos(angle), start.Y + length * Math.Sin(angle));
+    }
+    public void HandleCanvasSizeChanged(double width, double height)
+    {
+        if (width <= 0 || height <= 0) return;
+        Transform.PanOrigin = new Point(width / 2, height / 2);
+        OnPropertyChanged(nameof(ReferenceScreenX));
+        OnPropertyChanged(nameof(ReferenceScreenY));
+        RefreshGraph();
+    }
+
+    private DHBIMWATER.Core.Geometry.Point2D SnapForDrawing(DHBIMWATER.Core.Geometry.Point2D point)
+    {
+        if (_network.Nodes.Count == 0 && point.DistanceTo(new DHBIMWATER.Core.Geometry.Point2D(0, 0)) <= PipeTopologyBuilder.SnapTolerance)
+            return new DHBIMWATER.Core.Geometry.Point2D(0, 0);
+        return _network.SnapPoint(point);
     }
     public void SelectEdge(Guid edgeId) => SelectedEdge = Edges.FirstOrDefault(x => x.Id == edgeId);
 
@@ -126,7 +147,7 @@ public sealed class PipeLayoutViewModel : ViewModelBase
 
     private void CreateModel()
     {
-        CreateModelAction?.Invoke(_network.ToDefinition(DiameterMm, OutputMode));
+        CreateModelAction?.Invoke(_network.ToDefinition(DiameterMm, OutputMode, new(ReferenceX, ReferenceY)));
         Status = "Revit 모델 생성을 완료했습니다.";
     }
 

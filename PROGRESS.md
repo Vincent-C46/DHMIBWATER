@@ -699,3 +699,10 @@
   - PipeType·PipingSystemType·Level을 사용자가 선택하는 UI 추가.
   - Cap 패밀리 선택/배치, 밸브·플랜지 등 인라인 부속의 실제 MEP/패밀리 배치 및 Connector 연결.
   - 수직 라이저, 드래그 기반 부속 위치 편집, Canvas 팬/줌 및 그리드 표시.
+
+### 밸브실 배관 Canvas 기준점·빈 화면 스냅 보완 (2026-07-16)
+- [x] 빈 배관 네트워크에서 `SnapPoint()`가 null 좌표를 반환해 첫 점 지정 뒤 `DistanceTo(other)` 예외가 발생하던 문제 수정 — 스냅 대상이 없으면 원래 좌표를 반환.
+- [x] Canvas 중앙에 연두색 점선 십자 기준점 표시 및 기준점 X/Y(mm) 입력 추가.
+- [x] 빈 화면에서는 기준점(0,0)만 100mm 허용오차로 스냅; 기준점 입력 X/Y는 배관의 상대 좌표에 더해 Revit 실제 배치 좌표로 전달.
+- [x] `PipeNetworkDefinition.ReferencePoint`를 추가하고 MEP Pipe/GenericModel 출력 모두에 기준점 오프셋 적용.
+- 검증: `dotnet build src\\DHBIMWATER.Revit\\DHBIMWATER.Revit.csproj -c Release --no-restore -p:DebugSymbols=false -p:DebugType=none` 오류 0개 (기존 경고 89개).

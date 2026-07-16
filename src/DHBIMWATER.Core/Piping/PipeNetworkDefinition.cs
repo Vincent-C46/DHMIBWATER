@@ -10,4 +10,5 @@ public sealed record PipeNetworkDefinition(
     IReadOnlyList<FittingPlacementDefinition> InlineFittings,
     double Elevation,
     double DiameterMm,
-    PipeOutputMode OutputMode);
+    PipeOutputMode OutputMode,
+    Point2D ReferencePoint);

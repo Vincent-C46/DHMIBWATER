@@ -14,6 +14,7 @@ public sealed class PipeTopologyBuilder
     {
         var node = _network.Nodes.OrderBy(x => x.Position.DistanceTo(point)).FirstOrDefault();
         if (node is not null && node.Position.DistanceTo(point) <= SnapTolerance) return node.Position;
+        if (_network.Edges.Count == 0) return point;
         var candidate = _network.Edges.Select(edge =>
         {
             var start = _network.FindNode(edge.StartNodeId)!.Position;

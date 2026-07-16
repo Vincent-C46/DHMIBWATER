@@ -20,11 +20,11 @@ internal sealed class RevitPipeGenericModelCommandRepo : IPipeCommandRepo
             var shape = DirectShape.CreateElement(document, new ElementId(BuiltInCategory.OST_GenericModel));
             shape.ApplicationId = "DHBIMWATER";
             shape.ApplicationDataId = edge.Id.ToString();
-            shape.SetShape([Line.CreateBound(ToXyz(edge.Start, edge.Elevation), ToXyz(edge.End, edge.Elevation))]);
+            shape.SetShape([Line.CreateBound(ToXyz(edge.Start, edge.Elevation, network.ReferencePoint), ToXyz(edge.End, edge.Elevation, network.ReferencePoint))]);
         }
         foreach (var fitting in network.InlineFittings)
         {
-            var point = ToXyz(fitting.Position, fitting.Elevation);
+            var point = ToXyz(fitting.Position, fitting.Elevation, network.ReferencePoint);
             var shape = DirectShape.CreateElement(document, new ElementId(BuiltInCategory.OST_GenericModel));
             shape.ApplicationId = "DHBIMWATER";
             shape.ApplicationDataId = fitting.Id.ToString();
@@ -32,5 +32,5 @@ internal sealed class RevitPipeGenericModelCommandRepo : IPipeCommandRepo
         }
     }
 
-    private static XYZ ToXyz(DHBIMWATER.Core.Geometry.Point2D point, double elevation) => new(UC.MmToFt(point.X), UC.MmToFt(point.Y), UC.MmToFt(elevation));
+    private static XYZ ToXyz(DHBIMWATER.Core.Geometry.Point2D point, double elevation, DHBIMWATER.Core.Geometry.Point2D referencePoint) => new(UC.MmToFt(point.X + referencePoint.X), UC.MmToFt(point.Y + referencePoint.Y), UC.MmToFt(elevation));
 }
