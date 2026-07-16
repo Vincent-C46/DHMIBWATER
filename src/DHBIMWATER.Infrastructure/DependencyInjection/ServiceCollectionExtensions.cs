@@ -1,4 +1,4 @@
-using DHBIMWATER.Application.Interfaces;
+﻿using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Application.Interfaces.Geometry;
 using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Application.Interfaces.Settings;
@@ -13,6 +13,7 @@ using DHBIMWATER.Infrastructure.Repositories.Revit.Storage;
 using DHBIMWATER.Infrastructure.Repositories.Revit.Modeling;
 using DHBIMWATER.Infrastructure.Repositories.Revit.Geometry;
 using DHBIMWATER.Infrastructure.Repositories.Revit.Quantity;
+using DHBIMWATER.Infrastructure.Repositories.Revit.Piping;
 using DHBIMWATER.Infrastructure.Repositories.Revit;
 using DHBIMWATER.Infrastructure.Services.Common;
 using DHBIMWATER.Infrastructure.Services.Didas;
@@ -43,6 +44,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IElementTypeCommandRepo, RevitElementTypeCommandRepo>();
         services.AddTransient<IWallCommandRepo, RevitWallCommandRepo>();
         services.AddTransient<IGenericModelCommandRepo, RevitGenericModelCommandRepo>();
+        services.AddTransient<IPipeCommandRepo, RevitPipeMepCommandRepo>();
+        services.AddTransient<IPipeCommandRepo, RevitPipeGenericModelCommandRepo>();
         services.AddTransient<IBeamCommandRepo, RevitBeamCommandRepo>();
         services.AddTransient<IColumnCommandRepo, RevitColumnCommandRepo>();
         services.AddTransient<ISlabCommandRepo, RevitSlabCommandRepo>();

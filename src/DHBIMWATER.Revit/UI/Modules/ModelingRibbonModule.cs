@@ -14,13 +14,21 @@ namespace DHBIMWATER.Revit.UI.Modules
             PushButtonData reservoirBtn = new PushButtonData("ReservoirCommand", "배수지\n모델링", Assembly.GetExecutingAssembly().Location, RevitCommandType<WaterTankCommand>.FullName);
             PushButtonData pumpingStationBtn = new PushButtonData("PumpingStationCommand", "펌프장\n모델링", Assembly.GetExecutingAssembly().Location, RevitCommandType<PumpingStationCommand>.FullName);
 
+            PushButtonData valveRoomBtn = new PushButtonData("ValveRoomCommand", "밸브실\n모델링", Assembly.GetExecutingAssembly().Location, RevitCommandType<ValveRoomCommand>.FullName);
+            PushButtonData pipeLayoutBtn = new PushButtonData("PipeLayoutCommand", "밸브실\n배관", Assembly.GetExecutingAssembly().Location, RevitCommandType<PipeLayoutCommand>.FullName);
+
             reservoirBtn.LargeImage = RibbonButtonImages.GetIcon("water-tap.png");
             pumpingStationBtn.LargeImage = RibbonButtonImages.GetIcon("pump.png");
+
+            valveRoomBtn.LargeImage = RibbonButtonImages.GetIcon("water-tap.png");
+            pipeLayoutBtn.LargeImage = RibbonButtonImages.GetIcon("water-tap.png");
 
             return
             [
                 panel.AddItem(reservoirBtn),
                 panel.AddItem(pumpingStationBtn),
+                panel.AddItem(valveRoomBtn),
+                panel.AddItem(pipeLayoutBtn),
             ];
         }
     }

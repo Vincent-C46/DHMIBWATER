@@ -12,6 +12,19 @@
 - [x] DI Container 구성 (`ServiceContainer`, `Func<Document?>` 패턴)
 - [x] Revit Transaction 추상화 (`ITransactionContext`, `RevitTransactionContext`)
 - [x] `Result<T>` 공통 결과 타입
+- [x] **DHBoost 매스 로더 / n점 가변 패밀리 배치 로직 바이너리 참조 연결** (2026-07-16)
+  - 목적: 소스 비공개(코드 유출 방지)로 DHBoost 로직 재사용 → 컴파일된 DLL 참조 방식(A안)
+  - Costura `ExcludeAssemblies` 가 제외목록 방식이라 참조 DLL은 `DHBIMWATER.Revit.dll` 에 자동 임베드(배포 추가작업 없음)
+  - **ILRepack 으로 참조 4개 → 1개 병합** (2026-07-16 갱신)
+    - `DHBoost.Infrastructure.csproj` 에 `ILRepack.Lib.MSBuild.Task` + `AfterTargets="Build"` 타깃 추가
+      (Release 빌드 시 4개 라이브러리 → `bin/Release/net8.0-windows/ilrepack/DHBoost.Combined.dll` 자동 병합)
+    - `Internalize=false` (DHBIMWATER 가 public 타입 사용) / 외부참조(Revit·M.E.DI·ExcelDataReader)는 병합 안 함
+    - 함정: 출력 파일을 `LibraryPath` 와 같은 폴더에 두면 이전 산출물이 재입력돼 "Duplicate type" 오류 → **출력을 `ilrepack/` 하위 폴더로 분리**해 해결
+    - `src/DHBIMWATER.Revit/libs/DHBoost/` 는 이제 `DHBoost.Combined.dll` 1개, `DHBIMWATER.Revit.csproj` 참조도 1줄
+  - 빌드 검증: DHBoost Release / DHBIMWATER.Revit Release 모두 오류 0개, 출력 DLL 37.5MB(임베드 유지) 확인
+  - [ ] TODO: 실제 호출부(Command) 배선 — 호출 위치 확정 후 연결
+  - [ ] TODO(선택): 유출 방지 실효를 위한 병합본 난독화(obfuscator) 검토 — 평문 IL은 디컴파일 가능
+  - [ ] TODO: DHBoost 로직 변경 시 Release 재빌드 → `ilrepack/DHBoost.Combined.dll` 을 libs 로 수동 갱신
 
 ### 수량산출 (Quantity)
 - [x] `IQuantityExtractor` 인터페이스 정의
@@ -155,6 +168,12 @@
 ---
 
 ## 진행 중인 작업
+
+#### 밸브실 GeometryCalculator 샘플 단순화 (2026-07-16)
+- [x] `ValveRoomGeometryCalculator`의 펌프장 복붙 대량 분기/반복 로직을 제거하고, 각 `Calculate*` 메서드가 대표 샘플 1개만 직접 생성하도록 재작성.
+  - 대상: 레벨, 슬래브, 선형벽체, 프로파일벽체, 보, 솔리드, 슬래브/벽 오프닝, 일반모델, 단면뷰, 계단.
+  - 파일 규모: 약 2090줄 → 360줄.
+- 검증: `dotnet build src\DHBIMWATER.Application\DHBIMWATER.Application.csproj --no-restore` 오류 0개. 기존 nullable/미사용 필드 경고는 남음.
 
 #### 밸브실 모델링 입력 UI 목업 (2026-07-15)
 - 배경: 밸브실 자동 모델링 로직 착수. 사용자 입력 항목 정의를 위한 입력창 목업 선작성.
@@ -623,3 +642,60 @@
 - 변경 파일: `Infrastructure/Repositories/Revit/Geometry/RevitIntersectingElementFinder.cs`, `Infrastructure/Repositories/Revit/Geometry/RevitFaceClassifier.cs`
 - 검증: `dotnet build DHBIMWATER.sln -p:DebugType=none` 오류 0개(Revit 실행 중이라 Addins 폴더 복사 경고만 발생, 컴파일은 정상), `dotnet test tests\DHBIMWATER.UI.Tests` 18/18 통과.
 - 미결: 두 클래스 모두 Revit API 지오메트리(Solid/Face)에 의존해 순수 유닛테스트 불가 — Revit 실물에서 (1) 면적공제 탭 체크박스 변경 → 재산출 반영, (2) 작은 오프닝 임계값 미만 시 거푸집 OpeningSide 면적 감소 확인 필요. Task 4(할증률 열)는 미착수로 남음.
+
+### 밸브실 모델링 입력 목업 보완 (2026-07-16)
+- [x] `docs/08_밸브실모델링입력목업_v3.html`에 4변 공통 기초 Toe(`Lt`) 입력 및 기초 외곽 치수 요약 추가
+- [x] 이토밸브실: 중간벽체·중간슬래브 선택형 구성, 중간슬래브 적용 시 1F/2F 내부 높이 입력 추가
+- [x] 제수밸브실: X/Y 방향 보 개수·외벽 내측~첫 보 중심 거리·보 중심 간격 입력 및 보 교차부 기둥 자동배치 안내 추가
+- [x] 공기밸브실: 기초·4개 외벽·상부슬래브 단층 구성으로 표시; 하부 관통관 void는 추후 결정
+- 검증: 추출 JavaScript `node --check` 통과
+### 밸브실 WPF 입력 UI (2026-07-16)
+- [x] `ValveRoomView` / `ValveRoomViewModel` 추가: 이토·제수·공기밸브실 유형별 입력 노출, 4변 공통 기초 Toe 및 외곽 치수 요약
+- [x] 이토밸브실 선택형 중간벽체·중간슬래브 및 중간슬래브 적용 시 1F/2F 높이 입력 구현
+- [x] 제수밸브실 X/Y 보 배치 입력, 보 교차부 기둥 자동배치 안내 및 Revit 프레임 타입 목록 연동 구현
+- [x] DI 등록, `밸브실 모델링` 리본 버튼 및 `ValveRoomCommand` 추가
+- [x] 목업의 밸브실 종류 옆 설명 제거
+- [ ] TODO: `ValveRoomRequestDto` / UseCase / Revit 생성 Repo 연결 및 공기밸브실 하부 관통관 void 결정
+- 검증: `dotnet build src\\DHBIMWATER.UI\\DHBIMWATER.UI.csproj --no-dependencies -p:DebugSymbols=false -p:DebugType=none` 성공 (오류 0, 기존 경고 80개).
+- 검증: Costura 포함 Revit 애드인 재빌드·2026 배포 완료 — dotnet build src\\DHBIMWATER.Revit\\DHBIMWATER.Revit.csproj --no-dependencies -p:DebugSymbols=false -p:DebugType=none (오류 0, 기존 경고 5개).
+### DHBoost 난독화 병합 DLL 갱신 (2026-07-16)
+- [x] `F:\02_Work\04_Addin\DHBoost\src\DHBoost.Infrastructure\bin\Release\net8.0-windows\ilrepack\DHBoost.Combined.dll`을 `src\DHBIMWATER.Revit\libs\DHBoost\DHBoost.Combined.dll`로 복사
+- [x] 원본·참조 DLL SHA-256 일치 확인, 기존 단일 `DHBoost.Combined` 참조 유지
+- [x] `dotnet build src\DHBIMWATER.Revit\DHBIMWATER.Revit.csproj -c Release -p:DebugSymbols=false -p:DebugType=none` 성공 (오류 0, 기존 경고 116개)
+### 밸브실 내부 배관 배치 — Phase 1 (2026-07-16)
+- [x] Core `Piping` 그래프 추가: 노드 차수 기반 Cap·Inline·Elbow·Tee·Cross 분류, 모델 표고(mm) 예약 필드.
+- [x] `PipeTopologyBuilder`/`Segment2D` 구현: 끝점 스냅, 교차·T접점·공선 겹침 분할, 근접 노드 병합 및 엣지 정규화.
+- [x] `PipeLayoutView`/`PipeLayoutViewModel` 추가: 2회 클릭 직선 드로잉, 분기 색상 표시, 선택 엣지 부속품 순서형 +add/삭제/초기화.
+- [x] `CanvasModelTransform`, `PipeLayoutCommand`, UI DI 및 Modeling 리본 `밸브실 배관` 버튼 추가.
+- [x] `IPipeCommandRepo`와 순수 생성 정의만 추가 — Revit 모델 생성 구현은 제외.
+- 변경 파일: `Core/Piping/*`, `Application/Interfaces/IPipeCommandRepo.cs`, `UI/Utilities/CanvasModelTransform.cs`, `UI/ViewModels/Modeling/PipeLayoutViewModel.cs`, `UI/Views/Modeling/PipeLayoutView.*`, `Revit/Commands/PipeLayoutCommand.cs`, UI DI·Modeling 리본.
+- [ ] TODO (Phase 2): 사용자 표고 입력 UI, `IPipeCommandRepo` MEP Pipe/GenericModel 구현체, UseCase 트랜잭션 기반 Revit 생성·Connector 연결, 드래그 UX.
+### 밸브실 내부 배관 배치 — Phase 2 (2026-07-16)
+- [x] `PipeNetworkDefinition` 추가: 노드·엣지·인라인 부속, 작업 표고(mm), 관경(mm), 출력 모드를 불변 생성 요청으로 전달.
+- [x] `CreateValvePipingUseCase` 추가: `ITransactionContext`에서만 Transaction을 열고, 선택한 `IPipeCommandRepo` 구현으로 모델 생성을 위임.
+- [x] `RevitPipeMepCommandRepo` 구현: 첫 PipingSystemType/PipeType/Level을 기본 선택해 `Pipe.Create`로 생성하고, Inline·Elbow·Tee·Cross 노드를 Connector 기반 표준 부속으로 연결.
+- [x] `RevitPipeGenericModelCommandRepo` 구현: MEP 타입이 없는 프로젝트에서 선택 가능한 GenericModel DirectShape 대체 출력 제공.
+- [x] 배관 배치 UI에 출력 방식(MEP 기본), 표고, 관경(기본 Ø100 mm), `모델 생성` 버튼 추가. 명령이 UseCase 콜백을 연결.
+- [x] Infrastructure DI에 두 `IPipeCommandRepo` 구현체, Application DI에 UseCase 등록.
+- [ ] 제한/TODO: Cap은 Revit 2026에서 범용 `NewCapFitting` API가 없어 열린 Connector로 유지한다. 사용자별 PipeType·PipingSystemType·Level 선택 UI, 특정 인라인 부속 패밀리(밸브/플랜지 등) 배치, 수직 라이저 및 실제 Revit 모델 육안 검증은 후속 작업.
+- 검증: `dotnet build src\\DHBIMWATER.Revit\\DHBIMWATER.Revit.csproj -c Release --no-restore -p:DebugSymbols=false -p:DebugType=none` 오류 0개. 실행 중 Revit/Visual Studio의 배포 DLL 잠금 및 기존 경고는 남음.
+### 배관 Canvas 각도·선 스냅 및 가상선 (2026-07-16)
+- [x] `직교 + 45° 각도 스냅` 토글 추가(기본 켜짐). 자유 모드로 해제 가능.
+- [x] 첫 클릭 뒤 마우스 이동에 따라 주황 점선 가상선을 표시하고, 두 번째 클릭에서 세그먼트 확정.
+- [x] `PipeTopologyBuilder.SnapPoint()` 추가: 노드와 기존 엣지 내부 투영점 모두 100mm 허용오차로 스냅. 선 중간 클릭은 T 접점 분할로 연결.
+- [x] 선·노드 스냅은 각도 제약보다 우선하여, 기존 배관 접속점이 각도 보정으로 밀려나지 않도록 처리.
+- [x] 엣지 분할의 파라미터 경계 판정을 0~1 정규화 값에 맞게 수정.
+- 검증: `dotnet build src\\DHBIMWATER.Revit\\DHBIMWATER.Revit.csproj -c Release --no-restore -p:DebugSymbols=false -p:DebugType=none` 오류 0개(기존 경고만).
+### 밸브실 배관 배치 — 현재 작업 정리 (2026-07-16)
+- 구현 완료
+  - Phase 1: 2D `PipeNetwork` 토폴로지, 교차·T 접점 분할, 노드 차수 분류(Cap/Inline/Elbow/Tee/Cross), 인라인 부속 순서형 목록, Canvas 렌더링.
+  - Phase 2: 표고·관경·출력방식(MEP 기본/GenericModel 대체) 입력, `CreateValvePipingUseCase`의 Transaction 관리, MEP `Pipe.Create` 및 Elbow/Tee/Cross/Union Connector 연결, GenericModel DirectShape 대체 출력.
+  - UX 보완: 기본 활성화된 직교+45° 각도 스냅 토글, 노드·기존 선 내부 100mm 스냅, 첫 클릭 이후 주황 점선 가상선, 선 중간 클릭의 T 접점 연결.
+- 최신 빌드 상태
+  - `dotnet build src\\DHBIMWATER.UI\\DHBIMWATER.UI.csproj -c Release --no-restore -p:DebugSymbols=false -p:DebugType=none` 오류 0개.
+  - Revit 프로젝트는 이전 확인에서 오류 0개였으나, 실행 중 Revit/Visual Studio가 배포 DLL을 잠그면 복사 경고가 발생할 수 있음.
+- 확인 필요 / 후속 TODO
+  - Revit 실물에서 MEP 파이프 시스템·타입·레벨 자동 선택, 엘보·티·크로스 생성, DirectShape 대체 출력을 육안 검증.
+  - PipeType·PipingSystemType·Level을 사용자가 선택하는 UI 추가.
+  - Cap 패밀리 선택/배치, 밸브·플랜지 등 인라인 부속의 실제 MEP/패밀리 배치 및 Connector 연결.
+  - 수직 라이저, 드래그 기반 부속 위치 편집, Canvas 팬/줌 및 그리드 표시.
