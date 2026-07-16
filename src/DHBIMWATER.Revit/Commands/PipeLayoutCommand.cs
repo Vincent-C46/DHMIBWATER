@@ -15,9 +15,16 @@ public class PipeLayoutCommand : CommandBase
     {
         var view = ServiceContainer.GetService<PipeLayoutView>();
         var useCase = ServiceContainer.GetService<CreateValvePipingUseCase>();
-        ((DHBIMWATER.UI.ViewModels.Modeling.PipeLayoutViewModel)view.DataContext).CreateModelAction = useCase.Execute;
+        var handler = new PipeLayoutRequestHandler(useCase);
+        var externalEvent = ExternalEvent.Create(handler);
+        ((DHBIMWATER.UI.ViewModels.Modeling.PipeLayoutViewModel)view.DataContext).CreateModelAction = network =>
+        {
+            handler.PendingNetwork = network;
+            handler.Request.Make(PipeLayoutRequestId.CreateModel);
+            externalEvent.Raise();
+        };
         new WindowInteropHelper(view).Owner = commandData.Application.MainWindowHandle;
-        view.ShowDialog();
+        view.Show();
         return Result.Succeeded;
     }
 }

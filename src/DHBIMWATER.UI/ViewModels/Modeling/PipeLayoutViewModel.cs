@@ -13,14 +13,17 @@ public sealed class PipeLayoutViewModel : ViewModelBase
     private readonly PipeNetwork _network = new();
     private Point? _segmentStart;
     private PipeEdgeItem? _selectedEdge;
+    private double _selectedFittingT = 0.5;
     private string _selectedFittingType = "밸브";
     private string _status = "캔버스를 클릭하여 배관 시작점을 지정하세요.";
     private double _elevation;
     private double _referenceX, _referenceY;
     private double _diameterMm = 100;
     private PipeOutputMode _outputMode = PipeOutputMode.MepPipe;
-    private bool _useAngleSnap = true, _isPreviewVisible;
-    private double _previewX1, _previewY1, _previewX2, _previewY2;
+    private bool _useAngleSnap = true, _isPreviewVisible, _snapReferencePoint = true, _snapEndpoint = true, _snapMidpoint, _snapQuadrant, _snapIntersection = true, _snapNearest = true, _isSnapMarkerVisible;
+    private double _previewX1, _previewY1, _previewX2, _previewY2, _previewLengthX, _previewLengthY, _snapMarkerX, _snapMarkerY;
+    private string _previewLength = "0 mm";
+    private string _snapMarkerSymbol = "□";
 
     public PipeLayoutViewModel()
     {
@@ -45,6 +48,7 @@ public sealed class PipeLayoutViewModel : ViewModelBase
     public ICommand RemoveFittingCommand { get; }
     public ICommand ClearCommand { get; }
     public ICommand CancelDrawingCommand { get; }
+    public ICommand DeleteSelectedEdgeCommand { get; }
     public ICommand CloseCommand { get; }
     public ICommand CreateModelCommand { get; }
     public Action? CloseAction { get; set; }
@@ -58,11 +62,25 @@ public sealed class PipeLayoutViewModel : ViewModelBase
     public PipeOutputMode OutputMode { get => _outputMode; set => SetProperty(ref _outputMode, value); }
     public Array OutputModes { get; } = Enum.GetValues(typeof(PipeOutputMode));
     public bool UseAngleSnap { get => _useAngleSnap; set => SetProperty(ref _useAngleSnap, value); }
+    public bool SnapReferencePoint { get => _snapReferencePoint; set => SetProperty(ref _snapReferencePoint, value); }
+    public bool SnapEndpoint { get => _snapEndpoint; set => SetProperty(ref _snapEndpoint, value); }
+    public bool SnapMidpoint { get => _snapMidpoint; set => SetProperty(ref _snapMidpoint, value); }
+    public bool SnapQuadrant { get => _snapQuadrant; set => SetProperty(ref _snapQuadrant, value); }
+    public bool SnapIntersection { get => _snapIntersection; set => SetProperty(ref _snapIntersection, value); }
+    public bool SnapNearest { get => _snapNearest; set => SetProperty(ref _snapNearest, value); }
     public bool IsPreviewVisible { get => _isPreviewVisible; private set => SetProperty(ref _isPreviewVisible, value); }
+    public bool IsDrawing => _segmentStart is not null;
+    public bool IsSnapMarkerVisible { get => _isSnapMarkerVisible; private set => SetProperty(ref _isSnapMarkerVisible, value); }
+    public double SnapMarkerX { get => _snapMarkerX; private set => SetProperty(ref _snapMarkerX, value); }
+    public double SnapMarkerY { get => _snapMarkerY; private set => SetProperty(ref _snapMarkerY, value); }
+    public string SnapMarkerSymbol { get => _snapMarkerSymbol; private set => SetProperty(ref _snapMarkerSymbol, value); }
     public double PreviewX1 { get => _previewX1; private set => SetProperty(ref _previewX1, value); }
     public double PreviewY1 { get => _previewY1; private set => SetProperty(ref _previewY1, value); }
     public double PreviewX2 { get => _previewX2; private set => SetProperty(ref _previewX2, value); }
     public double PreviewY2 { get => _previewY2; private set => SetProperty(ref _previewY2, value); }
+    public double PreviewLengthX { get => _previewLengthX; private set => SetProperty(ref _previewLengthX, value); }
+    public double PreviewLengthY { get => _previewLengthY; private set => SetProperty(ref _previewLengthY, value); }
+    public string PreviewLength { get => _previewLength; private set => SetProperty(ref _previewLength, value); }
 
     public PipeEdgeItem? SelectedEdge
     {
@@ -76,29 +94,39 @@ public sealed class PipeLayoutViewModel : ViewModelBase
     {
         if (_segmentStart is null)
         {
-            var snappedStart = SnapForDrawing(Transform.ToModel(point));
+            var rawStart = Transform.ToModel(point);
+            var snappedStart = FindSnapPoint(rawStart) ?? rawStart;
             _segmentStart = Transform.ToScreen(snappedStart);
-            PreviewX1 = PreviewX2 = _segmentStart.Value.X; PreviewY1 = PreviewY2 = _segmentStart.Value.Y; IsPreviewVisible = true;
+            PreviewX1 = PreviewX2 = _segmentStart.Value.X; PreviewY1 = PreviewY2 = _segmentStart.Value.Y;
+            PreviewLengthX = _segmentStart.Value.X; PreviewLengthY = _segmentStart.Value.Y; PreviewLength = "0.000 m"; IsPreviewVisible = true;
             Status = "끝점을 클릭하면 배관이 확정됩니다.";
             return;
         }
         var start = Transform.ToModel(_segmentStart.Value);
         var raw = Transform.ToModel(point);
-        var snapped = SnapForDrawing(raw);
-        var end = raw.DistanceTo(snapped) > 0.001 ? snapped : Constrain(start, raw);
+        var snapped = FindSnapPoint(raw);
+        var end = snapped ?? Constrain(start, raw);
         _network.AddSegment(start, end);
-        _segmentStart = null; IsPreviewVisible = false;
+        _segmentStart = null; IsPreviewVisible = false; IsSnapMarkerVisible = false;
         RefreshGraph();
         Status = "기존 선 중간을 클릭하면 T 접점으로 연결됩니다.";
     }
 
     public void HandleCanvasMove(Point point)
     {
+        var raw = Transform.ToModel(point); var snapped = FindSnapPoint(raw);
+        if (snapped is not null)
+        {
+            var marker = Transform.ToScreen(snapped);
+            SnapMarkerX = marker.X; SnapMarkerY = marker.Y; SnapMarkerSymbol = GetSnapMarkerSymbol(raw, snapped); IsSnapMarkerVisible = true;
+        }
+        else IsSnapMarkerVisible = false;
         if (_segmentStart is null) return;
-        var start = Transform.ToModel(_segmentStart.Value); var raw = Transform.ToModel(point); var snapped = SnapForDrawing(raw);
-        var end = raw.DistanceTo(snapped) > 0.001 ? snapped : Constrain(start, raw);
+        var start = Transform.ToModel(_segmentStart.Value);
+        var end = Constrain(start, raw);
         var screen = Transform.ToScreen(end);
-        PreviewX1 = _segmentStart.Value.X; PreviewY1 = _segmentStart.Value.Y; PreviewX2 = screen.X; PreviewY2 = screen.Y; IsPreviewVisible = true;
+        PreviewX1 = _segmentStart.Value.X; PreviewY1 = _segmentStart.Value.Y; PreviewX2 = screen.X; PreviewY2 = screen.Y;
+        PreviewLengthX = (PreviewX1 + PreviewX2) / 2; PreviewLengthY = (PreviewY1 + PreviewY2) / 2; PreviewLength = $"{start.DistanceTo(end) / 1000:N3} m"; IsPreviewVisible = true;
     }
 
     private DHBIMWATER.Core.Geometry.Point2D Constrain(DHBIMWATER.Core.Geometry.Point2D start, DHBIMWATER.Core.Geometry.Point2D end)
@@ -118,18 +146,55 @@ public sealed class PipeLayoutViewModel : ViewModelBase
         RefreshGraph();
     }
 
-    private DHBIMWATER.Core.Geometry.Point2D SnapForDrawing(DHBIMWATER.Core.Geometry.Point2D point)
+    private DHBIMWATER.Core.Geometry.Point2D? FindSnapPoint(DHBIMWATER.Core.Geometry.Point2D point)
     {
-        if (_network.Nodes.Count == 0 && point.DistanceTo(new DHBIMWATER.Core.Geometry.Point2D(0, 0)) <= PipeTopologyBuilder.SnapTolerance)
-            return new DHBIMWATER.Core.Geometry.Point2D(0, 0);
-        return _network.SnapPoint(point);
+        var mode = PipeSnapMode.None;
+        if (SnapEndpoint) mode |= PipeSnapMode.Endpoint;
+        if (SnapMidpoint) mode |= PipeSnapMode.Midpoint;
+        if (SnapQuadrant) mode |= PipeSnapMode.Quadrant;
+        if (SnapIntersection) mode |= PipeSnapMode.Intersection;
+        if (SnapNearest) mode |= PipeSnapMode.Nearest;
+        var networkSnap = _network.FindSnapPoint(point, mode);
+        var referencePoint = new DHBIMWATER.Core.Geometry.Point2D(0, 0);
+        var referenceSnap = SnapReferencePoint && point.DistanceTo(referencePoint) <= PipeTopologyBuilder.SnapTolerance ? referencePoint : null;
+        if (networkSnap is null) return referenceSnap;
+        if (referenceSnap is null) return networkSnap;
+        return point.DistanceTo(networkSnap) <= point.DistanceTo(referenceSnap) ? networkSnap : referenceSnap;
     }
-    public void SelectEdge(Guid edgeId) => SelectedEdge = Edges.FirstOrDefault(x => x.Id == edgeId);
+    public void SelectEdge(Guid edgeId, Point? position = null)
+    {
+        SelectedEdge = Edges.FirstOrDefault(x => x.Id == edgeId);
+        if (SelectedEdge is not null && position is not null)
+        {
+            var dx = SelectedEdge.X2 - SelectedEdge.X1; var dy = SelectedEdge.Y2 - SelectedEdge.Y1;
+            var lengthSquared = dx * dx + dy * dy;
+            _selectedFittingT = lengthSquared <= double.Epsilon ? 0.5 : Math.Clamp(((position.Value.X - SelectedEdge.X1) * dx + (position.Value.Y - SelectedEdge.Y1) * dy) / lengthSquared, 0, 1);
+        }
+        RefreshGraph();
+    }
+
+    public void HandleEscape()
+    {
+        if (IsDrawing) { CancelDrawing(); return; }
+        if (SelectedEdge is null) return;
+        SelectedEdge = null;
+        RefreshGraph();
+        Status = "선택을 취소했습니다.";
+    }
+
+    public void DeleteSelectedEdge()
+    {
+        if (SelectedEdge is null) return;
+        _network.RemoveSegment(SelectedEdge.Id);
+        SelectedEdge = null;
+        RefreshGraph();
+        Status = "선택한 배관을 삭제했습니다.";
+    }
 
     private void AddFitting()
     {
         if (SelectedEdge is null) return;
-        _network.AddInlineFitting(SelectedEdge.Id, SelectedFittingType);
+        _network.AddInlineFitting(SelectedEdge.Id, SelectedFittingType, _selectedFittingT);
         RefreshGraph();
         SelectedEdge = Edges.FirstOrDefault(x => x.Id == SelectedEdge.Id);
     }
@@ -148,11 +213,32 @@ public sealed class PipeLayoutViewModel : ViewModelBase
     private void CreateModel()
     {
         CreateModelAction?.Invoke(_network.ToDefinition(DiameterMm, OutputMode, new(ReferenceX, ReferenceY)));
-        Status = "Revit 모델 생성을 완료했습니다.";
+        Status = "Revit 모델 생성 요청을 전송했습니다.";
     }
 
     private void Clear() { _network.Clear(); SelectedEdge = null; RefreshGraph(); Status = "그래프를 초기화했습니다."; }
-    private void CancelDrawing() { _segmentStart = null; IsPreviewVisible = false; Status = "그리기를 취소했습니다."; }
+    private void CancelDrawing() { _segmentStart = null; IsPreviewVisible = false; IsSnapMarkerVisible = false; Status = "그리기를 취소했습니다."; }
+
+    private string GetSnapMarkerSymbol(DHBIMWATER.Core.Geometry.Point2D raw, DHBIMWATER.Core.Geometry.Point2D snapped)
+    {
+        var referencePoint = new DHBIMWATER.Core.Geometry.Point2D(0, 0);
+        if (SnapReferencePoint && snapped.DistanceTo(referencePoint) <= double.Epsilon) return "+";
+        if (SnapIntersection && _network.Nodes.Any(x => x.Degree >= 3 && x.Position.DistanceTo(snapped) <= double.Epsilon)) return "×";
+        if (SnapEndpoint && _network.Nodes.Any(x => x.Position.DistanceTo(snapped) <= double.Epsilon)) return "□";
+        foreach (var edge in _network.Edges)
+        {
+            if (SnapMidpoint && IsAt(edge, snapped, 0.5)) return "△";
+            if (SnapQuadrant && (IsAt(edge, snapped, 0.25) || IsAt(edge, snapped, 0.75))) return "◇";
+        }
+        return "·";
+    }
+
+    private bool IsAt(PipeEdge edge, DHBIMWATER.Core.Geometry.Point2D point, double t)
+    {
+        var start = _network.Nodes.First(x => x.Id == edge.StartNodeId).Position;
+        var end = _network.Nodes.First(x => x.Id == edge.EndNodeId).Position;
+        return point.DistanceTo(new(start.X + (end.X - start.X) * t, start.Y + (end.Y - start.Y) * t)) <= double.Epsilon;
+    }
 
     private void RefreshGraph()
     {
@@ -162,7 +248,7 @@ public sealed class PipeLayoutViewModel : ViewModelBase
             var start = _network.Nodes.First(x => x.Id == edge.StartNodeId);
             var end = _network.Nodes.First(x => x.Id == edge.EndNodeId);
             var a = Transform.ToScreen(start.Position); var b = Transform.ToScreen(end.Position);
-            Edges.Add(new PipeEdgeItem(edge.Id, edge.StartNodeId, edge.EndNodeId, a.X, a.Y, b.X, b.Y));
+            Edges.Add(new PipeEdgeItem(edge.Id, edge.StartNodeId, edge.EndNodeId, a.X, a.Y, b.X, b.Y, start.Position.DistanceTo(end.Position), edge.Id == SelectedEdge?.Id));
         }
         foreach (var node in _network.Nodes)
         {
@@ -184,7 +270,13 @@ public sealed class PipeLayoutViewModel : ViewModelBase
     }
 }
 
-public sealed record PipeEdgeItem(Guid Id, Guid StartNodeId, Guid EndNodeId, double X1, double Y1, double X2, double Y2);
+public sealed record PipeEdgeItem(Guid Id, Guid StartNodeId, Guid EndNodeId, double X1, double Y1, double X2, double Y2, double LengthMm, bool IsSelected)
+{
+    public double LengthX => (X1 + X2) / 2;
+    public double LengthY => (Y1 + Y2) / 2;
+    public string LengthLabel => $"{LengthMm / 1000:N3} m";
+    public string Stroke => IsSelected ? "#E67E22" : "#2878B8";
+}
 public sealed record PipeNodeItem(Guid Id, double X, double Y, int Degree, NodeKind NodeKind)
 {
     public string Label => $"{NodeKind} ({Degree})";

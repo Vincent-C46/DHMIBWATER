@@ -1,3 +1,4 @@
+using DHBIMWATER.Application.DTOs.Revit.ValveRoom;
 using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.UI.Base;
 using DHBIMWATER.UI.Commands;
@@ -41,6 +42,10 @@ public class ValveRoomViewModel : ViewModelBase
     private double _beamOffsetY = 1000;
     private double _beamSpacingY = 1000;
 
+    private double _sharedCoordinateX;
+    private double _sharedCoordinateY;
+    private double _sharedElevation;
+    private double _trueNorthToProjectNorthClockwiseDegrees;
     public ValveRoomViewModel(IDialogService dialogService, IElementTypeQueryRepo typeQueryRepo)
     {
         _dialogService = dialogService;
@@ -52,8 +57,8 @@ public class ValveRoomViewModel : ViewModelBase
         LoadTypeNames();
 
         ResetCommand = new RelayCommand(_ => ApplyPreset());
-        PreviewCommand = new RelayCommand(_ => _dialogService.Info("미리보기", "밸브실 미리보기는 모델 생성 UseCase 연결 후 제공됩니다."));
-        CreateCommand = new RelayCommand(_ => _dialogService.Info("모델 생성", "현재는 밸브실 입력 UI 단계입니다. Revit 모델 생성은 후속 단계에서 연결합니다."));
+        PreviewCommand = new RelayCommand(_ => PreviewRequested?.Invoke(new ValveRoomPreviewViewModel(this)));
+        CreateCommand = new RelayCommand(_ => RequestCreate());
         CancelCommand = new RelayCommand(_ => CloseAction?.Invoke());
         ApplyPreset();
     }
@@ -66,6 +71,8 @@ public class ValveRoomViewModel : ViewModelBase
     public ICommand CreateCommand { get; }
     public ICommand CancelCommand { get; }
     public Action? CloseAction { get; set; }
+    public Action<ValveRoomPreviewViewModel>? PreviewRequested { get; set; }
+    public ValveRoomRequestDto? RequestedCreate { get; private set; }
 
     public string SelectedValveRoomType
     {
@@ -106,6 +113,10 @@ public class ValveRoomViewModel : ViewModelBase
     public double BeamOffsetY { get => _beamOffsetY; set => SetProperty(ref _beamOffsetY, value); }
     public double BeamSpacingY { get => _beamSpacingY; set => SetProperty(ref _beamSpacingY, value); }
 
+    public double SharedCoordinateX { get => _sharedCoordinateX; set => SetProperty(ref _sharedCoordinateX, value); }
+    public double SharedCoordinateY { get => _sharedCoordinateY; set => SetProperty(ref _sharedCoordinateY, value); }
+    public double SharedElevation { get => _sharedElevation; set => SetProperty(ref _sharedElevation, value); }
+    public double TrueNorthToProjectNorthClockwiseDegrees { get => _trueNorthToProjectNorthClockwiseDegrees; set => SetProperty(ref _trueNorthToProjectNorthClockwiseDegrees, value); }
     public bool HasIntermediateWall
     {
         get => _hasIntermediateWall;
@@ -187,6 +198,54 @@ public class ValveRoomViewModel : ViewModelBase
         OnPropertyChanged(nameof(Summary));
     }
 
+    private void RequestCreate()
+    {
+        if (InnerWidth <= 0 || InnerLength <= 0 || FoundationThickness <= 0 || OuterWallThickness <= 0 ||
+            (HasIntermediateSlab && (Floor1InnerHeight <= 0 || Floor2InnerHeight <= 0)))
+        {
+            _dialogService.Warn("입력 확인", "밸브실 치수와 두께는 0보다 커야 합니다.");
+            return;
+        }
+
+        if (IsSluice && (SelectedBeamTypeName == "(사용 안 함)" || SelectedColumnTypeName == "(사용 안 함)"))
+        {
+            _dialogService.Warn("입력 확인", "제수밸브실은 보 유형과 기둥 유형을 선택해야 합니다.");
+            return;
+        }
+
+        RequestedCreate = new ValveRoomRequestDto
+        {
+            RoomType = SelectedValveRoomType,
+            PlainConcreteThickness = PlainConcreteThickness,
+            FoundationThickness = FoundationThickness,
+            SharedCoordinateX = SharedCoordinateX,
+            SharedCoordinateY = SharedCoordinateY,
+            SharedElevation = SharedElevation,
+            TrueNorthToProjectNorthClockwiseDegrees = TrueNorthToProjectNorthClockwiseDegrees,
+            FoundationToe = FoundationToe,
+            OuterWallThickness = OuterWallThickness,
+            IntermediateWallThickness = IntermediateWallThickness,
+            UpperSlabThickness = UpperSlabThickness,
+            IntermediateSlabThickness = IntermediateSlabThickness,
+            InnerWidth = InnerWidth,
+            InnerLength = InnerLength,
+            InnerHeight = InnerHeight,
+            HasIntermediateWall = HasIntermediateWall,
+            IntermediateWallCount = IntermediateWallCount,
+            HasIntermediateSlab = HasIntermediateSlab,
+            Floor1InnerHeight = Floor1InnerHeight,
+            Floor2InnerHeight = Floor2InnerHeight,
+            BeamCountX = BeamCountX,
+            BeamOffsetX = BeamOffsetX,
+            BeamSpacingX = BeamSpacingX,
+            BeamCountY = BeamCountY,
+            BeamOffsetY = BeamOffsetY,
+            BeamSpacingY = BeamSpacingY,
+            BeamTypeName = SelectedBeamTypeName == "(사용 안 함)" ? string.Empty : SelectedBeamTypeName,
+            ColumnTypeName = SelectedColumnTypeName == "(사용 안 함)" ? string.Empty : SelectedColumnTypeName
+        };
+        CloseAction?.Invoke();
+    }
     private void LoadTypeNames()
     {
         foreach (var name in _typeQueryRepo.GetColumnTypeNames().Where(name => !string.IsNullOrWhiteSpace(name)).Distinct())

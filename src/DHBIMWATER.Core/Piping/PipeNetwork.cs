@@ -15,9 +15,10 @@ public sealed class PipeNetwork
     public IReadOnlyList<PipeNode> Nodes => _nodes;
     public IReadOnlyList<PipeEdge> Edges => _edges;
 
-    public Point2D SnapPoint(Point2D point) => new PipeTopologyBuilder(this).SnapPoint(point);
+    public Point2D? FindSnapPoint(Point2D point, PipeSnapMode modes) => new PipeTopologyBuilder(this).FindSnapPoint(point, modes);
     public void AddSegment(Point2D start, Point2D end) => new PipeTopologyBuilder(this).AddSegment(start, end);
-    public void AddInlineFitting(Guid edgeId, string typeKey) => new PipeTopologyBuilder(this).AddInlineFitting(edgeId, typeKey);
+    public void RemoveSegment(Guid edgeId) => new PipeTopologyBuilder(this).RemoveSegment(edgeId);
+    public void AddInlineFitting(Guid edgeId, string typeKey, double desiredT) => new PipeTopologyBuilder(this).AddInlineFitting(edgeId, typeKey, desiredT);
     public void RemoveInlineFitting(Guid edgeId, Guid fittingId) => new PipeTopologyBuilder(this).RemoveInlineFitting(edgeId, fittingId);
     public void Clear() { _nodes.Clear(); _edges.Clear(); }
     public PipeNetworkDefinition ToDefinition(double diameterMm, PipeOutputMode outputMode, Point2D referencePoint)
@@ -43,6 +44,7 @@ public sealed class PipeNetwork
     internal PipeNode AddNode(Point2D position) { var node = new PipeNode(Guid.NewGuid(), position); _nodes.Add(node); return node; }
     internal void AddEdge(Guid start, Guid end, IEnumerable<InlineFitting>? fittings = null) => _edges.Add(new PipeEdge(Guid.NewGuid(), start, end, fittings));
     internal void RemoveEdge(PipeEdge edge) => _edges.Remove(edge);
+    internal void RemoveUnconnectedNodes() => _nodes.RemoveAll(node => _edges.All(edge => edge.StartNodeId != node.Id && edge.EndNodeId != node.Id));
     internal PipeNode? FindNode(Guid id) => _nodes.FirstOrDefault(x => x.Id == id);
     internal PipeEdge? FindEdge(Guid id) => _edges.FirstOrDefault(x => x.Id == id);
 }

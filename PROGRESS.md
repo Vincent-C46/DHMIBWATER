@@ -706,3 +706,71 @@
 - [x] 빈 화면에서는 기준점(0,0)만 100mm 허용오차로 스냅; 기준점 입력 X/Y는 배관의 상대 좌표에 더해 Revit 실제 배치 좌표로 전달.
 - [x] `PipeNetworkDefinition.ReferencePoint`를 추가하고 MEP Pipe/GenericModel 출력 모두에 기준점 오프셋 적용.
 - 검증: `dotnet build src\\DHBIMWATER.Revit\\DHBIMWATER.Revit.csproj -c Release --no-restore -p:DebugSymbols=false -p:DebugType=none` 오류 0개 (기존 경고 89개).
+
+### 밸브실 배관 Canvas 방향·길이 표시 보완 (2026-07-16)
+- [x] Canvas 모델 좌표의 Y축을 반전해 기준점 위쪽은 북쪽(+Y), 오른쪽은 동쪽(+X)이 되도록 변경.
+- [x] 첫 점 지정 뒤 주황색 가상선 중앙에 현재 길이(m) 표시 추가.
+- [x] 확정된 각 배관 선 중앙에 길이(m) 표시 추가.
+- 검증: `dotnet build src\\DHBIMWATER.UI\\DHBIMWATER.UI.csproj -c Release --no-restore -p:DebugSymbols=false -p:DebugType=none` 오류 0개 (기존 경고 84개). Revit 전체 빌드는 64초 제한에서 시간 초과되어 UI 프로젝트 직접 빌드로 검증.
+
+### 밸브실 배관 Canvas OSNAP·부속품 위치 보완 (2026-07-16)
+- [x] OSNAP 체크박스 추가: 기준점, 끝점, 중간점, 사분점(선의 1/4·3/4), 근처점.
+- [x] 가상선은 스냅 위치로 끌려가지 않고 자유롭게 표시하며, 스냅 가능 위치에는 CAD 스타일 `□` 마커를 표시.
+- [x] 클릭 확정 때만 선택 OSNAP을 적용해 기존 선을 고정한 채 T 접점으로 분할.
+- [x] 선택선은 주황색으로 표시. 선 위 클릭 위치를 부속품 배치 기준으로 사용하고, 부속품 간 최소 100mm 간격을 유지하도록 자동 조정.
+- 검증: `dotnet build src\\DHBIMWATER.UI\\DHBIMWATER.UI.csproj -c Release --no-restore -p:DebugSymbols=false -p:DebugType=none` 오류 0개 (기존 경고 84개).
+
+### 밸브실 배관 Canvas 선택 단축키·OSNAP 마커 구분 (2026-07-16)
+- [x] `Esc`: 그리기 중이면 그리기 취소, 그 외에는 선택 엣지 해제. `Delete`: 선택 엣지와 해당 인라인 부속 삭제 및 고립 노드 정리.
+- [x] Canvas가 포커스를 받아 단축키가 동작하도록 연결. 텍스트·콤보박스 입력 중에는 키 입력을 가로채지 않음.
+- [x] OSNAP 마커를 CAD식으로 구분: 기준점 `+`, 끝점 `□`, 중간점 `△`, 사분점 `◇`, 근처점 `×`.
+- 검증: `dotnet build src\\DHBIMWATER.UI\\DHBIMWATER.UI.csproj -c Release --no-restore -p:DebugSymbols=false -p:DebugType=none` 오류 0개 (기존 경고 84개).
+
+### 밸브실 배관 Revit API 컨텍스트 보완 (2026-07-16)
+- [x] WPF UI 스레드에서 `CreateValvePipingUseCase`를 직접 실행해 발생한 Revit Transaction API 컨텍스트 예외 수정.
+- [x] `PipeLayoutRequest`/`PipeLayoutRequestHandler` ExternalEvent 경로 추가: 생성 정의를 전달하고 핸들러 안에서 UseCase·Transaction 실행.
+- [x] `PipeLayoutCommand`를 모델리스 창으로 전환해 ExternalEvent가 Revit UI 컨텍스트에서 처리되도록 변경.
+- 검증: `dotnet build src\\DHBIMWATER.Revit\\DHBIMWATER.Revit.csproj -c Release --no-restore -p:DebugSymbols=false -p:DebugType=none` 오류 0개 (기존 경고 116개).
+
+### 밸브실 Revit 모델 생성 연결 (2026-07-16)
+- [x] `ValveRoomRequestDto`에 밸브실 유형별 구조 치수·구성·제수형 프레임 타입·배치 기준점(mm)을 정의.
+- [x] `CreateValveRoomUseCase` 추가: `ITransactionContext`에서 트랜잭션을 관리하고, 공통 기준/상부 레벨을 보장한 뒤 버림콘크리트·기초·외벽·상부슬래브를 생성.
+  - 이토밸브실: 선택 시 등간격 중간벽과 중간슬래브(1F 높이 + 슬래브 두께 + 2F 높이)를 생성.
+  - 제수밸브실: 입력한 X/Y 보를 생성하고 보 중심선 교차점마다 선택한 기둥 유형을 생성. 프레임 타입 미선택 시 UI에서 생성을 차단.
+  - 공기밸브실: 합의한 대로 하부 관통관 void 없이 기본 구조만 생성.
+- [x] `ValveRoomViewModel`의 `모델 생성`을 DTO 요청으로 연결하고, `ValveRoomCommand`에서 창 종료 뒤 Revit 기준점(기초 중심)을 선택하여 UseCase로 전달.
+- [x] Application DI에 `CreateValveRoomUseCase` 등록.
+- 검증: `dotnet build src\\DHBIMWATER.Revit\\DHBIMWATER.Revit.csproj -c Release --no-restore -p:DebugSymbols=false -p:DebugType=none` 오류 0개 (기존 경고 244개).
+- 미결: Revit 실물에서 각 유형의 벽/슬래브 표고, 제수형 보·기둥 타입 및 기준점 선택 흐름을 육안 검증해야 함. `미리보기`는 여전히 안내 메시지이며 별도 구현 대상.
+
+### 밸브실 IsExterior 버그 수정 + 미리보기 구현 (2026-07-16)
+- [x] `CreateValveRoomUseCase.Wall()` 헬퍼에 `isExterior` 매개변수 추가 — 외벽 호출은 `true`, 중간벽 호출은 `false`로 명시 전달.
+  - 기존엔 두 호출 모두 `LinearWallDefinition.IsExterior` 기본값(`false`)에 머물러 있어 외벽도 내벽으로 분류됨(수량산출 `DefaultRuleSet`의 `DH_IsExterior` 필터·거푸집 규격 구분에 영향).
+- [x] `ValveRoomPreviewViewModel` 신규(`UI/ViewModels/Modeling`) — 현재 입력값으로 기초·외벽·내부실 사각형, 이토밸브실 중간벽 라인, 제수밸브실 보 그리드·기둥 좌표를 `CreateValveRoomUseCase`와 동일한 산식으로 계산.
+  - `CanvasModelTransform`으로 화면 좌표 변환, 560×420 캔버스에 맞춰 자동 축척(margin 40px).
+- [x] `ValveRoomPreviewView.xaml`/`.xaml.cs` 신규 — Canvas + ItemsControl(Rects/Lines/Columns) 렌더링, 치수 요약 텍스트, 닫기 버튼. `PipeLayoutView` 렌더링 패턴 준용.
+- [x] `ValveRoomViewModel.PreviewCommand` — 기존 안내 다이얼로그 대신 `PreviewRequested`(Action, 기존 `CloseAction` 패턴과 동일) 호출로 변경.
+- [x] `ValveRoomView.xaml.cs` — `PreviewRequested` 구독해 `ValveRoomPreviewView`를 모달로 표시.
+- 검증: `dotnet build DHBIMWATER.sln --no-restore -p:DebugType=none` 오류 0개.
+- 미결: 미리보기는 순수 2D 평면 스키매틱(Revit 미연동)이며, 실제 표고·3D 형상 검증은 여전히 Revit 실물에서 확인 필요.
+
+### 밸브실 내부원점·프로젝트 위치 자동 설정 (2026-07-16)
+- [x] 점 선택(기초 중심)을 제거하고, 밸브실 내부공간 좌하단을 내부원점 `(0,0,0)`으로 사용하도록 슬래브·외벽·중간벽·보·기둥 산식을 변경.
+  - 내부 유효공간은 `X=0..내부폭`, `Y=0..내부길이`; 외벽 중심선은 각 내부 경계의 바깥쪽 절반 벽두께 위치에 생성.
+- [x] 밸브실 입력 화면에 내부원점의 실제 X/Y/Elev(m) 및 도북각(진북→도북 시계방향, degree) 입력을 추가.
+- [x] `IProjectLocationCommandRepo`/`RevitProjectLocationCommandRepo`를 추가하고, 같은 모델 생성 트랜잭션에서 `ActiveProjectLocation.SetProjectPosition(XYZ.Zero, ...)`으로 내부원점의 공유좌표와 도북각을 갱신.
+  - Revit API의 양의 각도(반시계방향)와 UI 입력(시계방향)의 부호 차이는 Repository에서 반전.
+- [x] DI 등록 및 `ValveRoomCommand` 연결: 창을 닫은 뒤 더 이상 Revit 점을 선택하지 않고 즉시 생성.
+- 검증: Infrastructure, UI, Revit 프로젝트를 `-p:DebugType=embedded`로 빌드해 오류 0개. 기존 경고 다수 및 실행 중인 Revit/Visual Studio의 배포 DLL·PDB 잠금 경고는 유지.
+- 미결: 실제 Revit에서 입력 좌표가 공유좌표/도북으로 표시되는지, 각도 부호가 현장 도면 기준과 일치하는지 육안 검증 필요.
+
+### 배관 OSNAP 마커 접근 제한 수정 (2026-07-16)
+- [x] `PipeLayoutViewModel`의 `PipeNetwork.FindNode(Guid)` 호출을 공개 `Nodes` 컬렉션 조회로 교체. UI에서 `internal` 도메인 메서드에 접근하며 발생하던 CS0122 오류를 해소.
+- 검증: `dotnet build src\\DHBIMWATER.UI\\DHBIMWATER.UI.csproj -c Release --no-restore -p:DebugSymbols=false -p:DebugType=none` 오류 0개 (기존 경고 84개).
+
+### 배관 Canvas OSNAP 표기·교차점 보완 (2026-07-16)
+- [x] OSNAP 체크박스에 실제 마커 기호를 함께 표기: `+ 기준점`, `□ 끝점`, `△ 중간점`, `◇ 사분점`, `× 교차점`, `· 근처점`.
+- [x] 각도/OSNAP 옵션을 하나의 설정 카드로 묶고, 100mm 허용오차 안내를 추가해 설정 목적을 명확히 함.
+- [x] `PipeSnapMode.Intersection` 추가: T·Cross 노드(차수 3 이상)만 교차점으로 별도 스냅 가능. 기본 활성화.
+- [x] 기준 십자선과 스냅 좌표가 모델 원점 `(0,0)`으로 일치함을 확인하고, 글꼴 기준선 때문에 어긋나 보이던 스냅 마커를 20×20 중앙 정렬로 수정.
+- 검증: `dotnet build src\\DHBIMWATER.UI\\DHBIMWATER.UI.csproj -c Release --no-restore -p:DebugSymbols=false -p:DebugType=none` 오류 0개 (기존 경고 245개).

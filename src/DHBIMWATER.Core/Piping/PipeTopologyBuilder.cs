@@ -2,6 +2,9 @@ using DHBIMWATER.Core.Geometry;
 
 namespace DHBIMWATER.Core.Piping;
 
+[Flags]
+public enum PipeSnapMode { None = 0, Endpoint = 1, Midpoint = 2, Quadrant = 4, Nearest = 8, Intersection = 16 }
+
 public sealed class PipeTopologyBuilder
 {
     public const double SnapTolerance = 100.0;
@@ -10,20 +13,33 @@ public sealed class PipeTopologyBuilder
 
     public PipeTopologyBuilder(PipeNetwork network) => _network = network;
 
-    public Point2D SnapPoint(Point2D point)
+    public Point2D? FindSnapPoint(Point2D point, PipeSnapMode modes)
     {
-        var node = _network.Nodes.OrderBy(x => x.Position.DistanceTo(point)).FirstOrDefault();
-        if (node is not null && node.Position.DistanceTo(point) <= SnapTolerance) return node.Position;
-        if (_network.Edges.Count == 0) return point;
-        var candidate = _network.Edges.Select(edge =>
+        var candidates = new List<(Point2D Point, double Distance)>();
+        if (modes.HasFlag(PipeSnapMode.Endpoint))
+            candidates.AddRange(_network.Nodes.Select(x => (x.Position, x.Position.DistanceTo(point))));
+        if (modes.HasFlag(PipeSnapMode.Intersection))
+            candidates.AddRange(_network.Nodes.Where(x => x.Degree >= 3).Select(x => (x.Position, x.Position.DistanceTo(point))));
+        foreach (var edge in _network.Edges)
         {
             var start = _network.FindNode(edge.StartNodeId)!.Position;
             var end = _network.FindNode(edge.EndNodeId)!.Position;
-            var t = Math.Clamp(Segment2D.ParameterOnSegment(point, start, end), 0, 1);
-            var projected = new Point2D(start.X + (end.X - start.X) * t, start.Y + (end.Y - start.Y) * t);
-            return (projected, distance: projected.DistanceTo(point));
-        }).OrderBy(x => x.distance).FirstOrDefault();
-        return candidate.distance <= SnapTolerance ? candidate.projected : point;
+            if (modes.HasFlag(PipeSnapMode.Midpoint)) AddCandidate(candidates, point, start, end, 0.5);
+            if (modes.HasFlag(PipeSnapMode.Quadrant)) { AddCandidate(candidates, point, start, end, 0.25); AddCandidate(candidates, point, start, end, 0.75); }
+            if (modes.HasFlag(PipeSnapMode.Nearest))
+            {
+                var t = Math.Clamp(Segment2D.ParameterOnSegment(point, start, end), 0, 1);
+                AddCandidate(candidates, point, start, end, t);
+            }
+        }
+        var candidate = candidates.OrderBy(x => x.Distance).FirstOrDefault();
+        return candidate.Distance <= SnapTolerance ? candidate.Point : null;
+    }
+
+    private static void AddCandidate(List<(Point2D Point, double Distance)> candidates, Point2D target, Point2D start, Point2D end, double t)
+    {
+        var candidate = new Point2D(start.X + (end.X - start.X) * t, start.Y + (end.Y - start.Y) * t);
+        candidates.Add((candidate, candidate.DistanceTo(target)));
     }
     public void AddSegment(Point2D start, Point2D end)
     {
@@ -58,11 +74,30 @@ public sealed class PipeTopologyBuilder
         ClassifyNodes();
     }
 
-    public void AddInlineFitting(Guid edgeId, string typeKey)
+    public void AddInlineFitting(Guid edgeId, string typeKey, double desiredT)
     {
         var edge = _network.FindEdge(edgeId) ?? throw new ArgumentOutOfRangeException(nameof(edgeId));
-        var order = edge.InlineFittings.Count;
-        edge.AddFitting(new InlineFitting(typeKey, (order + 1d) / (order + 2d), order));
+        var start = _network.FindNode(edge.StartNodeId)!.Position;
+        var end = _network.FindNode(edge.EndNodeId)!.Position;
+        var length = start.DistanceTo(end);
+        var minSpacingT = Math.Min(0.45, 100 / length);
+        var t = FindAvailableFittingT(edge.InlineFittings, desiredT, minSpacingT);
+        edge.AddFitting(new InlineFitting(typeKey, t, edge.InlineFittings.Count));
+    }
+
+    private static double FindAvailableFittingT(IReadOnlyList<InlineFitting> fittings, double desiredT, double minSpacingT)
+    {
+        var lower = minSpacingT;
+        var upper = 1 - minSpacingT;
+        for (var offset = 0; offset <= 100; offset++)
+        {
+            foreach (var direction in offset == 0 ? new[] { 0 } : new[] { -1, 1 })
+            {
+                var candidate = Math.Clamp(desiredT + direction * offset * minSpacingT, lower, upper);
+                if (fittings.All(x => Math.Abs(x.T - candidate) >= minSpacingT)) return candidate;
+            }
+        }
+        throw new InvalidOperationException("선 위에 부속품을 배치할 공간이 부족합니다.");
     }
 
     public void RemoveInlineFitting(Guid edgeId, Guid fittingId)
@@ -71,6 +106,14 @@ public sealed class PipeTopologyBuilder
         var remaining = edge.InlineFittings.Where(x => x.Id != fittingId).Select((x, i) => x with { Order = i }).ToList();
         _network.RemoveEdge(edge);
         _network.AddEdge(edge.StartNodeId, edge.EndNodeId, remaining);
+    }
+
+    public void RemoveSegment(Guid edgeId)
+    {
+        var edge = _network.FindEdge(edgeId) ?? throw new ArgumentOutOfRangeException(nameof(edgeId));
+        _network.RemoveEdge(edge);
+        _network.RemoveUnconnectedNodes();
+        ClassifyNodes();
     }
 
     private PipeNode GetOrCreateNode(Point2D position) => _network.Nodes.FirstOrDefault(x => x.Position.DistanceTo(position) <= SnapTolerance) ?? _network.AddNode(position);
