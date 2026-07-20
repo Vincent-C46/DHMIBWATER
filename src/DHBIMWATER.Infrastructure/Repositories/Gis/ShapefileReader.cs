@@ -5,8 +5,10 @@ using System.IO;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Gis;
 
-public sealed class ShapefileReader : IShapefileReader
+public sealed class ShapefileReader : IShapefileReader, IAlignmentSourceReader
 {
+    public bool CanRead(string filePath) => string.Equals(Path.GetExtension(filePath), ".shp", StringComparison.OrdinalIgnoreCase);
+
     public ShapefileReadResult Read(string shpPath)
     {
         if (!File.Exists(shpPath)) throw new FileNotFoundException("SHP 파일을 찾을 수 없습니다.", shpPath);

@@ -29,6 +29,7 @@ public sealed class PipingViewModel : ViewModelBase
     private ZSource _zSource = ZSource.GeometryZ;
     private ZDatum _zDatum = ZDatum.AsIs;
     private bool _parseCombinedDiameter = true;
+    private bool _applySharedCoordinates;
 
     public PipingViewModel(IFileDialogService fileDialog, IShapefileReader reader, IDialogService dialog)
     {
@@ -47,6 +48,7 @@ public sealed class PipingViewModel : ViewModelBase
     public ZSource ZSource { get => _zSource; set => SetProperty(ref _zSource, value); }
     public ZDatum ZDatum { get => _zDatum; set => SetProperty(ref _zDatum, value); }
     public bool ParseCombinedDiameter { get => _parseCombinedDiameter; set => SetProperty(ref _parseCombinedDiameter, value); }
+    public bool ApplySharedCoordinates { get => _applySharedCoordinates; set => SetProperty(ref _applySharedCoordinates, value); }
     public Array ZSources => Enum.GetValues(typeof(ZSource)); public Array ZDatums => Enum.GetValues(typeof(ZDatum));
     public string SelectedFileDetails => SelectedFile is null ? "파일을 추가하면 DBF 필드와 샘플 속성이 표시됩니다." :
         $"{SelectedFile.Summary}\n필드: {string.Join(", ", SelectedFile.ReadResult.Fields.Select(x => x.Name))}\n샘플: {string.Join(", ", (SelectedFile.ReadResult.SampleAttributes ?? new Dictionary<string, string>()).Select(x => $"{x.Key}={x.Value}"))}\n인코딩: {SelectedFile.ReadResult.EncodingName}";
@@ -70,15 +72,17 @@ public sealed class PipingViewModel : ViewModelBase
     }
     private void RefreshReferencePoint()
     {
-        if (Files.Count == 0) { ReferenceX = ReferenceY = ReferenceZ = 0; return; }
-        ReferenceX = Math.Round((Files.Min(x => x.ReadResult.Extent.XMin) + Files.Max(x => x.ReadResult.Extent.XMax)) / 2, MidpointRounding.AwayFromZero);
-        ReferenceY = Math.Round((Files.Min(x => x.ReadResult.Extent.YMin) + Files.Max(x => x.ReadResult.Extent.YMax)) / 2, MidpointRounding.AwayFromZero);
-        ReferenceZ = Math.Round((Files.Min(x => x.ReadResult.Extent.ZMin) + Files.Max(x => x.ReadResult.Extent.ZMax)) / 2, MidpointRounding.AwayFromZero);
+        // 기준점 = 첫 번째 파일의 첫 번째 레코드의 첫 정점 (MBR 중심 대신 — 파일 추가/제거에 흔들리지 않는 실제 데이터 점을 쓴다).
+        var firstVertex = Files.SelectMany(f => f.ReadResult.Features).Select(a => a.Vertices.FirstOrDefault()).FirstOrDefault(v => v != null);
+        if (firstVertex is null) { ReferenceX = ReferenceY = ReferenceZ = 0; return; }
+        ReferenceX = Math.Round(firstVertex.X, MidpointRounding.AwayFromZero);
+        ReferenceY = Math.Round(firstVertex.Y, MidpointRounding.AwayFromZero);
+        ReferenceZ = Math.Round(firstVertex.Z, MidpointRounding.AwayFromZero);
     }
     private void RequestImport()
     {
         if (Files.Count == 0) { _dialog.Warn("입력 확인", "하나 이상의 SHP 파일을 추가하세요."); return; }
-        RequestedImport = new PipeAlignmentImportRequest { Files = Files.Select(x => new PipeAlignmentImportFile(x.Path, x.PipeKind)).ToList(), ReferenceX = ReferenceX, ReferenceY = ReferenceY, ReferenceZ = ReferenceZ, ZSource = ZSource, ZDatum = ZDatum, ParseCombinedDiameter = ParseCombinedDiameter };
+        RequestedImport = new PipeAlignmentImportRequest { Files = Files.Select(x => new PipeAlignmentImportFile(x.Path, x.PipeKind)).ToList(), ReferenceX = ReferenceX, ReferenceY = ReferenceY, ReferenceZ = ReferenceZ, ZSource = ZSource, ZDatum = ZDatum, ParseCombinedDiameter = ParseCombinedDiameter, ApplySharedCoordinates = ApplySharedCoordinates };
         CloseAction?.Invoke();
     }
 }

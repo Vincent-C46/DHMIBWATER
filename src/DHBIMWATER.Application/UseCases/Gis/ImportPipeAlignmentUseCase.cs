@@ -11,16 +11,16 @@ public sealed class ImportPipeAlignmentUseCase
 {
     private static readonly Regex CombinedDiameter = new("^(?<kind>.*?)_D(?<dia>\\d+)$", RegexOptions.Compiled);
     private readonly ITransactionContext _transaction;
-    private readonly IShapefileReader _reader;
+    private readonly IReadOnlyList<IAlignmentSourceReader> _readers;
     private readonly IPipeAlignmentCommandRepo _alignmentRepo;
     private readonly IProjectLocationCommandRepo _projectLocationRepo;
     private readonly ISharedParameterRepository _sharedParameterRepo;
 
-    public ImportPipeAlignmentUseCase(ITransactionContext transaction, IShapefileReader reader,
+    public ImportPipeAlignmentUseCase(ITransactionContext transaction, IEnumerable<IAlignmentSourceReader> readers,
         IPipeAlignmentCommandRepo alignmentRepo, IProjectLocationCommandRepo projectLocationRepo,
         ISharedParameterRepository sharedParameterRepo)
     {
-        _transaction = transaction; _reader = reader; _alignmentRepo = alignmentRepo;
+        _transaction = transaction; _readers = readers.ToList(); _alignmentRepo = alignmentRepo;
         _projectLocationRepo = projectLocationRepo; _sharedParameterRepo = sharedParameterRepo;
     }
 
@@ -30,7 +30,9 @@ public sealed class ImportPipeAlignmentUseCase
         var alignments = new List<PipeAlignment>();
         foreach (var file in request.Files)
         {
-            var read = _reader.Read(file.ShpPath);
+            var reader = _readers.FirstOrDefault(r => r.CanRead(file.ShpPath))
+                ?? throw new InvalidOperationException($"'{file.ShpPath}' 파일을 읽을 수 있는 리더가 없습니다.");
+            var read = reader.Read(file.ShpPath);
             warnings.AddRange(read.Warnings);
             alignments.AddRange(read.Features.Select(feature => ApplyAttributes(feature, file.PipeKind, request.ParseCombinedDiameter, warnings)));
         }
@@ -41,7 +43,8 @@ public sealed class ImportPipeAlignmentUseCase
             {
                 _transaction.Begin("Import Pipe Alignment");
                 _sharedParameterRepo.EnsureParameters(GetAlignmentParameterDefinitions());
-                _projectLocationRepo.SetInternalOriginSharedPosition(request.ReferenceX, request.ReferenceY, request.ReferenceZ, 0);
+                if (request.ApplySharedCoordinates)
+                    _projectLocationRepo.SetInternalOriginSharedPosition(request.ReferenceX, request.ReferenceY, request.ReferenceZ, 0);
                 var result = _alignmentRepo.Create(new PipeAlignmentCreateDefinition(alignments, request.ReferenceX, request.ReferenceY, request.ReferenceZ, request.ZDatum));
                 _transaction.Commit();
                 return result with { Warnings = warnings.Concat(result.Warnings).ToList() };

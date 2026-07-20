@@ -1,3 +1,4 @@
+using System.Linq;
 using Autodesk.Revit.DB;
 using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Infrastructure.Converters;
@@ -27,5 +28,12 @@ internal sealed class RevitProjectLocationCommandRepo : IProjectLocationCommandR
             angle);
 
         doc.ActiveProjectLocation.SetProjectPosition(XYZ.Zero, position);
+
+        // 프로젝트 기준점(Project Base Point)의 표고는 항상 0으로 고정한다.
+        var basePoint = new FilteredElementCollector(doc)
+            .OfCategory(BuiltInCategory.OST_ProjectBasePoint)
+            .WhereElementIsNotElementType()
+            .FirstOrDefault();
+        basePoint?.get_Parameter(BuiltInParameter.BASEPOINT_ELEVATION_PARAM)?.Set(0.0);
     }
 }

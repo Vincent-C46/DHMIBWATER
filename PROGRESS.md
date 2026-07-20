@@ -774,3 +774,102 @@
 - [x] `PipeSnapMode.Intersection` 추가: T·Cross 노드(차수 3 이상)만 교차점으로 별도 스냅 가능. 기본 활성화.
 - [x] 기준 십자선과 스냅 좌표가 모델 원점 `(0,0)`으로 일치함을 확인하고, 글꼴 기준선 때문에 어긋나 보이던 스냅 마커를 20×20 중앙 정렬로 수정.
 - 검증: `dotnet build src\\DHBIMWATER.UI\\DHBIMWATER.UI.csproj -c Release --no-restore -p:DebugSymbols=false -p:DebugType=none` 오류 0개 (기존 경고 245개).
+
+## 2026-07-20
+
+### 관로 모델링 커맨드 뼈대 (`PipingCommand`) (2026-07-20)
+- [x] `src/DHBIMWATER.Revit/Commands/PipingCommand.cs` 신규 — `CommandBase` 상속, `[Transaction(TransactionMode.Manual)]`.
+- [x] `IFileDialogService.OpenFile`로 shp 파일 선택 다이얼로그 연결 (필터: `*.shp` / 전체). 취소 시 `Result.Cancelled`.
+- [x] `ModelingRibbonModule.cs` "관로 모델링" 버튼의 대상 커맨드를 `PumpingStationCommand`(임시 배선) → `PipingCommand`로 교체.
+- 검증: `dotnet build src/DHBIMWATER.Revit/DHBIMWATER.Revit.csproj -c Debug` 오류 0개 (기존 경고 9개).
+- [ ] TODO: shp 파싱 → 좌표/속성 추출 (`IShapefileReader` 신설 예정)
+- [ ] TODO: 추출 데이터 검토 UI (`PipingView` / `PipingViewModel`) — HTML 목업 선행
+- [ ] TODO: `CreatePipingUseCase` 관로 모델링 (Transaction은 UseCase에서 관리)
+
+### 관로 모델링 입력 HTML 목업 (2026-07-20)
+- [x] `docs/09_관로모델링목업.html` 신규 — 기존 `docs/08_밸브실모델링입력목업_v3.html` 팔레트/창 프레임 스타일 계승.
+- 레이아웃: 상단 SHP 파일 행 고정 + 좌(596px, 탭 4개) / 우(평면 미리보기) 2단.
+  - 탭: **속성 테이블** / **필드 매핑** / **좌표계·단위** / **패밀리 매핑**
+  - 속성 테이블 행 ↔ 우측 SVG 구간 상호 선택(하이라이트), 선택 구간의 시·종점 좌표/연장/구경 표시
+- 목업에 반영한 기획 가정 (구현 시 확정 필요):
+  - 지오메트리는 PolyLine(2D/PolyLineZ)만 대상. Polygon·Point 제외
+  - `.prj` 있으면 좌표계 자동 인식, 없을 때만 수동 선택 (EPSG:5186 등)
+  - 표고는 토피고 / 관저고(EL) / 고정 심도 3가지 방식
+  - 필드 매핑·패밀리 매핑 프리셋은 DataStorage 저장 → 재실행 시 복원
+  - 관종×구경 조합별로 파이프 타입 매핑 행 자동 생성
+- [ ] TODO: 목업 리뷰 후 화면 확정 → `PipingView` / `PipingViewModel` 작성
+
+### 지장물 SHP 실데이터 분석 및 목업 보완 (2026-07-20)
+- [x] 실제 데이터셋 8개 파일 바이너리 덤프 분석 (`05_Addin_Docs/.../dataset/GIS DATA/지장물3DPOLY_*.shp`).
+  - 지오메트리: 전부 `ShapeType 13 = PolyLineZ`, 멀티파트 0건, 버텍스마다 절대 표고 Z 보유
+  - `.prj`: `KGD2002_Central_Belt_2010` = EPSG:5186 (중부원점 GRS80, FE 200000 / FN 600000)
+  - `.cpg`: `949`. 단 `.dbf` LangDriver 바이트는 `0x00`이라 `.cpg` 없으면 인코딩 추정 불가
+  - `.dbf` 필드가 **`Diameter`(C, 254) 단 1개**. 값 형식 `상수_D100` — 관종+구경이 한 문자열에 결합
+  - 관종 정보가 데이터에 없고 **파일명에만** 존재 (상수/하수/가스/통신/전력지중관로)
+  - 레코드 대비 버텍스 비율이 높음 — 예: 가스(가스공사) 3레코드 / 785버텍스 → 파이프 782개
+- [x] 목업은 **범용 유지** 결정 (이 데이터셋에 맞춰 축소하지 않음). 다른 발주처 shp는 필드가 풍부할 수 있음.
+- [x] `docs/09_관로모델링목업.html` 보완 — 범용성 강화 목적 2건만 수술적 반영:
+  - 좌표계·단위 탭에 **Z 출처**(지오메트리 Z / 속성 필드 / 없음(2D))와 **Z 해석 기준**(관 중심선 / 관저 / 관정) 추가.
+    `관 표고 기준`에 "Z 값 그대로 사용" 선택지 추가, `기준 지반고`는 2D일 때만 활성화되도록 disabled 표기.
+  - 속성 테이블에 **버텍스 / 파이프** 컬럼 추가, 상단 메타·하단 요약을 `레코드 → 버텍스 → 파이프` 표기로 변경.
+    "레코드 1건 ≠ 파이프 1개" 안내문 추가.
+- 좌표계는 사용자 지시에 따라 **선택 가능 유지** (`.prj`는 자동 추천까지만, 고정하지 않음).
+- [ ] TODO: Z 해석 기준(관 중심선 / 관저) — 발주처 사양서 확인 필요. 자동 판별 불가하므로 UI 확인 필수.
+- [ ] TODO: `IShapefileReader` 설계 시 아래 하한선 대응
+  - 필드 0~1개인 빈약한 dbf → 매핑 생략 + 일괄값 지정 허용
+  - `{관종}_D{구경}` 결합 문자열 파싱 규칙 옵션
+  - 다중 파일 로드 + 파일별 관종 지정 (파일명이 유일한 관종 단서인 경우)
+  - 멀티파트 폴리라인 (이번 샘플엔 없으나 표준상 가능)
+  - CP949 처리 위해 `CodePagesEncodingProvider` 등록 필요
+
+### 관로 선형 생성 Phase 1 지시서 작성 (2026-07-20)
+- [x] `docs/14_관로선형생성_Phase1_지시서.md` 신규 — Codex 핸드오프용. `docs/12_밸브실배관배치_Phase1_지시서.md` 포맷 계승.
+- [x] 사용자 확정 결정 4건 반영:
+  - 선형 표현 = **DirectShape**(`OST_GenericModel`, Geometry는 버텍스 구간별 `Line[]`)
+  - 좌표 정합 = **기준점 오프셋 + 공유좌표 기록**(`SetInternalOriginSharedPosition`, 미터 입력)
+  - 파서 = **직접 파싱**(`BinaryReader`), 외부 NuGet 추가 금지 (NTS 미도입)
+  - UI = **축소판** 2탭(속성 미리보기 / 좌표계·표고). 필드매핑·패밀리매핑 탭은 Phase 2
+- [x] 지시서에 포함한 내용: `.shp`/`.dbf` **바이트 오프셋·엔디안 표**, `.cpg` 인코딩 결정 규칙,
+  `상수_D100` 정규식, 좌표 변환식(m→mm→ft, X=Easting 주의), Z 해석 기준별 정규화식,
+  0길이 세그먼트 방어(Revit 최소 길이 ≈ 1/256 ft), 계층 배치, 재사용 자산 표, DI 등록 4지점, 검증 절차.
+- [x] 공유 파라미터 설계: `DH_구경`/`DH_연장`은 `Length`(MmToFt), `DH_시점표고`/`DH_종점표고`는
+  `Number`(절대 EL m, 변환 금지 — Length면 프로젝트 기준 길이로 표시돼 혼동).
+- [x] `docs/11_SHP파싱_기획.md` §6 미확정 4건 → 전부 확정 표기 + 문서 14 참조 링크 추가.
+- [ ] TODO: `src/DHBIMWATER.UI/Resources/Icons/pipe.png` 부재 — 리본 버튼이 아이콘 없이 렌더 중
+  (`RibbonButtonImages.GetIcon`이 예외를 삼킴). 아이콘 추가 필요.
+- [ ] TODO: Phase 2 착수 전 `libs/DHBoost/DHBoost.Combined.dll`의 n점 가변 패밀리 배치 진입 API 확인
+  (csproj 주석엔 있으나 C# 코드에서 사용처 0건).
+- [ ] TODO: 지시서를 Codex에 핸드오프 → 구현.
+# 2026-07-20 — 관로 선형 생성 Phase 1
+
+- SHP/DBF/PRJ 직접 파서와 GIS 도메인·Application UseCase를 추가했다. `.shx` 없이 PolyLine/PolyLineZ를 순차 파싱하며 CP949/CPG 인코딩을 처리한다.
+- 기준점 오프셋·공유좌표·DirectShape(일반 모델) 생성 및 DH 공유 매개변수 기록을 추가했다.
+- 축소판 관로 UI(파일별 관종, 속성 미리보기, 좌표계·표고 설정)와 리본 커맨드를 연결했다.
+- TODO (Phase 2): 필드/패밀리 매핑, 맨홀 Point, 좌표계 변환, n점 가변 패밀리 또는 MEP 파이프 배치.
+
+### 관로 선형 생성 — 방향성 정리 및 구조 보완 (2026-07-20)
+- `docs/15_관로선형생성_전체방향성.md` 신규 — "SHP/DWG 등 선형 소스 → DirectShape 선(영속 매개체) →
+  실제 Revit 객체(가변 패밀리/시스템 파이프) 배치" 3단계 파이프라인을 최종 목표로 명문화.
+  Codex가 이미 구현한 Phase 1(SHP 전용)이 이 방향성과 어긋나는 지점 4가지를 식별하고 우선순위화.
+- 위 문서의 §3-1·§3-2·§3-3을 이번 세션에서 구조적으로 보완:
+  - **소스 추상화**(`IAlignmentSourceReader` 신규, `Application/Interfaces/Gis/`) — `ShapefileReader`가 구현체로
+    편입(`IShapefileReader`와 동시 구현). `ImportPipeAlignmentUseCase`는 이제 `IEnumerable<IAlignmentSourceReader>`에
+    의존하며 `CanRead`로 리더를 선택 — DWG 등 신규 포맷 추가 시 UseCase 무변경으로 구현체만 추가하면 됨.
+  - **DirectShape 역조회 Repository**(`IPipeAlignmentQueryRepo` + `RevitPipeAlignmentQueryRepo` 신규) — 생성된
+    DirectShape에서 정점(Revit 내부원점 기준 상대좌표, mm)·관종·구경을 되읽는다. **원본 SHP 절대좌표(m)로는
+    복원하지 않음**(기준점이 프로젝트에 영속 저장되지 않아 불가) — Phase 2 배치 UseCase가 아직 없어 호출부는 없고,
+    Phase 2 착수 시 바로 쓸 수 있도록 미리 준비해 둔 상태.
+  - **ZSource 콤보박스 비활성화** — `GeometryZ`/`AttributeField`/`None2D` 옵션이 로직에서 전혀 쓰이지 않는데
+    동작하는 것처럼 보이는 문제를 UI에서 `IsEnabled="False"` + "Phase 2 예정" 툴팁으로 차단.
+- 공유좌표 관련 사용자 피드백 반영 3건:
+  - `PipeAlignmentImportRequest.ApplySharedCoordinates`(기본값 **false**) 추가 — 기준점 오프셋(16km 한계 회피용)은
+    항상 적용하되, 프로젝트 공유좌표(`SetInternalOriginSharedPosition`) 기록 여부는 체크박스로 분리.
+    여러 SHP를 순차 임포트할 때마다 공유좌표가 덮어써지는 문제(`docs/15` §3-4) 대응.
+  - 기준점 산출 방식을 **"전체 파일 MBR 중심"→"첫 번째 파일의 첫 레코드 첫 정점"**으로 변경
+    (`PipingViewModel.RefreshReferencePoint`) — 파일 추가/제거로 흔들리지 않는 실제 데이터 점 기준.
+  - `RevitProjectLocationCommandRepo.SetInternalOriginSharedPosition`에서 Project Base Point의
+    `BASEPOINT_ELEVATION_PARAM`을 항상 0으로 고정 설정.
+- DI 등록 갱신: `IAlignmentSourceReader`(real/mock), `IPipeAlignmentQueryRepo`(real) —
+  `Infrastructure/DependencyInjection/ServiceCollectionExtensions.cs`.
+- `dotnet build src/DHBIMWATER.Revit/DHBIMWATER.Revit.csproj -c Debug` 성공 확인.
+- TODO: Phase 2 UseCase(패밀리/파이프 배치)에서 `IPipeAlignmentQueryRepo` 실제 소비, DWG 리더 구현.

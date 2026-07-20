@@ -59,7 +59,9 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ISetParameterRepo, RevitSetParameterRepo>();
         services.AddTransient<ISharedParameterRepository, RevitSharedParameterRepository>();
         services.AddTransient<IPipeAlignmentCommandRepo, RevitPipeAlignmentCommandRepo>();
+        services.AddTransient<IPipeAlignmentQueryRepo, RevitPipeAlignmentQueryRepo>();
         services.AddTransient<IShapefileReader, ShapefileReader>();
+        services.AddTransient<IAlignmentSourceReader, ShapefileReader>();
         services.AddTransient<IGenericModelRepository, RevitGenericModelRepository>();
         services.AddTransient<IIntersectingElementFinder, RevitIntersectingElementFinder>();
         services.AddTransient<IExteriorWallClassifierRepo, RevitExteriorWallClassifierRepo>();
@@ -124,6 +126,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ISetParameterRepo, MockSetParameterRepo>();
         services.AddTransient<ISharedParameterRepository, MockSharedParameterRepository>();
         services.AddTransient<IShapefileReader, ShapefileReader>();
+        services.AddTransient<IAlignmentSourceReader, ShapefileReader>();
         #endregion
 
         #region Quantity 관련
