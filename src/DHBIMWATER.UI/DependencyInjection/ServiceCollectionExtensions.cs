@@ -24,6 +24,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<PumpingStationView>();
         services.AddTransient<ValveRoomView>();
         services.AddTransient<PipeLayoutView>();
+        services.AddTransient<PipingView>();
 
         // Quantity
         services.AddTransient<QuantityView>();
@@ -43,6 +44,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<PumpingStationViewModel>();
         services.AddTransient<ValveRoomViewModel>();
         services.AddTransient<PipeLayoutViewModel>();
+        services.AddTransient<PipingViewModel>();
 
         // Quantity
         services.AddTransient<QuantityViewModel>();

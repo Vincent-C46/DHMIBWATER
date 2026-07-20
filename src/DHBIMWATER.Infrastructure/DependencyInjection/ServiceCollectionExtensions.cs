@@ -7,6 +7,7 @@ using DHBIMWATER.Application.Interfaces.Storage;
 using DHBIMWATER.Core.Parameters;
 using DHBIMWATER.Infrastructure.Repositories.DB;
 using DHBIMWATER.Infrastructure.Repositories.FileSystem;
+using DHBIMWATER.Infrastructure.Repositories.Gis;
 using DHBIMWATER.Infrastructure.Repositories.Mock;
 using DHBIMWATER.Infrastructure.Repositories.Mock.Quantity;
 using DHBIMWATER.Infrastructure.Repositories.Revit.Storage;
@@ -15,6 +16,7 @@ using DHBIMWATER.Infrastructure.Repositories.Revit.Geometry;
 using DHBIMWATER.Infrastructure.Repositories.Revit.Quantity;
 using DHBIMWATER.Infrastructure.Repositories.Revit.Piping;
 using DHBIMWATER.Infrastructure.Repositories.Revit;
+using DHBIMWATER.Application.Interfaces.Gis;
 using DHBIMWATER.Infrastructure.Services.Common;
 using DHBIMWATER.Infrastructure.Services.Didas;
 using DHBIMWATER.Infrastructure.Services.Excel;
@@ -56,6 +58,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IViewCommandRepo, RevitViewCommandRepo>();
         services.AddTransient<ISetParameterRepo, RevitSetParameterRepo>();
         services.AddTransient<ISharedParameterRepository, RevitSharedParameterRepository>();
+        services.AddTransient<IPipeAlignmentCommandRepo, RevitPipeAlignmentCommandRepo>();
+        services.AddTransient<IShapefileReader, ShapefileReader>();
         services.AddTransient<IGenericModelRepository, RevitGenericModelRepository>();
         services.AddTransient<IIntersectingElementFinder, RevitIntersectingElementFinder>();
         services.AddTransient<IExteriorWallClassifierRepo, RevitExteriorWallClassifierRepo>();
@@ -119,6 +123,7 @@ public static class ServiceCollectionExtensions
 
         services.AddTransient<ISetParameterRepo, MockSetParameterRepo>();
         services.AddTransient<ISharedParameterRepository, MockSharedParameterRepository>();
+        services.AddTransient<IShapefileReader, ShapefileReader>();
         #endregion
 
         #region Quantity 관련

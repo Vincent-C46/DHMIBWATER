@@ -1,6 +1,7 @@
 ﻿using DHBIMWATER.Application.UseCases;
 using DHBIMWATER.Application.UseCases.AutoGenerator;
 using DHBIMWATER.Application.UseCases.QuantityCalculator;
+using DHBIMWATER.Application.UseCases.Gis;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DHBIMWATER.Application.DependencyInjection;
@@ -19,6 +20,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<CalculateQuantityUseCase>();
         services.AddTransient<ExportQuantityUseCase>();
         services.AddTransient<SaveQuantitySettingsUseCase>();
+        services.AddTransient<ImportPipeAlignmentUseCase>();
 
         return services;
     }
