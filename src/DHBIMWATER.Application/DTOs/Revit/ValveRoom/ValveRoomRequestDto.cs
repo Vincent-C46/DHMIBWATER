@@ -1,6 +1,7 @@
 namespace DHBIMWATER.Application.DTOs.Revit.ValveRoom;
 
-/// <summary>독립 밸브실 구조물 생성에 필요한 치수는 mm, 공유좌표는 m, 도북각은 degree 단위이다.</summary>
+/// <summary>독립 밸브실 구조물 생성에 필요한 치수는 mm, 공유좌표는 m, 도북각은 degree 단위이다.
+/// 타입 전용 입력은 RoomType에 대응하는 MudSpec/SluiceSpec 중 하나만 채운다.</summary>
 public record ValveRoomRequestDto
 {
     public string RoomType { get; init; } = string.Empty;
@@ -19,23 +20,12 @@ public record ValveRoomRequestDto
     public double FoundationThickness { get; init; }
     public double FoundationToe { get; init; }
     public double OuterWallThickness { get; init; }
-    public double IntermediateWallThickness { get; init; }
     public double UpperSlabThickness { get; init; }
-    public double IntermediateSlabThickness { get; init; }
     public double InnerWidth { get; init; }
     public double InnerLength { get; init; }
     public double InnerHeight { get; init; }
-    public bool HasIntermediateWall { get; init; }
-    public int IntermediateWallCount { get; init; }
-    public bool HasIntermediateSlab { get; init; }
-    public double Floor1InnerHeight { get; init; }
-    public double Floor2InnerHeight { get; init; }
-    public int BeamCountX { get; init; }
-    public double BeamOffsetX { get; init; }
-    public double BeamSpacingX { get; init; }
-    public int BeamCountY { get; init; }
-    public double BeamOffsetY { get; init; }
-    public double BeamSpacingY { get; init; }
-    public string BeamTypeName { get; init; } = string.Empty;
-    public string ColumnTypeName { get; init; } = string.Empty;
+    /// <summary>RoomType이 "이토밸브실"일 때만 값이 채워진다.</summary>
+    public MudValveRoomSpecDto? MudSpec { get; init; }
+    /// <summary>RoomType이 "제수밸브실"일 때만 값이 채워진다.</summary>
+    public SluiceValveRoomSpecDto? SluiceSpec { get; init; }
 }

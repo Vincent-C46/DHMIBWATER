@@ -85,6 +85,8 @@ public class WaterTankViewModelTests
         public IEnumerable<string> GetWallTypeNames() => Array.Empty<string>();
         public IEnumerable<string> GetColumnTypeNames() => new[] { "Column" };
         public IEnumerable<string> GetBeamTypeNames() => new[] { "Beam" };
+        public IEnumerable<string> GetPipingSystemTypeNames() => Array.Empty<string>();
+        public IEnumerable<string> GetPipeTypeNames() => Array.Empty<string>();
         public IEnumerable<string> GetFoundationTypeNames() => Array.Empty<string>();
     }
 

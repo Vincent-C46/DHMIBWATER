@@ -169,6 +169,20 @@
 
 ## 진행 중인 작업
 
+#### 밸브실 요청 DTO 타입별 스펙 분리 (2026-07-21)
+- 배경: `ValveRoomGeometryRequestDto`의 DTO 다분할이 과한지 검토. 검토 결과 `MudSpec`/`SluiceSpec`는
+  판별 유니온 역할(계산기가 `dto.SluiceSpec is not { } sluice` 로 패턴 매칭)이라 유지가 타당.
+  Design/Plan/Profile 3분할도 펌프장·저수조 Calculator와 동일 형태라 일관성 목적으로 유지.
+  실제 문제는 **플랫한 30필드짜리 `ValveRoomRequestDto`** — 타입 전용 필드가 섞여 있어 어떤 탭 값이
+  필요한지 타입에 드러나지 않고, `RoomType` 문자열 분기 매핑을 UseCase가 떠안고 있었음.
+- [x] `ValveRoomRequestDto` — 이토/제수 전용 필드 13개를 제거하고 `MudSpec`/`SluiceSpec` 서브레코드로 교체.
+- [x] `ValveRoomViewModel.RequestCreate()` — 기존 `IsMud`/`IsSluice` 로 해당 스펙만 조립(반대편은 null).
+- [x] `CreateValveRoomUseCase.ToGeometryDto()` — `RoomType` 문자열 분기 제거, 스펙 그대로 통과.
+- 검증: `dotnet build DHBIMWATER.sln` 오류 0개. 신규 경고 없음(기존 242개 유지).
+- [x] `ValveRoomGeometryCalculator.Validate()` — 이토밸브실 `MudSpec is null` 가드 추가.
+  `RoomHeight(dto)`가 `MudSpec`에 의존하므로 치수 검사보다 **앞에** 배치(제수밸브실 보/기둥 검사는 기존 유지).
+- [ ] TODO: `ReferenceX`/`ReferenceY`는 ViewModel이 채우지 않아 항상 0 — 사용처 확인 후 정리 필요(기존 상태 유지).
+
 #### 밸브실 GeometryCalculator 샘플 단순화 (2026-07-16)
 - [x] `ValveRoomGeometryCalculator`의 펌프장 복붙 대량 분기/반복 로직을 제거하고, 각 `Calculate*` 메서드가 대표 샘플 1개만 직접 생성하도록 재작성.
   - 대상: 레벨, 슬래브, 선형벽체, 프로파일벽체, 보, 솔리드, 슬래브/벽 오프닝, 일반모델, 단면뷰, 계단.

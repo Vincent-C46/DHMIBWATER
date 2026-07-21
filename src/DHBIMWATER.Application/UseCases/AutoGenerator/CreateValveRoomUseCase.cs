@@ -66,10 +66,6 @@ public sealed class CreateValveRoomUseCase
         new ValveRoomDesignConditionDto(r.RoomType, r.ReferenceZ),
         new ValveRoomPlanSpecDto(r.InnerWidth, r.InnerLength),
         new ValveRoomProfileSpecDto(r.InnerHeight, r.PlainConcreteThickness, r.FoundationThickness, r.FoundationToe, r.OuterWallThickness, r.UpperSlabThickness),
-        r.RoomType == "이토밸브실"
-            ? new MudValveRoomSpecDto(r.HasIntermediateWall, r.IntermediateWallCount, r.IntermediateWallThickness, r.HasIntermediateSlab, r.IntermediateSlabThickness, r.Floor1InnerHeight, r.Floor2InnerHeight)
-            : null,
-        r.RoomType == "제수밸브실"
-            ? new SluiceValveRoomSpecDto(r.BeamCountX, r.BeamOffsetX, r.BeamSpacingX, r.BeamCountY, r.BeamOffsetY, r.BeamSpacingY, r.BeamTypeName, r.ColumnTypeName)
-            : null);
+        r.MudSpec,
+        r.SluiceSpec);
 }

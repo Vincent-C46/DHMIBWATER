@@ -219,25 +219,20 @@ public class ValveRoomViewModel : ViewModelBase
             TrueNorthToProjectNorthClockwiseDegrees = TrueNorthToProjectNorthClockwiseDegrees,
             FoundationToe = FoundationToe,
             OuterWallThickness = OuterWallThickness,
-            IntermediateWallThickness = IntermediateWallThickness,
             UpperSlabThickness = UpperSlabThickness,
-            IntermediateSlabThickness = IntermediateSlabThickness,
             InnerWidth = InnerWidth,
             InnerLength = InnerLength,
             InnerHeight = InnerHeight,
-            HasIntermediateWall = HasIntermediateWall,
-            IntermediateWallCount = IntermediateWallCount,
-            HasIntermediateSlab = HasIntermediateSlab,
-            Floor1InnerHeight = Floor1InnerHeight,
-            Floor2InnerHeight = Floor2InnerHeight,
-            BeamCountX = BeamCountX,
-            BeamOffsetX = BeamOffsetX,
-            BeamSpacingX = BeamSpacingX,
-            BeamCountY = BeamCountY,
-            BeamOffsetY = BeamOffsetY,
-            BeamSpacingY = BeamSpacingY,
-            BeamTypeName = SelectedBeamTypeName == "(사용 안 함)" ? string.Empty : SelectedBeamTypeName,
-            ColumnTypeName = SelectedColumnTypeName == "(사용 안 함)" ? string.Empty : SelectedColumnTypeName
+            // 타입 전용 입력은 선택된 밸브실 타입에 해당하는 쪽만 채운다.
+            MudSpec = IsMud
+                ? new MudValveRoomSpecDto(HasIntermediateWall, IntermediateWallCount, IntermediateWallThickness,
+                    HasIntermediateSlab, IntermediateSlabThickness, Floor1InnerHeight, Floor2InnerHeight)
+                : null,
+            SluiceSpec = IsSluice
+                ? new SluiceValveRoomSpecDto(BeamCountX, BeamOffsetX, BeamSpacingX, BeamCountY, BeamOffsetY, BeamSpacingY,
+                    SelectedBeamTypeName == "(사용 안 함)" ? string.Empty : SelectedBeamTypeName,
+                    SelectedColumnTypeName == "(사용 안 함)" ? string.Empty : SelectedColumnTypeName)
+                : null
         };
         CloseAction?.Invoke();
     }

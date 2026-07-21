@@ -7,9 +7,35 @@ namespace DHBIMWATER.Application.Services;
 
 public class ValveRoomGeometryCalculator
 {
+    private const string FoundationPumpLevelName = "기초";
+    private const string UpperSlabLevelName = "상부슬래브";
+
+
+    public static IReadOnlyList<LevelDefinition> CalculateLevels(ValveRoomGeometryRequestDto dto)
+    {
+        var d = dto.DesignConditionDto;
+        var pl = dto.PlanSpecDto;
+        var pr = dto.ProfileSpecDto;
+
+        var outerWidth = pl.InnerWidth + pr.OuterWallThickness * 2;
+        var outerLength = pl.InnerLength + pr.OuterWallThickness * 2;
+        var foundationWidth = outerWidth + pr.FoundationToe * 2;
+        var foundationLength = outerLength + pr.FoundationToe * 2;
+
+        var levels = new List<LevelDefinition>
+        {
+            new LevelDefinition { Name = FoundationPumpLevelName,  Elevation = 1000 },
+            new LevelDefinition { Name = UpperSlabLevelName,  Elevation = 1000 },
+        };
+     
+        return levels;
+    }
+
     public static IReadOnlyList<SlabDefinition> CalculateSlabs(ValveRoomGeometryRequestDto dto)
     {
-        var d = dto.DesignConditionDto; var pl = dto.PlanSpecDto; var pr = dto.ProfileSpecDto;
+        var d = dto.DesignConditionDto; 
+        var pl = dto.PlanSpecDto; 
+        var pr = dto.ProfileSpecDto;
         var outerWidth = pl.InnerWidth + pr.OuterWallThickness * 2;
         var outerLength = pl.InnerLength + pr.OuterWallThickness * 2;
         var foundationWidth = outerWidth + pr.FoundationToe * 2;
@@ -92,6 +118,9 @@ public class ValveRoomGeometryCalculator
     public static void Validate(ValveRoomGeometryRequestDto dto)
     {
         var d = dto.DesignConditionDto; var pl = dto.PlanSpecDto; var pr = dto.ProfileSpecDto;
+        // RoomHeight(dto)가 MudSpec에 의존하므로 스펙 존재 검사를 치수 검사보다 먼저 수행한다.
+        if (d.RoomType == "이토밸브실" && dto.MudSpec is null)
+            throw new ArgumentException("이토밸브실은 중간벽·중간슬래브 입력이 필요합니다.");
         if (pl.InnerWidth <= 0 || pl.InnerLength <= 0 || RoomHeight(dto) <= 0 || pr.FoundationThickness <= 0 || pr.OuterWallThickness <= 0)
             throw new ArgumentException("밸브실 치수와 두께는 0보다 커야 합니다.");
         if (d.RoomType == "제수밸브실" && (dto.SluiceSpec is null || string.IsNullOrWhiteSpace(dto.SluiceSpec.BeamTypeName) || string.IsNullOrWhiteSpace(dto.SluiceSpec.ColumnTypeName)))

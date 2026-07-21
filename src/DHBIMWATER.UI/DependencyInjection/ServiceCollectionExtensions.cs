@@ -14,7 +14,7 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddUIServices(this IServiceCollection services)
     {
-        #region View µî·Ï
+        #region View ï¿½ï¿½ï¿½
         // Sample
         services.AddTransient<Modeling1View>();
         services.AddTransient<GuideLineView>();
@@ -25,6 +25,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ValveRoomView>();
         services.AddTransient<PipeLayoutView>();
         services.AddTransient<PipingView>();
+        services.AddTransient<AlignmentFamilyPlacementView>();
 
         // Quantity
         services.AddTransient<QuantityView>();
@@ -34,7 +35,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ExParamsView>();
         #endregion
 
-        #region ViewModel µî·Ï
+        #region ViewModel ï¿½ï¿½ï¿½
         // Sample
         services.AddTransient<Modeling1ViewModel>();
         services.AddTransient<GuideLineViewModel>();
@@ -45,6 +46,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ValveRoomViewModel>();
         services.AddTransient<PipeLayoutViewModel>();
         services.AddTransient<PipingViewModel>();
+        services.AddTransient<AlignmentFamilyPlacementViewModel>();
 
         // Quantity
         services.AddTransient<QuantityViewModel>();

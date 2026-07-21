@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,6 +12,8 @@ namespace DHBIMWATER.Application.Interfaces
         IEnumerable<string> GetWallTypeNames();
         IEnumerable<string> GetColumnTypeNames();
         IEnumerable<string> GetBeamTypeNames();
+        IEnumerable<string> GetPipingSystemTypeNames();
+        IEnumerable<string> GetPipeTypeNames();
         IEnumerable<string> GetFoundationTypeNames();
     }
 }

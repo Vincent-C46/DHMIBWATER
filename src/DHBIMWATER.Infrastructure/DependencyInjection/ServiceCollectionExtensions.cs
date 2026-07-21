@@ -1,4 +1,4 @@
-﻿using DHBIMWATER.Application.Interfaces;
+using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Application.Interfaces.Geometry;
 using DHBIMWATER.Application.Interfaces.Quantity;
 using DHBIMWATER.Application.Interfaces.Settings;
@@ -62,6 +62,9 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IPipeAlignmentQueryRepo, RevitPipeAlignmentQueryRepo>();
         services.AddTransient<IShapefileReader, ShapefileReader>();
         services.AddTransient<IAlignmentSourceReader, ShapefileReader>();
+        services.AddTransient<IAlignmentSourceReader, DxfAlignmentReader>();
+        services.AddTransient<IAlignmentBeamPlacementRepo, RevitAlignmentBeamPlacementRepo>();
+        services.AddTransient<IAlignmentPipePlacementRepo, RevitAlignmentPipePlacementRepo>();
         services.AddTransient<IGenericModelRepository, RevitGenericModelRepository>();
         services.AddTransient<IIntersectingElementFinder, RevitIntersectingElementFinder>();
         services.AddTransient<RevitIntersectingElementFinder>();
@@ -130,6 +133,12 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ISharedParameterRepository, MockSharedParameterRepository>();
         services.AddTransient<IShapefileReader, ShapefileReader>();
         services.AddTransient<IAlignmentSourceReader, ShapefileReader>();
+        services.AddTransient<IAlignmentSourceReader, DxfAlignmentReader>();
+        services.AddTransient<IAlignmentBeamPlacementRepo, MockAlignmentBeamPlacementRepo>();
+        services.AddTransient<IAlignmentPipePlacementRepo, MockAlignmentPipePlacementRepo>();
+        services.AddTransient<IAlignmentSourceReader, DxfAlignmentReader>();
+        services.AddTransient<IAlignmentBeamPlacementRepo, RevitAlignmentBeamPlacementRepo>();
+        services.AddTransient<IAlignmentPipePlacementRepo, RevitAlignmentPipePlacementRepo>();
         #endregion
 
         #region Quantity 관련

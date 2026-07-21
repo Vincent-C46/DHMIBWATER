@@ -1,4 +1,5 @@
 using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Plumbing;
 using DHBIMWATER.Application.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -58,6 +59,14 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             {
                 return Enumerable.Empty<string>();
             }
+        }
+        public IEnumerable<string> GetPipingSystemTypeNames() => GetNames(typeof(PipingSystemType));
+        public IEnumerable<string> GetPipeTypeNames() => GetNames(typeof(PipeType));
+        private IEnumerable<string> GetNames(Type type)
+        {
+            var doc = _docProvider(); if (doc is null) return Enumerable.Empty<string>();
+            try { return new FilteredElementCollector(doc).OfClass(type).WhereElementIsElementType().Cast<ElementType>().Select(x => x.Name).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().OrderBy(x => x).ToList(); }
+            catch { return Enumerable.Empty<string>(); }
         }
         public IEnumerable<string> GetColumnTypeNames()
         {

@@ -30,6 +30,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Mock
                 "Mock 기둥 타입 4 - 700x700"
             };
         }
+        public IEnumerable<string> GetPipingSystemTypeNames() => new[] { "Mock 파이프 시스템 1 - 급수" };
+        public IEnumerable<string> GetPipeTypeNames() => new[] { "Mock PipeType 1" };
 
         public IEnumerable<string> GetFoundationTypeNames()
         {
