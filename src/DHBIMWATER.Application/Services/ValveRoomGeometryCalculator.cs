@@ -18,7 +18,7 @@ public class ValveRoomGeometryCalculator
     {
         new LevelDefinition { Name = BaseLevelName, Elevation = BaseElevation(dto) },
         new LevelDefinition { Name = TopLevelName, Elevation = TopElevation(dto) },
-    };
+        };
 
     public static IReadOnlyList<SlabDefinition> CalculateSlabs(ValveRoomGeometryRequestDto dto)
     {
