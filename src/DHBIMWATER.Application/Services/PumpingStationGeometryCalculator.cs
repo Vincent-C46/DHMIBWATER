@@ -2151,7 +2151,7 @@ namespace DHBIMWATER.Application.Services
         /// <summary>
         /// 계단(Revit Stairs 요소) 배치 정의를 계산한다.
         /// 현재는 샘플로 "밸브실 → 상부슬래브" 직선 Run 1개만 생성한다.
-        /// </summary>
+        /// </summary>//
         public static IReadOnlyList<StairsDefinition> CalculateStairs(PumpCreationRequestDto dto)
         {
             var d = dto.DesignConditionDto;
