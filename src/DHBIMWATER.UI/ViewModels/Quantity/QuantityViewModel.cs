@@ -19,6 +19,7 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         private readonly ExportQuantityUseCase _exportQuantityUseCase;
         private Action? _extractAction;
         private Action<IList<long>>? _selectAction;
+        private Action<IList<long>>? _visualizeAction;
         private bool _isSelectedInRevit;
 
         private List<QuantityItem> _currentSelectedItems = new();
@@ -110,6 +111,7 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         public ICommand DeleteItemCommand { get; }
         public ICommand ExportToExcelCommand { get; }
         public ICommand SelectInRevitCommand { get; }
+        public ICommand VisualizeNetFaceCommand { get; }
         #endregion
 
         #region Constructor
@@ -135,6 +137,7 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             EditItemCommand = new RelayCommand(_ => OnEditItem(), _ => SelectedItem != null);
             DeleteItemCommand = new RelayCommand(_ => OnDeleteItem(), _ => _currentSelectedItems.Count > 0);
             SelectInRevitCommand = new RelayCommand(_ => OnSelectInRevit(), _ => _currentSelectedItems.Count > 0);
+            VisualizeNetFaceCommand = new RelayCommand(_ => OnVisualizeNetFace(), _ => _currentSelectedItems.Count > 0);
         }
         #endregion
 
@@ -236,6 +239,7 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
         }
         public void SetExtractAction(Action action) => _extractAction = action;
         public void SetSelectAction(Action<IList<long>> action) => _selectAction = action;
+        public void SetVisualizeAction(Action<IList<long>> action) => _visualizeAction = action;
         public void SetMeasureService(IMeasurePickService service) => MeasureService = service;
 
         private void OnSelectInRevit()
@@ -247,6 +251,15 @@ namespace DHBIMWATER.UI.ViewModels.Quantity
             _selectAction?.Invoke(ids);
             RevitSelectedCount = ids.Count;
             IsSelectedInRevit = true;
+        }
+
+        private void OnVisualizeNetFace()
+        {
+            var ids = _currentSelectedItems
+                .Select(i => i.ElementId)
+                .Distinct()
+                .ToList();
+            _visualizeAction?.Invoke(ids);
         }
 
         public void ApplyCalculatedItems(List<QuantityItem> items)

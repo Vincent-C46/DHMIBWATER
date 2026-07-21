@@ -64,6 +64,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IAlignmentSourceReader, ShapefileReader>();
         services.AddTransient<IGenericModelRepository, RevitGenericModelRepository>();
         services.AddTransient<IIntersectingElementFinder, RevitIntersectingElementFinder>();
+        services.AddTransient<RevitIntersectingElementFinder>();
+        services.AddTransient<INetFaceVisualizerRepo, RevitNetFaceVisualizerRepo>();
         services.AddTransient<IExteriorWallClassifierRepo, RevitExteriorWallClassifierRepo>();
         #endregion
 
@@ -121,6 +123,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ISlabCommandRepo, MockSlabCommandRepo>();
         services.AddTransient<IOpeningCommandRepo, MockOpeningCommandRepo>();
         services.AddTransient<IDirectShapeCommandRepo, MockDirectShapeCommandRepo>();
+        services.AddTransient<INetFaceVisualizerRepo, MockNetFaceVisualizerRepo>();
         services.AddTransient<IViewCommandRepo, MockViewCommandRepo>();
 
         services.AddTransient<ISetParameterRepo, MockSetParameterRepo>();

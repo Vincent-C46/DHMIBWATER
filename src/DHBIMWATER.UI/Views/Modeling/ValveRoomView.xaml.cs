@@ -10,6 +10,5 @@ public partial class ValveRoomView : Window
         InitializeComponent();
         DataContext = viewModel;
         viewModel.CloseAction = Close;
-        viewModel.PreviewRequested = previewViewModel => new ValveRoomPreviewView(previewViewModel) { Owner = this }.ShowDialog();
     }
 }

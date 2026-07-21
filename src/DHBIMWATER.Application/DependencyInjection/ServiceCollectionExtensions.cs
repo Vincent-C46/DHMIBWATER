@@ -18,6 +18,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<CreateValveRoomUseCase>();
         services.AddTransient<ClassifyExteriorWallsUseCase>();
         services.AddTransient<CalculateQuantityUseCase>();
+        services.AddTransient<VisualizeNetFacesUseCase>();
         services.AddTransient<ExportQuantityUseCase>();
         services.AddTransient<SaveQuantitySettingsUseCase>();
         services.AddTransient<ImportPipeAlignmentUseCase>();

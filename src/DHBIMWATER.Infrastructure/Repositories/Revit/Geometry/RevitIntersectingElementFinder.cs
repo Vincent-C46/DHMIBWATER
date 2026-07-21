@@ -29,43 +29,15 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
 
             var refElem = doc.GetElement(new ElementId(refElemId));
             if (refElem == null) return new List<FaceDeduction>();
-
-            //Debug.WriteLine($"RefElemId: {refElem.Id.Value} / 카테고리: {refElem.Category.Name}");
-
-            // 기준 객체 Solid (multi-body solid를 개별 solid로 분리)
-            var refSolids = RevitGeometryHelper.GetSolids(refElem)
-                .SelectMany(s => { try { return SolidUtils.SplitVolumes(s); } catch { return [s]; } })
-                .Where(s => s.Volume > 1e-9)
-                .ToList();
-            if (!refSolids.Any()) return new List<FaceDeduction>();
-
-            var bbox = refElem.get_BoundingBox(null);
-            if (bbox == null) return new List<FaceDeduction>();
-
-            var expandedMin = new XYZ(bbox.Min.X - Epsilon, bbox.Min.Y - Epsilon, bbox.Min.Z - Epsilon);
-            var expandedMax = new XYZ(bbox.Max.X + Epsilon, bbox.Max.Y + Epsilon, bbox.Max.Z + Epsilon);
-            var outline = new Outline(expandedMin, expandedMax);
-
-            var refCategory = (BuiltInCategory)refElem.Category.Id.Value;
-            var targetCategories = GetTargetCategories(refCategory);
-            if (targetCategories.Count == 0) return new List<FaceDeduction>();
-
-            // 1차 필터링: 확장된 BBox와 카테고리로 후보군 추출
-            var candidates = new FilteredElementCollector(doc)
-                                .WhereElementIsNotElementType()
-                                .WherePasses(new ElementMulticategoryFilter(targetCategories))
-                                .WherePasses(new BoundingBoxIntersectsFilter(outline))
-                                .Where(e => e.Id.Value != refElemId)
-                                .ToList();
+            var refSolids = GetSplitSolids(refElem);
+            var candidates = FindCandidates(doc, refElem, refElemId);
+            if (!refSolids.Any() || !candidates.Any()) return new List<FaceDeduction>();
 
             var contacts = new List<FaceDeduction>();
 
             foreach (var candidate in candidates)
             {
-                var candidateSolids = RevitGeometryHelper.GetSolids(candidate)
-                    .SelectMany(s => { try { return SolidUtils.SplitVolumes(s); } catch { return [s]; } })
-                    .Where(s => s.Volume > 1e-9)
-                    .ToList();
+                var candidateSolids = GetSplitSolids(candidate);
                 if (!candidateSolids.Any()) continue;
 
                 foreach (var refSolid in refSolids)
@@ -79,14 +51,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
                     foreach (Face candidateFace in candidateSolid.Faces)
                     {
                         if (candidateFace is not PlanarFace planarCand) continue;
-                        var candidateNormal = planarCand.FaceNormal;
-                        var candidateOrigin = planarCand.Origin;
-
-                        if (refNormal.DotProduct(candidateNormal) > -0.9) continue;
-
-                        var originDiff = candidateOrigin - refOrigin;
-                        var distance = Math.Abs(originDiff.DotProduct(refNormal));
-                        if (distance > 0.01) continue;
+                        if (!IsOpposingAndAdjacent(refNormal, refOrigin, planarCand)) continue;
 
                         try
                         {
@@ -105,6 +70,86 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
             }
 
             return contacts;
+        }
+
+        /// <summary>공제가 반영된 면 인스턴스별 얇은 Solid. Application 계층에는 노출하지 않는다.</summary>
+        internal IReadOnlyList<(FaceType FaceType, Solid NetSolid)> ComputeNetFaceSolids(long elementId)
+        {
+            var doc = _doc();
+            if (doc == null) return new List<(FaceType, Solid)>();
+
+            var element = doc.GetElement(new ElementId(elementId));
+            if (element == null) return new List<(FaceType, Solid)>();
+
+            var candidates = FindCandidates(doc, element, elementId);
+            var results = new List<(FaceType, Solid)>();
+            foreach (var referenceSolid in GetSplitSolids(element))
+            foreach (var face in referenceSolid.Faces.OfType<PlanarFace>())
+            {
+                var faceType = RevitFaceClassifier.Classify(element, face);
+                if (faceType is FaceType.None or FaceType.OpeningSide) continue;
+
+                Solid netSolid;
+                try
+                {
+                    netSolid = CreateExtrusionSolid(face, SolidThk, GetOrCreateFaceTypeMaterial(doc, faceType));
+                }
+                catch { continue; }
+
+                foreach (var candidate in candidates)
+                foreach (var candidateSolid in GetSplitSolids(candidate))
+                {
+                    var isContactFace = candidateSolid.Faces
+                        .OfType<PlanarFace>()
+                        .Any(candidateFace => IsOpposingAndAdjacent(face.FaceNormal, face.Origin, candidateFace));
+                    if (!isContactFace) continue;
+
+                    try
+                    {
+                        var intersecting = BooleanOperationsUtils.ExecuteBooleanOperation(
+                            candidateSolid, netSolid, BooleanOperationsType.Intersect);
+                        if (intersecting == null || intersecting.Volume <= 1e-10) continue;
+                        netSolid = BooleanOperationsUtils.ExecuteBooleanOperation(
+                            netSolid, intersecting, BooleanOperationsType.Difference);
+                    }
+                    catch { continue; }
+                }
+
+                if (netSolid.Volume > 1e-10)
+                    results.Add((faceType, netSolid));
+            }
+
+            return results;
+        }
+
+        private static List<Solid> GetSplitSolids(Element element) => RevitGeometryHelper.GetSolids(element)
+            .SelectMany(s => { try { return SolidUtils.SplitVolumes(s); } catch { return [s]; } })
+            .Where(s => s.Volume > 1e-9)
+            .ToList();
+
+        private List<Element> FindCandidates(Document doc, Element referenceElement, long referenceElementId)
+        {
+            var bbox = referenceElement.get_BoundingBox(null);
+            if (bbox == null || referenceElement.Category == null) return new List<Element>();
+
+            var outline = new Outline(
+                new XYZ(bbox.Min.X - Epsilon, bbox.Min.Y - Epsilon, bbox.Min.Z - Epsilon),
+                new XYZ(bbox.Max.X + Epsilon, bbox.Max.Y + Epsilon, bbox.Max.Z + Epsilon));
+            var targetCategories = GetTargetCategories((BuiltInCategory)referenceElement.Category.Id.Value);
+            if (targetCategories.Count == 0) return new List<Element>();
+
+            return new FilteredElementCollector(doc)
+                .WhereElementIsNotElementType()
+                .WherePasses(new ElementMulticategoryFilter(targetCategories))
+                .WherePasses(new BoundingBoxIntersectsFilter(outline))
+                .Where(e => e.Id.Value != referenceElementId)
+                .ToList();
+        }
+
+        private static bool IsOpposingAndAdjacent(XYZ referenceNormal, XYZ referenceOrigin, PlanarFace candidateFace)
+        {
+            if (referenceNormal.DotProduct(candidateFace.FaceNormal) > -0.9) return false;
+            return Math.Abs((candidateFace.Origin - referenceOrigin).DotProduct(referenceNormal)) <= Epsilon;
         }
 
         //public IEnumerable<long> FindIntersecting(long referenceElementId)
@@ -195,13 +240,42 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Geometry
             _categoryMatrix.TryGetValue((RevitCategory)(int)refCategory, out var adjacent)
                 ? adjacent.Select(c => (BuiltInCategory)(int)c).ToList()
                 : FallbackCategories;
-        private static Solid CreateExtrusionSolid(Face face, double thickness)
+        private static Solid CreateExtrusionSolid(Face face, double thickness, ElementId? materialId = null)
         {
             var curveLoops = face.GetEdgesAsCurveLoops().FirstOrDefault();
             var faceNormal = face.ComputeNormal(new UV(0.5, 0.5));
-            var solid = GeometryCreationUtilities.CreateExtrusionGeometry(new[] { curveLoops }, faceNormal, thickness);
+            var solidOptions = new SolidOptions(materialId ?? ElementId.InvalidElementId, ElementId.InvalidElementId);
+            var solid = GeometryCreationUtilities.CreateExtrusionGeometry(new[] { curveLoops }, faceNormal, thickness, solidOptions);
 
             return solid;
+        }
+
+        private static ElementId GetOrCreateFaceTypeMaterial(Document doc, FaceType faceType)
+        {
+            var (name, color) = faceType switch
+            {
+                FaceType.Top => ("DH_순면적_Top", new Color(255, 215, 0)),
+                FaceType.Bottom => ("DH_순면적_Bottom", new Color(255, 140, 0)),
+                FaceType.Left => ("DH_순면적_Left", new Color(0, 120, 215)),
+                FaceType.Right => ("DH_순면적_Right", new Color(0, 180, 0)),
+                FaceType.End => ("DH_순면적_End", new Color(160, 32, 240)),
+                _ => ("DH_순면적_Side", new Color(150, 150, 150)),
+            };
+
+            var materials = new FilteredElementCollector(doc)
+                .OfClass(typeof(Material))
+                .Cast<Material>()
+                .ToList();
+            var existing = materials.FirstOrDefault(m => m.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            if (existing != null) return existing.Id;
+
+            var baseMaterial = materials.FirstOrDefault();
+            if (baseMaterial == null) return ElementId.InvalidElementId;
+
+            var created = baseMaterial.Duplicate(name) as Material;
+            if (created == null) return ElementId.InvalidElementId;
+            created.Color = color;
+            return created.Id;
         }
     }
 }

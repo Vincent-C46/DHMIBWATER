@@ -11,6 +11,7 @@ namespace DHBIMWATER.Revit.Commands.Quantity
         None = 0,
         Calculate = 1,
         SelectInRevit = 2,
+        VisualizeNetFace = 3,
     }
     public class QuantityRequest
     {

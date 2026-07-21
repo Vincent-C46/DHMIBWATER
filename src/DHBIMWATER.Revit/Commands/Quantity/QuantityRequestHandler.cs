@@ -10,16 +10,22 @@ namespace DHBIMWATER.Revit.Commands.Quantity
     public class QuantityRequestHandler : IExternalEventHandler
     {
         private readonly CalculateQuantityUseCase _useCase;
+        private readonly VisualizeNetFacesUseCase _visualizeNetFacesUseCase;
         private readonly QuantityViewModel _vm;
 
         private readonly QuantityRequest _quantityRequest = new QuantityRequest();
         public QuantityRequest QuantityRequest { get { return _quantityRequest; } }
 
         public IList<long> ElementIdsToSelect { get; set; } = new List<long>();
+        public IList<long> ElementIdsToVisualize { get; set; } = new List<long>();
 
-        public QuantityRequestHandler(CalculateQuantityUseCase useCase, QuantityViewModel vm)
+        public QuantityRequestHandler(
+            CalculateQuantityUseCase useCase,
+            VisualizeNetFacesUseCase visualizeNetFacesUseCase,
+            QuantityViewModel vm)
         {
             _useCase = useCase;
+            _visualizeNetFacesUseCase = visualizeNetFacesUseCase;
             _vm = vm;
         }
 
@@ -45,6 +51,10 @@ namespace DHBIMWATER.Revit.Commands.Quantity
                                         .Where(id => doc.GetElement(id) != null)
                                         .ToList();
                         uidoc.Selection.SetElementIds(elementIds);
+                        break;
+                    case QuantityRequestId.VisualizeNetFace:
+                        var count = _visualizeNetFacesUseCase.Execute(ElementIdsToVisualize.ToList());
+                        TaskDialog.Show("순 면적 시각화", $"순 면적 시각화 {count}개 생성");
                         break;
                     default:
                         break;

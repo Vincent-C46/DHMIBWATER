@@ -130,8 +130,6 @@
             <Border Background="#EEF2F7" CornerRadius="8" Padding="10"><TextBlock Text="{Binding Summary}" Foreground="#2C3E50" TextWrapping="Wrap"/></Border>
             <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
                 <Button Content="기본값" Command="{Binding ResetCommand}" Margin="0,0,8,0"/>
-                <Button Content="미리보기" Command="{Binding PreviewCommand}" Margin="0,0,8,0"/>
-                <Button Content="취소" Command="{Binding CancelCommand}" Margin="0,0,8,0"/>
                 <Button Content="모델 생성" Style="{StaticResource PrimaryButtonStyle}" Command="{Binding CreateCommand}"/>
             </StackPanel>
         </Grid>

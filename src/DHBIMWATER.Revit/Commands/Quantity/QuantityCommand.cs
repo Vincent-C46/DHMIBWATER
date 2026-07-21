@@ -25,7 +25,8 @@ namespace DHBIMWATER.Revit.Commands.Quantity
 
             new WindowInteropHelper(_view).Owner = commandData.Application.MainWindowHandle;
             var useCase = ServiceContainer.GetService<CalculateQuantityUseCase>();
-            var handler = new QuantityRequestHandler(useCase, _view.ViewModel);
+            var visualizeNetFacesUseCase = ServiceContainer.GetService<VisualizeNetFacesUseCase>();
+            var handler = new QuantityRequestHandler(useCase, visualizeNetFacesUseCase, _view.ViewModel);
             var exEvent = ExternalEvent.Create(handler);
             var measureService = new RevitMeasurePickService();
 
@@ -40,6 +41,13 @@ namespace DHBIMWATER.Revit.Commands.Quantity
             {
                 handler.ElementIdsToSelect = ids;
                 handler.QuantityRequest.Make(QuantityRequestId.SelectInRevit);
+                exEvent.Raise();
+            });
+
+            _view.ViewModel.SetVisualizeAction(ids =>
+            {
+                handler.ElementIdsToVisualize = ids;
+                handler.QuantityRequest.Make(QuantityRequestId.VisualizeNetFace);
                 exEvent.Raise();
             });
 

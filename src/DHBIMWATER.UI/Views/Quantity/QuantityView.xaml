@@ -17,7 +17,7 @@
         Background="#F4F7F9" 
         AllowsTransparency="False" 
         WindowStyle="None"
-        FontFamily="Segoe UI, Malgun Gothic">
+        FontFamily="Segoe   UI, Malgun Gothic">
 
     <Window.Resources>
         <ResourceDictionary>
@@ -31,7 +31,7 @@
                     <PropertyGroupDescription PropertyName="WorkType"/>
                 </CollectionViewSource.GroupDescriptions>
             </CollectionViewSource>
-            -->
+            --> 
 
             <conv:GroupElementCountConverter x:Key="ElementCountConverter"/>
             <conv:QuantityStatusToLabelConverter x:Key="StatusLabelConverter"/>
@@ -453,6 +453,13 @@
                                 <Image Source="/DHBIMWATER.UI;component/Resources/Quantity/check.png" Width="18" Margin="0,0,6,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="Revit에서 객체 선택" VerticalAlignment="Center"/>
                             </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding VisualizeNetFaceCommand}"
+                                Padding="8,5" Margin="0,6,0,0"
+                                Style="{StaticResource ExportButtonStyle}"
+                                BorderThickness="1" HorizontalAlignment="Stretch">
+                            <TextBlock Text="순 면적 보기" VerticalAlignment="Center"/>
                         </Button>
 
                         <!-- 선택 완료 배지 -->

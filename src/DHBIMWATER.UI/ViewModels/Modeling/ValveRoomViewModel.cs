@@ -57,9 +57,7 @@ public class ValveRoomViewModel : ViewModelBase
         LoadTypeNames();
 
         ResetCommand = new RelayCommand(_ => ApplyPreset());
-        PreviewCommand = new RelayCommand(_ => PreviewRequested?.Invoke(new ValveRoomPreviewViewModel(this)));
         CreateCommand = new RelayCommand(_ => RequestCreate());
-        CancelCommand = new RelayCommand(_ => CloseAction?.Invoke());
         ApplyPreset();
     }
 
@@ -67,11 +65,8 @@ public class ValveRoomViewModel : ViewModelBase
     public ObservableCollection<string> ColumnTypeNames { get; }
     public ObservableCollection<string> BeamTypeNames { get; }
     public ICommand ResetCommand { get; }
-    public ICommand PreviewCommand { get; }
     public ICommand CreateCommand { get; }
-    public ICommand CancelCommand { get; }
     public Action? CloseAction { get; set; }
-    public Action<ValveRoomPreviewViewModel>? PreviewRequested { get; set; }
     public ValveRoomRequestDto? RequestedCreate { get; private set; }
 
     public string SelectedValveRoomType

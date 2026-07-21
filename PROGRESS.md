@@ -873,3 +873,66 @@
   `Infrastructure/DependencyInjection/ServiceCollectionExtensions.cs`.
 - `dotnet build src/DHBIMWATER.Revit/DHBIMWATER.Revit.csproj -c Debug` 성공 확인.
 - TODO: Phase 2 UseCase(패밀리/파이프 배치)에서 `IPipeAlignmentQueryRepo` 실제 소비, DWG 리더 구현.
+
+### 공제 후 순 면적(Net Face) 시각화 지시서 작성 (2026-07-20)
+- [x] `RevitIntersectingElementFinder.FindContactAreas()` 조사 — 접촉 공제가 순수 계산식이 아니라
+  Boolean Intersect로 실제 3D 접촉 볼륨(`intersectingSolid`)을 구한 뒤 `Volume/두께`로 스칼라화하고
+  있음을 확인.
+- [x] `docs/16_공제접촉면_시각화_지시서.md` 신규 — Codex 핸드오프용. **1차 초안은 "공제되어 빠지는
+  접촉 영역 자체"를 시각화하는 것으로 잘못 설계 → 사용자 정정("공제된 Net 면적을 나타내는 면") 반영해
+  재작성.** 핵심 알고리즘: 각 면을 얇게 돌출한 `grossThin`에서 맞닿는 이웃의 `intersectingSolid`를
+  순차 `Difference`로 실제로 도려내 `netSolid`를 만들고, 면 인스턴스별로 Union 없이
+  `GeometryObject[]`로 묶어 DirectShape 1개에 시각화. `Solid`/`GeometryObject`는 Infrastructure
+  밖으로 절대 노출하지 않도록 `INetFaceVisualizerRepo` 시그니처를 `int Visualize(ElementId[])`로
+  제한. `QuantityView`(모덜리스)에 ExternalEvent/Request 패턴으로 버튼 배선까지 5단계로 정리.
+  겹치는 두 이웃 공제 시 기존 스칼라 `GetNetArea`가 이중차감할 수 있어 시각화 면적과 어긋날 수 있음을
+  "검증 논리적 함정"으로 명시 — 버그 아님.
+- [x] 지시서의 "확인 필요" 4건 사용자 확정: ① 이전 DirectShape는 마커 파라미터(`DH_Category`=
+  `"순면적시각화"`) 검색 후 삭제, ② FaceType별 색상 재질 구분 표시(Left=파랑/Right=초록/Top=노랑/
+  Bottom=주황/End=보라/Side=회색), ③ 필터 없이 요소 전체 면을 한 번에 표시, ④ 이중차감 함정이
+  발견돼도 이번엔 시각화만 — `GetNetArea` 스칼라 계산은 건드리지 않음.
+  `docs/16_공제접촉면_시각화_지시서.md`에 색상 재질 매핑표와 find-or-create 재질 로직, Boolean
+  연산 후 재질 유지 여부 검증 항목을 반영해 갱신 완료.
+- [x] Net Face 시각화 구현 완료 (2026-07-20)
+  - `INetFaceVisualizerRepo` / `VisualizeNetFacesUseCase` / real·mock repository와 DI 등록을 추가.
+  - `RevitIntersectingElementFinder`의 후보 수집·면 판정 로직을 공용화하고, 면 인스턴스별
+    순차 Boolean Difference `netSolid` 계산을 추가. `OpeningSide`/`None`은 제외하며 FaceType별
+    재질(`DH_순면적_*`)을 find-or-create 한다.
+  - 이전 `DH_Category=순면적시각화` DirectShape는 삭제 후, 요소당 `OST_GenericModel` DirectShape 1개에
+    비연속 net Solid들을 Union 없이 저장한다.
+  - QuantityView의 `순 면적 보기` 버튼을 ExternalEvent 요청으로 연결했다.
+  - 빌드: `dotnet build src/DHBIMWATER.Revit/DHBIMWATER.Revit.csproj -c Debug -p:DebugType=None`
+    오류 0. Revit 실행 중 Addins DLL 복사 잠금 경고 및 기존 nullable 경고는 남음.
+  - TODO: 실제 Revit 모델에서 Difference 후 재질 색상 유지, 마커 파라미터 존재, 면적 일치 여부를 육안 확인.
+
+## 2026-07-21
+
+### ValveRoomView 하단 미리보기/취소 버튼 제거 + 관련 dead code 정리 (2026-07-21)
+- [x] `ValveRoomView.xaml` 하단 버튼 영역에서 `미리보기`(`PreviewCommand`), `취소`(`CancelCommand`) 버튼 제거.
+  `기본값` / `모델 생성` 버튼만 유지. 창 닫기는 기존 `TitleBar`의 닫기 버튼으로 계속 가능(`Result.Cancelled` 경로 유지).
+- [x] `ValveRoomViewModel`에서 `PreviewCommand`/`CancelCommand`/`PreviewRequested` 제거.
+- [x] `ValveRoomView.xaml.cs`에서 `PreviewRequested` 구독 코드 제거.
+- [x] 더 이상 참조되지 않는 `ValveRoomPreviewView.xaml`/`.xaml.cs`, `ValveRoomPreviewViewModel.cs` 삭제
+  (DI 미등록 확인 후 삭제 — 다른 참조 없음).
+- [x] `dotnet build src/DHBIMWATER.UI/DHBIMWATER.UI.csproj`, `dotnet build src/DHBIMWATER.Revit/DHBIMWATER.Revit.csproj` 오류 0 확인
+  (Revit 실행 중이라 Addins 폴더 DLL 복사 경고만 발생, 컴파일과 무관).
+
+### 밸브실 전용 Geometry DTO + Calculator 연동 (2026-07-21)
+- [x] `ValveRoomDesignConditionDto`/`ValveRoomPlanSpecDto`/`ValveRoomProfileSpecDto`와 이토·제수 전용 nullable 스펙,
+  최상위 `ValveRoomGeometryRequestDto`를 추가했다. 기존 UI-facing `ValveRoomRequestDto`는 변경하지 않았다.
+- [x] `ValveRoomGeometryCalculator`를 펌프장 DTO 기반 샘플 구현에서 밸브실 계산기로 전면 교체했다.
+  기존 UseCase의 슬래브·벽·보·기둥 산식과 Zone/Part/ElementCode를 이관하고, 타입 전용 DTO null 가드를 추가했다.
+- [x] `CreateValveRoomUseCase`는 flat 요청을 Geometry DTO로 매핑해 Calculator를 호출하도록 변경했다.
+  Transaction, 레벨 보장, 프로젝트 위치 설정은 UseCase에 유지했고 레벨 상수는 Calculator가 공유하도록 `internal`로 전환했다.
+- [x] 검증: `dotnet build src/DHBIMWATER.Application/DHBIMWATER.Application.csproj --no-restore -p:DebugType=none`,
+  `dotnet build src/DHBIMWATER.Revit/DHBIMWATER.Revit.csproj --no-restore -p:DebugType=none` 오류 0.
+  Revit 실행 프로세스의 Addins DLL 점유로 배포 복사 경고는 발생했다.
+- [ ] TODO: 실제 Revit에서 이토/제수/공기밸브실 3종의 형상을 육안 검증해야 한다.
+
+### 이토밸브실 외벽 중간슬래브 분절 (2026-07-21)
+- [x] `ValveRoomGeometryCalculator.CalculateWalls`: 이토밸브실이면서 `HasIntermediateSlab`가 true일 때,
+  외벽 4면을 중간슬래브에서 1회 끊어 2개 벽(1F: `Floor1InnerHeight`, 2F: `Floor2InnerHeight`)으로 생성하도록 변경.
+  2F 벽 `BaseOffset`은 `ReferenceZ + Floor1InnerHeight + IntermediateSlabThickness`. 중간벽(`중간벽`)은 대상에서 제외(사용자 확인).
+- [x] `Wall()` 헬퍼에 `baseOffset` 선택 인자 추가(기본값은 기존과 동일한 `ReferenceZ`).
+- [x] 검증: `dotnet build src/DHBIMWATER.Application/DHBIMWATER.Application.csproj` 오류 0.
+- [ ] TODO: Revit에서 실제 생성 후 벽 이음부가 슬래브와 겹치지 않고 정확히 접하는지 육안 확인.
