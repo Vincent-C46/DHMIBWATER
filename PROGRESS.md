@@ -169,6 +169,27 @@
 
 ## 진행 중인 작업
 
+#### 밸브실 기준점 모델링 개선 — 워크트리 작업 이식 (2026-07-21)
+- 배경: `C:/Users/admin/.herdr/worktrees/DHBIMWATER/` 의 별도 워크트리 2개에서 진행된 작업을 본 브랜치로 회수.
+  - `valveModeling`(dcbd6d0) — **이식 없음**. 내용이 이미 `650a32e`에 포함되어 있고, 차이나는 3파일은 전부
+    구버전(선형 배치 Repo의 기준점 오프셋 누락, DI Mock 리전에 Revit 구현체 중복 등록)이라 병합 시 회귀만 발생.
+  - `valveRoomModeling`(e12a432) — 아래 항목을 **수동 이식**. 평면 DTO 기반이라 그대로 병합하면
+    `MudSpec`/`SluiceSpec` 리팩터링과 충돌하고 `ValveRoomViewModel`은 자동병합되며 컴파일이 깨짐.
+- [x] `ValveRoomRequestDto.SharedElevation` → `FoundationTopEl`(기초 상부 EL, m). `ReferenceZ` 제거(본 변경으로 미사용화).
+- [x] `ValveRoomDesignConditionDto.ReferenceZ` → `FoundationTopEl`. DTO 분리 구조는 유지.
+- [x] `ValveRoomGeometryCalculator` — `BaseLevelName`/`TopLevelName` 상수 + `BaseElevation()`/`TopElevation()` 추가.
+  `CalculateLevels()`가 양쪽 다 `Elevation = 1000`을 반환하던 죽은 스텁이었던 것을 실제 표고 반환으로 교체.
+- [x] `CreateValveRoomUseCase` — 하드코딩 상수(`TopLevelElevation = 10000` 등) 제거, `CalculateLevels` + `UpdateLevel` 기반
+  `EnsureLevels()`로 전환. `SetInternalOriginSharedPosition`의 표고 인자를 항상 0으로 고정.
+- [x] `ValveRoomView.xaml` — 창 폭 700→1080, 우측 340px 참고도 패널(평면도/단면도 각 2칸) 추가.
+- 주의: **`BaseOffset`은 레벨 상대값, `ElevationZ`/기둥 `Position.Z`/보 `StartPoint.Z`는 절대값**(각 Revit Repo 확인 결과).
+  워크트리 원본이 2F 외벽 `baseOffset`에 절대표고를 넣던 것을 상대값으로 정정해 이식.
+- 이식 제외: 미리보기 기능(`PreviewCommand`/`ValveRoomPreviewViewModel`) — 폐기 결정. `f041ec6`에서 이미 삭제된 상태 유지.
+  `CancelCommand`/취소 버튼 — 사용자 요청으로 제외.
+- 검증: `dotnet build DHBIMWATER.sln` 오류 0개 / 경고 280개로 이식 전과 동일(신규 경고 없음).
+- [ ] TODO: `Resources/ValveRoomImages/` 폴더와 `{밸브실종류}_평면도_1.png` 등 참고도 이미지가 아직 없어 4칸 모두 빈 칸으로 표시됨.
+- [ ] TODO: 워크트리 2개(`valvemodeling`, `valveroommodeling`)는 회수 완료 — `git worktree remove` 로 정리 필요.
+
 #### 밸브실 요청 DTO 타입별 스펙 분리 (2026-07-21)
 - 배경: `ValveRoomGeometryRequestDto`의 DTO 다분할이 과한지 검토. 검토 결과 `MudSpec`/`SluiceSpec`는
   판별 유니온 역할(계산기가 `dto.SluiceSpec is not { } sluice` 로 패턴 매칭)이라 유지가 타당.

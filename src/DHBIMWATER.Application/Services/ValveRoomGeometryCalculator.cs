@@ -1,5 +1,4 @@
 using DHBIMWATER.Application.DTOs.Revit.ValveRoom;
-using DHBIMWATER.Application.UseCases.AutoGenerator;
 using DHBIMWATER.Core.Geometry;
 using DHBIMWATER.Core.Structures;
 
@@ -7,29 +6,19 @@ namespace DHBIMWATER.Application.Services;
 
 public class ValveRoomGeometryCalculator
 {
-    private const string FoundationPumpLevelName = "기초";
-    private const string UpperSlabLevelName = "상부슬래브";
+    public const string BaseLevelName = "밸브실 기초 상부";
+    public const string TopLevelName = "밸브실 상부슬래브";
 
+    /// <summary>기초 상부 EL(m)을 프로젝트 내부 단위(mm)로 환산한 기준 레벨 표고.</summary>
+    public static double BaseElevation(ValveRoomGeometryRequestDto dto) => dto.DesignConditionDto.FoundationTopEl * 1000;
 
-    public static IReadOnlyList<LevelDefinition> CalculateLevels(ValveRoomGeometryRequestDto dto)
+    public static double TopElevation(ValveRoomGeometryRequestDto dto) => BaseElevation(dto) + RoomHeight(dto);
+
+    public static IReadOnlyList<LevelDefinition> CalculateLevels(ValveRoomGeometryRequestDto dto) => new List<LevelDefinition>
     {
-        var d = dto.DesignConditionDto;
-        var pl = dto.PlanSpecDto;
-        var pr = dto.ProfileSpecDto;
-
-        var outerWidth = pl.InnerWidth + pr.OuterWallThickness * 2;
-        var outerLength = pl.InnerLength + pr.OuterWallThickness * 2;
-        var foundationWidth = outerWidth + pr.FoundationToe * 2;
-        var foundationLength = outerLength + pr.FoundationToe * 2;
-
-        var levels = new List<LevelDefinition>
-        {
-            new LevelDefinition { Name = FoundationPumpLevelName,  Elevation = 1000 },
-            new LevelDefinition { Name = UpperSlabLevelName,  Elevation = 1000 },
-        };
-     
-        return levels;
-    }
+        new LevelDefinition { Name = BaseLevelName, Elevation = BaseElevation(dto) },
+        new LevelDefinition { Name = TopLevelName, Elevation = TopElevation(dto) },
+    };
 
     public static IReadOnlyList<SlabDefinition> CalculateSlabs(ValveRoomGeometryRequestDto dto)
     {
@@ -40,14 +29,15 @@ public class ValveRoomGeometryCalculator
         var outerLength = pl.InnerLength + pr.OuterWallThickness * 2;
         var foundationWidth = outerWidth + pr.FoundationToe * 2;
         var foundationLength = outerLength + pr.FoundationToe * 2;
+        var baseZ = BaseElevation(dto);
         var slabs = new List<SlabDefinition>
         {
-            Slab(dto, pl.InnerWidth / 2, pl.InnerLength / 2, foundationWidth, foundationLength, pr.PlainConcreteThickness, d.ReferenceZ - pr.FoundationThickness, "버림콘크리트"),
-            Slab(dto, pl.InnerWidth / 2, pl.InnerLength / 2, foundationWidth, foundationLength, pr.FoundationThickness, d.ReferenceZ, "기초")
+            Slab(dto, pl.InnerWidth / 2, pl.InnerLength / 2, foundationWidth, foundationLength, pr.PlainConcreteThickness, baseZ - pr.FoundationThickness, "버림콘크리트"),
+            Slab(dto, pl.InnerWidth / 2, pl.InnerLength / 2, foundationWidth, foundationLength, pr.FoundationThickness, baseZ, "기초")
         };
         if (d.RoomType == "이토밸브실" && dto.MudSpec is { HasIntermediateSlab: true } mud)
-            slabs.Add(Slab(dto, pl.InnerWidth / 2, pl.InnerLength / 2, outerWidth, outerLength, mud.IntermediateSlabThickness, d.ReferenceZ + mud.Floor1InnerHeight, "중간슬래브"));
-        slabs.Add(Slab(dto, pl.InnerWidth / 2, pl.InnerLength / 2, outerWidth, outerLength, pr.UpperSlabThickness, d.ReferenceZ + RoomHeight(dto), "상부슬래브"));
+            slabs.Add(Slab(dto, pl.InnerWidth / 2, pl.InnerLength / 2, outerWidth, outerLength, mud.IntermediateSlabThickness, baseZ + mud.Floor1InnerHeight, "중간슬래브"));
+        slabs.Add(Slab(dto, pl.InnerWidth / 2, pl.InnerLength / 2, outerWidth, outerLength, pr.UpperSlabThickness, TopElevation(dto), "상부슬래브"));
         return slabs;
     }
 
@@ -67,8 +57,9 @@ public class ValveRoomGeometryCalculator
             foreach (var (start, end) in outerCorners)
             {
                 walls.Add(Wall(dto, start, end, pr.OuterWallThickness, slabMud.Floor1InnerHeight, "외벽", isExterior: true));
+                // BaseOffset은 기준 레벨(밸브실 기초 상부) 기준 상대 오프셋이므로 절대표고를 더하지 않는다.
                 walls.Add(Wall(dto, start, end, pr.OuterWallThickness, slabMud.Floor2InnerHeight, "외벽", isExterior: true,
-                    baseOffset: d.ReferenceZ + slabMud.Floor1InnerHeight + slabMud.IntermediateSlabThickness));
+                    baseOffset: slabMud.Floor1InnerHeight + slabMud.IntermediateSlabThickness));
             }
         }
         else
@@ -89,7 +80,7 @@ public class ValveRoomGeometryCalculator
     {
         var d = dto.DesignConditionDto; var pl = dto.PlanSpecDto;
         if (d.RoomType != "제수밸브실" || dto.SluiceSpec is not { } sluice) return Array.Empty<BeamDefinition>();
-        var z = d.ReferenceZ + RoomHeight(dto); var x0 = 0d; var x1 = pl.InnerWidth;
+        var z = TopElevation(dto); var x0 = 0d; var x1 = pl.InnerWidth;
         var y0 = 0d; var y1 = pl.InnerLength;
         var beams = new List<BeamDefinition>();
         for (var i = 0; i < sluice.BeamCountX; i++)
@@ -108,9 +99,10 @@ public class ValveRoomGeometryCalculator
         for (var y = 0; y < sluice.BeamCountX; y++)
             columns.Add(new ColumnDefinition
             {
-                Position = new Point3D(sluice.BeamOffsetY + sluice.BeamSpacingY * x, sluice.BeamOffsetX + sluice.BeamSpacingX * y, d.ReferenceZ),
-                TypeName = sluice.ColumnTypeName, BaseLevelName = CreateValveRoomUseCase.BaseLevelName, TopLevelName = CreateValveRoomUseCase.TopLevelName,
-                TopOffset = d.ReferenceZ + RoomHeight(dto) - CreateValveRoomUseCase.TopLevelElevation, ElementCode = "VR-C", Zone = d.RoomType, Part = "보 교차부 기둥"
+                Position = new Point3D(sluice.BeamOffsetY + sluice.BeamSpacingY * x, sluice.BeamOffsetX + sluice.BeamSpacingX * y, BaseElevation(dto)),
+                TypeName = sluice.ColumnTypeName, BaseLevelName = BaseLevelName, TopLevelName = TopLevelName,
+                // 상부 레벨이 이미 상부슬래브 표고이므로 추가 오프셋이 필요 없다.
+                TopOffset = 0, ElementCode = "VR-C", Zone = d.RoomType, Part = "보 교차부 기둥"
             });
         return columns;
     }
@@ -130,18 +122,18 @@ public class ValveRoomGeometryCalculator
     private static SlabDefinition Slab(ValveRoomGeometryRequestDto dto, double centerX, double centerY, double width, double length, double thickness, double z, string part) => new()
     {
         Points = Rectangle(centerX, centerY, width, length), SubPoints = Array.Empty<Point2D>(), Thickness = thickness, ElevationZ = z,
-        LevelName = CreateValveRoomUseCase.BaseLevelName, Category = "슬래브", ElementCode = "VR-S", Zone = dto.DesignConditionDto.RoomType, Part = part
+        LevelName = BaseLevelName, Category = "슬래브", ElementCode = "VR-S", Zone = dto.DesignConditionDto.RoomType, Part = part
     };
 
     private static LinearWallDefinition Wall(ValveRoomGeometryRequestDto dto, Point3D start, Point3D end, double thickness, double height, string part, bool isExterior, double? baseOffset = null) => new()
     {
-        StartPoint = start, EndPoint = end, Thickness = thickness, Height = height, BaseOffset = baseOffset ?? dto.DesignConditionDto.ReferenceZ,
-        LevelName = CreateValveRoomUseCase.BaseLevelName, Category = "벽", ElementCode = "VR-W", Zone = dto.DesignConditionDto.RoomType, Part = part, IsExterior = isExterior
+        StartPoint = start, EndPoint = end, Thickness = thickness, Height = height, BaseOffset = baseOffset ?? 0,
+        LevelName = BaseLevelName, Category = "벽", ElementCode = "VR-W", Zone = dto.DesignConditionDto.RoomType, Part = part, IsExterior = isExterior
     };
 
     private static BeamDefinition Beam(ValveRoomGeometryRequestDto dto, Point3D start, Point3D end, string part) => new()
     {
-        StartPoint = start, EndPoint = end, TypeName = dto.SluiceSpec!.BeamTypeName, LevelName = CreateValveRoomUseCase.BaseLevelName,
+        StartPoint = start, EndPoint = end, TypeName = dto.SluiceSpec!.BeamTypeName, LevelName = BaseLevelName,
         Category = "보", ElementCode = "VR-B", Zone = dto.DesignConditionDto.RoomType, Part = part
     };
 

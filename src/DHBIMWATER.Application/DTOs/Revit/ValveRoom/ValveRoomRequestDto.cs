@@ -10,12 +10,11 @@ public record ValveRoomRequestDto
     public double SharedCoordinateX { get; init; }
     /// <summary>내부공간 좌하단 내부원점의 북쪽 방향 공유좌표(m).</summary>
     public double SharedCoordinateY { get; init; }
-    /// <summary>내부공간 좌하단 내부원점의 공유표고(m).</summary>
-    public double SharedElevation { get; init; }
+    /// <summary>기초 상부 EL(m). 레벨 표고가 되며 내부원점 표고는 항상 0이다.</summary>
+    public double FoundationTopEl { get; init; }
     /// <summary>진북에서 도북(프로젝트 북)까지 시계방향 각도(degree).</summary>
     public double TrueNorthToProjectNorthClockwiseDegrees { get; init; }
     public double ReferenceY { get; init; }
-    public double ReferenceZ { get; init; }
     public double PlainConcreteThickness { get; init; }
     public double FoundationThickness { get; init; }
     public double FoundationToe { get; init; }

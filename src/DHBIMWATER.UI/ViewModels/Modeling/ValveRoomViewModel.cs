@@ -44,7 +44,7 @@ public class ValveRoomViewModel : ViewModelBase
 
     private double _sharedCoordinateX;
     private double _sharedCoordinateY;
-    private double _sharedElevation;
+    private double _foundationTopEl;
     private double _trueNorthToProjectNorthClockwiseDegrees;
     public ValveRoomViewModel(IDialogService dialogService, IElementTypeQueryRepo typeQueryRepo)
     {
@@ -83,6 +83,10 @@ public class ValveRoomViewModel : ViewModelBase
             OnPropertyChanged(nameof(IntermediateSlabVisibility));
             OnPropertyChanged(nameof(SingleHeightVisibility));
             OnPropertyChanged(nameof(Summary));
+            OnPropertyChanged(nameof(PlanImagePath1));
+            OnPropertyChanged(nameof(PlanImagePath2));
+            OnPropertyChanged(nameof(SectionImagePath1));
+            OnPropertyChanged(nameof(SectionImagePath2));
         }
     }
 
@@ -110,7 +114,8 @@ public class ValveRoomViewModel : ViewModelBase
 
     public double SharedCoordinateX { get => _sharedCoordinateX; set => SetProperty(ref _sharedCoordinateX, value); }
     public double SharedCoordinateY { get => _sharedCoordinateY; set => SetProperty(ref _sharedCoordinateY, value); }
-    public double SharedElevation { get => _sharedElevation; set => SetProperty(ref _sharedElevation, value); }
+    /// <summary>기초 상부 EL(m). 레벨 표고가 되며 내부원점 표고는 항상 0이다.</summary>
+    public double FoundationTopEl { get => _foundationTopEl; set => SetProperty(ref _foundationTopEl, value); }
     public double TrueNorthToProjectNorthClockwiseDegrees { get => _trueNorthToProjectNorthClockwiseDegrees; set => SetProperty(ref _trueNorthToProjectNorthClockwiseDegrees, value); }
     public bool HasIntermediateWall
     {
@@ -141,6 +146,13 @@ public class ValveRoomViewModel : ViewModelBase
     public Visibility IntermediateWallVisibility => IsMud && HasIntermediateWall ? Visibility.Visible : Visibility.Collapsed;
     public Visibility IntermediateSlabVisibility => IsMud && HasIntermediateSlab ? Visibility.Visible : Visibility.Collapsed;
     public Visibility SingleHeightVisibility => IsMud && HasIntermediateSlab ? Visibility.Collapsed : Visibility.Visible;
+
+    // TODO: Resources/ValveRoomImages/ 폴더와 "{종류}_평면도_1.png" 등의 참고도가 아직 없어 현재는 빈 칸으로 표시된다.
+    private const string ImageBasePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/ValveRoomImages/";
+    public string PlanImagePath1 => $"{ImageBasePath}{SelectedValveRoomType}_평면도_1.png";
+    public string PlanImagePath2 => $"{ImageBasePath}{SelectedValveRoomType}_평면도_2.png";
+    public string SectionImagePath1 => $"{ImageBasePath}{SelectedValveRoomType}_단면도_1.png";
+    public string SectionImagePath2 => $"{ImageBasePath}{SelectedValveRoomType}_단면도_2.png";
 
     public string Summary
     {
@@ -215,7 +227,7 @@ public class ValveRoomViewModel : ViewModelBase
             FoundationThickness = FoundationThickness,
             SharedCoordinateX = SharedCoordinateX,
             SharedCoordinateY = SharedCoordinateY,
-            SharedElevation = SharedElevation,
+            FoundationTopEl = FoundationTopEl,
             TrueNorthToProjectNorthClockwiseDegrees = TrueNorthToProjectNorthClockwiseDegrees,
             FoundationToe = FoundationToe,
             OuterWallThickness = OuterWallThickness,
