@@ -1,6 +1,5 @@
 using DHBIMWATER.Application.UseCases;
 using DHBIMWATER.Application.UseCases.AutoGenerator;
-using DHBIMWATER.Application.UseCases.QuantityCalculator;
 using DHBIMWATER.Application.UseCases.Gis;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -17,10 +16,6 @@ public static class ServiceCollectionExtensions
         services.AddTransient<CreateValvePipingUseCase>();
         services.AddTransient<CreateValveRoomUseCase>();
         services.AddTransient<ClassifyExteriorWallsUseCase>();
-        services.AddTransient<CalculateQuantityUseCase>();
-        services.AddTransient<VisualizeNetFacesUseCase>();
-        services.AddTransient<ExportQuantityUseCase>();
-        services.AddTransient<SaveQuantitySettingsUseCase>();
         services.AddTransient<ImportPipeAlignmentUseCase>();
         services.AddTransient<PlaceAlignmentFamilyUseCase>();
 

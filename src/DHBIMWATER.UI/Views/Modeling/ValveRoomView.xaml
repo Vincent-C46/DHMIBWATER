@@ -302,18 +302,12 @@
             <Border.Effect><DropShadowEffect BlurRadius="15" ShadowDepth="2" Color="#DDE4EB" Opacity="0.3"/></Border.Effect>
             <StackPanel>
                 <TextBlock Text="평면도" FontWeight="SemiBold" Foreground="#4A6FA5" Margin="0,0,0,8"/>
-                <Border Background="#EEF2F7" CornerRadius="8" Height="140" Margin="0,0,0,8">
-                    <Image Source="{Binding PlanImagePath1}" Stretch="Uniform" Margin="6"/>
-                </Border>
                 <Border Background="#EEF2F7" CornerRadius="8" Height="140" Margin="0,0,0,16">
-                    <Image Source="{Binding PlanImagePath2}" Stretch="Uniform" Margin="6"/>
+                    <Image Source="{Binding PlanImagePath}" Stretch="Uniform" Margin="6"/>
                 </Border>
                 <TextBlock Text="단면도" FontWeight="SemiBold" Foreground="#4A6FA5" Margin="0,0,0,8"/>
-                <Border Background="#EEF2F7" CornerRadius="8" Height="140" Margin="0,0,0,8">
-                    <Image Source="{Binding SectionImagePath1}" Stretch="Uniform" Margin="6"/>
-                </Border>
                 <Border Background="#EEF2F7" CornerRadius="8" Height="140">
-                    <Image Source="{Binding SectionImagePath2}" Stretch="Uniform" Margin="6"/>
+                    <Image Source="{Binding SectionImagePath}" Stretch="Uniform" Margin="6"/>
                 </Border>
             </StackPanel>
         </Border>

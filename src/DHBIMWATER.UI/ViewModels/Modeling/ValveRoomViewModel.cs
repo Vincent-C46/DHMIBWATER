@@ -83,10 +83,8 @@ public class ValveRoomViewModel : ViewModelBase
             OnPropertyChanged(nameof(IntermediateSlabVisibility));
             OnPropertyChanged(nameof(SingleHeightVisibility));
             OnPropertyChanged(nameof(Summary));
-            OnPropertyChanged(nameof(PlanImagePath1));
-            OnPropertyChanged(nameof(PlanImagePath2));
-            OnPropertyChanged(nameof(SectionImagePath1));
-            OnPropertyChanged(nameof(SectionImagePath2));
+            OnPropertyChanged(nameof(PlanImagePath));
+            OnPropertyChanged(nameof(SectionImagePath));
         }
     }
 
@@ -147,12 +145,10 @@ public class ValveRoomViewModel : ViewModelBase
     public Visibility IntermediateSlabVisibility => IsMud && HasIntermediateSlab ? Visibility.Visible : Visibility.Collapsed;
     public Visibility SingleHeightVisibility => IsMud && HasIntermediateSlab ? Visibility.Collapsed : Visibility.Visible;
 
-    // TODO: Resources/ValveRoomImages/ 폴더와 "{종류}_평면도_1.png" 등의 참고도가 아직 없어 현재는 빈 칸으로 표시된다.
+    // TODO: Resources/ValveRoomImages/ 폴더와 "{종류}_평면도.png" 등의 참고도가 아직 없어 현재는 빈 칸으로 표시된다.
     private const string ImageBasePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/ValveRoomImages/";
-    public string PlanImagePath1 => $"{ImageBasePath}{SelectedValveRoomType}_평면도_1.png";
-    public string PlanImagePath2 => $"{ImageBasePath}{SelectedValveRoomType}_평면도_2.png";
-    public string SectionImagePath1 => $"{ImageBasePath}{SelectedValveRoomType}_단면도_1.png";
-    public string SectionImagePath2 => $"{ImageBasePath}{SelectedValveRoomType}_단면도_2.png";
+    public string PlanImagePath => $"{ImageBasePath}{SelectedValveRoomType}_평면도.png";
+    public string SectionImagePath => $"{ImageBasePath}{SelectedValveRoomType}_단면도.png";
 
     public string Summary
     {

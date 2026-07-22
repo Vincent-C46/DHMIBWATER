@@ -1,10 +1,8 @@
 using DHBIMWATER.UI.ViewModels.GuideLine;
 using DHBIMWATER.UI.ViewModels.Modeling;
-using DHBIMWATER.UI.ViewModels.Quantity;
 using DHBIMWATER.UI.ViewModels.Utilities;
 using DHBIMWATER.UI.Views.GuideLine;
 using DHBIMWATER.UI.Views.Modeling;
-using DHBIMWATER.UI.Views.Quantity;
 using DHBIMWATER.UI.Views.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -27,10 +25,6 @@ public static class ServiceCollectionExtensions
         services.AddTransient<PipingView>();
         services.AddTransient<AlignmentFamilyPlacementView>();
 
-        // Quantity
-        services.AddTransient<QuantityView>();
-        services.AddTransient<ManualQuantityView>();
-
         // Utilities
         services.AddTransient<ExParamsView>();
         #endregion
@@ -47,10 +41,6 @@ public static class ServiceCollectionExtensions
         services.AddTransient<PipeLayoutViewModel>();
         services.AddTransient<PipingViewModel>();
         services.AddTransient<AlignmentFamilyPlacementViewModel>();
-
-        // Quantity
-        services.AddTransient<QuantityViewModel>();
-        services.AddTransient<ManualQuantityViewModel>();
 
         // Utilities
         services.AddTransient<ExParamsViewModel>();

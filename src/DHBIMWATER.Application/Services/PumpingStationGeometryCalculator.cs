@@ -2193,7 +2193,7 @@ namespace DHBIMWATER.Application.Services
                     Zone = "밸브실",
                     Part = "밸브실 계단",
                     TreadDepth = treadDepth,
-                    MaxRiserHeight = riserHeight,
+                    MaxRiserHeight = riserHeight,   
                     RisersNumber = riserNum,
                     Runs = new List<StairsRunDefinition>
                     {

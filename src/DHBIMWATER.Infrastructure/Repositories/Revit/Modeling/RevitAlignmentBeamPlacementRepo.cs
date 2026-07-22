@@ -18,13 +18,17 @@ internal sealed class RevitAlignmentBeamPlacementRepo : IAlignmentBeamPlacementR
         if (!type.IsActive) type.Activate();
         var reference = alignments.SelectMany(x => x.Vertices).FirstOrDefault();
         if (reference is null) return 0;
+        // Revit 짧은 커브 허용치(약 0.00256ft ≈ 0.78mm)보다 짧은 세그먼트는 보 생성이 불가하므로 건너뛴다.
+        var minLengthFt = doc.Application.ShortCurveTolerance;
         var count = 0;
-        foreach (var alignment in alignments) foreach (var sample in AlignmentIntervalSampler.SamplePoints(alignment.Vertices, intervalM))
+        // SamplePoints(점 배치)가 아니라 SampleSegments로 intervalM(6m)마다 끊어 시작/끝점을 잇는 선 기반 보를 생성한다.
+        // alignTangent는 선 기반 보에서는 커브가 곧 방향이므로 사용하지 않는다(회전 불필요).
+        foreach (var alignment in alignments) foreach (var segment in AlignmentIntervalSampler.SampleSegments(alignment.Vertices, intervalM))
         {
-            var point = ToXyz(sample.Position, reference);
-            var instance = doc.Create.NewFamilyInstance(point, type, level, StructuralType.NonStructural);
-            if (alignTangent && Math.Abs(sample.Tangent.X) + Math.Abs(sample.Tangent.Y) > 1e-9)
-                ElementTransformUtils.RotateElement(doc, instance.Id, Line.CreateBound(point, point + XYZ.BasisZ), Math.Atan2(sample.Tangent.Y, sample.Tangent.X));
+            var start = ToXyz(segment.Start, reference);
+            var end = ToXyz(segment.End, reference);
+            if (start.DistanceTo(end) < minLengthFt) continue;
+            doc.Create.NewFamilyInstance(Line.CreateBound(start, end), type, level, StructuralType.Beam);
             count++;
         }
         return count;

@@ -18,12 +18,12 @@ public class ValveRoomGeometryCalculator
     {
         new LevelDefinition { Name = BaseLevelName, Elevation = BaseElevation(dto) },
         new LevelDefinition { Name = TopLevelName, Elevation = TopElevation(dto) },
-        };
+    };
 
     public static IReadOnlyList<SlabDefinition> CalculateSlabs(ValveRoomGeometryRequestDto dto)
     {
-        var d = dto.DesignConditionDto; 
-        var pl = dto.PlanSpecDto; 
+        var d = dto.DesignConditionDto;
+        var pl = dto.PlanSpecDto;
         var pr = dto.ProfileSpecDto;
         var outerWidth = pl.InnerWidth + pr.OuterWallThickness * 2;
         var outerLength = pl.InnerLength + pr.OuterWallThickness * 2;
@@ -96,14 +96,19 @@ public class ValveRoomGeometryCalculator
         if (d.RoomType != "제수밸브실" || dto.SluiceSpec is not { } sluice) return Array.Empty<ColumnDefinition>();
         var columns = new List<ColumnDefinition>();
         for (var x = 0; x < sluice.BeamCountY; x++)
-        for (var y = 0; y < sluice.BeamCountX; y++)
-            columns.Add(new ColumnDefinition
-            {
-                Position = new Point3D(sluice.BeamOffsetY + sluice.BeamSpacingY * x, sluice.BeamOffsetX + sluice.BeamSpacingX * y, BaseElevation(dto)),
-                TypeName = sluice.ColumnTypeName, BaseLevelName = BaseLevelName, TopLevelName = TopLevelName,
-                // 상부 레벨이 이미 상부슬래브 표고이므로 추가 오프셋이 필요 없다.
-                TopOffset = 0, ElementCode = "VR-C", Zone = d.RoomType, Part = "보 교차부 기둥"
-            });
+            for (var y = 0; y < sluice.BeamCountX; y++)
+                columns.Add(new ColumnDefinition
+                {
+                    Position = new Point3D(sluice.BeamOffsetY + sluice.BeamSpacingY * x, sluice.BeamOffsetX + sluice.BeamSpacingX * y, BaseElevation(dto)),
+                    TypeName = sluice.ColumnTypeName,
+                    BaseLevelName = BaseLevelName,
+                    TopLevelName = TopLevelName,
+                    // 상부 레벨이 이미 상부슬래브 표고이므로 추가 오프셋이 필요 없다.
+                    TopOffset = 0,
+                    ElementCode = "VR-C",
+                    Zone = d.RoomType,
+                    Part = "보 교차부 기둥"
+                });
         return columns;
     }
 
@@ -121,20 +126,42 @@ public class ValveRoomGeometryCalculator
 
     private static SlabDefinition Slab(ValveRoomGeometryRequestDto dto, double centerX, double centerY, double width, double length, double thickness, double z, string part) => new()
     {
-        Points = Rectangle(centerX, centerY, width, length), SubPoints = Array.Empty<Point2D>(), Thickness = thickness, ElevationZ = z,
-        LevelName = BaseLevelName, Category = "슬래브", ElementCode = "VR-S", Zone = dto.DesignConditionDto.RoomType, Part = part
+        Points = Rectangle(centerX, centerY, width, length),
+        SubPoints = Array.Empty<Point2D>(),
+        Thickness = thickness,
+        ElevationZ = z,
+        LevelName = BaseLevelName,
+        Category = "슬래브",
+        ElementCode = "VR-S",
+        Zone = dto.DesignConditionDto.RoomType,
+        Part = part
     };
 
     private static LinearWallDefinition Wall(ValveRoomGeometryRequestDto dto, Point3D start, Point3D end, double thickness, double height, string part, bool isExterior, double? baseOffset = null) => new()
     {
-        StartPoint = start, EndPoint = end, Thickness = thickness, Height = height, BaseOffset = baseOffset ?? 0,
-        LevelName = BaseLevelName, Category = "벽", ElementCode = "VR-W", Zone = dto.DesignConditionDto.RoomType, Part = part, IsExterior = isExterior
+        StartPoint = start,
+        EndPoint = end,
+        Thickness = thickness,
+        Height = height,
+        BaseOffset = baseOffset ?? 0,
+        LevelName = BaseLevelName,
+        Category = "벽",
+        ElementCode = "VR-W",
+        Zone = dto.DesignConditionDto.RoomType,
+        Part = part,
+        IsExterior = isExterior
     };
 
     private static BeamDefinition Beam(ValveRoomGeometryRequestDto dto, Point3D start, Point3D end, string part) => new()
     {
-        StartPoint = start, EndPoint = end, TypeName = dto.SluiceSpec!.BeamTypeName, LevelName = BaseLevelName,
-        Category = "보", ElementCode = "VR-B", Zone = dto.DesignConditionDto.RoomType, Part = part
+        StartPoint = start,
+        EndPoint = end,
+        TypeName = dto.SluiceSpec!.BeamTypeName,
+        LevelName = BaseLevelName,
+        Category = "보",
+        ElementCode = "VR-B",
+        Zone = dto.DesignConditionDto.RoomType,
+        Part = part
     };
 
     private static IReadOnlyList<Point2D> Rectangle(double x, double y, double width, double length) =>
