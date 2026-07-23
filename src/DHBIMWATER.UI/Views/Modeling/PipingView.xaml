@@ -1,11 +1,76 @@
 <Window x:Class="DHBIMWATER.UI.Views.Modeling.PipingView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:controls="clr-namespace:DHBIMWATER.UI.Controls" Title="관로 선형 생성" Width="760" Height="650" WindowStartupLocation="CenterScreen" WindowStyle="None" FontFamily="Segoe UI, Malgun Gothic" Background="#F4F7F9">
-  <Window.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="/DHBIMWATER.UI;component/Styles/Generic.xaml"/></ResourceDictionary.MergedDictionaries></ResourceDictionary></Window.Resources>
-  <WindowChrome.WindowChrome><WindowChrome CaptionHeight="0" CornerRadius="15" GlassFrameThickness="1" UseAeroCaptionButtons="False"/></WindowChrome.WindowChrome>
-  <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions><controls:TitleBar Grid.Row="0"/>
-    <Border Grid.Row="1" Background="White" CornerRadius="15" Margin="20,12" Padding="18"><DockPanel>
-      <StackPanel DockPanel.Dock="Top" Orientation="Horizontal"><Button Content="SHP 추가" Command="{Binding AddCommand}"/><Button Content="제거" Margin="8,0,0,0" Command="{Binding RemoveCommand}"/><CheckBox Content="상수_D100 결합문자열 해석" Margin="18,4,0,0" IsChecked="{Binding ParseCombinedDiameter}"/></StackPanel>
-      <TabControl Margin="0,14,0,0"><TabItem Header="속성 미리보기"><Grid Margin="10"><Grid.RowDefinitions><RowDefinition Height="190"/><RowDefinition Height="*"/></Grid.RowDefinitions><ListBox ItemsSource="{Binding Files}" SelectedItem="{Binding SelectedFile}"><ListBox.ItemTemplate><DataTemplate><StackPanel Orientation="Horizontal"><TextBlock Text="{Binding FileName}" Width="270"/><TextBox Text="{Binding PipeKind, UpdateSourceTrigger=PropertyChanged}" Width="160" ToolTip="파일별 관종"/><TextBlock Text="{Binding Summary}" Margin="12,0,0,0"/></StackPanel></DataTemplate></ListBox.ItemTemplate></ListBox><TextBox Grid.Row="1" Text="{Binding SelectedFileDetails, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/></Grid></TabItem>
-        <TabItem Header="좌표계·표고"><ScrollViewer><StackPanel Margin="14"><TextBlock Text="좌표계 (.prj)" FontWeight="Bold"/><TextBox Text="{Binding ProjectionDetails, Mode=OneWay}" IsReadOnly="True" Height="110" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/><TextBlock Text="기준점 (m) — 첫 번째 파일의 첫 레코드 첫 정점을 자동 산출하며 수정할 수 있습니다." Margin="0,14,0,4"/><StackPanel Orientation="Horizontal"><TextBox Width="170" Text="{Binding ReferenceX}"/><TextBox Width="170" Margin="8,0" Text="{Binding ReferenceY}"/><TextBox Width="170" Text="{Binding ReferenceZ}"/></StackPanel><CheckBox Content="프로젝트 공유좌표에도 기준점 적용" Margin="0,10,0,0" IsChecked="{Binding ApplySharedCoordinates}"/><TextBlock Text="여러 SHP를 순차로 가져올 경우, 매번 켜두면 프로젝트 공유좌표가 마지막 임포트 기준점으로 계속 덮어써집니다. 기본값은 미적용입니다." Margin="0,4,0,0" TextWrapping="Wrap" Foreground="#666666" FontSize="11"/><TextBlock Text="Z 해석 기준은 데이터만으로 판별할 수 없습니다. 발주처 사양을 확인하세요." Margin="0,14,0,5" Foreground="#A04000"/><StackPanel Orientation="Horizontal"><ComboBox Width="180" ItemsSource="{Binding ZSources}" SelectedItem="{Binding ZSource}" IsEnabled="False" ToolTip="Phase 2 예정 — 아직 구현되지 않았습니다."/><ComboBox Width="180" Margin="8,0" ItemsSource="{Binding ZDatums}" SelectedItem="{Binding ZDatum}"/></StackPanel></StackPanel></ScrollViewer></TabItem></TabControl>
-    </DockPanel></Border><StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="20,0,20,16"><Button Content="취소" Command="{Binding CancelCommand}" Margin="0,0,8,0"/><Button Content="선형 생성" Style="{StaticResource PrimaryButtonStyle}" Command="{Binding CreateCommand}"/></StackPanel>
-  </Grid>
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/DHBIMWATER.UI;component/Styles/Generic.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="0" CornerRadius="15" GlassFrameThickness="1" UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <controls:TitleBar Grid.Row="0"/>
+        <Border Grid.Row="1" Background="White" CornerRadius="15" Margin="20,12" Padding="18">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                    <Button Content="SHP 추가" Style="{StaticResource PrimaryButtonStyle}" Command="{Binding AddCommand}"/>
+                    <Button Content="제거" Style="{StaticResource CancelButtonStyle}" Margin="8,0,0,0" Command="{Binding RemoveCommand}"/>
+                    <CheckBox Content="상수_D100 결합문자열 해석" Style="{StaticResource PrimaryCheckBoxStyle}" Margin="18,4,0,0" IsChecked="{Binding ParseCombinedDiameter}"/>
+                </StackPanel>
+                <TabControl Style="{StaticResource PrimaryTabControlStyle}" Margin="0,14,0,0">
+                    <TabItem Header="속성 미리보기">
+                        <Grid Margin="10">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="190"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <ListBox Style="{StaticResource PrimaryListBoxStyle}" ItemsSource="{Binding Files}" SelectedItem="{Binding SelectedFile}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding FileName}" Width="270"/>
+                                            <TextBox Style="{StaticResource PrimaryTextBoxStyle}" Text="{Binding PipeKind, UpdateSourceTrigger=PropertyChanged}" Width="160" ToolTip="파일별 관종"/>
+                                            <TextBlock Text="{Binding Summary}" Margin="12,0,0,0"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                            <TextBox Grid.Row="1" Style="{StaticResource PrimaryTextBoxStyle}" Text="{Binding SelectedFileDetails, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
+                        </Grid>
+                    </TabItem>
+                    <TabItem Header="좌표계·표고">
+                        <ScrollViewer>
+                            <StackPanel Margin="14">
+                                <TextBlock Text="좌표계 (.prj)" FontWeight="Bold"/>
+                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}" Text="{Binding ProjectionDetails, Mode=OneWay}" IsReadOnly="True" Height="110" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
+                                <TextBlock Text="기준점 (m) — 첫 번째 파일의 첫 레코드 첫 정점을 자동 산출하며 수정할 수 있습니다." Margin="0,14,0,4"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBox Style="{StaticResource PrimaryTextBoxStyle}" Width="170" Text="{Binding ReferenceX}"/>
+                                    <TextBox Style="{StaticResource PrimaryTextBoxStyle}" Width="170" Margin="8,0" Text="{Binding ReferenceY}"/>
+                                    <TextBox Style="{StaticResource PrimaryTextBoxStyle}" Width="170" Text="{Binding ReferenceZ}"/>
+                                </StackPanel>
+                                <CheckBox Content="프로젝트 공유좌표에도 기준점 적용" Style="{StaticResource PrimaryCheckBoxStyle}" Margin="0,10,0,0" IsChecked="{Binding ApplySharedCoordinates}"/>
+                                <TextBlock Text="여러 SHP를 순차로 가져올 경우, 매번 켜두면 프로젝트 공유좌표가 마지막 임포트 기준점으로 계속 덮어써집니다. 기본값은 미적용입니다." Margin="0,4,0,0" TextWrapping="Wrap" Foreground="#666666" FontSize="11"/>
+                                <TextBlock Text="Z 해석 기준은 데이터만으로 판별할 수 없습니다. 발주처 사양을 확인하세요." Margin="0,14,0,5" Foreground="#A04000"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" Width="180" ItemsSource="{Binding ZSources}" SelectedItem="{Binding ZSource}" IsEnabled="False" ToolTip="Phase 2 예정 — 아직 구현되지 않았습니다."/>
+                                    <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" Width="180" Margin="8,0" ItemsSource="{Binding ZDatums}" SelectedItem="{Binding ZDatum}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </TabItem>
+                </TabControl>
+            </DockPanel>
+        </Border>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="20,0,20,16">
+            <Button Content="취소" Style="{StaticResource CancelButtonStyle}" Command="{Binding CancelCommand}" Margin="0,0,8,0"/>
+            <Button Content="선형 생성" Style="{StaticResource PrimaryButtonStyle}" Command="{Binding CreateCommand}"/>
+        </StackPanel>
+    </Grid>
 </Window>

@@ -31,30 +31,30 @@
                 <TextBlock Text="선택 엣지에 순서대로 추가됩니다." Foreground="#7F8C8D" FontSize="11" Margin="0,4,0,12"/>
                 <Border Background="#F7F9FB" BorderBrush="#DCE6EE" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,10">
                     <StackPanel>
-                        <CheckBox Content="직교 + 45° 각도 스냅" IsChecked="{Binding UseAngleSnap}" Margin="0,0,0,8"/>
+                        <CheckBox Content="직교 + 45° 각도 스냅" Style="{StaticResource PrimaryCheckBoxStyle}" IsChecked="{Binding UseAngleSnap}" Margin="0,0,0,8"/>
                         <TextBlock Text="OSNAP  ·  커서가 100mm 이내일 때 적용" FontWeight="SemiBold" Foreground="#34495E"/>
                         <WrapPanel Margin="0,6,0,0">
-                            <CheckBox Content="+ 기준점" IsChecked="{Binding SnapReferencePoint}" Margin="0,0,10,5"/>
-                            <CheckBox Content="□ 끝점" IsChecked="{Binding SnapEndpoint}" Margin="0,0,10,5"/>
-                            <CheckBox Content="△ 중간점" IsChecked="{Binding SnapMidpoint}" Margin="0,0,10,5"/>
-                            <CheckBox Content="◇ 사분점" IsChecked="{Binding SnapQuadrant}" Margin="0,0,10,5"/>
-                            <CheckBox Content="× 교차점" IsChecked="{Binding SnapIntersection}" Margin="0,0,10,5"/>
-                            <CheckBox Content="· 근처점" IsChecked="{Binding SnapNearest}" Margin="0,0,10,0"/>
+                            <CheckBox Content="+ 기준점" Style="{StaticResource PrimaryCheckBoxStyle}" IsChecked="{Binding SnapReferencePoint}" Margin="0,0,10,5"/>
+                            <CheckBox Content="□ 끝점" Style="{StaticResource PrimaryCheckBoxStyle}" IsChecked="{Binding SnapEndpoint}" Margin="0,0,10,5"/>
+                            <CheckBox Content="△ 중간점" Style="{StaticResource PrimaryCheckBoxStyle}" IsChecked="{Binding SnapMidpoint}" Margin="0,0,10,5"/>
+                            <CheckBox Content="◇ 사분점" Style="{StaticResource PrimaryCheckBoxStyle}" IsChecked="{Binding SnapQuadrant}" Margin="0,0,10,5"/>
+                            <CheckBox Content="× 교차점" Style="{StaticResource PrimaryCheckBoxStyle}" IsChecked="{Binding SnapIntersection}" Margin="0,0,10,5"/>
+                            <CheckBox Content="· 근처점" Style="{StaticResource PrimaryCheckBoxStyle}" IsChecked="{Binding SnapNearest}" Margin="0,0,10,0"/>
                         </WrapPanel>
                     </StackPanel>
                 </Border>
                 <TextBlock Text="기준점 좌표" FontWeight="SemiBold"/>
-                <Grid Margin="0,4,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="75"/><ColumnDefinition Width="24"/></Grid.ColumnDefinitions><TextBlock Text="X" VerticalAlignment="Center"/><TextBox Grid.Column="1" Text="{Binding ReferenceX, UpdateSourceTrigger=LostFocus}"/><TextBlock Grid.Column="2" Text="mm" Margin="4,0"/></Grid>
-                <Grid Margin="0,0,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="75"/><ColumnDefinition Width="24"/></Grid.ColumnDefinitions><TextBlock Text="Y" VerticalAlignment="Center"/><TextBox Grid.Column="1" Text="{Binding ReferenceY, UpdateSourceTrigger=LostFocus}"/><TextBlock Grid.Column="2" Text="mm" Margin="4,0"/></Grid>
+                <Grid Margin="0,4,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="75"/><ColumnDefinition Width="24"/></Grid.ColumnDefinitions><TextBlock Text="X" VerticalAlignment="Center"/><TextBox Grid.Column="1" Style="{StaticResource PrimaryTextBoxStyle}" Text="{Binding ReferenceX, UpdateSourceTrigger=LostFocus}"/><TextBlock Grid.Column="2" Text="mm" Margin="4,0"/></Grid>
+                <Grid Margin="0,0,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="75"/><ColumnDefinition Width="24"/></Grid.ColumnDefinitions><TextBlock Text="Y" VerticalAlignment="Center"/><TextBox Grid.Column="1" Style="{StaticResource PrimaryTextBoxStyle}" Text="{Binding ReferenceY, UpdateSourceTrigger=LostFocus}"/><TextBlock Grid.Column="2" Text="mm" Margin="4,0"/></Grid>
                 <TextBlock Text="출력 방식" FontWeight="SemiBold"/>
                 <ComboBox ItemsSource="{Binding OutputModes}" SelectedItem="{Binding OutputMode}" Style="{StaticResource PrimaryComboBoxStyle}" Margin="0,4,0,8"/>
-                <Grid Margin="0,0,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="75"/><ColumnDefinition Width="24"/></Grid.ColumnDefinitions><TextBlock Text="표고" VerticalAlignment="Center"/><TextBox Grid.Column="1" Text="{Binding Elevation, UpdateSourceTrigger=LostFocus}"/><TextBlock Grid.Column="2" Text="mm" Margin="4,0"/></Grid>
-                <Grid Margin="0,0,0,10"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="75"/><ColumnDefinition Width="24"/></Grid.ColumnDefinitions><TextBlock Text="관경" VerticalAlignment="Center"/><TextBox Grid.Column="1" Text="{Binding DiameterMm, UpdateSourceTrigger=LostFocus}"/><TextBlock Grid.Column="2" Text="mm" Margin="4,0"/></Grid>
+                <Grid Margin="0,0,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="75"/><ColumnDefinition Width="24"/></Grid.ColumnDefinitions><TextBlock Text="표고" VerticalAlignment="Center"/><TextBox Grid.Column="1" Style="{StaticResource PrimaryTextBoxStyle}" Text="{Binding Elevation, UpdateSourceTrigger=LostFocus}"/><TextBlock Grid.Column="2" Text="mm" Margin="4,0"/></Grid>
+                <Grid Margin="0,0,0,10"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="75"/><ColumnDefinition Width="24"/></Grid.ColumnDefinitions><TextBlock Text="관경" VerticalAlignment="Center"/><TextBox Grid.Column="1" Style="{StaticResource PrimaryTextBoxStyle}" Text="{Binding DiameterMm, UpdateSourceTrigger=LostFocus}"/><TextBlock Grid.Column="2" Text="mm" Margin="4,0"/></Grid>
                 <ComboBox ItemsSource="{Binding FittingTypes}" SelectedItem="{Binding SelectedFittingType}" Style="{StaticResource PrimaryComboBoxStyle}"/>
                 <Button Content="+ 부속품 추가" Command="{Binding AddFittingCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,8,0,12"/>
-                <ListBox ItemsSource="{Binding InlineFittings}" Height="300"><ListBox.ItemTemplate><DataTemplate><DockPanel Margin="3"><Button Content="삭제" DockPanel.Dock="Right" Command="{Binding DataContext.RemoveFittingCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/><TextBlock Text="{Binding Order}" Width="24"/><TextBlock Text="{Binding TypeKey}"/></DockPanel></DataTemplate></ListBox.ItemTemplate></ListBox>
+                <ListBox Style="{StaticResource PrimaryListBoxStyle}" ItemsSource="{Binding InlineFittings}" Height="300"><ListBox.ItemTemplate><DataTemplate><DockPanel Margin="3"><Button Content="삭제" Style="{StaticResource CancelButtonStyle}" DockPanel.Dock="Right" Command="{Binding DataContext.RemoveFittingCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/><TextBlock Text="{Binding Order}" Width="24"/><TextBlock Text="{Binding TypeKey}"/></DockPanel></DataTemplate></ListBox.ItemTemplate></ListBox>
             </StackPanel></Border>
         </Grid>
-        <Grid Grid.Row="2" Margin="20,0,20,16"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{Binding Status}" VerticalAlignment="Center" Foreground="#34495E"/><StackPanel Grid.Column="1" Orientation="Horizontal"><Button Content="그리기 취소" Command="{Binding CancelDrawingCommand}" Margin="0,0,8,0"/><Button Content="초기화" Command="{Binding ClearCommand}" Margin="0,0,8,0"/><Button Content="모델 생성" Command="{Binding CreateModelCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/><Button Content="닫기" Command="{Binding CloseCommand}"/></StackPanel></Grid>
+        <Grid Grid.Row="2" Margin="20,0,20,16"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{Binding Status}" VerticalAlignment="Center" Foreground="#34495E"/><StackPanel Grid.Column="1" Orientation="Horizontal"><Button Content="그리기 취소" Style="{StaticResource CancelButtonStyle}" Command="{Binding CancelDrawingCommand}" Margin="0,0,8,0"/><Button Content="초기화" Style="{StaticResource CancelButtonStyle}" Command="{Binding ClearCommand}" Margin="0,0,8,0"/><Button Content="모델 생성" Command="{Binding CreateModelCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/><Button Content="닫기" Style="{StaticResource CancelButtonStyle}" Command="{Binding CloseCommand}"/></StackPanel></Grid>
     </Grid>
 </Window>

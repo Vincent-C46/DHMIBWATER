@@ -35,6 +35,7 @@ public sealed class CreateValveRoomUseCase
             try
             {
                 _transaction.Begin("Create Valve Room");
+
                 EnsureLevels(dto);
                 // 내부원점·프로젝트 기준점은 X, Y만 가진다. 표고는 항상 0이며 구조물 높이는 레벨이 결정한다.
                 _projectLocationCommand.SetInternalOriginSharedPosition(

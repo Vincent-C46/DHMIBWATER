@@ -35,6 +35,7 @@ public class ValveRoomGeometryCalculator
             Slab(dto, pl.InnerWidth / 2, pl.InnerLength / 2, foundationWidth, foundationLength, pr.PlainConcreteThickness, baseZ - pr.FoundationThickness, "버림콘크리트"),
             Slab(dto, pl.InnerWidth / 2, pl.InnerLength / 2, foundationWidth, foundationLength, pr.FoundationThickness, baseZ, "기초")
         };
+        // 이토밸브실 - 중간슬래브 추가
         if (d.RoomType == "이토밸브실" && dto.MudSpec is { HasIntermediateSlab: true } mud)
             slabs.Add(Slab(dto, pl.InnerWidth / 2, pl.InnerLength / 2, outerWidth, outerLength, mud.IntermediateSlabThickness, baseZ + mud.Floor1InnerHeight, "중간슬래브"));
         slabs.Add(Slab(dto, pl.InnerWidth / 2, pl.InnerLength / 2, outerWidth, outerLength, pr.UpperSlabThickness, TopElevation(dto), "상부슬래브"));

@@ -8,6 +8,8 @@ public sealed record AlignmentSampleSegment(Point3D Start, Point3D End, double D
 /// <summary>폴리라인의 호 길이를 기준으로 균일 간격 지점을 샘플링한다. 좌표와 간격은 같은 단위를 사용한다.</summary>
 public static class AlignmentIntervalSampler
 {
+    private const double Tolerance = 1e-9;
+
     public static IReadOnlyList<AlignmentSamplePoint> SamplePoints(IReadOnlyList<Point3D> vertices, double interval)
     {
         ValidateInterval(interval);
@@ -16,9 +18,10 @@ public static class AlignmentIntervalSampler
 
         var total = parts[^1].EndDistance;
         var result = new List<AlignmentSamplePoint>();
-        for (var distance = 0d; distance <= total + 1e-9; distance += interval)
+        for (var i = 0; ; i++)
         {
-            if (distance > total + 1e-9) break;
+            var distance = i * interval;              // 누산 대신 인덱스 곱 — 장거리 선형에서 오차 누적 방지
+            if (distance > total + Tolerance) break;
             var part = parts.First(x => distance <= x.EndDistance + 1e-9);
             var local = Math.Clamp((distance - part.StartDistance) / part.Length, 0d, 1d);
             result.Add(new AlignmentSamplePoint(
@@ -36,9 +39,26 @@ public static class AlignmentIntervalSampler
         if (parts.Count == 0) return Array.Empty<AlignmentSampleSegment>();
 
         var total = parts[^1].EndDistance;
-        var boundaries = SamplePoints(vertices, interval).Select(x => (x.Position, x.DistanceFromStart)).ToList();
-        if (boundaries[^1].Item2 < total - 1e-9) boundaries.Add((PointAt(parts, total), total));
-        return boundaries.Zip(boundaries.Skip(1), (a, b) => new AlignmentSampleSegment(a.Position, b.Position, a.Item2)).ToList();
+        // 분절 경계 = interval 배수 ∪ 폴리라인 정점(절점) 누적거리 ∪ 시작/끝점.
+        // 절점을 경계에 포함하지 않으면 코너를 가로지르는 직선 현이 생겨 도면 형상과 달라진다.
+        var distances = new List<double> { 0d, total };
+        for (var i = 1; i * interval < total; i++) distances.Add(i * interval);
+        foreach (var part in parts) distances.Add(part.EndDistance);
+
+        distances.Sort();
+        var boundaries = new List<double>(distances.Count);
+        foreach (var d in distances)
+        {
+            var clamped = Math.Clamp(d, 0d, total);
+            // 절점 거리와 interval 배수가 겹칠 때 길이 0 세그먼트가 생기지 않도록 tolerance 기준으로 중복 제거한다.
+            if (boundaries.Count == 0 || clamped - boundaries[^1] > Tolerance) boundaries.Add(clamped);
+        }
+        if (boundaries.Count < 2) return Array.Empty<AlignmentSampleSegment>();
+
+        var result = new List<AlignmentSampleSegment>(boundaries.Count - 1);
+        for (var i = 1; i < boundaries.Count; i++)
+            result.Add(new AlignmentSampleSegment(PointAt(parts, boundaries[i - 1]), PointAt(parts, boundaries[i]), boundaries[i - 1]));
+        return result;
     }
 
     private static Point3D PointAt(IReadOnlyList<Part> parts, double distance)

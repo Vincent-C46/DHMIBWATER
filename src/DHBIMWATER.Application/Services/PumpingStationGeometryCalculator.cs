@@ -2181,7 +2181,7 @@ namespace DHBIMWATER.Application.Services
             if (d.SelectedPumpingStationType == "Type2" || d.SelectedPumpingStationType == "Type3") return result;
 
             for (int i = 0; i < d.N - 1; i++)
-            {   
+            {
                 double y = -pl.T5 / 2 + (pl.B8 + pl.T5) * (i + 1);
                 var stairDef = new StairsDefinition
                 {
@@ -2193,7 +2193,7 @@ namespace DHBIMWATER.Application.Services
                     Zone = "밸브실",
                     Part = "밸브실 계단",
                     TreadDepth = treadDepth,
-                    MaxRiserHeight = riserHeight,   
+                    MaxRiserHeight = riserHeight,
                     RisersNumber = riserNum,
                     Runs = new List<StairsRunDefinition>
                     {
@@ -2206,7 +2206,7 @@ namespace DHBIMWATER.Application.Services
                         }
                     },
                 };
-               result.Add(stairDef);
+                result.Add(stairDef);
             }
             return result;
         }

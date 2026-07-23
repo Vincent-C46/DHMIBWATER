@@ -18,15 +18,21 @@ internal sealed class RevitAlignmentPipePlacementRepo : IAlignmentPipePlacementR
         var level = new FilteredElementCollector(doc).OfClass(typeof(Level)).Cast<Level>().FirstOrDefault(x => levelName is null || x.Name == levelName) ?? throw new InvalidOperationException("레벨을 찾을 수 없습니다.");
         var reference = alignments.SelectMany(x => x.Vertices).FirstOrDefault();
         if (reference is null) return 0;
+        // Revit 짧은 커브 허용치보다 짧은 구간은 Pipe 생성이 불가하므로 건너뛴다 (Beam 리포지토리와 동일 기준).
+        var minLengthFt = doc.Application.ShortCurveTolerance;
         var count = 0;
         foreach (var alignment in alignments)
         {
-            Pipe? previous = null;  
+            Pipe? previous = null;
             foreach (var segment in AlignmentIntervalSampler.SampleSegments(alignment.Vertices, intervalM))
             {
-                var pipe = Pipe.Create(doc, system.Id, type.Id, level.Id, ToXyz(segment.Start, reference), ToXyz(segment.End, reference));
+                var start = ToXyz(segment.Start, reference);
+                var end = ToXyz(segment.End, reference);
+                if (start.DistanceTo(end) < minLengthFt) continue;
+                var pipe = Pipe.Create(doc, system.Id, type.Id, level.Id, start, end);
                 if (alignment.DiameterMm > 0) pipe.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM)?.Set(UC.MmToFt(alignment.DiameterMm));
-                if (previous is not null) Connect(doc, previous, pipe, ToXyz(segment.Start, reference));
+                // 건너뛴 구간의 previous는 유지해, 다음 파이프를 새 시작점에서 이전 파이프와 연결한다.
+                if (previous is not null) Connect(doc, previous, pipe, start);
                 previous = pipe; count++;
             }
         }
