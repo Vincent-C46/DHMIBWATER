@@ -27,10 +27,21 @@
                     <TabItem Header="속성 미리보기">
                         <Grid Margin="10">
                             <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="190"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
-                            <ListBox Style="{StaticResource PrimaryListBoxStyle}" ItemsSource="{Binding Files}" SelectedItem="{Binding SelectedFile}">
+                            <Grid Margin="8,0,8,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="270"/>
+                                    <ColumnDefinition Width="160"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="파일명" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Column="1" Text="관종" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Column="2" Text="읽기 결과" Margin="12,0,0,0" FontWeight="SemiBold"/>
+                            </Grid>
+                            <ListBox Grid.Row="1" Style="{StaticResource PrimaryListBoxStyle}" ItemsSource="{Binding Files}" SelectedItem="{Binding SelectedFile}">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
@@ -41,7 +52,7 @@
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
                             </ListBox>
-                            <TextBox Grid.Row="1" Style="{StaticResource PrimaryTextBoxStyle}" Text="{Binding SelectedFileDetails, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
+                            <TextBox Grid.Row="2" Style="{StaticResource PrimaryTextBoxStyle}" Text="{Binding SelectedFileDetails, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
                         </Grid>
                     </TabItem>
                     <TabItem Header="좌표계·표고">

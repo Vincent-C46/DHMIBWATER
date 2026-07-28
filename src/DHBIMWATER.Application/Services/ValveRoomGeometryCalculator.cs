@@ -7,6 +7,7 @@ namespace DHBIMWATER.Application.Services;
 public class ValveRoomGeometryCalculator
 {
     public const string BaseLevelName = "밸브실 기초 상부";
+    public const string IntermediateLevelName = "밸브실 중간슬래브";
     public const string TopLevelName = "밸브실 상부슬래브";
 
     /// <summary>기초 상부 EL(m)을 프로젝트 내부 단위(mm)로 환산한 기준 레벨 표고.</summary>
@@ -14,11 +15,22 @@ public class ValveRoomGeometryCalculator
 
     public static double TopElevation(ValveRoomGeometryRequestDto dto) => BaseElevation(dto) + RoomHeight(dto);
 
-    public static IReadOnlyList<LevelDefinition> CalculateLevels(ValveRoomGeometryRequestDto dto) => new List<LevelDefinition>
+    public static IReadOnlyList<LevelDefinition> CalculateLevels(ValveRoomGeometryRequestDto dto)
     {
-        new LevelDefinition { Name = BaseLevelName, Elevation = BaseElevation(dto) },
-        new LevelDefinition { Name = TopLevelName, Elevation = TopElevation(dto) },
-    };
+        var levels = new List<LevelDefinition>
+        {
+            new LevelDefinition { Name = BaseLevelName, Elevation = BaseElevation(dto) },
+        };
+        // 이토밸브실 - 중간슬래브가 있으면 중간슬래브 상단(2F 바닥) 참고 레벨을 생성한다.
+        if (dto.DesignConditionDto.RoomType == "이토밸브실" && dto.MudSpec is { HasIntermediateSlab: true } mud)
+            levels.Add(new LevelDefinition
+            {
+                Name = IntermediateLevelName,
+                Elevation = BaseElevation(dto) + mud.Floor1InnerHeight + mud.IntermediateSlabThickness
+            });
+        levels.Add(new LevelDefinition { Name = TopLevelName, Elevation = TopElevation(dto) });
+        return levels;
+    }
 
     public static IReadOnlyList<SlabDefinition> CalculateSlabs(ValveRoomGeometryRequestDto dto)
     {
@@ -35,9 +47,9 @@ public class ValveRoomGeometryCalculator
             Slab(dto, pl.InnerWidth / 2, pl.InnerLength / 2, foundationWidth, foundationLength, pr.PlainConcreteThickness, baseZ - pr.FoundationThickness, "버림콘크리트"),
             Slab(dto, pl.InnerWidth / 2, pl.InnerLength / 2, foundationWidth, foundationLength, pr.FoundationThickness, baseZ, "기초")
         };
-        // 이토밸브실 - 중간슬래브 추가
+        // 이토밸브실 - 중간슬래브 추가. ElevationZ는 슬래브 상단면(=2F 바닥)이므로 1F 안목높이에 슬래브 두께를 더한다.
         if (d.RoomType == "이토밸브실" && dto.MudSpec is { HasIntermediateSlab: true } mud)
-            slabs.Add(Slab(dto, pl.InnerWidth / 2, pl.InnerLength / 2, outerWidth, outerLength, mud.IntermediateSlabThickness, baseZ + mud.Floor1InnerHeight, "중간슬래브"));
+            slabs.Add(Slab(dto, pl.InnerWidth / 2, pl.InnerLength / 2, outerWidth, outerLength, mud.IntermediateSlabThickness, baseZ + mud.Floor1InnerHeight + mud.IntermediateSlabThickness, "중간슬래브"));
         slabs.Add(Slab(dto, pl.InnerWidth / 2, pl.InnerLength / 2, outerWidth, outerLength, pr.UpperSlabThickness, TopElevation(dto), "상부슬래브"));
         return slabs;
     }
@@ -45,13 +57,18 @@ public class ValveRoomGeometryCalculator
     public static IReadOnlyList<LinearWallDefinition> CalculateWalls(ValveRoomGeometryRequestDto dto)
     {
         var d = dto.DesignConditionDto; var pl = dto.PlanSpecDto; var pr = dto.ProfileSpecDto;
-        var x0 = -pr.OuterWallThickness / 2; var x1 = pl.InnerWidth + pr.OuterWallThickness / 2;
-        var y0 = -pr.OuterWallThickness / 2; var y1 = pl.InnerLength + pr.OuterWallThickness / 2;
+        var t = pr.OuterWallThickness;
+        var x0 = -t / 2; var x1 = pl.InnerWidth + t / 2;   // 세로(좌우) 벽체 중심선 X
+        var y0 = -t / 2; var y1 = pl.InnerLength + t / 2;   // 가로(상하) 벽체 중심선 Y
+        // 외벽끼리 겹침 없이 ㅁ자로 맞물리도록 끝점만 조정한다.
+        // 가로 벽체는 양끝을 t/2 바깥으로 늘려 코너를 덮고, 세로 벽체는 양끝을 t/2 안쪽으로 물려 그 사이에 들어간다.
+        var hx0 = x0 - t / 2; var hx1 = x1 + t / 2;         // 가로 벽체 끝점 X (바깥으로)
+        var vy0 = y0 + t / 2; var vy1 = y1 - t / 2;         // 세로 벽체 끝점 Y (안쪽으로)
         var walls = new List<LinearWallDefinition>();
         var outerCorners = new[]
         {
-            (new Point3D(x0, y0, 0), new Point3D(x1, y0, 0)), (new Point3D(x1, y0, 0), new Point3D(x1, y1, 0)),
-            (new Point3D(x1, y1, 0), new Point3D(x0, y1, 0)), (new Point3D(x0, y1, 0), new Point3D(x0, y0, 0))
+            (new Point3D(hx0, y0, 0), new Point3D(hx1, y0, 0)), (new Point3D(x1, vy0, 0), new Point3D(x1, vy1, 0)),
+            (new Point3D(hx1, y1, 0), new Point3D(hx0, y1, 0)), (new Point3D(x0, vy1, 0), new Point3D(x0, vy0, 0))
         };
         if (d.RoomType == "이토밸브실" && dto.MudSpec is { HasIntermediateSlab: true } slabMud)
         {
@@ -59,20 +76,32 @@ public class ValveRoomGeometryCalculator
             {
                 walls.Add(Wall(dto, start, end, pr.OuterWallThickness, slabMud.Floor1InnerHeight, "외벽", isExterior: true));
                 // BaseOffset은 기준 레벨(밸브실 기초 상부) 기준 상대 오프셋이므로 절대표고를 더하지 않는다.
+                // 2F 벽 높이는 2F 안목높이 그대로이며, 상단은 상부슬래브 하단과 맞물린다.
                 walls.Add(Wall(dto, start, end, pr.OuterWallThickness, slabMud.Floor2InnerHeight, "외벽", isExterior: true,
                     baseOffset: slabMud.Floor1InnerHeight + slabMud.IntermediateSlabThickness));
             }
         }
         else
         {
-            foreach (var (start, end) in outerCorners) walls.Add(Wall(dto, start, end, pr.OuterWallThickness, RoomHeight(dto), "외벽", isExterior: true));
+            foreach (var (start, end) in outerCorners) walls.Add(Wall(dto, start, end, pr.OuterWallThickness, RoomHeight(dto) - pr.UpperSlabThickness, "외벽", isExterior: true));
         }
 
         if (d.RoomType != "이토밸브실" || dto.MudSpec is not { HasIntermediateWall: true } mud) return walls;
         for (var i = 1; i <= mud.IntermediateWallCount; i++)
         {
             var x = pl.InnerWidth * i / (mud.IntermediateWallCount + 1d);
-            walls.Add(Wall(dto, new Point3D(x, 0, 0), new Point3D(x, pl.InnerLength, 0), mud.IntermediateWallThickness, RoomHeight(dto), "중간벽", isExterior: false));
+            var start = new Point3D(x, 0, 0);
+            var end = new Point3D(x, pl.InnerLength, 0);
+            if (dto.MudSpec is { HasIntermediateSlab: true } intermediateSlab)
+            {
+                walls.Add(Wall(dto, start, end, mud.IntermediateWallThickness, intermediateSlab.Floor1InnerHeight, "중간벽", isExterior: false));
+                walls.Add(Wall(dto, start, end, mud.IntermediateWallThickness, intermediateSlab.Floor2InnerHeight, "중간벽", isExterior: false,
+                    baseOffset: intermediateSlab.Floor1InnerHeight + intermediateSlab.IntermediateSlabThickness));
+            }
+            else
+            {
+                walls.Add(Wall(dto, start, end, mud.IntermediateWallThickness, RoomHeight(dto) - pr.UpperSlabThickness, "중간벽", isExterior: false));
+            }
         }
         return walls;
     }
@@ -168,8 +197,9 @@ public class ValveRoomGeometryCalculator
     private static IReadOnlyList<Point2D> Rectangle(double x, double y, double width, double length) =>
         new[] { new Point2D(x - width / 2, y - length / 2), new Point2D(x + width / 2, y - length / 2), new Point2D(x + width / 2, y + length / 2), new Point2D(x - width / 2, y + length / 2) };
 
+    // 기초 상단~상부슬래브 상단 높이. 중간슬래브가 있으면 1F 안목 + 중간슬래브 두께 + 2F 안목 + 상부슬래브 두께.
     private static double RoomHeight(ValveRoomGeometryRequestDto dto) =>
         dto.MudSpec is { HasIntermediateSlab: true } mud
-            ? mud.Floor1InnerHeight + mud.IntermediateSlabThickness + mud.Floor2InnerHeight
+            ? mud.Floor1InnerHeight + mud.IntermediateSlabThickness + mud.Floor2InnerHeight + dto.ProfileSpecDto.UpperSlabThickness
             : dto.ProfileSpecDto.InnerHeight;
 }

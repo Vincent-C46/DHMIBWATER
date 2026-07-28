@@ -72,12 +72,11 @@ public sealed class PipingViewModel : ViewModelBase
     }
     private void RefreshReferencePoint()
     {
-        // 기준점 = 첫 번째 파일의 첫 번째 레코드의 첫 정점 (MBR 중심 대신 — 파일 추가/제거에 흔들리지 않는 실제 데이터 점을 쓴다).
-        var firstVertex = Files.SelectMany(f => f.ReadResult.Features).Select(a => a.Vertices.FirstOrDefault()).FirstOrDefault(v => v != null);
-        if (firstVertex is null) { ReferenceX = ReferenceY = ReferenceZ = 0; return; }
-        ReferenceX = Math.Round(firstVertex.X, MidpointRounding.AwayFromZero);
-        ReferenceY = Math.Round(firstVertex.Y, MidpointRounding.AwayFromZero);
-        ReferenceZ = Math.Round(firstVertex.Z, MidpointRounding.AwayFromZero);
+        var reference = AlignmentReferencePoint.FromFirstVertex(Files.SelectMany(f => f.ReadResult.Features));
+        if (reference is null) { ReferenceX = ReferenceY = ReferenceZ = 0; return; }
+        ReferenceX = reference.Value.X;
+        ReferenceY = reference.Value.Y;
+        ReferenceZ = reference.Value.Z;
     }
     private void RequestImport()
     {

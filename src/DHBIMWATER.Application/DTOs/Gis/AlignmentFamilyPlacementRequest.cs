@@ -1,3 +1,5 @@
+using DHBIMWATER.Core.Gis;
+
 namespace DHBIMWATER.Application.DTOs.Gis;
 
 public enum AlignmentPlacementTarget { Beam, PipingSystem }
@@ -15,6 +17,12 @@ public sealed record AlignmentFamilyPlacementRequest
     public string? LevelName { get; init; }
     public bool AlignTangent { get; init; } = true;
     public bool ParseCombinedDiameter { get; init; } = true;
+    public double ReferenceX { get; init; }
+    public double ReferenceY { get; init; }
+    public double ReferenceZ { get; init; }
+    public ZDatum ZDatum { get; init; } = ZDatum.AsIs;
+    public bool ApplySharedCoordinates { get; init; } = false;
 }
 
+public sealed record AlignmentPlacementOrigin(double X, double Y, double Z, ZDatum ZDatum);
 public sealed record AlignmentFamilyPlacementResult(int PlacedCount, IReadOnlyList<string> Warnings);

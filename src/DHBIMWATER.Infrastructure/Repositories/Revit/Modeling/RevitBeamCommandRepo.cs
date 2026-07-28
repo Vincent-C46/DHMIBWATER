@@ -81,7 +81,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             if (beamDef.Part == "HAUNCH")           
                 beam.get_Parameter(BuiltInParameter.Z_JUSTIFICATION).Set(beamDef.ZJustification);
 
-            JoinWithSlab(beam);
+            JoinWithUpperSlab(beam);
 
             beam.LookupParameter("DH_ElementCode")?.Set(beamDef.ElementCode);
             beam.LookupParameter("DH_Addin")?.Set("DHBIMWATER");
@@ -94,21 +94,22 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             return (int)beam.Id.Value;
         }
 
-        private void JoinWithSlab(Element beam)
+        private void JoinWithUpperSlab(Element beam)
         {
             var doc = _doc();
             doc.Regenerate();   
             var intersectFilter = new ElementIntersectsElementFilter(beam);
-            var intersectSlabs = new FilteredElementCollector(doc)
+            var upperSlabs = new FilteredElementCollector(doc)
                 .OfCategory(BuiltInCategory.OST_Floors)
                 .WhereElementIsNotElementType()
                 .WherePasses(intersectFilter)
-                .ToElements()
+                .Cast<Floor>()
+                .Where(floor => floor.LookupParameter("DH_Part")?.AsString() == "상부슬래브")
                 .ToList();
 
-            if (intersectSlabs.Count == 0) return;
+            if (upperSlabs.Count == 0) return;
 
-            foreach (var slab in intersectSlabs)
+            foreach (var slab in upperSlabs)
             {
                 try
                 {

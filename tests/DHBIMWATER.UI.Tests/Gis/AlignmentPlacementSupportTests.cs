@@ -8,6 +8,21 @@ namespace DHBIMWATER.UI.Tests.Gis;
 public class AlignmentPlacementSupportTests
 {
     [Fact]
+    public void ReferencePoint_rounds_first_vertex_away_from_zero_at_midpoint()
+    {
+        var alignments = new[]
+        {
+            new PipeAlignment(
+                new[] { new Point3D(123.5, -456.5, 10.5) },
+                "상수", 100, "test.shp", "1", new Dictionary<string, string>())
+        };
+
+        var reference = AlignmentReferencePoint.FromFirstVertex(alignments);
+
+        Assert.Equal((124d, -457d, 11d), reference);
+    }
+
+    [Fact]
     public void IntervalSampler_samples_points_and_terminal_segment_on_polyline()
     {
         var vertices = new[] { new Point3D(0, 0, 0), new Point3D(13, 0, 0) };
