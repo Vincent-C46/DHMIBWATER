@@ -4,7 +4,7 @@ namespace DHBIMWATER.Application.DTOs.Revit.ValveRoom;
 public record MudValveRoomSpecDto
 (
     bool HasIntermediateWall,
-    int IntermediateWallCount,
+    double IntermediateWallOffset,   // 좌측 외벽 내측(X=0) → 중간벽 좌측면까지의 안목거리(mm)
     double IntermediateWallThickness,
     bool HasIntermediateSlab,
     double IntermediateSlabThickness,

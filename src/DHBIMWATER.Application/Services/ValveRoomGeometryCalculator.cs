@@ -37,20 +37,26 @@ public class ValveRoomGeometryCalculator
         var d = dto.DesignConditionDto;
         var pl = dto.PlanSpecDto;
         var pr = dto.ProfileSpecDto;
-        var outerWidth = pl.InnerWidth + pr.OuterWallThickness * 2;
-        var outerLength = pl.InnerLength + pr.OuterWallThickness * 2;
-        var foundationWidth = outerWidth + pr.FoundationToe * 2;
-        var foundationLength = outerLength + pr.FoundationToe * 2;
+        // X축=길이(InnerLength), Y축=폭(InnerWidth). Slab(centerX, centerY, xExtent, yExtent, ...) 규약에 맞춰 X에 길이, Y에 폭을 넣는다.
+        var outerX = pl.InnerLength + pr.OuterWallThickness * 2;   // X(길이) 방향 외벽 외곽
+        var outerY = pl.InnerWidth + pr.OuterWallThickness * 2;    // Y(폭) 방향 외벽 외곽
+        var foundationX = outerX + pr.FoundationToe * 2;
+        var foundationY = outerY + pr.FoundationToe * 2;
+        // 버림콘크리트는 기초보다 사방으로 버림 두께만큼 바깥으로 확장한다.
+        var plainX = foundationX + pr.PlainConcreteThickness * 2;
+        var plainY = foundationY + pr.PlainConcreteThickness * 2;
+        var centerX = pl.InnerLength / 2;
+        var centerY = pl.InnerWidth / 2;
         var baseZ = BaseElevation(dto);
         var slabs = new List<SlabDefinition>
         {
-            Slab(dto, pl.InnerWidth / 2, pl.InnerLength / 2, foundationWidth, foundationLength, pr.PlainConcreteThickness, baseZ - pr.FoundationThickness, "버림콘크리트"),
-            Slab(dto, pl.InnerWidth / 2, pl.InnerLength / 2, foundationWidth, foundationLength, pr.FoundationThickness, baseZ, "기초")
+            Slab(dto, centerX, centerY, plainX, plainY, pr.PlainConcreteThickness, baseZ - pr.FoundationThickness, "버림콘크리트"),
+            Slab(dto, centerX, centerY, foundationX, foundationY, pr.FoundationThickness, baseZ, "기초")
         };
         // 이토밸브실 - 중간슬래브 추가. ElevationZ는 슬래브 상단면(=2F 바닥)이므로 1F 안목높이에 슬래브 두께를 더한다.
         if (d.RoomType == "이토밸브실" && dto.MudSpec is { HasIntermediateSlab: true } mud)
-            slabs.Add(Slab(dto, pl.InnerWidth / 2, pl.InnerLength / 2, outerWidth, outerLength, mud.IntermediateSlabThickness, baseZ + mud.Floor1InnerHeight + mud.IntermediateSlabThickness, "중간슬래브"));
-        slabs.Add(Slab(dto, pl.InnerWidth / 2, pl.InnerLength / 2, outerWidth, outerLength, pr.UpperSlabThickness, TopElevation(dto), "상부슬래브"));
+            slabs.Add(Slab(dto, centerX, centerY, outerX, outerY, mud.IntermediateSlabThickness, baseZ + mud.Floor1InnerHeight + mud.IntermediateSlabThickness, "중간슬래브"));
+        slabs.Add(Slab(dto, centerX, centerY, outerX, outerY, pr.UpperSlabThickness, TopElevation(dto), "상부슬래브"));
         return slabs;
     }
 
@@ -58,8 +64,8 @@ public class ValveRoomGeometryCalculator
     {
         var d = dto.DesignConditionDto; var pl = dto.PlanSpecDto; var pr = dto.ProfileSpecDto;
         var t = pr.OuterWallThickness;
-        var x0 = -t / 2; var x1 = pl.InnerWidth + t / 2;   // 세로(좌우) 벽체 중심선 X
-        var y0 = -t / 2; var y1 = pl.InnerLength + t / 2;   // 가로(상하) 벽체 중심선 Y
+        var x0 = -t / 2; var x1 = pl.InnerLength + t / 2;   // 세로(좌우) 벽체 중심선 X (길이 방향)
+        var y0 = -t / 2; var y1 = pl.InnerWidth + t / 2;    // 가로(상하) 벽체 중심선 Y (폭 방향)
         // 외벽끼리 겹침 없이 ㅁ자로 맞물리도록 끝점만 조정한다.
         // 가로 벽체는 양끝을 t/2 바깥으로 늘려 코너를 덮고, 세로 벽체는 양끝을 t/2 안쪽으로 물려 그 사이에 들어간다.
         var hx0 = x0 - t / 2; var hx1 = x1 + t / 2;         // 가로 벽체 끝점 X (바깥으로)
@@ -87,21 +93,19 @@ public class ValveRoomGeometryCalculator
         }
 
         if (d.RoomType != "이토밸브실" || dto.MudSpec is not { HasIntermediateWall: true } mud) return walls;
-        for (var i = 1; i <= mud.IntermediateWallCount; i++)
+        // 중간벽 1개. 입력 offset은 좌측 외벽 내측(X=0)에서 중간벽 좌측면까지의 안목거리이므로 중심선으로 환산한다.
+        var mx = mud.IntermediateWallOffset + mud.IntermediateWallThickness / 2;
+        var mStart = new Point3D(mx, 0, 0);
+        var mEnd = new Point3D(mx, pl.InnerWidth, 0);
+        if (dto.MudSpec is { HasIntermediateSlab: true } intermediateSlab)
         {
-            var x = pl.InnerWidth * i / (mud.IntermediateWallCount + 1d);
-            var start = new Point3D(x, 0, 0);
-            var end = new Point3D(x, pl.InnerLength, 0);
-            if (dto.MudSpec is { HasIntermediateSlab: true } intermediateSlab)
-            {
-                walls.Add(Wall(dto, start, end, mud.IntermediateWallThickness, intermediateSlab.Floor1InnerHeight, "중간벽", isExterior: false));
-                walls.Add(Wall(dto, start, end, mud.IntermediateWallThickness, intermediateSlab.Floor2InnerHeight, "중간벽", isExterior: false,
-                    baseOffset: intermediateSlab.Floor1InnerHeight + intermediateSlab.IntermediateSlabThickness));
-            }
-            else
-            {
-                walls.Add(Wall(dto, start, end, mud.IntermediateWallThickness, RoomHeight(dto) - pr.UpperSlabThickness, "중간벽", isExterior: false));
-            }
+            walls.Add(Wall(dto, mStart, mEnd, mud.IntermediateWallThickness, intermediateSlab.Floor1InnerHeight, "중간벽", isExterior: false));
+            walls.Add(Wall(dto, mStart, mEnd, mud.IntermediateWallThickness, intermediateSlab.Floor2InnerHeight, "중간벽", isExterior: false,
+                baseOffset: intermediateSlab.Floor1InnerHeight + intermediateSlab.IntermediateSlabThickness));
+        }
+        else
+        {
+            walls.Add(Wall(dto, mStart, mEnd, mud.IntermediateWallThickness, RoomHeight(dto) - pr.UpperSlabThickness, "중간벽", isExterior: false));
         }
         return walls;
     }
@@ -110,8 +114,8 @@ public class ValveRoomGeometryCalculator
     {
         var d = dto.DesignConditionDto; var pl = dto.PlanSpecDto;
         if (d.RoomType != "제수밸브실" || dto.SluiceSpec is not { } sluice) return Array.Empty<BeamDefinition>();
-        var z = TopElevation(dto); var x0 = 0d; var x1 = pl.InnerWidth;
-        var y0 = 0d; var y1 = pl.InnerLength;
+        var z = TopElevation(dto); var x0 = 0d; var x1 = pl.InnerLength;   // X방향 보는 길이(X) 전 구간을 가로지른다.
+        var y0 = 0d; var y1 = pl.InnerWidth;                              // Y방향 보는 폭(Y) 전 구간을 가로지른다.
         var beams = new List<BeamDefinition>();
         for (var i = 0; i < sluice.BeamCountX; i++)
             beams.Add(Beam(dto, new Point3D(x0, y0 + sluice.BeamOffsetX + sluice.BeamSpacingX * i, z), new Point3D(x1, y0 + sluice.BeamOffsetX + sluice.BeamSpacingX * i, z), "X방향 보"));
@@ -133,8 +137,8 @@ public class ValveRoomGeometryCalculator
                     TypeName = sluice.ColumnTypeName,
                     BaseLevelName = BaseLevelName,
                     TopLevelName = TopLevelName,
-                    // 상부 레벨이 이미 상부슬래브 표고이므로 추가 오프셋이 필요 없다.
-                    TopOffset = 0,
+                    // 상단은 상부슬래브 레벨에 구속하되, 슬래브 두께만큼 내려 슬래브 하부에 맞춘다.
+                    TopOffset = -dto.ProfileSpecDto.UpperSlabThickness,
                     ElementCode = "VR-C",
                     Zone = d.RoomType,
                     Part = "보 교차부 기둥"

@@ -31,7 +31,7 @@ public class ValveRoomViewModel : ViewModelBase
     private double _innerLength = 4000;
     private double _innerHeight = 2500;
     private bool _hasIntermediateWall = true;
-    private int _intermediateWallCount = 1;
+    private double _intermediateWallOffset = 2000;
     private bool _hasIntermediateSlab;
     private double _floor1InnerHeight = 2500;
     private double _floor2InnerHeight = 2500;
@@ -100,7 +100,7 @@ public class ValveRoomViewModel : ViewModelBase
     public double InnerWidth { get => _innerWidth; set => SetAndRefresh(ref _innerWidth, value); }
     public double InnerLength { get => _innerLength; set => SetAndRefresh(ref _innerLength, value); }
     public double InnerHeight { get => _innerHeight; set => SetAndRefresh(ref _innerHeight, value); }
-    public int IntermediateWallCount { get => _intermediateWallCount; set => SetAndRefresh(ref _intermediateWallCount, Math.Max(0, value)); }
+    public double IntermediateWallOffset { get => _intermediateWallOffset; set => SetAndRefresh(ref _intermediateWallOffset, value); }
     public double Floor1InnerHeight { get => _floor1InnerHeight; set => SetAndRefresh(ref _floor1InnerHeight, value); }
     public double Floor2InnerHeight { get => _floor2InnerHeight; set => SetAndRefresh(ref _floor2InnerHeight, value); }
     public int BeamCountX { get => _beamCountX; set => SetAndRefresh(ref _beamCountX, Math.Max(0, value)); }
@@ -160,7 +160,7 @@ public class ValveRoomViewModel : ViewModelBase
             var foundationLength = outerLength + FoundationToe * 2;
             var height = IsMud && HasIntermediateSlab ? Floor1InnerHeight + Floor2InnerHeight : InnerHeight;
             var members = IsMud
-                ? $"기초 · 외벽 4개 · {(HasIntermediateWall ? $"중간벽 {IntermediateWallCount}개 · " : string.Empty)}{(HasIntermediateSlab ? "중간슬래브 · " : string.Empty)}상부슬래브"
+                ? $"기초 · 외벽 4개 · {(HasIntermediateWall ? "중간벽 · " : string.Empty)}{(HasIntermediateSlab ? "중간슬래브 · " : string.Empty)}상부슬래브"
                 : IsSluice
                     ? $"사각형 기초 · 외벽 4개 · 상부슬래브 · 보 X{BeamCountX}/Y{BeamCountY}개 · 보 교차부 기둥"
                     : "기초 · 외벽 4개 · 상부슬래브";
@@ -178,7 +178,7 @@ public class ValveRoomViewModel : ViewModelBase
         if (IsMud)
         {
             _innerWidth = 2500; _innerLength = 4000; _innerHeight = 2500;
-            _hasIntermediateWall = true; _intermediateWallCount = 1; _hasIntermediateSlab = false;
+            _hasIntermediateWall = true; _intermediateWallOffset = _innerLength / 2; _hasIntermediateSlab = false;
         }
         else if (IsSluice)
         {
@@ -193,7 +193,7 @@ public class ValveRoomViewModel : ViewModelBase
         OnPropertyChanged(nameof(InnerLength));
         OnPropertyChanged(nameof(InnerHeight));
         OnPropertyChanged(nameof(HasIntermediateWall));
-        OnPropertyChanged(nameof(IntermediateWallCount));
+        OnPropertyChanged(nameof(IntermediateWallOffset));
         OnPropertyChanged(nameof(HasIntermediateSlab));
         OnPropertyChanged(nameof(IntermediateWallVisibility));
         OnPropertyChanged(nameof(IntermediateSlabVisibility));
@@ -233,7 +233,7 @@ public class ValveRoomViewModel : ViewModelBase
             InnerHeight = InnerHeight,
             // 타입 전용 입력은 선택된 밸브실 타입에 해당하는 쪽만 채운다.
             MudSpec = IsMud
-                ? new MudValveRoomSpecDto(HasIntermediateWall, IntermediateWallCount, IntermediateWallThickness,
+                ? new MudValveRoomSpecDto(HasIntermediateWall, IntermediateWallOffset, IntermediateWallThickness,
                     HasIntermediateSlab, IntermediateSlabThickness, Floor1InnerHeight, Floor2InnerHeight)
                 : null,
             SluiceSpec = IsSluice

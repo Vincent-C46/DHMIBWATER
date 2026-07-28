@@ -99,7 +99,8 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                     // Level 생성
                     foreach (var lvl in PumpingStationGeometryCalculator.CalculateLevels(dto))
                     {
-                        var existLevel = existingLevels.FirstOrDefault(s => s.Contains(lvl.Name));
+                        var existLevel = existingLevels.FirstOrDefault(s =>
+                            s.Equals(lvl.Name, StringComparison.OrdinalIgnoreCase));
                         long levelId;
 
                         if (existLevel != null)

@@ -78,10 +78,21 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             StructuralFramingUtils.DisallowJoinAtEnd(beam, 0);
             StructuralFramingUtils.DisallowJoinAtEnd(beam, 1);
 
-            if (beamDef.Part == "HAUNCH")           
+            // HAUNCH와 밸브실 보(VR-B)만 Z맞춤을 명시 적용한다.
+            // 그 외(PumpingStation GIRDER·Reservoir 등)는 기존대로 Revit 기본 Z맞춤을 사용한다.
+            if (beamDef.Part == "HAUNCH" || beamDef.ElementCode == "VR-B")
                 beam.get_Parameter(BuiltInParameter.Z_JUSTIFICATION).Set(beamDef.ZJustification);
 
-            JoinWithUpperSlab(beam);
+            // 밸브실 보: 원점(2) 기준에서 보 높이의 절반만큼 아래로 내려 보 상단을 상부슬래브 상단(보 z)에 맞춘다.
+            if (beamDef.ElementCode == "VR-B")
+            {
+                var halfHeightFt = GetBeamHeightFt(beamType) / 2;
+                if (halfHeightFt > 0)
+                    beam.get_Parameter(BuiltInParameter.Z_OFFSET_VALUE)?.Set(-halfHeightFt);
+            }
+
+            if (beamDef.ElementCode == "VR-B")
+                JoinWithUpperSlab(beam);
 
             beam.LookupParameter("DH_ElementCode")?.Set(beamDef.ElementCode);
             beam.LookupParameter("DH_Addin")?.Set("DHBIMWATER");
@@ -94,33 +105,54 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             return (int)beam.Id.Value;
         }
 
+        /// <summary>보 타입의 단면 높이를 내부 단위(피트)로 반환한다. 단면 높이 파라미터가 없으면 0.</summary>
+        private static double GetBeamHeightFt(FamilySymbol beamType)
+        {
+            var p = beamType.get_Parameter(BuiltInParameter.STRUCTURAL_SECTION_COMMON_HEIGHT)
+                    ?? beamType.LookupParameter("h")
+                    ?? beamType.LookupParameter("H");
+            return p?.AsDouble() ?? 0;
+        }
+
         private void JoinWithUpperSlab(Element beam)
         {
             var doc = _doc();
-            doc.Regenerate();   
-            var intersectFilter = new ElementIntersectsElementFilter(beam);
+            doc.Regenerate();
+            var beamBoundingBox = beam.get_BoundingBox(null);
             var upperSlabs = new FilteredElementCollector(doc)
                 .OfCategory(BuiltInCategory.OST_Floors)
                 .WhereElementIsNotElementType()
-                .WherePasses(intersectFilter)
                 .Cast<Floor>()
-                .Where(floor => floor.LookupParameter("DH_Part")?.AsString() == "상부슬래브")
+                .Where(floor => BoundingBoxesOverlap(beamBoundingBox, floor.get_BoundingBox(null)))
                 .ToList();
 
-            if (upperSlabs.Count == 0) return;
+            if (upperSlabs.Count == 0)
+            {
+                TaskDialog.Show("Error", $"제수밸브실 보와 겹치는 슬래브를 찾을 수 없습니다. (보: {beam.Id.Value})");
+                return;
+            }
 
             foreach (var slab in upperSlabs)
             {
                 try
                 {
+                    if (JoinGeometryUtils.AreElementsJoined(doc, slab, beam)) continue;
                     JoinGeometryUtils.JoinGeometry(doc, slab, beam);
                 }
                 catch (Exception ex)
                 {
-                    TaskDialog.Show("Error", ex.Message);
+                    TaskDialog.Show("Error", $"제수밸브실 보와 상부슬래브를 결합하지 못했습니다. (보: {beam.Id.Value}, 슬래브: {slab.Id.Value})\n{ex.Message}");
                 }
             }
-            return;
+        }
+
+        private static bool BoundingBoxesOverlap(BoundingBoxXYZ? first, BoundingBoxXYZ? second)
+        {
+            if (first == null || second == null) return false;
+
+            return first.Min.X <= second.Max.X && first.Max.X >= second.Min.X
+                && first.Min.Y <= second.Max.Y && first.Max.Y >= second.Min.Y
+                && first.Min.Z <= second.Max.Z && first.Max.Z >= second.Min.Z;
         }
     }
 }
