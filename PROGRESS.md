@@ -17,6 +17,21 @@
 
 ## 완료된 작업
 
+### 관로 직관 분절 — 절점 기준 간격 리셋 (2026-07-30)
+- [x] 증상: 6m 간격 배치인데 절점이 없는 위치에서 6.577m 구간이 1,923.6mm + 4,653.5mm로 끊겼다.
+- [x] 원인: `AlignmentIntervalSampler.SampleSegments`가 분절 경계를 **폴리라인 전체 누적거리**의 interval
+      배수로 잡았다. 앞 구간들의 잔여 길이가 다음 구간으로 전파돼 파트 중간 임의 위치에서 끊긴다.
+      (역산: 해당 파트의 시작 누적거리 mod 6000 = 4,076.4mm → 다음 6m 배수까지 1,923.6mm)
+- [x] 수정: 경계를 **각 절점부터 다시 잰** interval 배수로 변경. 절점~절점 구간마다 6m 정척 + 잔여 조각이 된다.
+- [x] 기존 테스트 `SampleSegments_breaks_at_polyline_vertex_not_aligned_to_interval` 기대값 갱신
+      (5m 두 구간은 각각 통째), 신규 회귀 테스트 `SampleSegments_restarts_interval_at_each_vertex` 추가.
+- [x] `SamplePoints`의 반환 계약은 변경하지 않음(`docs/18` 지시서 제약 유지).
+- [x] 검증: Core 빌드 오류 0. 테스트 프로젝트가 기존 컴파일 오류로 실행 불가해 임시 콘솔 러너로
+      기존 5건 + 신규 6건(보고된 6.577m 케이스 재현 포함) 전부 PASS 확인.
+- [ ] TODO: 절점에 곡관이 들어가면 직관 구간은 절점이 아니라 **곡관 몸통 끝에서 시작**해 거기서부터 다시
+      6m씩 끊어야 한다. 직경×각도별 곡관 연장 데이터가 필요해 배치 단계(⑤)로 이월.
+      `SampleSegments` 상단 TODO 주석 및 `docs/20_관로네트워크_분기곡관_지시서.md` §1-1 참조.
+
 ### 관로 네트워크 위상 그래프 + 절점 분류 (①②) (2026-07-30)
 - [x] `Core/Gis/PipeNetworkGraph.cs` 신규 — `NetworkNode`(Position/Incidences/Degree), `NetworkEdge`, `DirectionFrom(incidence)`.
 - [x] `Core/Gis/PipeNetworkBuilder.cs` 신규 — 여러 폴리선을 하나의 위상 그래프로 조립. 선분 쌍의 최근접점을

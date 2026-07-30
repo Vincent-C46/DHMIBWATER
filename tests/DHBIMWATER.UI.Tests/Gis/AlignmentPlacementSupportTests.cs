@@ -53,16 +53,28 @@ public class AlignmentPlacementSupportTests
     public void SampleSegments_breaks_at_polyline_vertex_not_aligned_to_interval()
     {
         // 절점(5,0,0)이 간격 6의 배수가 아니어서 기존 로직은 코너를 가로지르는 현을 만들었다.
+        // 간격은 절점마다 리셋되므로 5m짜리 두 구간은 각각 통째로 하나의 세그먼트가 된다.
         var vertices = new[] { new Point3D(0, 0, 0), new Point3D(5, 0, 0), new Point3D(5, 5, 0) };
 
         var segments = AlignmentIntervalSampler.SampleSegments(vertices, 6);
 
-        Assert.Equal(new[] { 0d, 5d, 6d }, segments.Select(x => x.DistanceFromStart));
+        Assert.Equal(new[] { 0d, 5d }, segments.Select(x => x.DistanceFromStart));
         Assert.Equal(5, segments[0].End.X);
         Assert.Equal(0, segments[0].End.Y);   // 절점에서 정확히 분절
-        Assert.Equal(5, segments[1].End.X);
-        Assert.Equal(1, segments[1].End.Y);
-        Assert.Equal(5, segments[2].End.Y);   // 종점
+        Assert.Equal(5, segments[1].End.Y);   // 종점
+    }
+
+    [Fact]
+    public void SampleSegments_restarts_interval_at_each_vertex()
+    {
+        // 앞 구간(7m)의 잔여 1m가 다음 구간으로 전파되면 안 된다.
+        // 전체 누적거리 기준이면 두 번째 구간이 5m/3m로 끊겼지만, 절점 기준 리셋에서는 6m/2m가 된다.
+        var vertices = new[] { new Point3D(0, 0, 0), new Point3D(7, 0, 0), new Point3D(7, 8, 0) };
+
+        var segments = AlignmentIntervalSampler.SampleSegments(vertices, 6);
+
+        Assert.Equal(new[] { 0d, 6d, 7d, 13d }, segments.Select(x => x.DistanceFromStart));
+        Assert.Equal(new[] { 6d, 1d, 6d, 2d }, segments.Select(x => Math.Round(x.Start.DistanceTo(x.End), 9)));
     }
 
     [Fact]

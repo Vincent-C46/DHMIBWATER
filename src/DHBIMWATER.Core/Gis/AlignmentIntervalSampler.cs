@@ -32,6 +32,9 @@ public static class AlignmentIntervalSampler
         return result;
     }
 
+    // TODO: 절점에 곡관이 들어가면 직관 구간은 절점이 아니라 곡관 몸통 끝에서 시작해야 한다.
+    //       (절점별 곡관 연장을 받아 파트 양끝에서 차감한 뒤 그 지점부터 interval 분할)
+    //       곡관 카탈로그(직경×각도별 연장)와 곡관 판정이 준비되는 배치 단계에서 처리한다.
     public static IReadOnlyList<AlignmentSampleSegment> SampleSegments(IReadOnlyList<Point3D> vertices, double interval)
     {
         ValidateInterval(interval);
@@ -39,11 +42,16 @@ public static class AlignmentIntervalSampler
         if (parts.Count == 0) return Array.Empty<AlignmentSampleSegment>();
 
         var total = parts[^1].EndDistance;
-        // 분절 경계 = interval 배수 ∪ 폴리라인 정점(절점) 누적거리 ∪ 시작/끝점.
+        // 분절 경계 = 절점 ∪ 각 절점부터 다시 잰 interval 배수 ∪ 시작/끝점.
+        // 간격은 폴리라인 전체 누적거리가 아니라 절점마다 리셋한다. 전체 누적거리로 재면 앞 구간의
+        // 잔여 길이가 다음 구간으로 전파돼, 절점도 없는 위치에서 임의 길이로 끊긴다.
         // 절점을 경계에 포함하지 않으면 코너를 가로지르는 직선 현이 생겨 도면 형상과 달라진다.
         var distances = new List<double> { 0d, total };
-        for (var i = 1; i * interval < total; i++) distances.Add(i * interval);
-        foreach (var part in parts) distances.Add(part.EndDistance);
+        foreach (var part in parts)
+        {
+            for (var i = 1; i * interval < part.Length; i++) distances.Add(part.StartDistance + i * interval);
+            distances.Add(part.EndDistance);
+        }
 
         distances.Sort();
         var boundaries = new List<double>(distances.Count);
