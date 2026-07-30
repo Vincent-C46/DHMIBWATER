@@ -42,6 +42,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IBeamCommandRepo, RevitBeamCommandRepo>();
         services.AddTransient<IColumnCommandRepo, RevitColumnCommandRepo>();
         services.AddTransient<ISlabCommandRepo, RevitSlabCommandRepo>();
+        services.AddTransient<IFoundationCommandRepo, RevitFoundationCommandRepo>();
         services.AddTransient<IOpeningCommandRepo, RevitOpeningCommandRepo>();
         services.AddTransient<IStairCommandRepo, RevitStairCommandRepo>();
         services.AddTransient<IDirectShapeCommandRepo, RevitDirectShapeCommandRepo>();
@@ -87,6 +88,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IGenericModelCommandRepo, MockGenericModelCommandRepo>();
         services.AddTransient<IBeamCommandRepo, MockBeamCommandRepo>();
         services.AddTransient<ISlabCommandRepo, MockSlabCommandRepo>();
+        services.AddTransient<IFoundationCommandRepo, MockFoundationCommandRepo>();
         services.AddTransient<IOpeningCommandRepo, MockOpeningCommandRepo>();
         services.AddTransient<IDirectShapeCommandRepo, MockDirectShapeCommandRepo>();
         services.AddTransient<IViewCommandRepo, MockViewCommandRepo>();

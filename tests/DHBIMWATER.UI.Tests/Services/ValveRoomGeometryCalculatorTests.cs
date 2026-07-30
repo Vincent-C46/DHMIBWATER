@@ -28,6 +28,25 @@ public class ValveRoomGeometryCalculatorTests
         Assert.Equal(-250, column.TopOffset);
     }
 
+    [Fact]
+    public void AirValveRoom_UsesIndependentFoundationInsteadOfFoundationFloor()
+    {
+        var dto = new ValveRoomGeometryRequestDto(
+            new ValveRoomDesignConditionDto("공기밸브실", 123.45),
+            new ValveRoomPlanSpecDto(1500, 1800),
+            new ValveRoomProfileSpecDto(2000, 100, 650, 300, 300, 400),
+            null,
+            null);
+
+        var foundation = Assert.Single(ValveRoomGeometryCalculator.CalculateFoundations(dto));
+
+        Assert.DoesNotContain(ValveRoomGeometryCalculator.CalculateSlabs(dto), slab => slab.Part == "기초");
+        Assert.Equal(900, foundation.Position.X);
+        Assert.Equal(750, foundation.Position.Y);
+        Assert.Equal(123450, foundation.Position.Z);
+        Assert.Equal(650, foundation.Thickness);
+    }
+
     private static ValveRoomGeometryRequestDto CreateMudValveRoomDto(double intermediateWallOffset, double intermediateWallThickness) => new(
         new ValveRoomDesignConditionDto("이토밸브실", 0),
         new ValveRoomPlanSpecDto(2500, 4000),
