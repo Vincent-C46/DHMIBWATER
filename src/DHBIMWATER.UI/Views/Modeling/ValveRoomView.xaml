@@ -134,7 +134,7 @@
                                                 <ColumnDefinition Width="35"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Text="H"/>
-                                            <TextBlock Grid.Column="1" Text="내부 높이"/>
+                                            <TextBlock Grid.Column="1" Text="내부 높이(슬래브 하부)"/>
                                             <TextBox Grid.Column="2" Text="{Binding InnerHeight, UpdateSourceTrigger=LostFocus}"/>
                                             <TextBlock Grid.Column="3" Text="mm" Margin="8,0"/>
                                         </Grid>
@@ -267,12 +267,24 @@
                                 <Border Background="#EEF2F7" CornerRadius="8" Padding="14">
                                     <StackPanel>
                                         <TextBlock Text="구조 두께" FontWeight="SemiBold" Foreground="#4A6FA5" Margin="0,0,0,8"/>
-                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="45"/><ColumnDefinition Width="*"/><ColumnDefinition Width="110"/><ColumnDefinition Width="35"/></Grid.ColumnDefinitions>
+                                        <Grid Visibility="{Binding PlainConcreteVisibility}"><Grid.ColumnDefinitions><ColumnDefinition Width="45"/><ColumnDefinition Width="*"/><ColumnDefinition Width="110"/><ColumnDefinition Width="35"/></Grid.ColumnDefinitions>
                                             <TextBlock Text="Tb"/><TextBlock Grid.Column="1" Text="버림 두께"/><TextBox Grid.Column="2" Text="{Binding PlainConcreteThickness, UpdateSourceTrigger=LostFocus}"/><TextBlock Grid.Column="3" Text="mm" Margin="8,0"/>
                                         </Grid>
                                         <Grid Margin="0,8,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="45"/><ColumnDefinition Width="*"/><ColumnDefinition Width="110"/><ColumnDefinition Width="35"/></Grid.ColumnDefinitions>
                                             <TextBlock Text="Tf"/><TextBlock Grid.Column="1" Text="기초 두께"/><TextBox Grid.Column="2" Text="{Binding FoundationThickness, UpdateSourceTrigger=LostFocus}"/><TextBlock Grid.Column="3" Text="mm" Margin="8,0"/>
                                         </Grid>
+                                        <StackPanel Margin="0,8,0,0" Visibility="{Binding AirValveVisibility}">
+                                            <TextBlock Text="본관 관통 Void" FontWeight="SemiBold" Foreground="#4A6FA5" Margin="0,0,0,6"/>
+                                            <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="45"/><ColumnDefinition Width="*"/><ColumnDefinition Width="110"/><ColumnDefinition Width="35"/></Grid.ColumnDefinitions>
+                                                <TextBlock Text="D"/><TextBlock Grid.Column="1" Text="본관 직경"/><TextBox Grid.Column="2" Text="{Binding MainPipeDiameter, UpdateSourceTrigger=LostFocus}"/><TextBlock Grid.Column="3" Text="mm" Margin="8,0"/>
+                                            </Grid>
+                                            <Grid Margin="0,8,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="45"/><ColumnDefinition Width="*"/><ColumnDefinition Width="110"/><ColumnDefinition Width="35"/></Grid.ColumnDefinitions>
+                                                <TextBlock Text="H"/><TextBlock Grid.Column="1" Text="기초 상부~본관 중심 깊이"/><TextBox Grid.Column="2" Text="{Binding FoundationTopToPipeCenterDepth, UpdateSourceTrigger=LostFocus}"/><TextBlock Grid.Column="3" Text="mm" Margin="8,0"/>
+                                            </Grid>
+                                            <Grid Margin="0,8,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="45"/><ColumnDefinition Width="*"/><ColumnDefinition Width="145"/></Grid.ColumnDefinitions>
+                                                <TextBlock Text="축"/><TextBlock Grid.Column="1" Text="관통 방향"/><ComboBox Grid.Column="2" ItemsSource="{Binding VoidAxes}" SelectedItem="{Binding SelectedVoidAxis}"/>
+                                            </Grid>
+                                        </StackPanel>
                                         <Grid Margin="0,8,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="45"/><ColumnDefinition Width="*"/><ColumnDefinition Width="110"/><ColumnDefinition Width="35"/></Grid.ColumnDefinitions>
                                             <TextBlock Text="Lt"/><TextBlock Grid.Column="1" Text="기초 Toe 길이 (4변 공통)"/><TextBox Grid.Column="2" Text="{Binding FoundationToe, UpdateSourceTrigger=LostFocus}"/><TextBlock Grid.Column="3" Text="mm" Margin="8,0"/>
                                         </Grid>

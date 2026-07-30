@@ -30,7 +30,6 @@ namespace DHBIMWATER.Application.Services
               {
                   new LevelDefinition { Name = "LWL",  Elevation = d.LWL * 1000 },
                   new LevelDefinition { Name = "HWL",  Elevation = d.HWL * 1000 },
-
                   new LevelDefinition { Name = FoundationPumpLevelName,  Elevation = d.LWL * 1000 - pr.H4 },
                   new LevelDefinition { Name = FoundationInletLevelName, Elevation = d.LWL * 1000 - pr.H1 },
                   new LevelDefinition { Name = ValveRoomLevelName,       Elevation = upperSlab - pr.H7 - d.D - pr.H6 },
@@ -310,10 +309,8 @@ namespace DHBIMWATER.Application.Services
                                 Zone = "펌프장",
                                 Part = "펌프장 내벽",
                             };
-
                             innerWallUnderValveDef.StartPoint = new Point3D(totalLength - pr.T4 - pr.B7 - pr.T3, pl.B8 + pl.T5 / 2 + (pl.B8 + pl.T5) * i, 0);
                             innerWallUnderValveDef.EndPoint = new Point3D(totalLength - pr.T4, pl.B8 + pl.T5 / 2 + (pl.B8 + pl.T5) * i, 0);
-
                             linearWalls.Add(innerWallUnderValveDef);
                         }
 
@@ -2147,7 +2144,6 @@ namespace DHBIMWATER.Application.Services
 
             return sectionViewDefs;
         }
-
         /// <summary>
         /// 계단(Revit Stairs 요소) 배치 정의를 계산한다.
         /// 현재는 샘플로 "밸브실 → 상부슬래브" 직선 Run 1개만 생성한다.

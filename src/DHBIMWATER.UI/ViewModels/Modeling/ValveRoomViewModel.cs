@@ -23,6 +23,9 @@ public class ValveRoomViewModel : ViewModelBase
     private double _plainConcreteThickness = 100;
     private double _foundationThickness = 500;
     private double _foundationToe = 300;
+    private double _mainPipeDiameter = 100;
+    private double _foundationTopToPipeCenterDepth = 250;
+    private string _selectedVoidAxis = "X";
     private double _outerWallThickness = 400;
     private double _intermediateWallThickness = 300;
     private double _upperSlabThickness = 400;
@@ -54,6 +57,7 @@ public class ValveRoomViewModel : ViewModelBase
         ValveRoomTypes = new ObservableCollection<string>(new[] { "이토밸브실", "제수밸브실", "공기밸브실" });
         ColumnTypeNames = new ObservableCollection<string>(new[] { "(사용 안 함)" });
         BeamTypeNames = new ObservableCollection<string>(new[] { "(사용 안 함)" });
+        VoidAxes = new ObservableCollection<string>(new[] { "X", "Y" });
         LoadTypeNames();
 
         ResetCommand = new RelayCommand(_ => ApplyPreset());
@@ -64,6 +68,7 @@ public class ValveRoomViewModel : ViewModelBase
     public ObservableCollection<string> ValveRoomTypes { get; }
     public ObservableCollection<string> ColumnTypeNames { get; }
     public ObservableCollection<string> BeamTypeNames { get; }
+    public ObservableCollection<string> VoidAxes { get; }
     public ICommand ResetCommand { get; }
     public ICommand CreateCommand { get; }
     public Action? CloseAction { get; set; }
@@ -82,6 +87,8 @@ public class ValveRoomViewModel : ViewModelBase
             OnPropertyChanged(nameof(IntermediateWallVisibility));
             OnPropertyChanged(nameof(IntermediateSlabVisibility));
             OnPropertyChanged(nameof(SingleHeightVisibility));
+            OnPropertyChanged(nameof(AirValveVisibility));
+            OnPropertyChanged(nameof(PlainConcreteVisibility));
             OnPropertyChanged(nameof(Summary));
             OnPropertyChanged(nameof(PlanImagePath));
             OnPropertyChanged(nameof(SectionImagePath));
@@ -93,6 +100,9 @@ public class ValveRoomViewModel : ViewModelBase
     public double PlainConcreteThickness { get => _plainConcreteThickness; set => SetAndRefresh(ref _plainConcreteThickness, value); }
     public double FoundationThickness { get => _foundationThickness; set => SetAndRefresh(ref _foundationThickness, value); }
     public double FoundationToe { get => _foundationToe; set => SetAndRefresh(ref _foundationToe, value); }
+    public double MainPipeDiameter { get => _mainPipeDiameter; set => SetAndRefresh(ref _mainPipeDiameter, value); }
+    public double FoundationTopToPipeCenterDepth { get => _foundationTopToPipeCenterDepth; set => SetAndRefresh(ref _foundationTopToPipeCenterDepth, value); }
+    public string SelectedVoidAxis { get => _selectedVoidAxis; set => SetAndRefresh(ref _selectedVoidAxis, value); }
     public double OuterWallThickness { get => _outerWallThickness; set => SetAndRefresh(ref _outerWallThickness, value); }
     public double IntermediateWallThickness { get => _intermediateWallThickness; set => SetProperty(ref _intermediateWallThickness, value); }
     public double UpperSlabThickness { get => _upperSlabThickness; set => SetProperty(ref _upperSlabThickness, value); }
@@ -144,6 +154,8 @@ public class ValveRoomViewModel : ViewModelBase
     public Visibility IntermediateWallVisibility => IsMud && HasIntermediateWall ? Visibility.Visible : Visibility.Collapsed;
     public Visibility IntermediateSlabVisibility => IsMud && HasIntermediateSlab ? Visibility.Visible : Visibility.Collapsed;
     public Visibility SingleHeightVisibility => IsMud && HasIntermediateSlab ? Visibility.Collapsed : Visibility.Visible;
+    public Visibility AirValveVisibility => IsAir ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility PlainConcreteVisibility => IsAir ? Visibility.Collapsed : Visibility.Visible;
 
     // TODO: Resources/ValveRoomImages/ 폴더와 "{종류}_평면도.png" 등의 참고도가 아직 없어 현재는 빈 칸으로 표시된다.
     private const string ImageBasePath = "pack://application:,,,/DHBIMWATER.UI;component/Resources/ValveRoomImages/";
@@ -163,7 +175,7 @@ public class ValveRoomViewModel : ViewModelBase
                 ? $"기초 · 외벽 4개 · {(HasIntermediateWall ? "중간벽 · " : string.Empty)}{(HasIntermediateSlab ? "중간슬래브 · " : string.Empty)}상부슬래브"
                 : IsSluice
                     ? $"사각형 기초 · 외벽 4개 · 상부슬래브 · 보 X{BeamCountX}/Y{BeamCountY}개 · 보 교차부 기둥"
-                    : "기초 · 외벽 4개 · 상부슬래브";
+                    : "독립기초 · 본관 관통 Void · 외벽 4개 · 상부슬래브";
 
             return $"{SelectedValveRoomType} · 외벽 외곽 {outerWidth:N0}×{outerLength:N0} mm · " +
                    $"기초 {foundationWidth:N0}×{foundationLength:N0} mm (Toe {FoundationToe:N0} mm, 내부 H {height:N0} mm)\n{members}";
@@ -172,26 +184,34 @@ public class ValveRoomViewModel : ViewModelBase
 
     private bool IsMud => SelectedValveRoomType == "이토밸브실";
     private bool IsSluice => SelectedValveRoomType == "제수밸브실";
+    private bool IsAir => SelectedValveRoomType == "공기밸브실";
 
     private void ApplyPreset()
     {
         if (IsMud)
         {
             _innerWidth = 2500; _innerLength = 4000; _innerHeight = 2500;
+            _foundationToe = 300;
             _hasIntermediateWall = true; _intermediateWallOffset = _innerLength / 2; _hasIntermediateSlab = false;
         }
         else if (IsSluice)
         {
             _innerWidth = 2000; _innerLength = 3000; _innerHeight = 2500;
+            _foundationToe = 300;
         }
         else
         {
             _innerWidth = 1500; _innerLength = 1800; _innerHeight = 2000;
+            _foundationToe = 100; _mainPipeDiameter = 100; _foundationTopToPipeCenterDepth = 250; _selectedVoidAxis = "X";
         }
 
         OnPropertyChanged(nameof(InnerWidth));
         OnPropertyChanged(nameof(InnerLength));
         OnPropertyChanged(nameof(InnerHeight));
+        OnPropertyChanged(nameof(FoundationToe));
+        OnPropertyChanged(nameof(MainPipeDiameter));
+        OnPropertyChanged(nameof(FoundationTopToPipeCenterDepth));
+        OnPropertyChanged(nameof(SelectedVoidAxis));
         OnPropertyChanged(nameof(HasIntermediateWall));
         OnPropertyChanged(nameof(IntermediateWallOffset));
         OnPropertyChanged(nameof(HasIntermediateSlab));
@@ -216,6 +236,12 @@ public class ValveRoomViewModel : ViewModelBase
             return;
         }
 
+        if (IsAir && (MainPipeDiameter <= 0 || FoundationTopToPipeCenterDepth <= 0 || FoundationTopToPipeCenterDepth >= FoundationThickness))
+        {
+            _dialogService.Warn("입력 확인", "공기밸브실 본관 직경은 0보다 크고, 본관 중심 깊이는 기초 두께 범위 안이어야 합니다.");
+            return;
+        }
+
         RequestedCreate = new ValveRoomRequestDto
         {
             RoomType = SelectedValveRoomType,
@@ -231,6 +257,7 @@ public class ValveRoomViewModel : ViewModelBase
             InnerWidth = InnerWidth,
             InnerLength = InnerLength,
             InnerHeight = InnerHeight,
+            AirSpec = IsAir ? new AirValveRoomSpecDto(MainPipeDiameter, FoundationTopToPipeCenterDepth, SelectedVoidAxis) : null,
             // 타입 전용 입력은 선택된 밸브실 타입에 해당하는 쪽만 채운다.
             MudSpec = IsMud
                 ? new MudValveRoomSpecDto(HasIntermediateWall, IntermediateWallOffset, IntermediateWallThickness,

@@ -48,10 +48,10 @@ public class ValveRoomGeometryCalculator
         var centerX = pl.InnerLength / 2;
         var centerY = pl.InnerWidth / 2;
         var baseZ = BaseElevation(dto);
-        var slabs = new List<SlabDefinition>
-        {
-            Slab(dto, centerX, centerY, plainX, plainY, pr.PlainConcreteThickness, baseZ - pr.FoundationThickness, "버림콘크리트")
-        };
+        var slabs = new List<SlabDefinition>();
+        // 공기밸브실은 독립기초만 생성하며 버림콘크리트는 생성하지 않는다.
+        if (d.RoomType != "공기밸브실")
+            slabs.Add(Slab(dto, centerX, centerY, plainX, plainY, pr.PlainConcreteThickness, baseZ - pr.FoundationThickness, "버림콘크리트"));
         // 공기밸브실 기초는 독립기초로 별도 생성한다. 다른 밸브실은 기존 Floor 기초를 유지한다.
         if (d.RoomType != "공기밸브실")
             slabs.Add(Slab(dto, centerX, centerY, foundationX, foundationY, pr.FoundationThickness, baseZ, "기초"));
@@ -72,6 +72,8 @@ public class ValveRoomGeometryCalculator
             new FoundationDefinition
             {
                 Position = new Point3D(plan.InnerLength / 2, plan.InnerWidth / 2, BaseElevation(dto)),
+                Length = plan.InnerLength + dto.ProfileSpecDto.OuterWallThickness * 2 + dto.ProfileSpecDto.FoundationToe * 2,
+                Width = plan.InnerWidth + dto.ProfileSpecDto.OuterWallThickness * 2 + dto.ProfileSpecDto.FoundationToe * 2,
                 Thickness = dto.ProfileSpecDto.FoundationThickness,
                 ElementCode = "VR-F",
                 Zone = dto.DesignConditionDto.RoomType,
@@ -80,14 +82,23 @@ public class ValveRoomGeometryCalculator
         };
     }
 
+    public static AirValveVoidPlacementDefinition CalculateAirValveVoid(ValveRoomGeometryRequestDto dto, AirValveRoomSpecDto air)
+    {
+        var plan = dto.PlanSpecDto;
+        var isYAxis = air.VoidAxis.Equals("Y", StringComparison.OrdinalIgnoreCase);
+        return new AirValveVoidPlacementDefinition(
+            new Point3D(isYAxis ? plan.InnerLength / 2 : 0, isYAxis ? 0 : plan.InnerWidth / 2,
+                BaseElevation(dto) - air.FoundationTopToPipeCenterDepth),
+            air.MainPipeDiameter / 2,
+            isYAxis ? "Y" : "X");
+    }
+
     public static IReadOnlyList<LinearWallDefinition> CalculateWalls(ValveRoomGeometryRequestDto dto)
     {
         var d = dto.DesignConditionDto; var pl = dto.PlanSpecDto; var pr = dto.ProfileSpecDto;
         var t = pr.OuterWallThickness;
         var x0 = -t / 2; var x1 = pl.InnerLength + t / 2;   // 세로(좌우) 벽체 중심선 X (길이 방향)
         var y0 = -t / 2; var y1 = pl.InnerWidth + t / 2;    // 가로(상하) 벽체 중심선 Y (폭 방향)
-        // 외벽끼리 겹침 없이 ㅁ자로 맞물리도록 끝점만 조정한다.
-        // 가로 벽체는 양끝을 t/2 바깥으로 늘려 코너를 덮고, 세로 벽체는 양끝을 t/2 안쪽으로 물려 그 사이에 들어간다.
         var hx0 = x0 - t / 2; var hx1 = x1 + t / 2;         // 가로 벽체 끝점 X (바깥으로)
         var vy0 = y0 + t / 2; var vy1 = y1 - t / 2;         // 세로 벽체 끝점 Y (안쪽으로)
         var walls = new List<LinearWallDefinition>();
@@ -101,8 +112,6 @@ public class ValveRoomGeometryCalculator
             foreach (var (start, end) in outerCorners)
             {
                 walls.Add(Wall(dto, start, end, pr.OuterWallThickness, slabMud.Floor1InnerHeight, "외벽", isExterior: true));
-                // BaseOffset은 기준 레벨(밸브실 기초 상부) 기준 상대 오프셋이므로 절대표고를 더하지 않는다.
-                // 2F 벽 높이는 2F 안목높이 그대로이며, 상단은 상부슬래브 하단과 맞물린다.
                 walls.Add(Wall(dto, start, end, pr.OuterWallThickness, slabMud.Floor2InnerHeight, "외벽", isExterior: true,
                     baseOffset: slabMud.Floor1InnerHeight + slabMud.IntermediateSlabThickness));
             }
@@ -113,7 +122,7 @@ public class ValveRoomGeometryCalculator
         }
 
         if (d.RoomType != "이토밸브실" || dto.MudSpec is not { HasIntermediateWall: true } mud) return walls;
-        // 중간벽 1개. 입력 offset은 좌측 외벽 내측(X=0)에서 중간벽 좌측면까지의 안목거리이므로 중심선으로 환산한다.
+        // 중간벽 1개. 입력 offset은 좌측 외벽 내측(X=0)에서 중간벽 좌측면까지의 안목거리이므로 중심선으로 환산
         var mx = mud.IntermediateWallOffset + mud.IntermediateWallThickness / 2;
         var mStart = new Point3D(mx, 0, 0);
         var mEnd = new Point3D(mx, pl.InnerWidth, 0);
@@ -221,9 +230,9 @@ public class ValveRoomGeometryCalculator
     private static IReadOnlyList<Point2D> Rectangle(double x, double y, double width, double length) =>
         new[] { new Point2D(x - width / 2, y - length / 2), new Point2D(x + width / 2, y - length / 2), new Point2D(x + width / 2, y + length / 2), new Point2D(x - width / 2, y + length / 2) };
 
-    // 기초 상단~상부슬래브 상단 높이. 중간슬래브가 있으면 1F 안목 + 중간슬래브 두께 + 2F 안목 + 상부슬래브 두께.
+    // 기초 상단~상부슬래브 상단 높이. 입력 내부 높이는 상부슬래브 하단까지이며, 중간슬래브가 있으면 1F 안목 + 중간슬래브 두께 + 2F 안목 + 상부슬래브 두께.
     private static double RoomHeight(ValveRoomGeometryRequestDto dto) =>
         dto.MudSpec is { HasIntermediateSlab: true } mud
             ? mud.Floor1InnerHeight + mud.IntermediateSlabThickness + mud.Floor2InnerHeight + dto.ProfileSpecDto.UpperSlabThickness
-            : dto.ProfileSpecDto.InnerHeight;
+            : dto.ProfileSpecDto.InnerHeight + dto.ProfileSpecDto.UpperSlabThickness;
 }

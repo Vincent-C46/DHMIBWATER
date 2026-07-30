@@ -1,11 +1,14 @@
 using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Structure;
+using Autodesk.Revit.UI;
 using DHBIMWATER.Application.Interfaces;
+using DHBIMWATER.Application.Services;
 using DHBIMWATER.Core.Structures;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling;
 
-/// <summary>문서에 있는 첫 독립기초를 기준으로 공기밸브실용 유형과 인스턴스를 만든다.</summary>
+/// <summary>문서에 로드된 독립기초 유형으로 공기밸브실용 유형과 인스턴스를 만든다.</summary>
 public sealed class RevitFoundationCommandRepo : IFoundationCommandRepo
 {
     private readonly Func<Document?> _doc;
@@ -15,27 +18,46 @@ public sealed class RevitFoundationCommandRepo : IFoundationCommandRepo
     public int CreateFoundationFromFirstInstance(FoundationDefinition definition)
     {
         var doc = _doc() ?? throw new InvalidOperationException("활성 Revit 문서를 찾을 수 없습니다.");
-        var source = new FilteredElementCollector(doc)
+        var sourceType = new FilteredElementCollector(doc)
             .OfCategory(BuiltInCategory.OST_StructuralFoundation)
-            .WhereElementIsNotElementType()
-            .OfType<FamilyInstance>()
-            .OrderBy(instance => instance.Id.Value)
-            .FirstOrDefault()
-            ?? throw new InvalidOperationException("공기밸브실을 만들기 전에 복제 기준이 될 독립기초를 하나 배치해야 합니다.");
+            .WhereElementIsElementType()
+            .OfType<FamilySymbol>()
+            .OrderBy(symbol => symbol.Id.Value)
+            .FirstOrDefault();
+        if (sourceType == null)
+        {
+            TaskDialog.Show("독립기초 유형 없음", "공기밸브실을 만들려면 독립기초 패밀리 유형을 하나 이상 로드해야 합니다.");
+            return 0;
+        }
 
-        var targetType = GetOrCreateAirValveFoundationType(doc, source.Symbol, definition.Thickness);
-        var sourceBox = source.get_BoundingBox(null)
-            ?? throw new InvalidOperationException("복제 기준 독립기초의 위치 정보를 읽을 수 없습니다.");
-        var sourceCenter = (sourceBox.Min + sourceBox.Max) * 0.5;
+        var targetType = GetOrCreateAirValveFoundationType(doc, sourceType, definition);
+        if (!targetType.IsActive)
+        {
+            targetType.Activate();
+            doc.Regenerate();
+        }
+
+        var level = new FilteredElementCollector(doc)
+            .OfClass(typeof(Level))
+            .Cast<Level>()
+            .FirstOrDefault(item => item.Name.Equals(ValveRoomGeometryCalculator.BaseLevelName, StringComparison.OrdinalIgnoreCase))
+            ?? throw new InvalidOperationException($"Level '{ValveRoomGeometryCalculator.BaseLevelName}'를 찾을 수 없습니다.");
         var targetTop = UC.MmToFt(definition.Position.Z);
-        var translation = new XYZ(
-            UC.MmToFt(definition.Position.X) - sourceCenter.X,
-            UC.MmToFt(definition.Position.Y) - sourceCenter.Y,
-            targetTop - sourceBox.Max.Z);
-
-        var copiedId = ElementTransformUtils.CopyElement(doc, source.Id, translation).Single();
-        var foundation = (FamilyInstance)doc.GetElement(copiedId);
-        foundation.ChangeTypeId(targetType.Id);
+        var foundation = doc.Create.NewFamilyInstance(
+            new XYZ(UC.MmToFt(definition.Position.X), UC.MmToFt(definition.Position.Y), level.Elevation),
+            targetType,
+            level,
+            StructuralType.Footing);
+        var rotationCenter = new XYZ(UC.MmToFt(definition.Position.X), UC.MmToFt(definition.Position.Y), level.Elevation);
+        ElementTransformUtils.RotateElement(
+            doc,
+            foundation.Id,
+            Line.CreateBound(rotationCenter, rotationCenter + XYZ.BasisZ),
+            -Math.PI / 2);
+        doc.Regenerate();
+        var foundationBox = foundation.get_BoundingBox(null)
+            ?? throw new InvalidOperationException("생성한 독립기초의 위치 정보를 읽을 수 없습니다.");
+        ElementTransformUtils.MoveElement(doc, foundation.Id, XYZ.BasisZ * (targetTop - foundationBox.Max.Z));
         foundation.LookupParameter("DH_Addin")?.Set("DHBIMWATER");
         foundation.LookupParameter("DH_Category")?.Set("독립기초");
         foundation.LookupParameter("DH_ElementCode")?.Set(definition.ElementCode);
@@ -44,9 +66,9 @@ public sealed class RevitFoundationCommandRepo : IFoundationCommandRepo
         return (int)foundation.Id.Value;
     }
 
-    private static FamilySymbol GetOrCreateAirValveFoundationType(Document doc, FamilySymbol sourceType, double thicknessMm)
+    private static FamilySymbol GetOrCreateAirValveFoundationType(Document doc, FamilySymbol sourceType, FoundationDefinition definition)
     {
-        var typeName = $"공기밸브실 기초 - {thicknessMm:0.##}mm";
+        var typeName = $"공기밸브실 기초 - {definition.Length:0.##}x{definition.Width:0.##}x{definition.Thickness:0.##}mm";
         var existing = new FilteredElementCollector(doc)
             .OfCategory(BuiltInCategory.OST_StructuralFoundation)
             .WhereElementIsElementType()
@@ -55,11 +77,18 @@ public sealed class RevitFoundationCommandRepo : IFoundationCommandRepo
         if (existing != null) return existing;
 
         var duplicated = (FamilySymbol)sourceType.Duplicate(typeName);
-        var thicknessParameter = duplicated.get_Parameter(BuiltInParameter.STRUCTURAL_FOUNDATION_THICKNESS);
-        if (thicknessParameter == null || thicknessParameter.IsReadOnly)
-            throw new InvalidOperationException("복제 기준 독립기초 유형에서 기초 두께 파라미터를 찾을 수 없습니다.");
-
-        thicknessParameter.Set(UC.MmToFt(thicknessMm));
+        SetTypeDimension(duplicated, BuiltInParameter.STRUCTURAL_FOUNDATION_LENGTH, definition.Length, "길이");
+        SetTypeDimension(duplicated, BuiltInParameter.STRUCTURAL_FOUNDATION_WIDTH, definition.Width, "폭");
+        SetTypeDimension(duplicated, BuiltInParameter.STRUCTURAL_FOUNDATION_THICKNESS, definition.Thickness, "두께");
         return duplicated;
+    }
+
+    private static void SetTypeDimension(FamilySymbol symbol, BuiltInParameter parameterId, double valueMm, string name)
+    {
+        var parameter = symbol.get_Parameter(parameterId);
+        if (parameter == null || parameter.IsReadOnly)
+            throw new InvalidOperationException($"독립기초 유형에서 기초 {name} 파라미터를 찾을 수 없습니다.");
+
+        parameter.Set(UC.MmToFt(valueMm));
     }
 }

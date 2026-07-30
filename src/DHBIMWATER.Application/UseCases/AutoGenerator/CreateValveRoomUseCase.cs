@@ -13,6 +13,7 @@ public sealed class CreateValveRoomUseCase
     private readonly ISlabCommandRepo _slabCommand;
     private readonly IProjectLocationCommandRepo _projectLocationCommand;
     private readonly IFoundationCommandRepo _foundationCommand;
+    private readonly IAirValveVoidCommandRepo _airValveVoidCommand;
     private readonly IWallCommandRepo _wallCommand;
     private readonly IBeamCommandRepo _beamCommand;
     private readonly IColumnCommandRepo _columnCommand;
@@ -20,10 +21,10 @@ public sealed class CreateValveRoomUseCase
 
     public CreateValveRoomUseCase(ITransactionContext transaction, ILevelQueryRepo levelQuery, ILevelCommandRepo levelCommand,
         IProjectLocationCommandRepo projectLocationCommand,
-        ISlabCommandRepo slabCommand, IFoundationCommandRepo foundationCommand, IWallCommandRepo wallCommand, IBeamCommandRepo beamCommand,
+        ISlabCommandRepo slabCommand, IFoundationCommandRepo foundationCommand, IAirValveVoidCommandRepo airValveVoidCommand, IWallCommandRepo wallCommand, IBeamCommandRepo beamCommand,
         IColumnCommandRepo columnCommand, IDialogService dialog)
     {
-        _transaction = transaction; _levelQuery = levelQuery; _levelCommand = levelCommand; _projectLocationCommand = projectLocationCommand; _slabCommand = slabCommand; _foundationCommand = foundationCommand;
+        _transaction = transaction; _levelQuery = levelQuery; _levelCommand = levelCommand; _projectLocationCommand = projectLocationCommand; _slabCommand = slabCommand; _foundationCommand = foundationCommand; _airValveVoidCommand = airValveVoidCommand;
         _wallCommand = wallCommand; _beamCommand = beamCommand; _columnCommand = columnCommand; _dialog = dialog;
     }
 
@@ -45,7 +46,12 @@ public sealed class CreateValveRoomUseCase
                     0,
                     request.TrueNorthToProjectNorthClockwiseDegrees);
                 foreach (var slab in ValveRoomGeometryCalculator.CalculateSlabs(dto)) _slabCommand.CreateSlab(slab);
-                foreach (var foundation in ValveRoomGeometryCalculator.CalculateFoundations(dto)) _foundationCommand.CreateFoundationFromFirstInstance(foundation);
+                foreach (var foundation in ValveRoomGeometryCalculator.CalculateFoundations(dto))
+                {
+                    var foundationId = _foundationCommand.CreateFoundationFromFirstInstance(foundation);
+                    if (request.AirSpec is { } air)
+                        _airValveVoidCommand.CreateAirValveFoundationVoid(foundationId, ValveRoomGeometryCalculator.CalculateAirValveVoid(dto, air));
+                }
                 foreach (var wall in ValveRoomGeometryCalculator.CalculateWalls(dto)) _wallCommand.CreateLinearWall(wall);
                 foreach (var beam in ValveRoomGeometryCalculator.CalculateBeams(dto)) _beamCommand.CreateBeam(beam);
                 foreach (var column in ValveRoomGeometryCalculator.CalculateColumns(dto)) _columnCommand.CreateColumn(column);

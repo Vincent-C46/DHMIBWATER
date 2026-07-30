@@ -23,6 +23,8 @@ public record ValveRoomRequestDto
     public double InnerWidth { get; init; }
     public double InnerLength { get; init; }
     public double InnerHeight { get; init; }
+    /// <summary>RoomType이 "공기밸브실"일 때만 값이 채워진다.</summary>
+    public AirValveRoomSpecDto? AirSpec { get; init; }
     /// <summary>RoomType이 "이토밸브실"일 때만 값이 채워진다.</summary>
     public MudValveRoomSpecDto? MudSpec { get; init; }
     /// <summary>RoomType이 "제수밸브실"일 때만 값이 채워진다.</summary>
