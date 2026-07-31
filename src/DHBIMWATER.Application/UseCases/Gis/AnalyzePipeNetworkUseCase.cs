@@ -1,0 +1,128 @@
+using System.Globalization;
+using System.Text.RegularExpressions;
+using DHBIMWATER.Application.DTOs.Gis;
+using DHBIMWATER.Application.Interfaces.Gis;
+using DHBIMWATER.Core.Gis;
+
+namespace DHBIMWATER.Application.UseCases.Gis;
+
+/// <summary>
+/// 관로 폴리선을 위상 그래프로 만들어 절점을 분류하고 곡관을 판정한다.
+/// 읽기 전용이므로 ITransactionContext를 주입받지 않는다.
+/// </summary>
+public sealed class AnalyzePipeNetworkUseCase
+{
+    // TODO: 파일 읽기·속성 해석이 PlaceAlignmentFamilyUseCase와 동일하다. 공용 헬퍼로 뽑는 편이 낫다.
+    private static readonly Regex CombinedDiameter = new("^(?<kind>.*?)_D(?<dia>\\d+)$", RegexOptions.Compiled);
+
+    private readonly IReadOnlyList<IAlignmentSourceReader> _readers;
+    private readonly IBendSettingsRepo _settingsRepo;
+
+    public AnalyzePipeNetworkUseCase(IEnumerable<IAlignmentSourceReader> readers, IBendSettingsRepo settingsRepo)
+    { _readers = readers.ToList(); _settingsRepo = settingsRepo; }
+
+    public PipeNetworkDiagnosisResult Execute(PipeNetworkDiagnosisRequest request)
+    {
+        if (request.SnapToleranceMm <= 0) throw new ArgumentOutOfRangeException(nameof(request.SnapToleranceMm));
+
+        var warnings = new List<string>();
+        var alignments = new List<PipeAlignment>();
+        foreach (var file in request.Files)
+        {
+            var reader = _readers.FirstOrDefault(r => r.CanRead(file.FilePath)) ?? throw new InvalidOperationException($"'{file.FilePath}' 파일을 읽을 수 있는 리더가 없습니다.");
+            var read = reader.Read(file.FilePath); warnings.AddRange(read.Warnings);
+            alignments.AddRange(read.Features.Select(x => ApplyAttributes(x, file.PipeKind, request.ParseCombinedDiameter, warnings)));
+        }
+
+        var settings = _settingsRepo.Load();
+        if (settings is null)
+        {
+            settings = BendSettings.Default;
+            warnings.Add("허용굴곡 설정이 저장되지 않아 기본값으로 판정했습니다.");
+        }
+
+        var graph = PipeNetworkBuilder.Build(alignments, request.SnapToleranceMm / 1000d);
+        var nodes = PipeNetworkClassifier.Classify(graph);
+        var resolutions = BendResolver.ResolveAll(nodes, settings, request.Form).ToDictionary(x => x.NodeId);
+
+        var standard = resolutions.Values.Count(x => x.Kind == BendResolutionKind.Standard);
+        var none = resolutions.Values.Count(x => x.Kind == BendResolutionKind.None);
+        var unresolved = resolutions.Values.Count(x => x.Kind == BendResolutionKind.Unresolved);
+        var conflicts = resolutions.Values.Where(x => !x.IsSizeConsistent).ToList();
+
+        if (standard > 0 && resolutions.Values.All(x => !x.HasFittingSize))
+            warnings.Add("곡관 치수가 입력되지 않아 직관 구간 차감이 적용되지 않습니다.");
+
+        foreach (var conflict in conflicts)
+            warnings.Add($"절점 {conflict.NodeId}: 곡관 치수가 성립하지 않습니다(t={conflict.LayingLengthMm:0.#}mm < 접선길이 T={conflict.TangentLengthMm:0.#}mm). 호가 곡관 몸통 밖으로 나갑니다.");
+
+        warnings.AddRange(FindAdjacentInterference(graph, resolutions));
+
+        return new PipeNetworkDiagnosisResult(
+            graph.Nodes.Count,
+            graph.Edges.Count,
+            nodes.GroupBy(x => x.Kind.ToString()).ToDictionary(g => g.Key, g => g.Count()),
+            standard, none, unresolved,
+            conflicts.Count,
+            BuildAttention(nodes, resolutions),
+            warnings);
+    }
+
+    /// <summary>
+    /// 인접한 두 절점의 곡관이 겹치는지 본다. 간선 길이보다 양끝 t의 합이 크면 그 사이 직관 구간이 음수가 된다.
+    /// </summary>
+    private static IEnumerable<string> FindAdjacentInterference(PipeNetworkGraph graph, IReadOnlyDictionary<int, BendResolution> resolutions)
+    {
+        foreach (var edge in graph.Edges)
+        {
+            var head = LayingLength(resolutions, edge.StartNodeId);
+            var tail = LayingLength(resolutions, edge.EndNodeId);
+            if (head + tail <= 0) continue;
+
+            var lengthMm = edge.Length * 1000d;
+            if (head + tail > lengthMm)
+                yield return $"절점 {edge.StartNodeId}–{edge.EndNodeId}: 구간 길이 {lengthMm:0.#}mm 가 양끝 곡관 연장 합계 {head + tail:0.#}mm 보다 짧아 직관이 들어갈 자리가 없습니다.";
+        }
+    }
+
+    private static double LayingLength(IReadOnlyDictionary<int, BendResolution> resolutions, int nodeId)
+        => resolutions.TryGetValue(nodeId, out var r) && r.Kind == BendResolutionKind.Standard ? r.LayingLengthMm : 0d;
+
+    /// <summary>사용자가 눈으로 확인해야 하는 절점만 담는다. 정상 Tee/Cross/Straight는 집계에만 반영한다.</summary>
+    private static IReadOnlyList<PipeNetworkNodeReport> BuildAttention(IReadOnlyList<NodeClassification> nodes, IReadOnlyDictionary<int, BendResolution> resolutions)
+    {
+        var reports = new List<(int Order, PipeNetworkNodeReport Report)>();
+        foreach (var node in nodes)
+        {
+            resolutions.TryGetValue(node.NodeId, out var bend);
+            var order = node.Kind switch
+            {
+                _ when bend is { Kind: BendResolutionKind.Unresolved } => 0,
+                _ when bend is { IsSizeConsistent: false } => 1,
+                NodeKind.TooManyBranches => 2,
+                NodeKind.EndPoint => 3,
+                _ => -1
+            };
+            if (order < 0) continue;
+            reports.Add((order, ToReport(node, bend)));
+        }
+        return reports.OrderBy(x => x.Order).ThenBy(x => x.Report.NodeId).Select(x => x.Report).ToList();
+    }
+
+    private static PipeNetworkNodeReport ToReport(NodeClassification node, BendResolution? bend) => new(
+        node.NodeId, node.Kind.ToString(), node.Degree,
+        node.Position.X, node.Position.Y, node.Position.Z,
+        node.DeflectionDeg, node.MaxDiameterMm, node.MinDiameterMm, node.PipeKind,
+        bend?.Kind.ToString() ?? string.Empty,
+        bend?.StandardAngleDeg ?? 0d, bend?.ResidualDeg ?? 0d,
+        bend?.LayingLengthMm ?? 0d, bend?.CenterlineRadiusMm ?? 0d, bend?.TangentLengthMm ?? 0d,
+        bend?.IsSizeConsistent ?? true);
+
+    private static PipeAlignment ApplyAttributes(PipeAlignment alignment, string fileKind, bool parse, List<string> warnings)
+    {
+        if (!parse || !alignment.Attributes.TryGetValue("Diameter", out var raw)) return alignment with { PipeKind = fileKind };
+        var match = CombinedDiameter.Match(raw);
+        if (!match.Success) { warnings.Add($"{alignment.SourceFile} 레코드 {alignment.RecordNumber}: Diameter '{raw}' 형식을 해석하지 못했습니다."); return alignment with { PipeKind = raw }; }
+        return alignment with { PipeKind = string.IsNullOrWhiteSpace(match.Groups["kind"].Value) ? fileKind : match.Groups["kind"].Value, DiameterMm = double.Parse(match.Groups["dia"].Value, CultureInfo.InvariantCulture) };
+    }
+}

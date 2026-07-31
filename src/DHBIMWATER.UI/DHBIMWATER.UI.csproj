@@ -29,6 +29,7 @@
 	  <None Remove="Resources\Icons\revit.png" />
 	  <None Remove="Resources\Icons\Sheet.png" />
 	  <None Remove="Resources\Icons\Trash.png" />
+	  <None Remove="Resources\Icons\valve.png" />
 	  <None Remove="Resources\Icons\ViewDirection0.png" />
 	  <None Remove="Resources\Icons\ViewDirection1.png" />
 	  <None Remove="Resources\Icons\ViewDirection2.png" />
@@ -85,6 +86,9 @@
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Resource>
 	  <Resource Include="Resources\Icons\pipe_2.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Resource>
+	  <Resource Include="Resources\Icons\valve.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Resource>
 	  <Resource Include="Resources\PumpStationImages\TYPE-1_종단개요.png">

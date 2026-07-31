@@ -24,6 +24,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<PipeLayoutView>();
         services.AddTransient<PipingView>();
         services.AddTransient<AlignmentFamilyPlacementView>();
+        services.AddTransient<PipeNetworkDiagnosisView>();
 
         // Utilities
         services.AddTransient<ExParamsView>();
@@ -41,6 +42,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<PipeLayoutViewModel>();
         services.AddTransient<PipingViewModel>();
         services.AddTransient<AlignmentFamilyPlacementViewModel>();
+        services.AddTransient<PipeNetworkDiagnosisViewModel>();
 
         // Utilities
         services.AddTransient<ExParamsViewModel>();

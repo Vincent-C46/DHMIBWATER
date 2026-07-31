@@ -18,6 +18,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ClassifyExteriorWallsUseCase>();
         services.AddTransient<ImportPipeAlignmentUseCase>();
         services.AddTransient<PlaceAlignmentFamilyUseCase>();
+        services.AddTransient<AnalyzePipeNetworkUseCase>();
+        services.AddTransient<SaveBendSettingsUseCase>();
 
         return services;
     }

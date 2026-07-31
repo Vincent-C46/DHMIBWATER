@@ -4,6 +4,7 @@ using DHBIMWATER.Core.Parameters;
 using DHBIMWATER.Infrastructure.Repositories.DB;
 using DHBIMWATER.Infrastructure.Repositories.Gis;
 using DHBIMWATER.Infrastructure.Repositories.Mock;
+using DHBIMWATER.Infrastructure.Repositories.Revit.Gis;
 using DHBIMWATER.Infrastructure.Repositories.Revit.Modeling;
 using DHBIMWATER.Infrastructure.Repositories.Revit.Piping;
 using DHBIMWATER.Infrastructure.Repositories.Revit;
@@ -57,6 +58,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IAlignmentSourceReader, DxfAlignmentReader>();
         services.AddTransient<IAlignmentBeamPlacementRepo, RevitAlignmentBeamPlacementRepo>();
         services.AddTransient<IAlignmentPipePlacementRepo, RevitAlignmentPipePlacementRepo>();
+        services.AddTransient<IBendSettingsRepo, RevitBendSettingsRepo>();
         services.AddTransient<IGenericModelRepository, RevitGenericModelRepository>();
         services.AddTransient<IExteriorWallClassifierRepo, RevitExteriorWallClassifierRepo>();
         #endregion
@@ -105,6 +107,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IAlignmentSourceReader, DxfAlignmentReader>();
         services.AddTransient<IAlignmentBeamPlacementRepo, RevitAlignmentBeamPlacementRepo>();
         services.AddTransient<IAlignmentPipePlacementRepo, RevitAlignmentPipePlacementRepo>();
+        services.AddTransient<IBendSettingsRepo, MockBendSettingsRepo>();
         #endregion
 
         services.AddTransient<IExcelReader, ExcelReader>();

@@ -49,13 +49,10 @@ public class ValveRoomGeometryCalculator
         var centerY = pl.InnerWidth / 2;
         var baseZ = BaseElevation(dto);
         var slabs = new List<SlabDefinition>();
-        // 공기밸브실은 독립기초만 생성하며 버림콘크리트는 생성하지 않는다.
         if (d.RoomType != "공기밸브실")
             slabs.Add(Slab(dto, centerX, centerY, plainX, plainY, pr.PlainConcreteThickness, baseZ - pr.FoundationThickness, "버림콘크리트"));
-        // 공기밸브실 기초는 독립기초로 별도 생성한다. 다른 밸브실은 기존 Floor 기초를 유지한다.
         if (d.RoomType != "공기밸브실")
             slabs.Add(Slab(dto, centerX, centerY, foundationX, foundationY, pr.FoundationThickness, baseZ, "기초"));
-        // 이토밸브실 - 중간슬래브 추가. ElevationZ는 슬래브 상단면(=2F 바닥)이므로 1F 안목높이에 슬래브 두께를 더한다.
         if (d.RoomType == "이토밸브실" && dto.MudSpec is { HasIntermediateSlab: true } mud)
             slabs.Add(Slab(dto, centerX, centerY, outerX, outerY, mud.IntermediateSlabThickness, baseZ + mud.Floor1InnerHeight + mud.IntermediateSlabThickness, "중간슬래브"));
         slabs.Add(Slab(dto, centerX, centerY, outerX, outerY, pr.UpperSlabThickness, TopElevation(dto), "상부슬래브"));

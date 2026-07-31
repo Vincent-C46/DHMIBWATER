@@ -35,7 +35,8 @@ public sealed record NodeClassification(
     int Degree,
     double DeflectionDeg,
     double MaxDiameterMm,
-    double MinDiameterMm)
+    double MinDiameterMm,
+    string PipeKind)
 {
     public bool DiameterChanged => MaxDiameterMm - MinDiameterMm > 1e-9;
 }
@@ -54,9 +55,10 @@ public static class PipeNetworkClassifier
             var diameters = node.Incidences.Select(x => graph.Edges[x.EdgeId].DiameterMm).ToList();
             var max = diameters.Count == 0 ? 0 : diameters.Max();
             var min = diameters.Count == 0 ? 0 : diameters.Min();
+            var pipeKind = node.Incidences.Select(x => graph.Edges[x.EdgeId]).OrderByDescending(x => x.DiameterMm).FirstOrDefault()?.PipeKind ?? string.Empty;
             var deflection = node.Degree == 2 ? DeflectionDegrees(graph, node) : 0d;
             var kind = Resolve(node.Degree, deflection, max - min > 1e-9);
-            result.Add(new NodeClassification(node.Id, node.Position, kind, node.Degree, deflection, max, min));
+            result.Add(new NodeClassification(node.Id, node.Position, kind, node.Degree, deflection, max, min, pipeKind));
         }
         return result;
     }
