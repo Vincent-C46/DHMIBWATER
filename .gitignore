@@ -74,13 +74,3 @@ docs/05_수량산출로직.md
 /docs/부재별탭_ElementCode_정렬_계획.md
 *.md
 *.html
-
-# 위 *.md 규칙의 예외 — 이 문서들만 추적한다.
-!docs/01_기본셋팅.md
-!docs/02_컨트롤등록.md
-!docs/03_뷰모델구현.md
-!docs/04_Github.md
-!installer/README.md
-!src/DHBIMWATER.Application/README.md
-!src/DHBIMWATER.Core/README.md
-!src/DHBIMWATER.Infrastructure/README.md
