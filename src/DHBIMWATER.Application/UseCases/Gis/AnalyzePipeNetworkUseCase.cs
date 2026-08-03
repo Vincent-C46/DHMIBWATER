@@ -1,6 +1,5 @@
-using System.Globalization;
-using System.Text.RegularExpressions;
 using DHBIMWATER.Application.DTOs.Gis;
+using DHBIMWATER.Application.Gis;
 using DHBIMWATER.Application.Interfaces.Gis;
 using DHBIMWATER.Core.Gis;
 
@@ -12,27 +11,18 @@ namespace DHBIMWATER.Application.UseCases.Gis;
 /// </summary>
 public sealed class AnalyzePipeNetworkUseCase
 {
-    // TODO: 파일 읽기·속성 해석이 PlaceAlignmentFamilyUseCase와 동일하다. 공용 헬퍼로 뽑는 편이 낫다.
-    private static readonly Regex CombinedDiameter = new("^(?<kind>.*?)_D(?<dia>\\d+)$", RegexOptions.Compiled);
-
-    private readonly IReadOnlyList<IAlignmentSourceReader> _readers;
+    private readonly AlignmentSourceLoader _loader;
     private readonly IBendSettingsRepo _settingsRepo;
 
-    public AnalyzePipeNetworkUseCase(IEnumerable<IAlignmentSourceReader> readers, IBendSettingsRepo settingsRepo)
-    { _readers = readers.ToList(); _settingsRepo = settingsRepo; }
+    public AnalyzePipeNetworkUseCase(AlignmentSourceLoader loader, IBendSettingsRepo settingsRepo)
+    { _loader = loader; _settingsRepo = settingsRepo; }
 
     public PipeNetworkDiagnosisResult Execute(PipeNetworkDiagnosisRequest request)
     {
         if (request.SnapToleranceMm <= 0) throw new ArgumentOutOfRangeException(nameof(request.SnapToleranceMm));
 
-        var warnings = new List<string>();
-        var alignments = new List<PipeAlignment>();
-        foreach (var file in request.Files)
-        {
-            var reader = _readers.FirstOrDefault(r => r.CanRead(file.FilePath)) ?? throw new InvalidOperationException($"'{file.FilePath}' 파일을 읽을 수 있는 리더가 없습니다.");
-            var read = reader.Read(file.FilePath); warnings.AddRange(read.Warnings);
-            alignments.AddRange(read.Features.Select(x => ApplyAttributes(x, file.PipeKind, request.ParseCombinedDiameter, warnings)));
-        }
+        var loaded = _loader.Load(request.Files);
+        var warnings = loaded.Warnings.ToList();
 
         var settings = _settingsRepo.Load();
         if (settings is null)
@@ -41,7 +31,7 @@ public sealed class AnalyzePipeNetworkUseCase
             warnings.Add("허용굴곡 설정이 저장되지 않아 기본값으로 판정했습니다.");
         }
 
-        var graph = PipeNetworkBuilder.Build(alignments, request.SnapToleranceMm / 1000d);
+        var graph = PipeNetworkBuilder.Build(loaded.Alignments, request.SnapToleranceMm / 1000d);
         var nodes = PipeNetworkClassifier.Classify(graph);
         var resolutions = BendResolver.ResolveAll(nodes, settings, request.Form).ToDictionary(x => x.NodeId);
 
@@ -118,11 +108,4 @@ public sealed class AnalyzePipeNetworkUseCase
         bend?.LayingLengthMm ?? 0d, bend?.CenterlineRadiusMm ?? 0d, bend?.TangentLengthMm ?? 0d,
         bend?.IsSizeConsistent ?? true);
 
-    private static PipeAlignment ApplyAttributes(PipeAlignment alignment, string fileKind, bool parse, List<string> warnings)
-    {
-        if (!parse || !alignment.Attributes.TryGetValue("Diameter", out var raw)) return alignment with { PipeKind = fileKind };
-        var match = CombinedDiameter.Match(raw);
-        if (!match.Success) { warnings.Add($"{alignment.SourceFile} 레코드 {alignment.RecordNumber}: Diameter '{raw}' 형식을 해석하지 못했습니다."); return alignment with { PipeKind = raw }; }
-        return alignment with { PipeKind = string.IsNullOrWhiteSpace(match.Groups["kind"].Value) ? fileKind : match.Groups["kind"].Value, DiameterMm = double.Parse(match.Groups["dia"].Value, CultureInfo.InvariantCulture) };
-    }
 }

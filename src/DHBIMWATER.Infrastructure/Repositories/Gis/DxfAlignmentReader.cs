@@ -17,7 +17,9 @@ public sealed class DxfAlignmentReader : IAlignmentSourceReader
         var features = entities.Select((x, i) => new PipeAlignment(x.Vertices, string.Empty, 0, Path.GetFileName(filePath), (i + 1).ToString(), x.Attributes)).ToList();
         var warnings = features.Count == 0 ? new List<string> { "POLYLINE 또는 LWPOLYLINE 엔티티를 찾지 못했습니다. DWG 파일이 아닌 ASCII DXF인지 확인하세요." } : new List<string>();
         var extent = features.SelectMany(x => x.Vertices).ToList();
-        return new ShapefileReadResult(features, Array.Empty<ShapefileFieldInfo>(), extent.Count == 0 ? ShapefileExtent.Empty : new ShapefileExtent(extent.Min(x => x.X), extent.Min(x => x.Y), extent.Max(x => x.X), extent.Max(x => x.Y), extent.Min(x => x.Z), extent.Max(x => x.Z)), null, null, "UTF-8", features.Count, extent.Count, features.Sum(x => Math.Max(0, x.Vertices.Count - 1)), warnings, features.FirstOrDefault()?.Attributes);
+        var fields = features.SelectMany(x => x.Attributes.Keys).Distinct(StringComparer.OrdinalIgnoreCase)
+            .Select(x => new ShapefileFieldInfo(x, 'C', 0, 0)).ToList();
+        return new ShapefileReadResult(features, fields, extent.Count == 0 ? ShapefileExtent.Empty : new ShapefileExtent(extent.Min(x => x.X), extent.Min(x => x.Y), extent.Max(x => x.X), extent.Max(x => x.Y), extent.Min(x => x.Z), extent.Max(x => x.Z)), null, null, "UTF-8", features.Count, extent.Count, features.Sum(x => Math.Max(0, x.Vertices.Count - 1)), warnings, features.FirstOrDefault()?.Attributes);
     }
 }
 
@@ -45,14 +47,19 @@ internal static class DxfGeometryReader
     }
     private static List<Point3D> ReadLwVertices(IReadOnlyList<(string Code, string Value)> pairs)
     {
-        var result = new List<Point3D>(); double? x = null, y = null; var z = 0d;
+        // LWPOLYLINE은 평면 폴리선이라 정점별 Z(30)를 갖지 않고 엔티티 단위 표고(38)를 사용한다.
+        // 38은 정점(10/20)보다 앞에 오는 것이 표준이지만, 순서에 의존하지 않도록 먼저 스캔한다.
+        var elevation = pairs.Where(p => p.Code == "38").Select(p => Number(p.Value)).DefaultIfEmpty(0d).First();
+        var result = new List<Point3D>(); double? x = null, y = null; var z = elevation;
         foreach (var pair in pairs)
         {
             if (pair.Code == "10") { if (x.HasValue && y.HasValue) result.Add(new Point3D(x.Value, y.Value, z)); x = Number(pair.Value); y = null; }
+            // 30은 표준 LWPOLYLINE에는 없지만 일부 변환기가 내보내므로 있으면 표고보다 우선 적용
             else if (pair.Code == "20") y = Number(pair.Value); else if (pair.Code == "30") z = Number(pair.Value);
         }
         if (x.HasValue && y.HasValue) result.Add(new Point3D(x.Value, y.Value, z)); return result;
     }
+    // TODO: bulge(42) 미처리 — 호 구간이 직선 현으로 단순화되어 곡관 진단 결과에 영향 가능
     private static List<Point3D> ReadVertices(IReadOnlyList<(string Code, string Value)> pairs)
     {
         var result = new List<Point3D>();
@@ -66,10 +73,11 @@ internal static class DxfGeometryReader
     }
     private static IReadOnlyDictionary<string, string> ReadAttributes(IReadOnlyList<(string Code, string Value)> pairs)
     {
-        var xdata = pairs.Where(x => x.Code == "1000").Select(x => x.Value).ToList(); string? kind = null, diameter = null;
+        var xdata = pairs.Where(x => x.Code == "1000").Select(x => x.Value).ToList();
+        var attributes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (var text in xdata) foreach (var part in text.Split(',', StringSplitOptions.RemoveEmptyEntries))
-        { var kv = part.Split('=', 2); if (kv.Length == 2) { if (kv[0].Trim().Equals("KIND", StringComparison.OrdinalIgnoreCase)) kind = kv[1].Trim(); if (kv[0].Trim().Equals("DIAMETER", StringComparison.OrdinalIgnoreCase)) diameter = kv[1].Trim(); } }
-        return diameter is null ? new Dictionary<string, string>() : new Dictionary<string, string> { ["Diameter"] = string.IsNullOrEmpty(kind) ? $"_D{diameter}" : $"{kind}_D{diameter}" };
+        { var kv = part.Split('=', 2); if (kv.Length == 2) attributes[kv[0].Trim().ToUpperInvariant()] = kv[1].Trim(); }
+        return attributes;
     }
     private static double Number(string value) => double.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
 }

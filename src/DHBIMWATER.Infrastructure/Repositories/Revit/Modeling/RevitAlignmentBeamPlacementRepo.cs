@@ -27,10 +27,28 @@ internal sealed class RevitAlignmentBeamPlacementRepo : IAlignmentBeamPlacementR
             var start = ToXyz(segment.Start, alignment.DiameterMm, origin);
             var end = ToXyz(segment.End, alignment.DiameterMm, origin);
             if (start.DistanceTo(end) < minLengthFt) continue;
-            doc.Create.NewFamilyInstance(Line.CreateBound(start, end), type, level, StructuralType.Beam);
+            var instance = doc.Create.NewFamilyInstance(Line.CreateBound(start, end), type, level, StructuralType.Beam);
+            SuppressEndAdjustments(instance);
             count++;
         }
         return count;
+    }
+
+    // 구조 프레이밍은 인접 보와 자동 조인되면서 끝단이 연장/컷백된다.
+    // 그 결과 위치선 끝점은 절점에 있어도 형상(모양 핸들)이 절점을 넘어가고 다음 보 시작점도 밀려 보인다.
+    // → 양단 조인을 해제하고 시작/끝 연장값을 0으로 고정해 형상을 위치선에 일치시킨다.
+    private static void SuppressEndAdjustments(FamilyInstance instance)
+    {
+        StructuralFramingUtils.DisallowJoinAtEnd(instance, 0);
+        StructuralFramingUtils.DisallowJoinAtEnd(instance, 1);
+        SetZero(instance, BuiltInParameter.START_EXTENSION);
+        SetZero(instance, BuiltInParameter.END_EXTENSION);
+    }
+
+    private static void SetZero(FamilyInstance instance, BuiltInParameter parameter)
+    {
+        var target = instance.get_Parameter(parameter);
+        if (target is { IsReadOnly: false }) target.Set(0.0);
     }
     private static XYZ ToXyz(DHBIMWATER.Core.Geometry.Point3D point, double diameterMm, AlignmentPlacementOrigin origin)
     {

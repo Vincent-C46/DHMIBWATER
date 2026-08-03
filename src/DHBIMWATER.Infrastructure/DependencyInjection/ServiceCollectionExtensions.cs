@@ -107,6 +107,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IAlignmentSourceReader, DxfAlignmentReader>();
         services.AddTransient<IAlignmentBeamPlacementRepo, RevitAlignmentBeamPlacementRepo>();
         services.AddTransient<IAlignmentPipePlacementRepo, RevitAlignmentPipePlacementRepo>();
+        // TODO: Mock 블록에 Revit Repo가 덮어쓰기 등록됨 — 별도 확인 필요
         services.AddTransient<IBendSettingsRepo, MockBendSettingsRepo>();
         #endregion
 
