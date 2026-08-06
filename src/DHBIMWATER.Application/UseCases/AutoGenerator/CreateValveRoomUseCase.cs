@@ -43,7 +43,6 @@ public sealed class CreateValveRoomUseCase
                 _projectLocationCommand.SetInternalOriginSharedPosition(
                     request.SharedCoordinateX,
                     request.SharedCoordinateY,
-                    0,
                     request.TrueNorthToProjectNorthClockwiseDegrees);
                 foreach (var slab in ValveRoomGeometryCalculator.CalculateSlabs(dto)) _slabCommand.CreateSlab(slab);
                 foreach (var foundation in ValveRoomGeometryCalculator.CalculateFoundations(dto))

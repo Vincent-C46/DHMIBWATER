@@ -6,7 +6,7 @@ using System.IO;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Gis;
 
-/// <summary>ASCII DXF의 ENTITIES 폴리라인을 관로 선형으로 읽는다. DWG 바이너리는 지원하지 않는다.</summary>
+/// <summary>ASCII DXF의 ENTITIES 폴리라인을 관로 선형으로 읽는다.</summary>
 public sealed class DxfAlignmentReader : IAlignmentSourceReader
 {
     public bool CanRead(string filePath) => string.Equals(Path.GetExtension(filePath), ".dxf", StringComparison.OrdinalIgnoreCase);
@@ -72,12 +72,21 @@ internal static class DxfGeometryReader
         return result;
     }
     private static IReadOnlyDictionary<string, string> ReadAttributes(IReadOnlyList<(string Code, string Value)> pairs)
+        => CadXDataAttributeParser.Parse(pairs.Where(x => x.Code == "1000").Select(x => x.Value));
+    private static double Number(string value) => double.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
+}
+
+internal static class CadXDataAttributeParser
+{
+    public static IReadOnlyDictionary<string, string> Parse(IEnumerable<string> values)
     {
-        var xdata = pairs.Where(x => x.Code == "1000").Select(x => x.Value).ToList();
         var attributes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var text in xdata) foreach (var part in text.Split(',', StringSplitOptions.RemoveEmptyEntries))
-        { var kv = part.Split('=', 2); if (kv.Length == 2) attributes[kv[0].Trim().ToUpperInvariant()] = kv[1].Trim(); }
+        foreach (var text in values)
+        foreach (var part in text.Split(',', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var keyValue = part.Split('=', 2);
+            if (keyValue.Length == 2) attributes[keyValue[0].Trim().ToUpperInvariant()] = keyValue[1].Trim();
+        }
         return attributes;
     }
-    private static double Number(string value) => double.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
 }

@@ -23,10 +23,12 @@ public sealed class AlignmentSourceLoader
                 ?? throw new InvalidOperationException($"'{file.FilePath}' 파일을 읽을 수 있는 리더가 없습니다.");
             var read = reader.Read(file.FilePath);
             warnings.AddRange(read.Warnings);
+            var layers = file.Layers is { Count: > 0 } ? new HashSet<string>(file.Layers, StringComparer.OrdinalIgnoreCase) : null;
             var failed = 0;
             string? example = null;
             foreach (var feature in read.Features)
             {
+                if (layers is not null && (!feature.Attributes.TryGetValue("LAYER", out var layer) || !layers.Contains(layer))) continue;
                 var kind = ReadValue(feature, file.KindField);
                 var rawDiameter = ReadValue(feature, file.DiameterField);
                 var parsed = AlignmentAttributeParser.ParseDiameter(rawDiameter);

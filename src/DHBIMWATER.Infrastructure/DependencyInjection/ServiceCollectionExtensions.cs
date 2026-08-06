@@ -56,11 +56,13 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IShapefileReader, ShapefileReader>();
         services.AddTransient<IAlignmentSourceReader, ShapefileReader>();
         services.AddTransient<IAlignmentSourceReader, DxfAlignmentReader>();
+        services.AddTransient<IAlignmentSourceReader, DwgAlignmentReader>();
         services.AddTransient<IAlignmentBeamPlacementRepo, RevitAlignmentBeamPlacementRepo>();
         services.AddTransient<IAlignmentPipePlacementRepo, RevitAlignmentPipePlacementRepo>();
         services.AddTransient<IBendSettingsRepo, RevitBendSettingsRepo>();
         services.AddTransient<IGenericModelRepository, RevitGenericModelRepository>();
         services.AddTransient<IExteriorWallClassifierRepo, RevitExteriorWallClassifierRepo>();
+        services.AddTransient<IValveRoomOutlinePickRepo, RevitValveRoomOutlinePickRepo>();
         #endregion
 
         services.AddTransient<IExcelReader, ExcelReader>();
@@ -102,6 +104,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IShapefileReader, ShapefileReader>();
         services.AddTransient<IAlignmentSourceReader, ShapefileReader>();
         services.AddTransient<IAlignmentSourceReader, DxfAlignmentReader>();
+        services.AddTransient<IAlignmentSourceReader, DwgAlignmentReader>();
         services.AddTransient<IAlignmentBeamPlacementRepo, MockAlignmentBeamPlacementRepo>();
         services.AddTransient<IAlignmentPipePlacementRepo, MockAlignmentPipePlacementRepo>();
         services.AddTransient<IAlignmentSourceReader, DxfAlignmentReader>();

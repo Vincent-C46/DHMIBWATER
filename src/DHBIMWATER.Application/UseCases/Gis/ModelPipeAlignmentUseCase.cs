@@ -27,16 +27,17 @@ public sealed class ModelPipeAlignmentUseCase
         if (request.OutputMode is PipeAlignmentOutputMode.Beam or PipeAlignmentOutputMode.PipingSystem && request.IntervalMm <= 0)
             throw new ArgumentOutOfRangeException(nameof(request.IntervalMm));
         var loaded = _loader.Load(request.Files);
-        var reference = request.ReferenceX == 0 && request.ReferenceY == 0 && request.ReferenceZ == 0
-            ? AlignmentReferencePoint.FromFirstVertex(loaded.Alignments) : (request.ReferenceX, request.ReferenceY, request.ReferenceZ);
-        var origin = new AlignmentPlacementOrigin(reference?.X ?? 0, reference?.Y ?? 0, reference?.Z ?? 0, request.ZDatum);
+        var reference = request.ReferenceX == 0 && request.ReferenceY == 0
+            ? AlignmentReferencePoint.FromFirstVertex(loaded.Alignments)
+            : ((double X, double Y)?)(request.ReferenceX, request.ReferenceY);
+        var origin = new AlignmentPlacementOrigin(reference?.X ?? 0, reference?.Y ?? 0, request.ZDatum);
         using (_transaction)
         {
             try
             {
                 _transaction.Begin(request.OutputMode == PipeAlignmentOutputMode.DirectShape ? "Import Pipe Alignment" : "선형 패밀리 배치");
                 if (request.OutputMode == PipeAlignmentOutputMode.DirectShape) _sharedParameterRepo.EnsureParameters(GetAlignmentParameterDefinitions());
-                if (request.ApplySharedCoordinates) _projectLocationRepo.SetInternalOriginSharedPosition(origin.X, origin.Y, origin.Z, 0);
+                if (request.ApplySharedCoordinates) _projectLocationRepo.SetInternalOriginSharedPosition(origin.X, origin.Y, 0);
                 var (count, skipped, repoWarnings) = request.OutputMode switch
                 {
                     PipeAlignmentOutputMode.DirectShape => ToDirectShape(loaded.Alignments, origin),
@@ -52,7 +53,7 @@ public sealed class ModelPipeAlignmentUseCase
     }
 
     private (int Count, int Skipped, IReadOnlyList<string> Warnings) ToDirectShape(IReadOnlyList<PipeAlignment> alignments, AlignmentPlacementOrigin origin)
-    { var result = _alignmentRepo.Create(new PipeAlignmentCreateDefinition(alignments, origin.X, origin.Y, origin.Z, origin.ZDatum)); return (result.CreatedCount, result.SkippedSegments, result.Warnings); }
+    { var result = _alignmentRepo.Create(new PipeAlignmentCreateDefinition(alignments, origin.X, origin.Y, origin.ZDatum)); return (result.CreatedCount, result.SkippedSegments, result.Warnings); }
     private static string Require(string? value, string name) => !string.IsNullOrWhiteSpace(value) ? value : throw new InvalidOperationException($"{name}을 선택하세요.");
     private static IReadOnlyList<SharedParameterDefinition> GetAlignmentParameterDefinitions() => new List<SharedParameterDefinition>
     {

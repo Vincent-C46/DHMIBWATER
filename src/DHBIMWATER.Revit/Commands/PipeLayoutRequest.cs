@@ -2,7 +2,7 @@ using System.Threading;
 
 namespace DHBIMWATER.Revit.Commands;
 
-internal enum PipeLayoutRequestId { None, CreateModel }
+internal enum PipeLayoutRequestId { None, CreateModel, PickOutline }
 
 internal sealed class PipeLayoutRequest
 {

@@ -1,6 +1,7 @@
 using Autodesk.Revit.DB;
 using DHBIMWATER.Application.DTOs.Gis;
 using DHBIMWATER.Application.Interfaces.Gis;
+using DHBIMWATER.Infrastructure.Helpers;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling;
@@ -14,6 +15,7 @@ public sealed class RevitPipeAlignmentCommandRepo : IPipeAlignmentCommandRepo
     public PipeAlignmentCreateResult Create(PipeAlignmentCreateDefinition definition)
     {
         var doc = _doc() ?? throw new InvalidOperationException("활성 Revit 문서를 찾을 수 없습니다.");
+        var basePoint = AlignmentPlacementMapper.GetProjectBasePoint(doc);
         var created = 0; var skipped = 0; var warnings = new List<string>();
         foreach (var alignment in definition.Alignments)
         {
@@ -21,8 +23,8 @@ public sealed class RevitPipeAlignmentCommandRepo : IPipeAlignmentCommandRepo
             var lines = new List<GeometryObject>();
             for (var i = 1; i < alignment.Vertices.Count; i++)
             {
-                var start = ToXyz(alignment.Vertices[i - 1], alignment.DiameterMm, definition);
-                var end = ToXyz(alignment.Vertices[i], alignment.DiameterMm, definition);
+                var start = ToXyz(alignment.Vertices[i - 1], alignment.DiameterMm, definition, basePoint);
+                var end = ToXyz(alignment.Vertices[i], alignment.DiameterMm, definition, basePoint);
                 if (start.DistanceTo(end) < MinimumSegmentFeet) { skipped++; continue; }
                 lines.Add(Line.CreateBound(start, end));
             }
@@ -44,16 +46,8 @@ public sealed class RevitPipeAlignmentCommandRepo : IPipeAlignmentCommandRepo
         return new PipeAlignmentCreateResult(created, skipped, warnings);
     }
 
-    private static XYZ ToXyz(DHBIMWATER.Core.Geometry.Point3D point, double diameterMm, PipeAlignmentCreateDefinition definition)
-    {
-        var z = definition.ZDatum switch
-        {
-            DHBIMWATER.Core.Gis.ZDatum.Invert => point.Z + diameterMm / 2000.0,
-            DHBIMWATER.Core.Gis.ZDatum.Crown => point.Z - diameterMm / 2000.0,
-            _ => point.Z
-        };
-        return new XYZ(UC.MmToFt((point.X - definition.ReferenceX) * 1000), UC.MmToFt((point.Y - definition.ReferenceY) * 1000), UC.MmToFt((z - definition.ReferenceZ) * 1000));
-    }
+    private static XYZ ToXyz(DHBIMWATER.Core.Geometry.Point3D point, double diameterMm, PipeAlignmentCreateDefinition definition, XYZ basePoint)
+        => AlignmentPlacementMapper.ToXyz(point, diameterMm, definition.ReferenceX, definition.ReferenceY, definition.ZDatum, basePoint);
 
     private static double CalculateLengthMm(IReadOnlyList<DHBIMWATER.Core.Geometry.Point3D> vertices) => vertices.Zip(vertices.Skip(1), (a, b) => a.DistanceTo(b)).Sum() * 1000;
     private static void SetText(Element element, string name, string value) => element.LookupParameter(name)?.Set(value ?? string.Empty);

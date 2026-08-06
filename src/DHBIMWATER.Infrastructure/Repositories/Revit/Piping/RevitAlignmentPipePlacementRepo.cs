@@ -3,6 +3,7 @@ using Autodesk.Revit.DB.Plumbing;
 using DHBIMWATER.Application.DTOs.Gis;
 using DHBIMWATER.Application.Interfaces.Gis;
 using DHBIMWATER.Core.Gis;
+using DHBIMWATER.Infrastructure.Helpers;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Revit.Piping;
@@ -19,14 +20,15 @@ internal sealed class RevitAlignmentPipePlacementRepo : IAlignmentPipePlacementR
         var level = new FilteredElementCollector(doc).OfClass(typeof(Level)).Cast<Level>().FirstOrDefault(x => levelName is null || x.Name == levelName) ?? throw new InvalidOperationException("레벨을 찾을 수 없습니다.");
         // Revit 짧은 커브 허용치보다 짧은 구간은 Pipe 생성이 불가하므로 건너뛴다 (Beam 리포지토리와 동일 기준).
         var minLengthFt = doc.Application.ShortCurveTolerance;
+        var basePoint = AlignmentPlacementMapper.GetProjectBasePoint(doc);
         var count = 0;
         foreach (var alignment in alignments)
         {
             Pipe? previous = null;
             foreach (var segment in AlignmentIntervalSampler.SampleSegments(alignment.Vertices, intervalM))
             {
-                var start = ToXyz(segment.Start, alignment.DiameterMm, origin);
-                var end = ToXyz(segment.End, alignment.DiameterMm, origin);
+                var start = ToXyz(segment.Start, alignment.DiameterMm, origin, basePoint);
+                var end = ToXyz(segment.End, alignment.DiameterMm, origin, basePoint);
                 if (start.DistanceTo(end) < minLengthFt) continue;
                 var pipe = Pipe.Create(doc, system.Id, type.Id, level.Id, start, end);
                 if (alignment.DiameterMm > 0) pipe.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM)?.Set(UC.MmToFt(alignment.DiameterMm));
@@ -42,16 +44,12 @@ internal sealed class RevitAlignmentPipePlacementRepo : IAlignmentPipePlacementR
         var a = first.ConnectorManager.Connectors.Cast<Connector>().OrderBy(x => x.Origin.DistanceTo(point)).First();
         var b = second.ConnectorManager.Connectors.Cast<Connector>().OrderBy(x => x.Origin.DistanceTo(point)).First();
         try { if (a.CoordinateSystem.BasisZ.IsAlmostEqualTo(b.CoordinateSystem.BasisZ) || a.CoordinateSystem.BasisZ.IsAlmostEqualTo(-b.CoordinateSystem.BasisZ)) doc.Create.NewUnionFitting(a, b); else doc.Create.NewElbowFitting(a, b); }
-        catch (Exception ex) { throw new InvalidOperationException("선형 파이프 구간 연결에 실패했습니다. PipeType의 부속 설정을 확인하세요.", ex); }
-    }
-    private static XYZ ToXyz(DHBIMWATER.Core.Geometry.Point3D point, double diameterMm, AlignmentPlacementOrigin origin)
-    {
-        var z = origin.ZDatum switch
+        catch (Exception ex)
         {
-            ZDatum.Invert => point.Z + diameterMm / 2000.0,
-            ZDatum.Crown => point.Z - diameterMm / 2000.0,
-            _ => point.Z
-        };
-        return new XYZ(UC.MmToFt((point.X - origin.X) * 1000), UC.MmToFt((point.Y - origin.Y) * 1000), UC.MmToFt((z - origin.Z) * 1000));
+            // PipeType 부속 설정이 맞지 않으면 이 연결부만 생략하고 직선 파이프는 유지한다.
+            System.Diagnostics.Debug.WriteLine($"선형 파이프 구간 연결 생략: {ex.Message}");
+        }
     }
+    private static XYZ ToXyz(DHBIMWATER.Core.Geometry.Point3D point, double diameterMm, AlignmentPlacementOrigin origin, XYZ basePoint)
+        => AlignmentPlacementMapper.ToXyz(point, diameterMm, origin.X, origin.Y, origin.ZDatum, basePoint);
 }

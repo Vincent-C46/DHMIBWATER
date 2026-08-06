@@ -3,7 +3,7 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Structure;
 using DHBIMWATER.Application.Interfaces.Gis;
 using DHBIMWATER.Core.Gis;
-using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
+using DHBIMWATER.Infrastructure.Helpers;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling;
 
@@ -19,13 +19,14 @@ internal sealed class RevitAlignmentBeamPlacementRepo : IAlignmentBeamPlacementR
         if (!type.IsActive) type.Activate();
         // Revit 짧은 커브 허용치(약 0.00256ft ≈ 0.78mm)보다 짧은 세그먼트는 보 생성이 불가하므로 건너뛴다.
         var minLengthFt = doc.Application.ShortCurveTolerance;
+        var basePoint = AlignmentPlacementMapper.GetProjectBasePoint(doc);
         var count = 0;
         // SamplePoints(점 배치)가 아니라 SampleSegments로 intervalM(6m)마다 끊어 시작/끝점을 잇는 선 기반 보를 생성한다.
         // alignTangent는 선 기반 보에서는 커브가 곧 방향이므로 사용하지 않는다(회전 불필요).
         foreach (var alignment in alignments) foreach (var segment in AlignmentIntervalSampler.SampleSegments(alignment.Vertices, intervalM))
         {
-            var start = ToXyz(segment.Start, alignment.DiameterMm, origin);
-            var end = ToXyz(segment.End, alignment.DiameterMm, origin);
+            var start = ToXyz(segment.Start, alignment.DiameterMm, origin, basePoint);
+            var end = ToXyz(segment.End, alignment.DiameterMm, origin, basePoint);
             if (start.DistanceTo(end) < minLengthFt) continue;
             var instance = doc.Create.NewFamilyInstance(Line.CreateBound(start, end), type, level, StructuralType.Beam);
             SuppressEndAdjustments(instance);
@@ -50,14 +51,6 @@ internal sealed class RevitAlignmentBeamPlacementRepo : IAlignmentBeamPlacementR
         var target = instance.get_Parameter(parameter);
         if (target is { IsReadOnly: false }) target.Set(0.0);
     }
-    private static XYZ ToXyz(DHBIMWATER.Core.Geometry.Point3D point, double diameterMm, AlignmentPlacementOrigin origin)
-    {
-        var z = origin.ZDatum switch
-        {
-            ZDatum.Invert => point.Z + diameterMm / 2000.0,
-            ZDatum.Crown => point.Z - diameterMm / 2000.0,
-            _ => point.Z
-        };
-        return new XYZ(UC.MmToFt((point.X - origin.X) * 1000), UC.MmToFt((point.Y - origin.Y) * 1000), UC.MmToFt((z - origin.Z) * 1000));
-    }
+    private static XYZ ToXyz(DHBIMWATER.Core.Geometry.Point3D point, double diameterMm, AlignmentPlacementOrigin origin, XYZ basePoint)
+        => AlignmentPlacementMapper.ToXyz(point, diameterMm, origin.X, origin.Y, origin.ZDatum, basePoint);
 }

@@ -17,6 +17,24 @@
                 <Canvas x:Name="LayoutCanvas" Background="#FCFDFE" Focusable="True" MouseLeftButtonDown="OnCanvasMouseLeftButtonDown" MouseMove="OnCanvasMouseMove" SizeChanged="OnLayoutCanvasSizeChanged">
                     <Line X1="{Binding ReferenceScreenX}" Y1="0" X2="{Binding ReferenceScreenX}" Y2="{Binding ActualHeight, ElementName=LayoutCanvas}" Stroke="#9ACD32" StrokeThickness="1.5" StrokeDashArray="4,3" IsHitTestVisible="False"/>
                     <Line X1="0" Y1="{Binding ReferenceScreenY}" X2="{Binding ActualWidth, ElementName=LayoutCanvas}" Y2="{Binding ReferenceScreenY}" Stroke="#9ACD32" StrokeThickness="1.5" StrokeDashArray="4,3" IsHitTestVisible="False"/>
+                    <!-- 외곽 레이아웃: 내측면(진한 실선)이 기준면, 외측면(연한 선)은 벽 두께 표현 -->
+                    <ItemsControl ItemsSource="{Binding OutlineWalls}" IsHitTestVisible="False"><ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas/></ItemsPanelTemplate></ItemsControl.ItemsPanel><ItemsControl.ItemTemplate><DataTemplate><Canvas>
+                        <Line X1="{Binding OuterX1}" Y1="{Binding OuterY1}" X2="{Binding OuterX2}" Y2="{Binding OuterY2}" Stroke="#C3CFD9" StrokeThickness="1"/>
+                        <Line X1="{Binding InnerX1}" Y1="{Binding InnerY1}" X2="{Binding OuterX1}" Y2="{Binding OuterY1}" Stroke="#C3CFD9" StrokeThickness="1"/>
+                        <Line X1="{Binding InnerX2}" Y1="{Binding InnerY2}" X2="{Binding OuterX2}" Y2="{Binding OuterY2}" Stroke="#C3CFD9" StrokeThickness="1"/>
+                        <Line X1="{Binding InnerX1}" Y1="{Binding InnerY1}" X2="{Binding InnerX2}" Y2="{Binding InnerY2}" Stroke="#5D6D7E" StrokeThickness="2.5"/>
+                    </Canvas></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+                    <!-- IN/OUT 화살표: 좌·우 내측면 고정, 상하 위치만 사용자 지정 -->
+                    <ItemsControl ItemsSource="{Binding OutlineArrows}" IsHitTestVisible="False"><ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas/></ItemsPanelTemplate></ItemsControl.ItemsPanel><ItemsControl.ItemTemplate><DataTemplate><Canvas>
+                        <Line X1="{Binding X1}" Y1="{Binding Y1}" X2="{Binding X2}" Y2="{Binding Y2}" Stroke="{Binding Color}" StrokeThickness="2.5"/>
+                        <Polygon Points="{Binding HeadPoints}" Fill="{Binding Color}"/>
+                        <TextBlock Canvas.Left="{Binding LabelX}" Canvas.Top="{Binding LabelY}" Text="{Binding Label}" FontSize="11" FontWeight="Bold" Foreground="{Binding Color}"/>
+                    </Canvas></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+                    <!-- 임시치수: 커서에서 X·Y 각 방향으로 가장 가까운 외곽선까지 -->
+                    <ItemsControl ItemsSource="{Binding TempDimensions}" IsHitTestVisible="False"><ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas/></ItemsPanelTemplate></ItemsControl.ItemsPanel><ItemsControl.ItemTemplate><DataTemplate><Canvas>
+                        <Line X1="{Binding X1}" Y1="{Binding Y1}" X2="{Binding X2}" Y2="{Binding Y2}" Stroke="#8E44AD" StrokeThickness="1" StrokeDashArray="3,2"/>
+                        <TextBlock Canvas.Left="{Binding LabelX}" Canvas.Top="{Binding LabelY}" Margin="2,-16,0,0" Text="{Binding Label}" FontSize="10" FontWeight="SemiBold" Foreground="#6C3483" Background="#FBF6FE"/>
+                    </Canvas></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
                     <TextBlock Canvas.Left="{Binding SnapMarkerX}" Canvas.Top="{Binding SnapMarkerY}" Margin="-10,-10,0,0" Width="20" Height="20" TextAlignment="Center" VerticalAlignment="Center" Text="{Binding SnapMarkerSymbol}" FontSize="19" FontWeight="Bold" Foreground="#00A651" IsHitTestVisible="False" Visibility="{Binding IsSnapMarkerVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                     <Line X1="{Binding PreviewX1}" Y1="{Binding PreviewY1}" X2="{Binding PreviewX2}" Y2="{Binding PreviewY2}" Stroke="#E67E22" StrokeThickness="3" StrokeDashArray="6,3" IsHitTestVisible="False" Visibility="{Binding IsPreviewVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                     <TextBlock Canvas.Left="{Binding PreviewLengthX}" Canvas.Top="{Binding PreviewLengthY}" Margin="4,-20,0,0" Text="{Binding PreviewLength}" FontSize="11" FontWeight="SemiBold" Foreground="#D35400" Background="#FFFCF8" IsHitTestVisible="False" Visibility="{Binding IsPreviewVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
@@ -26,7 +44,19 @@
                 </Canvas>
                 <Border VerticalAlignment="Top" HorizontalAlignment="Left" Background="#EAF2F8" CornerRadius="5" Padding="8"><TextBlock Text="연두색 십자선의 교차점은 배관 원점(0,0)입니다. 빈 화면에서는 원점만 100mm 스냅됩니다. 노드: 회색 Cap · 파랑 Inline · 주황 Elbow · 보라 Tee · 빨강 Cross" FontSize="11"/></Border>
             </Grid></Border>
-            <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="16"><StackPanel>
+            <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="16"><ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel>
+                <TextBlock Text="외곽 레이아웃" FontWeight="Bold" Foreground="#4A6FA5" FontSize="16"/>
+                <TextBlock Text="Revit에서 밸브실 외곽 벽체를 선택하면 벽 내측면이 기준선이 됩니다." Foreground="#7F8C8D" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,8"/>
+                <Button Content="외곽 벽체 선택" Command="{Binding PickOutlineCommand}" Style="{StaticResource PrimaryButtonStyle}"/>
+                <Button Content="외곽 지우기" Command="{Binding ClearOutlineCommand}" Style="{StaticResource CancelButtonStyle}" Margin="0,6,0,10"/>
+                <Border Background="#F7F9FB" BorderBrush="#DCE6EE" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,12" Visibility="{Binding HasOutline, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <StackPanel>
+                        <TextBlock Text="IN / OUT 상하 위치" FontWeight="SemiBold" Foreground="#34495E"/>
+                        <CheckBox Content="상단벽 기준으로 이격 (해제 시 하단벽)" Style="{StaticResource PrimaryCheckBoxStyle}" IsChecked="{Binding ArrowFromTop}" Margin="0,6,0,6"/>
+                        <Grid Margin="0,0,0,6"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="75"/><ColumnDefinition Width="24"/></Grid.ColumnDefinitions><TextBlock Text="IN" VerticalAlignment="Center" Foreground="#1E8449" FontWeight="SemiBold"/><TextBox Grid.Column="1" Style="{StaticResource PrimaryTextBoxStyle}" Text="{Binding InOffsetMm, UpdateSourceTrigger=LostFocus}"/><TextBlock Grid.Column="2" Text="mm" Margin="4,0"/></Grid>
+                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="75"/><ColumnDefinition Width="24"/></Grid.ColumnDefinitions><TextBlock Text="OUT" VerticalAlignment="Center" Foreground="#B03A2E" FontWeight="SemiBold"/><TextBox Grid.Column="1" Style="{StaticResource PrimaryTextBoxStyle}" Text="{Binding OutOffsetMm, UpdateSourceTrigger=LostFocus}"/><TextBlock Grid.Column="2" Text="mm" Margin="4,0"/></Grid>
+                    </StackPanel>
+                </Border>
                 <TextBlock Text="인라인 부속품" FontWeight="Bold" Foreground="#4A6FA5" FontSize="16"/>
                 <TextBlock Text="선택 엣지에 순서대로 추가됩니다." Foreground="#7F8C8D" FontSize="11" Margin="0,4,0,12"/>
                 <Border Background="#F7F9FB" BorderBrush="#DCE6EE" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,10">
@@ -41,6 +71,7 @@
                             <CheckBox Content="× 교차점" Style="{StaticResource PrimaryCheckBoxStyle}" IsChecked="{Binding SnapIntersection}" Margin="0,0,10,5"/>
                             <CheckBox Content="· 근처점" Style="{StaticResource PrimaryCheckBoxStyle}" IsChecked="{Binding SnapNearest}" Margin="0,0,10,0"/>
                         </WrapPanel>
+                        <CheckBox Content="외곽선에도 OSNAP 적용" Style="{StaticResource PrimaryCheckBoxStyle}" IsChecked="{Binding SnapOutline}" Margin="0,6,0,0"/>
                     </StackPanel>
                 </Border>
                 <TextBlock Text="기준점 좌표" FontWeight="SemiBold"/>
@@ -53,7 +84,7 @@
                 <ComboBox ItemsSource="{Binding FittingTypes}" SelectedItem="{Binding SelectedFittingType}" Style="{StaticResource PrimaryComboBoxStyle}"/>
                 <Button Content="+ 부속품 추가" Command="{Binding AddFittingCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,8,0,12"/>
                 <ListBox Style="{StaticResource PrimaryListBoxStyle}" ItemsSource="{Binding InlineFittings}" Height="300"><ListBox.ItemTemplate><DataTemplate><DockPanel Margin="3"><Button Content="삭제" Style="{StaticResource CancelButtonStyle}" DockPanel.Dock="Right" Command="{Binding DataContext.RemoveFittingCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/><TextBlock Text="{Binding Order}" Width="24"/><TextBlock Text="{Binding TypeKey}"/></DockPanel></DataTemplate></ListBox.ItemTemplate></ListBox>
-            </StackPanel></Border>
+            </StackPanel></ScrollViewer></Border>
         </Grid>
         <Grid Grid.Row="2" Margin="20,0,20,16"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{Binding Status}" VerticalAlignment="Center" Foreground="#34495E"/><StackPanel Grid.Column="1" Orientation="Horizontal"><Button Content="그리기 취소" Style="{StaticResource CancelButtonStyle}" Command="{Binding CancelDrawingCommand}" Margin="0,0,8,0"/><Button Content="초기화" Style="{StaticResource CancelButtonStyle}" Command="{Binding ClearCommand}" Margin="0,0,8,0"/><Button Content="모델 생성" Command="{Binding CreateModelCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/><Button Content="닫기" Style="{StaticResource CancelButtonStyle}" Command="{Binding CloseCommand}"/></StackPanel></Grid>
     </Grid>
