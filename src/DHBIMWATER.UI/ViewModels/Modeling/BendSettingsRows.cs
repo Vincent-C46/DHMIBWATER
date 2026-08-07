@@ -17,13 +17,17 @@ public sealed class BendToleranceRow : ViewModelBase
 public sealed class BendFittingRow : ViewModelBase
 {
     private string _pipeKind = string.Empty;
-    private double _diameterMm, _angleDeg = 45d, _layingLengthMm, _centerlineRadiusMm;
+    private double _diameterMm, _angleDeg = 45d, _layingLengthMm, _centerlineRadiusMm, _extraLegLengthMm;
     private BendForm _form = BendForm.AType;
     public string PipeKind { get => _pipeKind; set => SetProperty(ref _pipeKind, value); }
     public double DiameterMm { get => _diameterMm; set => SetProperty(ref _diameterMm, value); }
     public double AngleDeg { get => _angleDeg; set { if (SetProperty(ref _angleDeg, value)) OnPropertyChanged(nameof(TangentLengthMm)); } }
     public BendForm Form { get => _form; set => SetProperty(ref _form, value); }
-    public double LayingLengthMm { get => _layingLengthMm; set => SetProperty(ref _layingLengthMm, value); }
+    public double LayingLengthMm { get => _layingLengthMm; set { if (SetProperty(ref _layingLengthMm, value)) OnPropertyChanged(nameof(LongLegLengthMm)); } }
     public double CenterlineRadiusMm { get => _centerlineRadiusMm; set { if (SetProperty(ref _centerlineRadiusMm, value)) OnPropertyChanged(nameof(TangentLengthMm)); } }
+    /// <summary>s — B형에서 한쪽에만 더 붙는 직관부(mm). A형은 0. 긴 쪽은 폴리선 진행 방향 기준 하류쪽에 붙는다.</summary>
+    public double ExtraLegLengthMm { get => _extraLegLengthMm; set { if (SetProperty(ref _extraLegLengthMm, value)) OnPropertyChanged(nameof(LongLegLengthMm)); } }
+    /// <summary>긴 쪽 관 끝까지의 거리 t + s(mm). 확인용 읽기 전용 열이다.</summary>
+    public double LongLegLengthMm => Math.Round(LayingLengthMm + ExtraLegLengthMm, 1);
     public double TangentLengthMm => Math.Round(BendResolver.TangentLength(CenterlineRadiusMm, AngleDeg), 1);
 }

@@ -16,11 +16,12 @@ public sealed class ModelPipeAlignmentUseCase
     private readonly IAlignmentPipePlacementRepo _pipeRepo;
     private readonly IProjectLocationCommandRepo _projectLocationRepo;
     private readonly ISharedParameterRepository _sharedParameterRepo;
+    private readonly IBendSettingsRepo _bendSettingsRepo;
 
     public ModelPipeAlignmentUseCase(ITransactionContext transaction, AlignmentSourceLoader loader, IPipeAlignmentCommandRepo alignmentRepo,
         IAlignmentBeamPlacementRepo beamRepo, IAlignmentPipePlacementRepo pipeRepo, IProjectLocationCommandRepo projectLocationRepo,
-        ISharedParameterRepository sharedParameterRepo)
-    { _transaction = transaction; _loader = loader; _alignmentRepo = alignmentRepo; _beamRepo = beamRepo; _pipeRepo = pipeRepo; _projectLocationRepo = projectLocationRepo; _sharedParameterRepo = sharedParameterRepo; }
+        ISharedParameterRepository sharedParameterRepo, IBendSettingsRepo bendSettingsRepo)
+    { _transaction = transaction; _loader = loader; _alignmentRepo = alignmentRepo; _beamRepo = beamRepo; _pipeRepo = pipeRepo; _projectLocationRepo = projectLocationRepo; _sharedParameterRepo = sharedParameterRepo; _bendSettingsRepo = bendSettingsRepo; }
 
     public PipeAlignmentModelingResult Execute(PipeAlignmentModelingRequest request)
     {
@@ -31,6 +32,12 @@ public sealed class ModelPipeAlignmentUseCase
             ? AlignmentReferencePoint.FromFirstVertex(loaded.Alignments)
             : ((double X, double Y)?)(request.ReferenceX, request.ReferenceY);
         var origin = new AlignmentPlacementOrigin(reference?.X ?? 0, reference?.Y ?? 0, request.ZDatum);
+        // 곡관 자리 계산은 Beam 모드에만 적용한다(사용자 결정 2026-08-07).
+        // PipingSystem은 Revit이 NewElbowFitting으로 부속을 자동 생성해 이중이 되고,
+        // DirectShape는 폴리선 원형을 그대로 형상화하는 경로다.
+        var (bendPlan, bendWarnings) = request.OutputMode == PipeAlignmentOutputMode.Beam
+            ? PlanBends(loaded.Alignments, request)
+            : (null, Array.Empty<string>());
         using (_transaction)
         {
             try
@@ -41,15 +48,46 @@ public sealed class ModelPipeAlignmentUseCase
                 var (count, skipped, repoWarnings) = request.OutputMode switch
                 {
                     PipeAlignmentOutputMode.DirectShape => ToDirectShape(loaded.Alignments, origin),
-                    PipeAlignmentOutputMode.Beam => (_beamRepo.PlaceAlong(loaded.Alignments, Require(request.BeamTypeName, "빔 유형"), request.LevelName, request.IntervalMm / 1000d, request.AlignTangent, origin), 0, (IReadOnlyList<string>)Array.Empty<string>()),
+                    PipeAlignmentOutputMode.Beam => (_beamRepo.PlaceAlong(loaded.Alignments, Require(request.BeamTypeName, "빔 유형"), request.LevelName, request.IntervalMm / 1000d, request.AlignTangent, origin, bendPlan?.Plans.Select(x => x.Trims).ToList()), 0, (IReadOnlyList<string>)bendWarnings),
                     PipeAlignmentOutputMode.PipingSystem => (_pipeRepo.PlaceAlong(loaded.Alignments, Require(request.PipingSystemTypeName, "파이프 시스템 유형"), Require(request.PipeTypeName, "PipeType"), request.LevelName, request.IntervalMm / 1000d, origin), 0, (IReadOnlyList<string>)Array.Empty<string>()),
                     _ => throw new ArgumentOutOfRangeException(nameof(request.OutputMode))
                 };
                 _transaction.Commit();
-                return new PipeAlignmentModelingResult(request.OutputMode, count, skipped, loaded.Warnings.Concat(repoWarnings).ToList());
+                return new PipeAlignmentModelingResult(request.OutputMode, count, skipped, loaded.Warnings.Concat(repoWarnings).ToList(), bendPlan?.Placements.Count ?? 0);
             }
             catch { _transaction.Rollback(); throw; }
         }
+    }
+
+    /// <summary>
+    /// 절점 곡관 판정을 폴리선 정점 차감량으로 환산한다. 곡관 실물(RFA) 배치는 아직 하지 않고 자리만 비운다.
+    /// 설정이 없거나 곡관이 하나도 없으면 null을 돌려 기존(차감 없음) 동작을 그대로 쓴다.
+    /// </summary>
+    private (BendTrimPlan? Plan, IReadOnlyList<string> Warnings) PlanBends(IReadOnlyList<PipeAlignment> alignments, PipeAlignmentModelingRequest request)
+    {
+        if (request.SnapToleranceMm <= 0) throw new ArgumentOutOfRangeException(nameof(request.SnapToleranceMm));
+
+        var warnings = new List<string>();
+        var settings = _bendSettingsRepo.Load();
+        if (settings is null)
+        {
+            warnings.Add("허용굴곡·곡관 치수 설정이 저장되지 않아 곡관 자리를 비우지 않고 직관을 절점까지 붙였습니다.");
+            return (null, warnings);
+        }
+
+        var snapTolerance = request.SnapToleranceMm / 1000d;
+        var graph = PipeNetworkBuilder.Build(alignments, snapTolerance);
+        var nodes = PipeNetworkClassifier.Classify(graph);
+        var resolutions = BendResolver.ResolveAll(nodes, settings, request.Form);
+        var plan = BendTrimPlanner.Plan(alignments, graph, resolutions, snapTolerance);
+
+        // 곡관을 넣지 못한 절점은 직관이 절점까지 그대로 붙는다. 배치 결과만 보면 알 수 없으므로 집계해 남긴다.
+        var skipped = resolutions.Count(x => x.Kind == BendResolutionKind.Unresolved)
+            + resolutions.Count(x => x.Kind == BendResolutionKind.Standard && !x.HasFittingSize);
+        if (skipped > 0)
+            warnings.Add($"곡관을 넣지 못한 절점 {skipped}곳은 직관을 절점까지 붙였습니다(미해결 편각 또는 곡관 치수 미입력).");
+
+        return (plan, warnings);
     }
 
     private (int Count, int Skipped, IReadOnlyList<string> Warnings) ToDirectShape(IReadOnlyList<PipeAlignment> alignments, AlignmentPlacementOrigin origin)

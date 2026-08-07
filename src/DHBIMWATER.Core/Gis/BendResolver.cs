@@ -13,12 +13,17 @@ public enum BendResolutionKind
 /// <param name="StandardAngleDeg">Standard면 선정된 표준각, Unresolved면 가장 가까운 표준각, None이면 0.</param>
 /// <param name="ResidualDeg">편각과 StandardAngleDeg의 차(부호 포함). None이면 편각 그대로.</param>
 /// <param name="LayingLengthMm">
-/// t — Standard일 때 선정된 곡관의 절점~관 끝 거리(mm). None/Unresolved/치수 미입력이면 0.
-/// 배치 단계에서 이 값만큼 양쪽 직관 구간을 줄이고 그 지점부터 다시 interval로 분절한다.
+/// t — Standard일 때 선정된 곡관의 절점~짧은 쪽 관 끝 거리(mm). None/Unresolved/치수 미입력이면 0.
+/// 배치 단계에서 이 값만큼 직관 구간을 줄이고 그 지점부터 다시 interval로 분절한다.
 /// </param>
 /// <param name="CenterlineRadiusMm">R — 중심선 호의 곡률반경(mm). 호 중점 P2 계산에 쓴다. 치수 미입력이면 0.</param>
 /// <param name="TangentLengthMm">T = R·tan(θ/2). 계산값이며 입력값이 아니다.</param>
 /// <param name="HasFittingSize">카탈로그에서 t·R을 찾았는지. false면 직관 차감도 호 계산도 할 수 없다.</param>
+/// <param name="ExtraLegLengthMm">
+/// s — 긴 쪽에만 더 붙는 직관부(mm). A형은 0. 긴 쪽 차감량은 <see cref="LongLegLengthMm"/>다.
+/// 어느 방향이 긴 쪽인지는 이 레코드가 정하지 않는다. 절점 편각만으로는 정할 수 없고
+/// 폴리선 진행 방향이 필요해 <see cref="BendTrimPlanner"/>가 결정한다.
+/// </param>
 public sealed record BendResolution(
     int NodeId,
     BendResolutionKind Kind,
@@ -29,10 +34,15 @@ public sealed record BendResolution(
     double LayingLengthMm,
     double CenterlineRadiusMm,
     double TangentLengthMm,
-    bool HasFittingSize)
+    bool HasFittingSize,
+    double ExtraLegLengthMm = 0d)
 {
+    /// <summary>긴 쪽 관 끝까지의 거리 t + s(mm).</summary>
+    public double LongLegLengthMm => LayingLengthMm > 0d ? LayingLengthMm + ExtraLegLengthMm : 0d;
+
     /// <summary>
     /// t &lt; T면 호가 곡관 몸통 밖으로 나가므로 치수가 성립하지 않는다.
+    /// 짧은 쪽으로 판정한다 — 짧은 쪽이 성립하면 긴 쪽(t+s)은 자동으로 성립한다.
     /// 사용자 결정(2026-07-31)에 따라 모델링은 진행하되 호출부에서 경고를 띄운다.
     /// </summary>
     public bool IsSizeConsistent => !HasFittingSize || LayingLengthMm + 1e-9 >= TangentLengthMm;
@@ -70,7 +80,7 @@ public static class BendResolver
         var tangent = TangentLength(fitting.CenterlineRadiusMm, nearest);
         return new BendResolution(
             node.NodeId, BendResolutionKind.Standard, theta, nearest, tolerance, residual,
-            fitting.LayingLengthMm, fitting.CenterlineRadiusMm, tangent, true);
+            fitting.LayingLengthMm, fitting.CenterlineRadiusMm, tangent, true, fitting.ExtraLegLengthMm);
     }
 
     public static IReadOnlyList<BendResolution> ResolveAll(IReadOnlyList<NodeClassification> nodes, BendSettings settings, BendForm form)

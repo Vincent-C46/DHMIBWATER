@@ -16,17 +16,22 @@ public enum BendForm
 /// <param name="AngleDeg">표준 곡관 각도(<see cref="BendToleranceTable.StandardAngles"/> 중 하나).</param>
 /// <param name="Form">곡관 형식(A형/B형).</param>
 /// <param name="LayingLengthMm">
-/// t — 절점(두 직관 축의 교점)에서 곡관 끝단까지의 거리(mm). 양방향 동일하다.
+/// t — 절점(두 직관 축의 교점)에서 곡관 짧은 쪽 끝단까지의 거리(mm).
 /// 호의 시작점까지의 거리(접선길이 T)가 아니다. 곡관 양끝의 직관부 때문에 보통 t &gt; T다.
 /// </param>
 /// <param name="CenterlineRadiusMm">R — 직선과 직선 사이에 들어가는 중심선 호의 곡률반경(mm).</param>
+/// <param name="ExtraLegLengthMm">
+/// s — B형에서 한쪽에만 더 붙는 직관부(mm). 긴 쪽 = t + s, 짧은 쪽 = t다. A형은 0.
+/// 어느 방향이 긴 쪽인지는 치수가 아니라 배치 규칙이 정한다(사용자 결정 2026-08-07: 폴리선 진행 방향 기준 하류쪽).
+/// </param>
 public sealed record BendFittingEntry(
     string PipeKind,
     double DiameterMm,
     double AngleDeg,
     BendForm Form,
     double LayingLengthMm,
-    double CenterlineRadiusMm);
+    double CenterlineRadiusMm,
+    double ExtraLegLengthMm = 0d);
 
 /// <summary>관종·직경·각도·형식별 곡관 치수 카탈로그. 근거는 주철관 핸드북 곡관 치수표다.</summary>
 public sealed class BendFittingCatalog

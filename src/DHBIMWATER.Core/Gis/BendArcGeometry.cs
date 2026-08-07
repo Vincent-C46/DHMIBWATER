@@ -25,7 +25,7 @@ public static class BendArcGeometry
     /// <param name="dirB">V에서 반대쪽 직관으로 나가는 단위벡터.</param>
     /// <param name="angleDeg">곡관 각도 θ(=편각). 두 방향의 사잇각은 180−θ다.</param>
     /// <param name="radiusMm">R — 중심선 호의 곡률반경(mm).</param>
-    /// <param name="layingLengthMm">t — 절점에서 관 끝까지의 거리(mm).</param>
+    /// <param name="layingLengthMm">t — 절점에서 관 끝까지의 거리(mm). 양방향 동일하다.</param>
     /// <param name="mmToCoordinate">mm를 좌표 단위로 바꾸는 배율. 기본 0.001(mm→m).</param>
     public static BendArcPoints Compute(
         Point3D node,
@@ -35,6 +35,26 @@ public static class BendArcGeometry
         double radiusMm,
         double layingLengthMm,
         double mmToCoordinate = 0.001)
+        => Compute(node, dirA, dirB, angleDeg, radiusMm, layingLengthMm, layingLengthMm, mmToCoordinate);
+
+    /// <summary>
+    /// 양쪽 관 끝 거리가 다른 곡관(B형 — 한쪽에 직관부 s가 더 붙는다)용.
+    /// </summary>
+    /// <remarks>
+    /// 호 자체는 비대칭의 영향을 받지 않는다. 호는 R과 θ만으로 결정되고 접점은 절점에서 양쪽 T로 대칭이라,
+    /// 달라지는 것은 접점 바깥 직관부 길이(= 관 끝 P1/P3의 위치)뿐이다. P2 계산식은 그대로다.
+    /// </remarks>
+    /// <param name="layingLengthAMm">dirA 방향 관 끝까지의 거리(mm).</param>
+    /// <param name="layingLengthBMm">dirB 방향 관 끝까지의 거리(mm).</param>
+    public static BendArcPoints Compute(
+        Point3D node,
+        Vector3D dirA,
+        Vector3D dirB,
+        double angleDeg,
+        double radiusMm,
+        double layingLengthAMm,
+        double layingLengthBMm,
+        double mmToCoordinate = 0.001)
     {
         // V에서 호 쪽을 향하는 내각 이등분선. 두 방향이 정반대(편각 0)면 정의되지 않는다.
         var sum = new Vector3D(dirA.X + dirB.X, dirA.Y + dirB.Y, dirA.Z + dirB.Z);
@@ -43,13 +63,12 @@ public static class BendArcGeometry
         var bisector = sum.Normalize();
 
         var externalMm = ExternalDistance(radiusMm, angleDeg);
-        var t = layingLengthMm * mmToCoordinate;
         var e = externalMm * mmToCoordinate;
 
         return new BendArcPoints(
-            Offset(node, dirA, t),
+            Offset(node, dirA, layingLengthAMm * mmToCoordinate),
             Offset(node, bisector, e),
-            Offset(node, dirB, t),
+            Offset(node, dirB, layingLengthBMm * mmToCoordinate),
             externalMm);
     }
 

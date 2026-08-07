@@ -30,6 +30,8 @@ public sealed class PipeLayoutViewModel : ViewModelBase
     private ValveRoomOutline _canvasOutline = ValveRoomOutline.Empty;
     private double _canvasWidth, _canvasHeight;
     private double _inOffsetMm = 500, _outOffsetMm = 500;
+    /// <summary>IN/OUT 화살표가 벽 내측면에 닿는 접점(캔버스 좌표, mm). 끝점 스냅 후보로 쓴다.</summary>
+    private readonly List<DHBIMWATER.Core.Geometry.Point2D> _arrowAnchors = [];
     private bool _arrowFromTop;
     private bool _snapOutline = true;
 
@@ -194,7 +196,7 @@ public sealed class PipeLayoutViewModel : ViewModelBase
 
         // 네트워크·기준점·외곽선 후보 중 커서에 가장 가까운 것을 고른다.
         DHBIMWATER.Core.Geometry.Point2D? best = null;
-        foreach (var candidate in OutlineSnapCandidates(point).Append(networkSnap).Append(referenceSnap))
+        foreach (var candidate in OutlineSnapCandidates(point).Concat(ArrowSnapCandidates(point)).Append(networkSnap).Append(referenceSnap))
         {
             if (candidate is null) continue;
             if (best is null || point.DistanceTo(candidate) < point.DistanceTo(best)) best = candidate;
@@ -211,6 +213,14 @@ public sealed class PipeLayoutViewModel : ViewModelBase
         if (SnapNearest) candidates = candidates.Concat(_canvasOutline.NearestPoints(point));
         foreach (var candidate in candidates)
             if (point.DistanceTo(candidate) <= PipeTopologyBuilder.SnapTolerance) yield return candidate;
+    }
+
+    /// <summary>IN/OUT 화살표의 벽면 접점을 끝점 스냅 후보로 낸다.</summary>
+    private IEnumerable<DHBIMWATER.Core.Geometry.Point2D?> ArrowSnapCandidates(DHBIMWATER.Core.Geometry.Point2D point)
+    {
+        if (!SnapEndpoint) yield break;
+        foreach (var anchor in _arrowAnchors)
+            if (point.DistanceTo(anchor) <= PipeTopologyBuilder.SnapTolerance) yield return anchor;
     }
 
     private void PickOutline()
@@ -280,6 +290,7 @@ public sealed class PipeLayoutViewModel : ViewModelBase
     private void RefreshArrows()
     {
         OutlineArrows.Clear();
+        _arrowAnchors.Clear();
         if (_canvasOutline.IsEmpty) return;
 
         // 화살표는 좌/우 내측면에 고정하고, 사용자는 상하 위치만 지정한다(확정 사항).
@@ -292,7 +303,9 @@ public sealed class PipeLayoutViewModel : ViewModelBase
     {
         const double ShaftPx = 46, HeadPx = 10;
         var y = ArrowFromTop ? _canvasOutline.MaxY - offsetMm : _canvasOutline.MinY + offsetMm;
-        var anchor = Transform.ToScreen(new DHBIMWATER.Core.Geometry.Point2D(faceX, y));
+        var anchorModel = new DHBIMWATER.Core.Geometry.Point2D(faceX, y);
+        _arrowAnchors.Add(anchorModel);   // 벽면 접점을 끝점 스냅 후보로 등록
+        var anchor = Transform.ToScreen(anchorModel);
 
         var isIn = label == "IN";
         var tail = isIn ? anchor.X - ShaftPx : anchor.X;
@@ -386,6 +399,7 @@ public sealed class PipeLayoutViewModel : ViewModelBase
         if (SnapReferencePoint && snapped.DistanceTo(referencePoint) <= double.Epsilon) return "+";
         if (SnapIntersection && _network.Nodes.Any(x => x.Degree >= 3 && x.Position.DistanceTo(snapped) <= double.Epsilon)) return "×";
         if (SnapEndpoint && _network.Nodes.Any(x => x.Position.DistanceTo(snapped) <= double.Epsilon)) return "□";
+        if (SnapEndpoint && _arrowAnchors.Any(x => x.DistanceTo(snapped) <= ValveRoomOutline.Tolerance)) return "□";
         if (SnapOutline && !_canvasOutline.IsEmpty)
         {
             if (SnapEndpoint && _canvasOutline.Endpoints().Any(x => x.DistanceTo(snapped) <= ValveRoomOutline.Tolerance)) return "□";

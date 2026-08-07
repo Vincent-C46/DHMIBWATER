@@ -11,7 +11,8 @@ internal sealed class RevitAlignmentBeamPlacementRepo : IAlignmentBeamPlacementR
 {
     private readonly Func<Document?> _doc;
     public RevitAlignmentBeamPlacementRepo(Func<Document?> doc) => _doc = doc;
-    public int PlaceAlong(IReadOnlyList<PipeAlignment> alignments, string beamTypeName, string? levelName, double intervalM, bool alignTangent, AlignmentPlacementOrigin origin)
+    public int PlaceAlong(IReadOnlyList<PipeAlignment> alignments, string beamTypeName, string? levelName, double intervalM, bool alignTangent, AlignmentPlacementOrigin origin,
+        IReadOnlyList<IReadOnlyList<VertexTrim>>? trims = null)
     {
         var doc = _doc() ?? throw new InvalidOperationException("활성 Revit 문서가 없습니다.");
         var type = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_StructuralFraming).WhereElementIsElementType().Cast<FamilySymbol>().FirstOrDefault(x => x.Name == beamTypeName) ?? throw new InvalidOperationException($"빔 유형을 찾을 수 없습니다: {beamTypeName}");
@@ -23,14 +24,20 @@ internal sealed class RevitAlignmentBeamPlacementRepo : IAlignmentBeamPlacementR
         var count = 0;
         // SamplePoints(점 배치)가 아니라 SampleSegments로 intervalM(6m)마다 끊어 시작/끝점을 잇는 선 기반 보를 생성한다.
         // alignTangent는 선 기반 보에서는 커브가 곧 방향이므로 사용하지 않는다(회전 불필요).
-        foreach (var alignment in alignments) foreach (var segment in AlignmentIntervalSampler.SampleSegments(alignment.Vertices, intervalM))
+        // 곡관이 들어가는 정점에서는 그 몸통 자리(t, B형은 하류쪽 t+s)만큼 직관을 만들지 않는다.
+        for (var index = 0; index < alignments.Count; index++)
         {
-            var start = ToXyz(segment.Start, alignment.DiameterMm, origin, basePoint);
-            var end = ToXyz(segment.End, alignment.DiameterMm, origin, basePoint);
-            if (start.DistanceTo(end) < minLengthFt) continue;
-            var instance = doc.Create.NewFamilyInstance(Line.CreateBound(start, end), type, level, StructuralType.Beam);
-            SuppressEndAdjustments(instance);
-            count++;
+            var alignment = alignments[index];
+            var vertexTrims = trims is not null && index < trims.Count ? trims[index] : null;
+            foreach (var segment in AlignmentIntervalSampler.SampleSegments(alignment.Vertices, intervalM, vertexTrims))
+            {
+                var start = ToXyz(segment.Start, alignment.DiameterMm, origin, basePoint);
+                var end = ToXyz(segment.End, alignment.DiameterMm, origin, basePoint);
+                if (start.DistanceTo(end) < minLengthFt) continue;
+                var instance = doc.Create.NewFamilyInstance(Line.CreateBound(start, end), type, level, StructuralType.Beam);
+                SuppressEndAdjustments(instance);
+                count++;
+            }
         }
         return count;
     }

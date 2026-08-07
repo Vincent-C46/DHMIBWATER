@@ -68,7 +68,7 @@
                         </StackPanel>
                     </Grid>
                 </TabItem>
-                <TabItem Header="출력 설정">
+                <TabItem Header="모델 유형 선택">
                     <StackPanel Margin="16">
                         <StackPanel Orientation="Horizontal">
                             <RadioButton Content="DirectShape (선형 형상)" IsChecked="{Binding IsDirectShape}" GroupName="Output"/>
@@ -95,7 +95,8 @@
                         </StackPanel>
                     </StackPanel>
                 </TabItem>
-                <TabItem Header="곡관 설정">
+                <!-- 곡관 설정 탭: 임시 숨김. 다시 노출하려면 Visibility 속성 제거 -->
+                <TabItem Header="곡관 설정" Visibility="Collapsed">
                     <StackPanel Margin="12">
                         <TextBlock Foreground="#B26B00" Text="{Binding SettingsNotice}" TextWrapping="Wrap"/>
                         <StackPanel Orientation="Horizontal" Margin="0,8">
@@ -111,7 +112,8 @@
                         <DataGrid Height="180" ItemsSource="{Binding Fittings}" SelectedItem="{Binding SelectedFitting}" AutoGenerateColumns="True"/>
                     </StackPanel>
                 </TabItem>
-                <TabItem Header="진단">
+                <!-- 진단 탭: 임시 숨김. 다시 노출하려면 Visibility 속성 제거 -->
+                <TabItem Header="진단" Visibility="Collapsed">
                     <Grid Margin="8">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
