@@ -4,8 +4,16 @@ namespace DHBIMWATER.Application.DTOs.Gis;
 
 public enum PipeAlignmentOutputMode { DirectShape, Beam, PipingSystem }
 
-/// <summary>입력 파일 1개와 그 파일의 필드 매핑. null 필드는 해당 값을 읽지 않는다.</summary>
-public sealed record AlignmentSourceFile(string FilePath, string PipeKind, string? DiameterField, string? KindField, IReadOnlyList<string>? Layers = null);
+/// <summary>엑셀 시트 1개를 관로 선형으로 읽기 위한 열 매핑. X·Y·Z는 필수, 나머지는 선택.</summary>
+/// <param name="StationColumnIndex">선택. 체이니지 정렬 검증용.</param>
+/// <param name="DiameterColumnIndex">선택. 시트 전체가 관로 1개(=레코드 1개)이므로, 데이터 영역에서 처음 찾은 값 하나를 그 레코드의 직경 필드값으로 쓴다.</param>
+/// <param name="KindColumnIndex">선택. DiameterColumnIndex와 동일한 방식으로 관종 필드값을 읽는다.</param>
+/// <param name="FittingColumnIndex">선택. DiameterColumnIndex와 동일한 방식으로 피팅(이형관)명을 읽는다. 배치 로직은 아직 없고 값만 속성으로 보관한다.</param>
+public sealed record ExcelAlignmentMapping(string SheetName, int HeaderRow, int DataStartRow, int XColumnIndex, int YColumnIndex, int ZColumnIndex, int? StationColumnIndex, int? DiameterColumnIndex = null, int? KindColumnIndex = null, int? FittingColumnIndex = null);
+
+/// <summary>입력 파일 1개와 그 파일의 필드 매핑. null 필드는 해당 값을 읽지 않는다. ExcelMapping이 있으면 엑셀 리더가 재읽기 시에도 이를 사용한다.</summary>
+/// <param name="ManualDiameterMm">직경 필드로 해석하지 못했을 때(엑셀처럼 필드 자체가 없는 경우 포함) 대신 쓸 수동 입력값. null 또는 0 이하면 쓰지 않는다.</param>
+public sealed record AlignmentSourceFile(string FilePath, string PipeKind, string? DiameterField, string? KindField, IReadOnlyList<string>? Layers = null, ExcelAlignmentMapping? ExcelMapping = null, double? ManualDiameterMm = null);
 
 public sealed record PipeAlignmentModelingRequest
 {
@@ -19,6 +27,10 @@ public sealed record PipeAlignmentModelingRequest
     public PipeAlignmentOutputMode OutputMode { get; init; } = PipeAlignmentOutputMode.DirectShape;
     public double IntervalMm { get; init; } = 6000;
     public string? BeamTypeName { get; init; }
+    /// <summary>빔 인스턴스에 직경(mm)을 기록할 파라미터명. null이면 기록하지 않는다.</summary>
+    public string? BeamDiameterParameterName { get; init; }
+    /// <summary>빔 인스턴스에 관종을 기록할 파라미터명. null이면 기록하지 않는다.</summary>
+    public string? BeamKindParameterName { get; init; }
     public string? PipingSystemTypeName { get; init; }
     public string? PipeTypeName { get; init; }
     public string? LevelName { get; init; }

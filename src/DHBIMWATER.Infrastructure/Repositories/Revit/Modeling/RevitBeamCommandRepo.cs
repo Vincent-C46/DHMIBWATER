@@ -18,7 +18,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             _elementTypeCmdRepo = elementTypeRepo;
         }
 
-        public int CreateBeam(BeamDefinition beamDef)
+        public int CreateBeam(BeamDefinition beamDef, ConcreteSpec? concrete = null)
         {
             var doc = _doc();
             if (doc == null) return 0;
@@ -55,7 +55,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             }
             else
             {
-                var spec = new BeamTypeSpec(beamDef.Width, beamDef.Height, $"{beamDef.Width} x {beamDef.Height}");
+                var spec = new BeamTypeSpec(beamDef.Width, beamDef.Height, $"{beamDef.Width} x {beamDef.Height}", concrete);
                 int typeId = _elementTypeCmdRepo.FindOrCreateBeamType(spec);
                 beamType = doc.GetElement(new ElementId((long)typeId)) as FamilySymbol;
                 if (beamType == null) return 0;

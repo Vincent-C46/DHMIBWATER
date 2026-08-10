@@ -11,7 +11,7 @@ namespace DHBIMWATER.Application.Interfaces
 {
     public interface IWallCommandRepo
     {
-        int CreateLinearWall(LinearWallDefinition linearWallDefinition);
-        int CreateProfileWall(ProfileWallDefinition profileWallDefinition);
+        int CreateLinearWall(LinearWallDefinition linearWallDefinition, ConcreteSpec? concrete = null);
+        int CreateProfileWall(ProfileWallDefinition profileWallDefinition, ConcreteSpec? concrete = null);
     }
 }

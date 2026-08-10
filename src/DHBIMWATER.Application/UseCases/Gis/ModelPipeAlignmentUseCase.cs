@@ -48,7 +48,7 @@ public sealed class ModelPipeAlignmentUseCase
                 var (count, skipped, repoWarnings) = request.OutputMode switch
                 {
                     PipeAlignmentOutputMode.DirectShape => ToDirectShape(loaded.Alignments, origin),
-                    PipeAlignmentOutputMode.Beam => (_beamRepo.PlaceAlong(loaded.Alignments, Require(request.BeamTypeName, "빔 유형"), request.LevelName, request.IntervalMm / 1000d, request.AlignTangent, origin, bendPlan?.Plans.Select(x => x.Trims).ToList()), 0, (IReadOnlyList<string>)bendWarnings),
+                    PipeAlignmentOutputMode.Beam => (_beamRepo.PlaceAlong(loaded.Alignments, Require(request.BeamTypeName, "빔 유형"), request.LevelName, request.IntervalMm / 1000d, request.AlignTangent, origin, bendPlan?.Plans.Select(x => x.Trims).ToList(), request.BeamDiameterParameterName, request.BeamKindParameterName), 0, (IReadOnlyList<string>)bendWarnings),
                     PipeAlignmentOutputMode.PipingSystem => (_pipeRepo.PlaceAlong(loaded.Alignments, Require(request.PipingSystemTypeName, "파이프 시스템 유형"), Require(request.PipeTypeName, "PipeType"), request.LevelName, request.IntervalMm / 1000d, origin), 0, (IReadOnlyList<string>)Array.Empty<string>()),
                     _ => throw new ArgumentOutOfRangeException(nameof(request.OutputMode))
                 };

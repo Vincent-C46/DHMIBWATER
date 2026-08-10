@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1781655254905,
+  "lastScanned": 1786327019443,
   "projectRoot": "F:\\02_Work\\04_Addin\\DHBIMWATER",
   "techStack": {
     "languages": [],
@@ -26,7 +26,8 @@
     "workspaces": [],
     "mainDirectories": [
       "docs",
-      "src"
+      "src",
+      "tests"
     ],
     "gitBranches": {
       "defaultBranch": "main",
@@ -38,20 +39,21 @@
     "docs": {
       "path": "docs",
       "purpose": "Documentation",
-      "fileCount": 4,
-      "lastAccessed": 1781655254746,
+      "fileCount": 32,
+      "lastAccessed": 1786327019187,
       "keyFiles": [
         "02_컨트럴등록.md",
-        "01_기본셋팅.md",
         "03_뷰모델구현.md",
-        "04_Github.md"
+        "04_Github.md",
+        "01_기본셋팅.md",
+        "부재별탭_ElementCode_정렬_계획.md"
       ]
     },
     "installer": {
       "path": "installer",
       "purpose": null,
       "fileCount": 6,
-      "lastAccessed": 1781655254749,
+      "lastAccessed": 1786327019188,
       "keyFiles": [
         "README.md",
         "DHBIMWATER_2025.nsi",
@@ -64,130 +66,269 @@
       "path": "sandbox",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1781655254750,
+      "lastAccessed": 1786327019190,
       "keyFiles": []
     },
     "src": {
       "path": "src",
       "purpose": "Source code",
       "fileCount": 0,
-      "lastAccessed": 1781655254751,
+      "lastAccessed": 1786327019191,
+      "keyFiles": []
+    },
+    "tests": {
+      "path": "tests",
+      "purpose": "Test files",
+      "fileCount": 0,
+      "lastAccessed": 1786327019192,
       "keyFiles": []
     }
   },
   "hotPaths": [
     {
-      "path": "src\\DHBIMWATER.UI\\ViewModels\\Quantity\\QuantityViewModel.cs",
-      "accessCount": 20,
-      "lastAccessed": 1781678572755,
+      "path": "src\\DHBIMWATER.UI\\ViewModels\\Modeling\\PipeAlignmentModelingViewModel.cs",
+      "accessCount": 27,
+      "lastAccessed": 1786350839830,
       "type": "file"
     },
     {
-      "path": "src\\DHBIMWATER.UI\\Views\\Quantity\\QuantityView.xaml",
-      "accessCount": 19,
-      "lastAccessed": 1781678592250,
+      "path": "src\\DHBIMWATER.UI\\Views\\Modeling\\PipeAlignmentModelingView.xaml",
+      "accessCount": 17,
+      "lastAccessed": 1786349654048,
+      "type": "file"
+    },
+    {
+      "path": "src\\DHBIMWATER.UI\\ViewModels\\Modeling\\ExcelAlignmentMappingViewModel.cs",
+      "accessCount": 12,
+      "lastAccessed": 1786346702746,
       "type": "file"
     },
     {
       "path": "src",
-      "accessCount": 8,
-      "lastAccessed": 1781675101488,
+      "accessCount": 9,
+      "lastAccessed": 1786351385956,
       "type": "directory"
+    },
+    {
+      "path": "src\\DHBIMWATER.Application\\DTOs\\Gis\\PipeAlignmentModelingRequest.cs",
+      "accessCount": 7,
+      "lastAccessed": 1786349534687,
+      "type": "file"
+    },
+    {
+      "path": "src\\DHBIMWATER.Infrastructure\\Repositories\\Revit\\Modeling\\RevitAlignmentBeamPlacementRepo.cs",
+      "accessCount": 7,
+      "lastAccessed": 1786351585675,
+      "type": "file"
+    },
+    {
+      "path": "src\\DHBIMWATER.Infrastructure\\Repositories\\Gis\\ExcelAlignmentReader.cs",
+      "accessCount": 6,
+      "lastAccessed": 1786346659939,
+      "type": "file"
+    },
+    {
+      "path": "PROGRESS.md",
+      "accessCount": 6,
+      "lastAccessed": 1786349828037,
+      "type": "file"
+    },
+    {
+      "path": "src\\DHBIMWATER.Application\\Gis\\AlignmentSourceLoader.cs",
+      "accessCount": 6,
+      "lastAccessed": 1786350792936,
+      "type": "file"
+    },
+    {
+      "path": "src\\DHBIMWATER.UI\\Views\\Modeling\\ExcelAlignmentMappingView.xaml",
+      "accessCount": 5,
+      "lastAccessed": 1786346721500,
+      "type": "file"
+    },
+    {
+      "path": "src\\DHBIMWATER.Infrastructure\\DependencyInjection\\ServiceCollectionExtensions.cs",
+      "accessCount": 3,
+      "lastAccessed": 1786328477902,
+      "type": "directory"
+    },
+    {
+      "path": "src\\DHBIMWATER.Application",
+      "accessCount": 3,
+      "lastAccessed": 1786349330645,
+      "type": "directory"
+    },
+    {
+      "path": "src\\DHBIMWATER.Application\\UseCases\\Gis\\ModelPipeAlignmentUseCase.cs",
+      "accessCount": 3,
+      "lastAccessed": 1786349586229,
+      "type": "file"
+    },
+    {
+      "path": "src\\DHBIMWATER.Application\\Interfaces\\Gis\\IAlignmentBeamPlacementRepo.cs",
+      "accessCount": 3,
+      "lastAccessed": 1786351357164,
+      "type": "file"
+    },
+    {
+      "path": "src\\DHBIMWATER.Core\\Gis\\PipeAlignment.cs",
+      "accessCount": 2,
+      "lastAccessed": 1786346453165,
+      "type": "file"
+    },
+    {
+      "path": "C:\\Users\\admin\\.claude\\projects\\F--02-Work-04-Addin-DHBIMWATER\\memory\\MEMORY.md",
+      "accessCount": 2,
+      "lastAccessed": 1786347276955,
+      "type": "file"
+    },
+    {
+      "path": "src\\DHBIMWATER.Infrastructure\\Repositories\\Revit\\Modeling\\RevitPipeAlignmentCommandRepo.cs",
+      "accessCount": 2,
+      "lastAccessed": 1786349040885,
+      "type": "file"
+    },
+    {
+      "path": "src\\DHBIMWATER.Core\\Gis\\AlignmentAttributeParser.cs",
+      "accessCount": 2,
+      "lastAccessed": 1786349361060,
+      "type": "file"
+    },
+    {
+      "path": "src\\DHBIMWATER.Infrastructure\\Repositories\\Revit\\Modeling\\RevitElementTypeQueryRepo.cs",
+      "accessCount": 2,
+      "lastAccessed": 1786351352659,
+      "type": "file"
+    },
+    {
+      "path": "src\\DHBIMWATER.Application\\Interfaces\\IElementTypeQueryRepo.cs",
+      "accessCount": 2,
+      "lastAccessed": 1786351354231,
+      "type": "file"
+    },
+    {
+      "path": "src\\DHBIMWATER.Application\\Interfaces\\IProjectLocationCommandRepo.cs",
+      "accessCount": 1,
+      "lastAccessed": 1786327730682,
+      "type": "file"
+    },
+    {
+      "path": "src\\DHBIMWATER.Infrastructure\\Repositories\\Revit\\Modeling\\RevitProjectLocationCommandRepo.cs",
+      "accessCount": 1,
+      "lastAccessed": 1786327733230,
+      "type": "file"
+    },
+    {
+      "path": "src\\DHBIMWATER.Infrastructure\\Helpers\\AlignmentPlacementMapper.cs",
+      "accessCount": 1,
+      "lastAccessed": 1786327734024,
+      "type": "file"
+    },
+    {
+      "path": "src\\DHBIMWATER.Infrastructure\\Converters",
+      "accessCount": 1,
+      "lastAccessed": 1786327892277,
+      "type": "directory"
+    },
+    {
+      "path": "src\\DHBIMWATER.UI\\DependencyInjection\\ServiceCollectionExtensions.cs",
+      "accessCount": 1,
+      "lastAccessed": 1786327910242,
+      "type": "file"
     },
     {
       "path": "",
-      "accessCount": 6,
-      "lastAccessed": 1781675956696,
+      "accessCount": 1,
+      "lastAccessed": 1786328404972,
       "type": "directory"
     },
     {
-      "path": "src\\DHBIMWATER.Revit\\Commands\\Quantity\\QuantityCommand.cs",
-      "accessCount": 5,
-      "lastAccessed": 1781675827518,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.Revit\\Commands\\Quantity\\QuantityRequestHandler.cs",
-      "accessCount": 3,
-      "lastAccessed": 1781675772574,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.UI\\ViewModels\\Modeling\\WaterTankViewModel.cs",
-      "accessCount": 2,
-      "lastAccessed": 1781658621327,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.UI\\Views\\Modeling\\WaterTankView.xaml",
-      "accessCount": 2,
-      "lastAccessed": 1781658629755,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.UI\\Views\\Quantity\\QuantityView.xaml.cs",
-      "accessCount": 2,
-      "lastAccessed": 1781675115505,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.Revit\\Commands\\Quantity\\QuantityRequest.cs",
-      "accessCount": 2,
-      "lastAccessed": 1781675770760,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.Core\\Quantity\\QuantityItem.cs",
-      "accessCount": 2,
-      "lastAccessed": 1781675982918,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.UI\\Converters\\QuantityStatusConverter.cs",
-      "accessCount": 2,
-      "lastAccessed": 1781676190728,
-      "type": "file"
-    },
-    {
-      "path": "docs\\ai\\wtank_ui_todo.md",
+      "path": "src\\DHBIMWATER.Application\\Interfaces\\IProjectLocationQueryRepo.cs",
       "accessCount": 1,
-      "lastAccessed": 1781656859419,
+      "lastAccessed": 1786328455844,
       "type": "file"
     },
     {
-      "path": "docs\\ai\\06_ui.md",
+      "path": "src\\DHBIMWATER.Infrastructure\\Repositories\\Revit\\Modeling\\RevitProjectLocationQueryRepo.cs",
       "accessCount": 1,
-      "lastAccessed": 1781658620203,
+      "lastAccessed": 1786328466534,
       "type": "file"
     },
     {
-      "path": "src\\DHBIMWATER.Revit\\Commands\\WaterTankCommand.cs",
+      "path": "src\\DHBIMWATER.Application\\DTOs\\Gis\\ShapefileReadResult.cs",
       "accessCount": 1,
-      "lastAccessed": 1781658636206,
+      "lastAccessed": 1786334063590,
       "type": "file"
     },
     {
-      "path": "src\\DHBIMWATER.Application\\UseCases\\QuantityCalculator\\CalculateQuantityUseCase.cs",
+      "path": "tests",
       "accessCount": 1,
-      "lastAccessed": 1781674751458,
+      "lastAccessed": 1786334297852,
+      "type": "directory"
+    },
+    {
+      "path": "C:\\Users\\admin\\.claude\\projects\\F--02-Work-04-Addin-DHBIMWATER\\memory\\project_fitting_placement.md",
+      "accessCount": 1,
+      "lastAccessed": 1786347264991,
       "type": "file"
     },
     {
-      "path": "src\\DHBIMWATER.Infrastructure\\Repositories\\Revit\\Storage\\ElementQuantityRepo.cs",
+      "path": "src\\DHBIMWATER.Application\\Interfaces\\IBeamCommandRepo.cs",
       "accessCount": 1,
-      "lastAccessed": 1781674752399,
+      "lastAccessed": 1786348938376,
       "type": "file"
     },
     {
-      "path": "src\\DHBIMWATER.Infrastructure\\Transactions\\RevitTransactionContext.cs",
+      "path": "src\\DHBIMWATER.Infrastructure",
       "accessCount": 1,
-      "lastAccessed": 1781675113492,
+      "lastAccessed": 1786348995041,
+      "type": "directory"
+    },
+    {
+      "path": "src\\DHBIMWATER.Infrastructure\\Repositories\\Gis\\DwgAlignmentReader.cs",
+      "accessCount": 1,
+      "lastAccessed": 1786348999536,
       "type": "file"
     },
     {
-      "path": "C:\\Users\\admin\\.claude\\plans\\lazy-yawning-treehouse.md",
+      "path": "src\\DHBIMWATER.Infrastructure\\Repositories\\Revit",
       "accessCount": 1,
-      "lastAccessed": 1781676088826,
+      "lastAccessed": 1786349027363,
+      "type": "directory"
+    },
+    {
+      "path": "src\\DHBIMWATER.Application\\Interfaces\\IWallCommandRepo.cs",
+      "accessCount": 1,
+      "lastAccessed": 1786349172334,
+      "type": "file"
+    },
+    {
+      "path": "src\\DHBIMWATER.Application\\DTOs\\Revit\\PumpingStation\\PumpMaterialSpecDto.cs",
+      "accessCount": 1,
+      "lastAccessed": 1786349175629,
+      "type": "file"
+    },
+    {
+      "path": "src\\DHBIMWATER.Infrastructure\\Converters\\RevitUnitConverter.cs",
+      "accessCount": 1,
+      "lastAccessed": 1786349348346,
+      "type": "file"
+    },
+    {
+      "path": "src\\DHBIMWATER.Infrastructure\\Repositories\\Mock\\MockElementTypeQueryRepo.cs",
+      "accessCount": 1,
+      "lastAccessed": 1786349526422,
+      "type": "file"
+    },
+    {
+      "path": "src\\DHBIMWATER.Infrastructure\\Repositories\\Mock\\MockAlignmentBeamPlacementRepo.cs",
+      "accessCount": 1,
+      "lastAccessed": 1786349551737,
+      "type": "file"
+    },
+    {
+      "path": "src\\DHBIMWATER.Infrastructure\\Repositories\\Revit\\Modeling\\RevitFoundationCommandRepo.cs",
+      "accessCount": 1,
+      "lastAccessed": 1786351393421,
       "type": "file"
     }
   ],

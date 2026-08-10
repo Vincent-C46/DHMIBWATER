@@ -20,7 +20,10 @@ public sealed class DwgAlignmentReader : IAlignmentSourceReader
         var document = DwgReader.Read(filePath);
         var features = document.ModelSpace.Entities.SelectMany((entity, index) => ToFeature(entity, filePath, index + 1)).ToList();
         var vertices = features.SelectMany(x => x.Vertices).ToList();
+        // LAYER는 CAD 레이어명을 레이어 필터용으로 Attributes에 합쳐둔 것일 뿐 실제 XDATA 필드가 아니므로,
+        // 직경·관종 필드 콤보박스에 노출되는 fields 목록에서는 제외한다.
         var fields = features.SelectMany(x => x.Attributes.Keys).Distinct(StringComparer.OrdinalIgnoreCase)
+            .Where(x => !string.Equals(x, "LAYER", StringComparison.OrdinalIgnoreCase))
             .Select(x => new ShapefileFieldInfo(x, 'C', 0, 0)).ToList();
         var warnings = features.Count == 0
             ? new List<string> { "ModelSpace에서 POLYLINE, POLYLINE3D 또는 LWPOLYLINE 엔티티를 찾지 못했습니다." }

@@ -18,6 +18,7 @@ public sealed class DxfAlignmentReader : IAlignmentSourceReader
         var warnings = features.Count == 0 ? new List<string> { "POLYLINE 또는 LWPOLYLINE 엔티티를 찾지 못했습니다. DWG 파일이 아닌 ASCII DXF인지 확인하세요." } : new List<string>();
         var extent = features.SelectMany(x => x.Vertices).ToList();
         var fields = features.SelectMany(x => x.Attributes.Keys).Distinct(StringComparer.OrdinalIgnoreCase)
+            .Where(x => !string.Equals(x, "LAYER", StringComparison.OrdinalIgnoreCase))
             .Select(x => new ShapefileFieldInfo(x, 'C', 0, 0)).ToList();
         return new ShapefileReadResult(features, fields, extent.Count == 0 ? ShapefileExtent.Empty : new ShapefileExtent(extent.Min(x => x.X), extent.Min(x => x.Y), extent.Max(x => x.X), extent.Max(x => x.Y), extent.Min(x => x.Z), extent.Max(x => x.Z)), null, null, "UTF-8", features.Count, extent.Count, features.Sum(x => Math.Max(0, x.Vertices.Count - 1)), warnings, features.FirstOrDefault()?.Attributes);
     }
@@ -72,7 +73,12 @@ internal static class DxfGeometryReader
         return result;
     }
     private static IReadOnlyDictionary<string, string> ReadAttributes(IReadOnlyList<(string Code, string Value)> pairs)
-        => CadXDataAttributeParser.Parse(pairs.Where(x => x.Code == "1000").Select(x => x.Value));
+    {
+        var attributes = new Dictionary<string, string>(CadXDataAttributeParser.Parse(pairs.Where(x => x.Code == "1000").Select(x => x.Value)), StringComparer.OrdinalIgnoreCase);
+        var layer = pairs.FirstOrDefault(x => x.Code == "8").Value;
+        if (!string.IsNullOrWhiteSpace(layer)) attributes["LAYER"] = layer;
+        return attributes;
+    }
     private static double Number(string value) => double.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
 }
 

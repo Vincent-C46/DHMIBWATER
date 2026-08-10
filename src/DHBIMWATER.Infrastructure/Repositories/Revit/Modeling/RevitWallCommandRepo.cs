@@ -32,7 +32,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
         #endregion
 
         #region Methods
-        public int CreateLinearWall(LinearWallDefinition linearWallDefinition)
+        public int CreateLinearWall(LinearWallDefinition linearWallDefinition, ConcreteSpec? concrete = null)
         {
             Document? doc = _doc();
 
@@ -61,7 +61,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
                                 UC.MmToFt(linearWallDefinition.EndPoint.Z));
             Curve wallCurve = Line.CreateBound(startPt, endPt);
 
-            var wallSpec = new WallTypeSpec(linearWallDefinition.Thickness, $"일반 - {linearWallDefinition.Thickness}mm", _concrete);
+            var wallSpec = new WallTypeSpec(linearWallDefinition.Thickness, $"일반 - {linearWallDefinition.Thickness}mm", concrete ?? _concrete);
             var wallTypeId = new ElementId((long)_elementTypeCmdRepo.FindOrCreateWallType(wallSpec));
 
             //if (linearWallDefinition.Height <= 0)
@@ -100,7 +100,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
 
             return (int)wall.Id.Value;
         }
-        public int CreateProfileWall(ProfileWallDefinition profileWallDefinition)
+        public int CreateProfileWall(ProfileWallDefinition profileWallDefinition, ConcreteSpec? concrete = null)
         {
             Document? doc = _doc();
 
@@ -110,7 +110,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
                 return 0;
             }
 
-            var wallSpec = new WallTypeSpec(profileWallDefinition.Thickness, $"일반 - {profileWallDefinition.Thickness}mm", _concrete);
+            var wallSpec = new WallTypeSpec(profileWallDefinition.Thickness, $"일반 - {profileWallDefinition.Thickness}mm", concrete ?? _concrete);
 
             var wallTypeIntId = _elementTypeCmdRepo.FindOrCreateWallType(wallSpec);
             if (wallTypeIntId == 0) { _dialog.Warn("Error", "WallType 생성 실패"); return 0; }

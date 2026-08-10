@@ -20,7 +20,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             _doc = doc;
         }
 
-        private ElementId FindOrCreateConcreteMaterial(Document doc)
+        private ElementId FindOrCreateConcreteMaterial(Document doc, ConcreteSpec concrete)
         {
             var allMaterials = new FilteredElementCollector(doc)
                 .OfClass(typeof(Material))
@@ -28,7 +28,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
                 .ToList();
 
             var existing = allMaterials.FirstOrDefault(m =>
-                m.Name.Equals(_concrete.MaterialName, StringComparison.OrdinalIgnoreCase));
+                m.Name.Equals(concrete.MaterialName, StringComparison.OrdinalIgnoreCase));
             if (existing != null) return existing.Id;
 
             var baseMaterial = allMaterials.FirstOrDefault(m =>
@@ -38,8 +38,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             if (baseMaterial == null)
                 return ElementId.InvalidElementId;
 
-            var newMat = baseMaterial.Duplicate(_concrete.MaterialName) as Material;
-            var strength = UnitUtils.ConvertToInternalUnits(_concrete.CompressiveStrength, UnitTypeId.Megapascals);
+            var newMat = baseMaterial.Duplicate(concrete.MaterialName) as Material;
+            var strength = UnitUtils.ConvertToInternalUnits(concrete.CompressiveStrength, UnitTypeId.Megapascals);
             newMat.get_Parameter(BuiltInParameter.PHY_MATERIAL_PARAM_CONCRETE_COMPRESSION)?.Set(strength);
             return newMat.Id;
         }
@@ -48,7 +48,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             var doc = _doc();
             if (doc == null) return 0;
 
-            var materialId = FindOrCreateConcreteMaterial(doc);
+            var materialId = FindOrCreateConcreteMaterial(doc, _concrete);
             var geometry = BuildExtrusion(solidExtrusionDef, materialId);
             var ds = DirectShape.CreateElement(doc, new ElementId(BuiltInCategory.OST_Floors));
             ds.SetShape(new GeometryObject[] { geometry });
@@ -56,13 +56,13 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             return (int)ds.Id.Value;
         }
 
-        public IReadOnlyList<int> CreateDirectShapes(IReadOnlyList<SolidExtrusionDefinition> solidExtrusionDefs)
+        public IReadOnlyList<int> CreateDirectShapes(IReadOnlyList<SolidExtrusionDefinition> solidExtrusionDefs, ConcreteSpec? concrete = null)
         {
             var doc = _doc();
             if (doc == null) return new List<int>() { 0 };
 
             var ids = new List<int>();
-            var materialId = FindOrCreateConcreteMaterial(doc);
+            var materialId = FindOrCreateConcreteMaterial(doc, concrete ?? _concrete);
 
             foreach (var group in solidExtrusionDefs.GroupBy(d => d.ElementCode))
             {

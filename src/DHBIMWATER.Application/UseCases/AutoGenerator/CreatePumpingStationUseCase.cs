@@ -125,17 +125,17 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                     #endregion
                     #region 2. 슬래브 생성
                     foreach (var slabDef in PumpingStationGeometryCalculator.CalculateSlabs(dto))
-                        _slabCmdRepo.CreateSlab(slabDef);
+                        _slabCmdRepo.CreateSlab(slabDef, dto.Materials.Slab);
 
                     // 기초 다이렉트쉐이프
                     var dsDefs = PumpingStationGeometryCalculator.CalculateSolids(dto);
-                    var ids = _dsCmdRepo.CreateDirectShapes(dsDefs);
+                    var ids = _dsCmdRepo.CreateDirectShapes(dsDefs, dto.Materials.Foundation);
                     #endregion
                     #region 3. 벽체 생성
                     foreach (var linearWallDef in PumpingStationGeometryCalculator.CalculateLinearWalls(dto))
-                        _wallCmdRepo.CreateLinearWall(linearWallDef);
+                        _wallCmdRepo.CreateLinearWall(linearWallDef, dto.Materials.Wall);
                     foreach (var profileWallDef in PumpingStationGeometryCalculator.CalculateProfileWalls(dto))
-                        _wallCmdRepo.CreateProfileWall(profileWallDef);
+                        _wallCmdRepo.CreateProfileWall(profileWallDef, dto.Materials.Wall);
 
                     var hull = _classifyWallsUseCase.Execute();
                     var hullStr = string.Join("\n", hull.Select((p, i) => $"[{i}] X={p.X:F0}  Y={p.Y:F0}"));
@@ -143,7 +143,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                     #endregion
                     #region 4. 보 생성
                     foreach (var beamDef in PumpingStationGeometryCalculator.CalculateBeams(dto))
-                        _beamCmdRepo.CreateBeam(beamDef);
+                        _beamCmdRepo.CreateBeam(beamDef, dto.Materials.Girder);
                     #endregion
                     #region 5. 오프닝 배치
                     // 슬래브 오프닝 (사각형)

@@ -37,6 +37,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IElementTypeCommandRepo, RevitElementTypeCommandRepo>();
         services.AddTransient<IWallCommandRepo, RevitWallCommandRepo>();
         services.AddTransient<IProjectLocationCommandRepo, RevitProjectLocationCommandRepo>();
+        services.AddTransient<IProjectLocationQueryRepo, RevitProjectLocationQueryRepo>();
         services.AddTransient<IGenericModelCommandRepo, RevitGenericModelCommandRepo>();
         services.AddTransient<IPipeCommandRepo, RevitPipeMepCommandRepo>();
         services.AddTransient<IPipeCommandRepo, RevitPipeGenericModelCommandRepo>();
@@ -57,6 +58,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IAlignmentSourceReader, ShapefileReader>();
         services.AddTransient<IAlignmentSourceReader, DxfAlignmentReader>();
         services.AddTransient<IAlignmentSourceReader, DwgAlignmentReader>();
+        services.AddTransient<IAlignmentSourceReader, ExcelAlignmentReader>();
+        services.AddTransient<IExcelAlignmentSourceReader, ExcelAlignmentReader>();
         services.AddTransient<IAlignmentBeamPlacementRepo, RevitAlignmentBeamPlacementRepo>();
         services.AddTransient<IAlignmentPipePlacementRepo, RevitAlignmentPipePlacementRepo>();
         services.AddTransient<IBendSettingsRepo, RevitBendSettingsRepo>();
@@ -105,6 +108,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IAlignmentSourceReader, ShapefileReader>();
         services.AddTransient<IAlignmentSourceReader, DxfAlignmentReader>();
         services.AddTransient<IAlignmentSourceReader, DwgAlignmentReader>();
+        services.AddTransient<IAlignmentSourceReader, ExcelAlignmentReader>();
+        services.AddTransient<IExcelAlignmentSourceReader, ExcelAlignmentReader>();
         services.AddTransient<IAlignmentBeamPlacementRepo, MockAlignmentBeamPlacementRepo>();
         services.AddTransient<IAlignmentPipePlacementRepo, MockAlignmentPipePlacementRepo>();
         services.AddTransient<IAlignmentSourceReader, DxfAlignmentReader>();

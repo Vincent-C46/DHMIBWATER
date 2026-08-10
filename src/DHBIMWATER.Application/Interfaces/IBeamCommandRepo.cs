@@ -9,6 +9,6 @@ namespace DHBIMWATER.Application.Interfaces
 {
     public interface IBeamCommandRepo
     {
-        public int CreateBeam(BeamDefinition beamDef);
+        public int CreateBeam(BeamDefinition beamDef, ConcreteSpec? concrete = null);
     }
 }

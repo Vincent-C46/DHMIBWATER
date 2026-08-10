@@ -12,7 +12,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Mock
 {
     public class MockBeamCommandRepo : IBeamCommandRepo
     {
-        public int CreateBeam(BeamDefinition beamDef)
+        public int CreateBeam(BeamDefinition beamDef, ConcreteSpec? concrete = null)
         {
             var mockDialogService = new MockDialogService();
             mockDialogService.Info("Beam Creation", $"{beamDef.ElementCode} 작성완료");

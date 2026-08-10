@@ -21,7 +21,9 @@ public sealed class AlignmentSourceLoader
         {
             var reader = _readers.FirstOrDefault(r => r.CanRead(file.FilePath))
                 ?? throw new InvalidOperationException($"'{file.FilePath}' 파일을 읽을 수 있는 리더가 없습니다.");
-            var read = reader.Read(file.FilePath);
+            var read = reader is IExcelAlignmentSourceReader excelReader && file.ExcelMapping is not null
+                ? excelReader.Read(file.FilePath, file.ExcelMapping)
+                : reader.Read(file.FilePath);
             warnings.AddRange(read.Warnings);
             var layers = file.Layers is { Count: > 0 } ? new HashSet<string>(file.Layers, StringComparer.OrdinalIgnoreCase) : null;
             var failed = 0;
@@ -34,12 +36,16 @@ public sealed class AlignmentSourceLoader
                 var parsed = AlignmentAttributeParser.ParseDiameter(rawDiameter);
                 if (string.IsNullOrWhiteSpace(kind)) kind = parsed.Kind;
                 if (string.IsNullOrWhiteSpace(kind)) kind = file.PipeKind;
-                if (file.DiameterField is null || !parsed.Success)
+                double diameterMm; bool diameterResolved;
+                if (parsed.Success) { diameterMm = parsed.DiameterMm; diameterResolved = true; }
+                else if (file.ManualDiameterMm is > 0) { diameterMm = file.ManualDiameterMm.Value; diameterResolved = true; }
+                else { diameterMm = 0d; diameterResolved = false; }
+                if (!diameterResolved)
                 {
                     unresolved++; failed++;
                     example ??= rawDiameter;
                 }
-                alignments.Add(feature with { PipeKind = kind, DiameterMm = parsed.Success ? parsed.DiameterMm : 0d });
+                alignments.Add(feature with { PipeKind = kind, DiameterMm = diameterMm });
             }
             if (failed > 0)
             {

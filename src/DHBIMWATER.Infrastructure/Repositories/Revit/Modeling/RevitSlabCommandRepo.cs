@@ -20,7 +20,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             _elementTypeCmdRepo = elementTypeRepo;
         }
 
-        public int CreateSlab(SlabDefinition slabDef)
+        public int CreateSlab(SlabDefinition slabDef, ConcreteSpec? concrete = null)
         {
             var doc = _doc();
             if (doc == null) return 0;
@@ -66,7 +66,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
                     curveLoopList.Add(subCurveLoop);
             }
 
-            var floorSpec = new FloorTypeSpec(slabDef.Thickness, $"일반 - {slabDef.Thickness}mm", _concrete);
+            var floorSpec = new FloorTypeSpec(slabDef.Thickness, $"일반 - {slabDef.Thickness}mm", concrete ?? _concrete);
             var floorTypeId = new ElementId((long)_elementTypeCmdRepo.FindOrCreateSlabType(floorSpec));
 
             var level = new FilteredElementCollector(doc)

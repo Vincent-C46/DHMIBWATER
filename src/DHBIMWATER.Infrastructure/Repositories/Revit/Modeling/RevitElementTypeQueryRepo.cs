@@ -60,6 +60,30 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
                 return Enumerable.Empty<string>();
             }
         }
+        public IEnumerable<string> GetBeamInstanceParameterNames(string beamTypeName)
+        {
+            var doc = _docProvider();
+            if (doc is null || string.IsNullOrWhiteSpace(beamTypeName)) return Enumerable.Empty<string>();
+
+            try
+            {
+                var symbol = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_StructuralFraming).WhereElementIsElementType()
+                    .Cast<FamilySymbol>().FirstOrDefault(x => x.Name == beamTypeName);
+                if (symbol is null) return Enumerable.Empty<string>();
+
+                // 인스턴스 전용 파라미터는 유형 자체에서는 조회할 수 없어, 이미 배치된 인스턴스가 있으면 그걸 우선 쓴다.
+                // TODO: 배치된 인스턴스가 하나도 없는 유형은 유형 파라미터만 후보로 보여준다(인스턴스 전용 파라미터 누락 가능).
+                var sampleInstance = new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_StructuralFraming).WhereElementIsNotElementType()
+                    .Cast<FamilyInstance>().FirstOrDefault(x => x.Symbol.Id == symbol.Id);
+                var source = (Element?)sampleInstance ?? symbol;
+                return source.Parameters.Cast<Parameter>().Select(p => p.Definition?.Name).Where(n => !string.IsNullOrWhiteSpace(n))
+                    .Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(n => n).ToList()!;
+            }
+            catch
+            {
+                return Enumerable.Empty<string>();
+            }
+        }
         public IEnumerable<string> GetPipingSystemTypeNames() => GetNames(typeof(PipingSystemType));
         public IEnumerable<string> GetPipeTypeNames() => GetNames(typeof(PipeType));
         private IEnumerable<string> GetNames(Type type)

@@ -12,7 +12,8 @@ namespace DHBIMWATER.Application.DTOs.Revit.PumpingStation
         PumpPlanSpecDto PlanSpecDto,
         PumpProfileSpecDto ProfileSpecDto,
         // HasCheckValve 여부에 따라 선택된 밸브받침 제원 (WithCheckValve / WithoutCheckValve 중 하나)
-        PumpValveDimensionDto ValveBase
+        PumpValveDimensionDto ValveBase,
+        PumpMaterialSpecDto Materials
         //PumpTypeSelectionDto TypeSelectionDto
     );
 }

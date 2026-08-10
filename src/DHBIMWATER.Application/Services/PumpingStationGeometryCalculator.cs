@@ -2184,6 +2184,7 @@ namespace DHBIMWATER.Application.Services
                     BaseLevelName = ValveRoomLevelName,
                     TopLevelName = UpperSlabLevelName,
                     TypeName = "현장타설", // 비우면 기본 StairsType 사용
+                    Concrete = dto.Materials.Stair,
                     ElementCode = "ST1",
                     Category = "계단",
                     Zone = "밸브실",
