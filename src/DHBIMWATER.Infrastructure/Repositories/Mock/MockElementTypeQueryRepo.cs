@@ -19,6 +19,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Mock
                 "Mock 보 타입 4 - 600x900"
             };
         }
+        public IEnumerable<string> GetAdaptiveBendTypeNames() => new[] { "Mock 5점 곡관 : DN100", "Mock 5점 곡관 : DN200", "Mock 3점 곡관 : DN300" };
+        public int GetAdaptiveBendPointCount(string familyTypeName) => familyTypeName.StartsWith("Mock 5점 곡관", StringComparison.Ordinal) ? 5 : familyTypeName.StartsWith("Mock 3점 곡관", StringComparison.Ordinal) ? 3 : -1;
 
         public IEnumerable<string> GetColumnTypeNames()
         {

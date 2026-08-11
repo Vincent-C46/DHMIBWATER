@@ -9,7 +9,7 @@
         d:DataContext="{d:DesignInstance vm:WaterTankViewModel, IsDesignTimeCreatable=False}"
         
         Title="DHBIM WATER - WTank Builder" 
-        Height="Auto" Width="1100"
+        Height="Auto" Width="1100"  
         WindowStartupLocation="CenterScreen"
         Background="#F4F7F9" 
         AllowsTransparency="False" 

@@ -11,44 +11,23 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
     public class RevitDirectShapeCommandRepo : IDirectShapeCommandRepo
     {
         private readonly Func<Document?> _doc;
+        private readonly IElementTypeCommandRepo _elementTypeCmdRepo;
 
         // TODO: 설정값에서 가져오도록 변경 — 굵은골재최대치수-압축강도-슬럼프
         private static readonly ConcreteSpec _concrete = new ConcreteSpec(25, 21, 120);
 
-        public RevitDirectShapeCommandRepo(Func<Document?> doc)
+        public RevitDirectShapeCommandRepo(Func<Document?> doc, IElementTypeCommandRepo elementTypeCmdRepo)
         {
             _doc = doc;
+            _elementTypeCmdRepo = elementTypeCmdRepo;
         }
 
-        private ElementId FindOrCreateConcreteMaterial(Document doc, ConcreteSpec concrete)
-        {
-            var allMaterials = new FilteredElementCollector(doc)
-                .OfClass(typeof(Material))
-                .Cast<Material>()
-                .ToList();
-
-            var existing = allMaterials.FirstOrDefault(m =>
-                m.Name.Equals(concrete.MaterialName, StringComparison.OrdinalIgnoreCase));
-            if (existing != null) return existing.Id;
-
-            var baseMaterial = allMaterials.FirstOrDefault(m =>
-                m.Name.IndexOf("concrete", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                m.Name.Contains("콘크리트"));
-
-            if (baseMaterial == null)
-                return ElementId.InvalidElementId;
-
-            var newMat = baseMaterial.Duplicate(concrete.MaterialName) as Material;
-            var strength = UnitUtils.ConvertToInternalUnits(concrete.CompressiveStrength, UnitTypeId.Megapascals);
-            newMat.get_Parameter(BuiltInParameter.PHY_MATERIAL_PARAM_CONCRETE_COMPRESSION)?.Set(strength);
-            return newMat.Id;
-        }
         public int CreateDirectShape(SolidExtrusionDefinition solidExtrusionDef)
         {
             var doc = _doc();
             if (doc == null) return 0;
 
-            var materialId = FindOrCreateConcreteMaterial(doc, _concrete);
+            var materialId = new ElementId(_elementTypeCmdRepo.FindOrCreateConcreteMaterial(_concrete));
             var geometry = BuildExtrusion(solidExtrusionDef, materialId);
             var ds = DirectShape.CreateElement(doc, new ElementId(BuiltInCategory.OST_Floors));
             ds.SetShape(new GeometryObject[] { geometry });
@@ -62,7 +41,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             if (doc == null) return new List<int>() { 0 };
 
             var ids = new List<int>();
-            var materialId = FindOrCreateConcreteMaterial(doc, concrete ?? _concrete);
+            var materialId = new ElementId(_elementTypeCmdRepo.FindOrCreateConcreteMaterial(concrete ?? _concrete));
 
             foreach (var group in solidExtrusionDefs.GroupBy(d => d.ElementCode))
             {

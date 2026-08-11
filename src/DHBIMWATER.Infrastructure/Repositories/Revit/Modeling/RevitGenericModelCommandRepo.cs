@@ -18,16 +18,12 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             _dialog = dialog;
         }
 
-        public int PlaceInstance(GenericModelPlacementDefinition def)
+        public int PlaceInstance(GenericModelPlacementDefinition def, long levelId, int symbolId)
         {
             Document? doc = _doc();
             if (doc == null) return 0;
 
-            FamilySymbol? symbol = new FilteredElementCollector(doc)
-                .OfClass(typeof(FamilySymbol))
-                .OfCategory(BuiltInCategory.OST_GenericModel)
-                .Cast<FamilySymbol>()
-                .FirstOrDefault(s => s.Name.Contains(def.SymbolName));
+            FamilySymbol? symbol = doc.GetElement(new ElementId((long)symbolId)) as FamilySymbol;
 
             if (symbol == null)
             {
@@ -35,10 +31,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
                 return 0;
             }
 
-            Level? level = new FilteredElementCollector(doc)
-                .OfClass(typeof(Level))
-                .Cast<Level>()
-                .FirstOrDefault(l => l.Name == def.LevelName);
+            Level? level = doc.GetElement(new ElementId(levelId)) as Level;
 
             if (level == null)
             {

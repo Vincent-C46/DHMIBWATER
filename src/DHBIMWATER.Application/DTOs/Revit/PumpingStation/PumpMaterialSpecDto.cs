@@ -7,4 +7,5 @@ public record PumpMaterialSpecDto(
     ConcreteSpec Slab,
     ConcreteSpec Foundation,
     ConcreteSpec Girder,
-    ConcreteSpec Stair);
+    ConcreteSpec Stair,
+    ConcreteSpec LeanConcrete);

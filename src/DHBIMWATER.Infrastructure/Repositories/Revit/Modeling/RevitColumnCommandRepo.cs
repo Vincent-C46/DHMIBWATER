@@ -16,20 +16,13 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             _doc = doc;
         }
 
-        public int CreateColumn(ColumnDefinition def)
+        public int CreateColumn(ColumnDefinition def, long baseLevelId, long topLevelId, int columnTypeId)
         {
             var doc = _doc();
             if (doc == null) return 0;
 
-            var baseLevel = new FilteredElementCollector(doc)
-                .OfClass(typeof(Level))
-                .Cast<Level>()
-                .FirstOrDefault(l => l.Name == def.BaseLevelName);
-
-            var topLevel = new FilteredElementCollector(doc)
-                .OfClass(typeof(Level))
-                .Cast<Level>()
-                .FirstOrDefault(l => l.Name == def.TopLevelName);
+            var baseLevel = doc.GetElement(new ElementId(baseLevelId)) as Level;
+            var topLevel = doc.GetElement(new ElementId(topLevelId)) as Level;
 
             if (baseLevel == null || topLevel == null)
             {
@@ -37,11 +30,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
                 return 0;
             }
 
-            var colType = new FilteredElementCollector(doc)
-                .OfCategory(BuiltInCategory.OST_StructuralColumns)
-                .WhereElementIsElementType()
-                .Cast<FamilySymbol>()
-                .FirstOrDefault(fs => fs.Name == def.TypeName);
+            var colType = doc.GetElement(new ElementId((long)columnTypeId)) as FamilySymbol;
 
             if (colType == null)
             {

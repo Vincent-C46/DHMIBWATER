@@ -24,6 +24,9 @@ public enum BendResolutionKind
 /// 어느 방향이 긴 쪽인지는 이 레코드가 정하지 않는다. 절점 편각만으로는 정할 수 없고
 /// 폴리선 진행 방향이 필요해 <see cref="BendTrimPlanner"/>가 결정한다.
 /// </param>
+/// <param name="WallThicknessMm">e — 곡관 벽 두께(mm). Standard·HasFittingSize일 때만 카탈로그 값이 들어간다.</param>
+/// <param name="FamilyName">카탈로그에 등록된 곡관 패밀리명. 미등록이면 null — 실물 배치를 건너뛴다.</param>
+/// <param name="TypeName">카탈로그에 등록된 곡관 타입명. 미등록이면 null.</param>
 public sealed record BendResolution(
     int NodeId,
     BendResolutionKind Kind,
@@ -35,7 +38,10 @@ public sealed record BendResolution(
     double CenterlineRadiusMm,
     double TangentLengthMm,
     bool HasFittingSize,
-    double ExtraLegLengthMm = 0d)
+    double ExtraLegLengthMm = 0d,
+    double WallThicknessMm = 0d,
+    string? FamilyName = null,
+    string? TypeName = null)
 {
     /// <summary>긴 쪽 관 끝까지의 거리 t + s(mm).</summary>
     public double LongLegLengthMm => LayingLengthMm > 0d ? LayingLengthMm + ExtraLegLengthMm : 0d;
@@ -80,7 +86,8 @@ public static class BendResolver
         var tangent = TangentLength(fitting.CenterlineRadiusMm, nearest);
         return new BendResolution(
             node.NodeId, BendResolutionKind.Standard, theta, nearest, tolerance, residual,
-            fitting.LayingLengthMm, fitting.CenterlineRadiusMm, tangent, true, fitting.ExtraLegLengthMm);
+            fitting.LayingLengthMm, fitting.CenterlineRadiusMm, tangent, true, fitting.ExtraLegLengthMm,
+            fitting.WallThicknessMm, fitting.FamilyName, fitting.TypeName);
     }
 
     public static IReadOnlyList<BendResolution> ResolveAll(IReadOnlyList<NodeClassification> nodes, BendSettings settings, BendForm form)

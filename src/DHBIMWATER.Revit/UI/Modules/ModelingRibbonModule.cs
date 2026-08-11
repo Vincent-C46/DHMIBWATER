@@ -29,9 +29,9 @@ namespace DHBIMWATER.Revit.UI.Modules
             [
                 //panel.AddItem(reservoirBtn),
                 panel.AddItem(pumpingStationBtn),
-                panel.AddItem(pipingBtn),
-                panel.AddItem(valveRoomBtn),
-                panel.AddItem(pipeLayoutBtn),
+                //panel.AddItem(pipingBtn),
+                //panel.AddItem(valveRoomBtn),
+                //panel.AddItem(pipeLayoutBtn),
             ];
         }
     }

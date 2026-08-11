@@ -6,10 +6,14 @@ namespace DHBIMWATER.UI.ViewModels.Modeling;
 public sealed class ConcreteMaterialRowViewModel : ViewModelBase
 {
     private int _maxAggregateSize = 25;
-    private int _compressiveStrength = 27;
+    private int _compressiveStrength;
     private int _slump = 120;
 
-    public ConcreteMaterialRowViewModel(string memberName) => MemberName = memberName;
+    public ConcreteMaterialRowViewModel(string memberName, int defaultCompressiveStrength = 24)
+    {
+        MemberName = memberName;
+        _compressiveStrength = defaultCompressiveStrength;
+    }
 
     public string MemberName { get; }
     public int MaxAggregateSize { get => _maxAggregateSize; set { _maxAggregateSize = value; OnPropertyChanged(nameof(MaxAggregateSize)); OnPropertyChanged(nameof(MaterialName)); } }

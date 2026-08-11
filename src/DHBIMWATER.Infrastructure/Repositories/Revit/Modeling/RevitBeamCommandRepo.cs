@@ -10,56 +10,18 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
     public class RevitBeamCommandRepo : IBeamCommandRepo
     {
         private readonly Func<Document?> _doc;
-        private readonly IElementTypeCommandRepo _elementTypeCmdRepo;
-
-        public RevitBeamCommandRepo(Func<Document?> doc, IElementTypeCommandRepo elementTypeRepo)
+        public RevitBeamCommandRepo(Func<Document?> doc)
         {
             _doc = doc;
-            _elementTypeCmdRepo = elementTypeRepo;
         }
 
-        public int CreateBeam(BeamDefinition beamDef, ConcreteSpec? concrete = null)
+        public int CreateBeam(BeamDefinition beamDef, long levelId, int beamTypeId)
         {
             var doc = _doc();
             if (doc == null) return 0;
 
-            FamilySymbol? beamType;
-
-            if (beamDef.Part == "HAUNCH")
-            {
-                beamType = new FilteredElementCollector(doc)
-                    .OfCategory(BuiltInCategory.OST_StructuralFraming)
-                    .WhereElementIsElementType()
-                    .Cast<FamilySymbol>()
-                    .FirstOrDefault(s => s.Name.Contains("헌치") || s.Name.Contains("haunch") || s.FamilyName.Contains("헌치") || s.FamilyName.Contains("haunch"));
-
-                if (beamType == null)
-                {
-                    //TaskDialog.Show("Error", "헌치 패밀리 심볼을 찾을 수 없습니다.");
-                    return 0;
-                }
-            }
-            else if (!string.IsNullOrEmpty(beamDef.TypeName))
-            {
-                beamType = new FilteredElementCollector(doc)
-                    .OfCategory(BuiltInCategory.OST_StructuralFraming)
-                    .WhereElementIsElementType()
-                    .Cast<FamilySymbol>()
-                    .FirstOrDefault(fs => fs.Name == beamDef.TypeName);
-
-                if (beamType == null)
-                {
-                    TaskDialog.Show("Error", $"보 유형을 찾을 수 없습니다: {beamDef.TypeName}");
-                    return 0;
-                }
-            }
-            else
-            {
-                var spec = new BeamTypeSpec(beamDef.Width, beamDef.Height, $"{beamDef.Width} x {beamDef.Height}", concrete);
-                int typeId = _elementTypeCmdRepo.FindOrCreateBeamType(spec);
-                beamType = doc.GetElement(new ElementId((long)typeId)) as FamilySymbol;
-                if (beamType == null) return 0;
-            }
+            var beamType = doc.GetElement(new ElementId((long)beamTypeId)) as FamilySymbol;
+            if (beamType == null) return 0;
 
             if (!beamType.IsActive)
             {
@@ -69,10 +31,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
 
             var curve = Line.CreateBound(new XYZ(UC.MmToFt(beamDef.StartPoint.X), UC.MmToFt(beamDef.StartPoint.Y), UC.MmToFt(beamDef.StartPoint.Z)),
                                          new XYZ(UC.MmToFt(beamDef.EndPoint.X), UC.MmToFt(beamDef.EndPoint.Y), UC.MmToFt(beamDef.EndPoint.Z)));
-            var levelId = new FilteredElementCollector(doc)
-                .OfClass(typeof(Level))
-                .FirstOrDefault(e => e.Name.Equals(beamDef.LevelName))?.Id ?? ElementId.InvalidElementId;
-            Level level = doc.GetElement(levelId) as Level;
+            Level level = doc.GetElement(new ElementId(levelId)) as Level;
+            if (level == null) return 0;
 
             var beam = doc.Create.NewFamilyInstance(curve, beamType, level, StructuralType.Beam);
             StructuralFramingUtils.DisallowJoinAtEnd(beam, 0);

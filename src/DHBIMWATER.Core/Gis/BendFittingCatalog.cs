@@ -24,6 +24,9 @@ public enum BendForm
 /// s — B형에서 한쪽에만 더 붙는 직관부(mm). 긴 쪽 = t + s, 짧은 쪽 = t다. A형은 0.
 /// 어느 방향이 긴 쪽인지는 치수가 아니라 배치 규칙이 정한다(사용자 결정 2026-08-07: 폴리선 진행 방향 기준 하류쪽).
 /// </param>
+/// <param name="WallThicknessMm">e — 곡관 벽 두께(mm). 곡관 패밀리의 thk 인스턴스 매개변수에 대응한다.</param>
+/// <param name="FamilyName">3점(5점) 가변 곡관 패밀리명. null이면 실물 배치를 건너뛰고 자리만 비운다.</param>
+/// <param name="TypeName">곡관 패밀리의 타입명. null이면 실물 배치를 건너뛴다.</param>
 public sealed record BendFittingEntry(
     string PipeKind,
     double DiameterMm,
@@ -31,7 +34,10 @@ public sealed record BendFittingEntry(
     BendForm Form,
     double LayingLengthMm,
     double CenterlineRadiusMm,
-    double ExtraLegLengthMm = 0d);
+    double ExtraLegLengthMm = 0d,
+    double WallThicknessMm = 0d,
+    string? FamilyName = null,
+    string? TypeName = null);
 
 /// <summary>관종·직경·각도·형식별 곡관 치수 카탈로그. 근거는 주철관 핸드북 곡관 치수표다.</summary>
 public sealed class BendFittingCatalog

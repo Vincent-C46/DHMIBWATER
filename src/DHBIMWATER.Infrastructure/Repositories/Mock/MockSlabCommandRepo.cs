@@ -12,7 +12,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Mock
 {
     public class MockSlabCommandRepo : ISlabCommandRepo
     {
-        public int CreateSlab(SlabDefinition slabDef, ConcreteSpec? concrete = null)
+        public int CreateSlab(SlabDefinition slabDef, long levelId, int slabTypeId)
         {
             var mockDialogService = new MockDialogService();
             mockDialogService.Info("Slab Creation", $"슬래브 작성 완료");

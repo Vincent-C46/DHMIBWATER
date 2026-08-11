@@ -12,6 +12,10 @@ namespace DHBIMWATER.Application.Interfaces
         IEnumerable<string> GetWallTypeNames();
         IEnumerable<string> GetColumnTypeNames();
         IEnumerable<string> GetBeamTypeNames();
+        /// <summary>프로젝트에 로드된 Adaptive Component 패밀리의 타입명 목록. "패밀리명 : 타입명" 형식으로 반환한다.</summary>
+        IEnumerable<string> GetAdaptiveBendTypeNames();
+        /// <summary>familyTypeName("패밀리명 : 타입명")이 가진 Adaptive Point 개수. 확인할 수 없으면 -1.</summary>
+        int GetAdaptiveBendPointCount(string familyTypeName);
         IEnumerable<string> GetPipingSystemTypeNames();
         IEnumerable<string> GetPipeTypeNames();
         IEnumerable<string> GetFoundationTypeNames();

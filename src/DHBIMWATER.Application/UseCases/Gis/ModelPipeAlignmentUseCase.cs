@@ -17,11 +17,12 @@ public sealed class ModelPipeAlignmentUseCase
     private readonly IProjectLocationCommandRepo _projectLocationRepo;
     private readonly ISharedParameterRepository _sharedParameterRepo;
     private readonly IBendSettingsRepo _bendSettingsRepo;
+    private readonly IAdaptiveBendPlacementRepo _adaptiveBendRepo;
 
     public ModelPipeAlignmentUseCase(ITransactionContext transaction, AlignmentSourceLoader loader, IPipeAlignmentCommandRepo alignmentRepo,
         IAlignmentBeamPlacementRepo beamRepo, IAlignmentPipePlacementRepo pipeRepo, IProjectLocationCommandRepo projectLocationRepo,
-        ISharedParameterRepository sharedParameterRepo, IBendSettingsRepo bendSettingsRepo)
-    { _transaction = transaction; _loader = loader; _alignmentRepo = alignmentRepo; _beamRepo = beamRepo; _pipeRepo = pipeRepo; _projectLocationRepo = projectLocationRepo; _sharedParameterRepo = sharedParameterRepo; _bendSettingsRepo = bendSettingsRepo; }
+        ISharedParameterRepository sharedParameterRepo, IBendSettingsRepo bendSettingsRepo, IAdaptiveBendPlacementRepo adaptiveBendRepo)
+    { _transaction = transaction; _loader = loader; _alignmentRepo = alignmentRepo; _beamRepo = beamRepo; _pipeRepo = pipeRepo; _projectLocationRepo = projectLocationRepo; _sharedParameterRepo = sharedParameterRepo; _bendSettingsRepo = bendSettingsRepo; _adaptiveBendRepo = adaptiveBendRepo; }
 
     public PipeAlignmentModelingResult Execute(PipeAlignmentModelingRequest request)
     {
@@ -52,6 +53,7 @@ public sealed class ModelPipeAlignmentUseCase
                     PipeAlignmentOutputMode.PipingSystem => (_pipeRepo.PlaceAlong(loaded.Alignments, Require(request.PipingSystemTypeName, "파이프 시스템 유형"), Require(request.PipeTypeName, "PipeType"), request.LevelName, request.IntervalMm / 1000d, origin), 0, (IReadOnlyList<string>)Array.Empty<string>()),
                     _ => throw new ArgumentOutOfRangeException(nameof(request.OutputMode))
                 };
+                if (request.OutputMode == PipeAlignmentOutputMode.Beam && bendPlan is not null) PlaceBendFittings(bendPlan, origin);
                 _transaction.Commit();
                 return new PipeAlignmentModelingResult(request.OutputMode, count, skipped, loaded.Warnings.Concat(repoWarnings).ToList(), bendPlan?.Placements.Count ?? 0);
             }
@@ -87,7 +89,24 @@ public sealed class ModelPipeAlignmentUseCase
         if (skipped > 0)
             warnings.Add($"곡관을 넣지 못한 절점 {skipped}곳은 직관을 절점까지 붙였습니다(미해결 편각 또는 곡관 치수 미입력).");
 
+        // t/R은 있지만 패밀리·타입이 카탈로그에 없는 절점 — 직관 차감은 되지만 실물은 안 들어간다.
+        var missingFamily = plan.Placements.Count(x => x.FamilyName is null || x.TypeName is null);
+        if (missingFamily > 0)
+            warnings.Add($"곡관 패밀리·타입이 설정되지 않아 실물 배치를 생략한 절점 {missingFamily}곳은 자리만 비웠습니다.");
+
         return (plan, warnings);
+    }
+
+    /// <summary>카탈로그에 패밀리·타입이 등록된 절점만 골라 5점 가변 곡관을 배치한다.</summary>
+    private void PlaceBendFittings(BendTrimPlan plan, AlignmentPlacementOrigin origin)
+    {
+        var placeable = plan.Placements.Where(x => x.FamilyName is not null && x.TypeName is not null).ToList();
+        if (placeable.Count == 0) return;
+
+        var bendPlans = placeable.Select(x => new AdaptiveBendPlacementPlan(
+            x.NodeId, x.FamilyName!, x.TypeName!, x.Points, x.DiameterMm, x.WallThicknessMm,
+            x.RotXYDeg, x.RotXZDeg)).ToList();
+        _adaptiveBendRepo.Place(bendPlans, origin);
     }
 
     private (int Count, int Skipped, IReadOnlyList<string> Warnings) ToDirectShape(IReadOnlyList<PipeAlignment> alignments, AlignmentPlacementOrigin origin)

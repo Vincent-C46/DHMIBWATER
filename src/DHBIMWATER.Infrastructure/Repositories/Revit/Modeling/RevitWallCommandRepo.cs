@@ -13,26 +13,21 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
         #region Fields
         private readonly Func<Document?> _doc;  // Revit Document에 접근하기 위한 람다식
         private readonly IDialogService _dialog;
-        private readonly IElementTypeCommandRepo _elementTypeCmdRepo;
-
-        // TODO: 설정값에서 가져오도록 변경 — 굵은골재최대치수-압축강도-슬럼프
-        private static readonly ConcreteSpec _concrete = new ConcreteSpec(25, 27, 120);
         #endregion
 
         #region Properties
         #endregion
 
         #region Constructor
-        public RevitWallCommandRepo(Func<Document?> doc, IDialogService dialog, IElementTypeCommandRepo elementTypeCmdRepo)
+        public RevitWallCommandRepo(Func<Document?> doc, IDialogService dialog)
         {
             _doc = doc;
             _dialog = dialog;
-            _elementTypeCmdRepo = elementTypeCmdRepo;
         }
         #endregion
 
         #region Methods
-        public int CreateLinearWall(LinearWallDefinition linearWallDefinition, ConcreteSpec? concrete = null)
+        public int CreateLinearWall(LinearWallDefinition linearWallDefinition, long levelId, int wallTypeId)
         {
             Document? doc = _doc();
 
@@ -43,16 +38,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             }
             var elementId = 0;
 
-            Level? wallLevel = new FilteredElementCollector(doc)
-                .OfClass(typeof(Level))
-                .Cast<Level>()
-                .FirstOrDefault(l => l.Name == linearWallDefinition.LevelName);
-
-            if (wallLevel == null)
-            {
-                _dialog.Warn("Error", "Wall 하단 레벨이 설정되지않았습니다.");
-                return 0;
-            }
             XYZ startPt = new XYZ(UC.MmToFt(linearWallDefinition.StartPoint.X),
                                   UC.MmToFt(linearWallDefinition.StartPoint.Y),
                                   UC.MmToFt(linearWallDefinition.StartPoint.Z));
@@ -61,8 +46,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
                                 UC.MmToFt(linearWallDefinition.EndPoint.Z));
             Curve wallCurve = Line.CreateBound(startPt, endPt);
 
-            var wallSpec = new WallTypeSpec(linearWallDefinition.Thickness, $"일반 - {linearWallDefinition.Thickness}mm", concrete ?? _concrete);
-            var wallTypeId = new ElementId((long)_elementTypeCmdRepo.FindOrCreateWallType(wallSpec));
 
             //if (linearWallDefinition.Height <= 0)
             //{
@@ -73,7 +56,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
 
             try
             {
-                wall = Wall.Create(doc, wallCurve, wallTypeId, wallLevel.Id,
+                wall = Wall.Create(doc, wallCurve, new ElementId((long)wallTypeId), new ElementId(levelId),
                         UC.MmToFt(linearWallDefinition.Height),
                         UC.MmToFt(linearWallDefinition.BaseOffset),
                         linearWallDefinition.IsFlipped, true);
@@ -100,7 +83,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
 
             return (int)wall.Id.Value;
         }
-        public int CreateProfileWall(ProfileWallDefinition profileWallDefinition, ConcreteSpec? concrete = null)
+        public int CreateProfileWall(ProfileWallDefinition profileWallDefinition, long levelId, int wallTypeId)
         {
             Document? doc = _doc();
 
@@ -110,22 +93,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
                 return 0;
             }
 
-            var wallSpec = new WallTypeSpec(profileWallDefinition.Thickness, $"일반 - {profileWallDefinition.Thickness}mm", concrete ?? _concrete);
-
-            var wallTypeIntId = _elementTypeCmdRepo.FindOrCreateWallType(wallSpec);
-            if (wallTypeIntId == 0) { _dialog.Warn("Error", "WallType 생성 실패"); return 0; }
-            var wallTypeId = new ElementId((long)wallTypeIntId);
-
-            Level? wallLevel = new FilteredElementCollector(doc)
-                                .OfClass(typeof(Level))
-                                .Cast<Level>()
-                                .FirstOrDefault(l => l.Name == profileWallDefinition.LevelName);
-
-            if (wallLevel == null)
-            {
-                _dialog.Warn("Error", "레벨 지정 실패. (프로파일 벽체)");
-                return 0;
-            }
 
             var profiles = new List<Curve>();
             int numPoints = profileWallDefinition.Points.Count;
@@ -145,7 +112,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             Wall profileWall;
             try
             {
-                profileWall = Wall.Create(doc, profiles, wallTypeId, wallLevel.Id, true);
+                profileWall = Wall.Create(doc, profiles, new ElementId((long)wallTypeId), new ElementId(levelId), true);
             }
             catch( Exception ex)
             {

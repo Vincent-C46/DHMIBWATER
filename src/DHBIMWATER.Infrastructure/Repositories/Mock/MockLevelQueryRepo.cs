@@ -21,5 +21,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Mock
         {
             return new List<string> { "Section A", "Section B", "Section C" };
         }
+        public IReadOnlyDictionary<string, long> GetLevelIds(IEnumerable<string> levelNames) =>
+            levelNames.Distinct().ToDictionary(name => name, _ => 1L);
     }
 }

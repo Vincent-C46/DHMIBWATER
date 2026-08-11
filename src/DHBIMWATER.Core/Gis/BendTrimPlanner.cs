@@ -7,6 +7,11 @@ namespace DHBIMWATER.Core.Gis;
 /// <param name="Points">P1(상류 관 끝) / P2(호 중점) / P3(하류 관 끝). 좌표는 원본 GIS 좌표(m)다.</param>
 /// <param name="UpstreamLegMm">상류 쪽 차감량 t(mm).</param>
 /// <param name="DownstreamLegMm">하류 쪽 차감량 t+s(mm). A형은 t와 같다.</param>
+/// <param name="WallThicknessMm">e — 곡관 벽 두께(mm). 카탈로그에 없으면 0.</param>
+/// <param name="FamilyName">곡관 패밀리명. 카탈로그 미등록이면 null — 배치 단계가 실물 배치를 건너뛴다.</param>
+/// <param name="TypeName">곡관 타입명. 카탈로그 미등록이면 null.</param>
+/// <param name="RotXYDeg">P1~P5 각 점의 rot_XY(도). 인덱스는 <see cref="Points"/>의 Start/ArcStart/ArcMid/ArcEnd/End 순서와 같다.</param>
+/// <param name="RotXZDeg">P1~P5 각 점의 rot_XZ(도). 인덱스는 <paramref name="RotXYDeg"/>와 같다.</param>
 public sealed record BendPlacement(
     int NodeId,
     int AlignmentIndex,
@@ -16,7 +21,12 @@ public sealed record BendPlacement(
     string PipeKind,
     BendArcPoints Points,
     double UpstreamLegMm,
-    double DownstreamLegMm);
+    double DownstreamLegMm,
+    double WallThicknessMm,
+    string? FamilyName,
+    string? TypeName,
+    IReadOnlyList<double> RotXYDeg,
+    IReadOnlyList<double> RotXZDeg);
 
 /// <param name="Trims">인덱스 = 폴리선 정점 인덱스. 차감이 없는 정점은 <see cref="VertexTrim.None"/>다.</param>
 public sealed record AlignmentBendPlan(int AlignmentIndex, IReadOnlyList<VertexTrim> Trims);
@@ -85,10 +95,17 @@ public static class BendTrimPlanner
                     vertices[v], upstream, downstream,
                     bend.StandardAngleDeg, bend.CenterlineRadiusMm, shortLeg, longLeg);
 
+                // P1~P5 각 점의 접선 방향에서 rot_XY_n/rot_XZ_n(도)을 구한다. P1·P2/P4·P5는 직선 구간이라 같은 값이다.
+                var tangents = BendOrientation.Tangents(upstream, downstream, bend.StandardAngleDeg);
+                var rotXy = new double[tangents.Count];
+                var rotXz = new double[tangents.Count];
+                for (var i = 0; i < tangents.Count; i++) (rotXy[i], rotXz[i]) = BendOrientation.Compute(tangents[i]);
+
                 placements.Add(new BendPlacement(
                     nodeId.Value, a, v, bend.StandardAngleDeg,
                     alignments[a].DiameterMm, alignments[a].PipeKind,
-                    points, shortLeg, longLeg));
+                    points, shortLeg, longLeg,
+                    bend.WallThicknessMm, bend.FamilyName, bend.TypeName, rotXy, rotXz));
             }
 
             plans.Add(new AlignmentBendPlan(a, trims));

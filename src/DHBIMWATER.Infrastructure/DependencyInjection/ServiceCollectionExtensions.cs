@@ -63,6 +63,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IAlignmentBeamPlacementRepo, RevitAlignmentBeamPlacementRepo>();
         services.AddTransient<IAlignmentPipePlacementRepo, RevitAlignmentPipePlacementRepo>();
         services.AddTransient<IBendSettingsRepo, RevitBendSettingsRepo>();
+        services.AddTransient<IAdaptiveBendPlacementRepo, RevitAdaptiveBendPlacementRepo>();
         services.AddTransient<IGenericModelRepository, RevitGenericModelRepository>();
         services.AddTransient<IExteriorWallClassifierRepo, RevitExteriorWallClassifierRepo>();
         services.AddTransient<IValveRoomOutlinePickRepo, RevitValveRoomOutlinePickRepo>();
@@ -117,6 +118,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IAlignmentPipePlacementRepo, RevitAlignmentPipePlacementRepo>();
         // TODO: Mock 블록에 Revit Repo가 덮어쓰기 등록됨 — 별도 확인 필요
         services.AddTransient<IBendSettingsRepo, MockBendSettingsRepo>();
+        services.AddTransient<IAdaptiveBendPlacementRepo, MockAdaptiveBendPlacementRepo>();
         #endregion
 
         services.AddTransient<IExcelReader, ExcelReader>();
