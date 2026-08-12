@@ -19,3 +19,7 @@ public sealed record AdaptiveBendPlacementPlan(
     double WallThicknessMm,
     IReadOnlyList<double> RotXYDeg,
     IReadOnlyList<double> RotXZDeg);
+
+/// <param name="Count">실제로 배치된 곡관 수.</param>
+/// <param name="Warnings">OD/thk/rot_XY_/rot_XZ_ 등 패밀리 인스턴스 파라미터를 찾지 못하거나 읽기전용이라 값을 못 넣은 경우의 안내.</param>
+public sealed record AdaptiveBendPlacementResult(int Count, IReadOnlyList<string> Warnings);

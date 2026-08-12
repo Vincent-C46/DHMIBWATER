@@ -39,6 +39,11 @@ public sealed class ModelPipeAlignmentUseCase
         var (bendPlan, bendWarnings) = request.OutputMode == PipeAlignmentOutputMode.Beam
             ? PlanBends(loaded.Alignments, request)
             : (null, Array.Empty<string>());
+
+        // 트랜잭션을 열기 전에 카탈로그가 가리키는 곡관 패밀리가 실제로 이 문서에 로드돼 있는지 확인한다.
+        // 그렇지 않으면 직관 배치까지 다 끝낸 뒤 곡관 배치 단계에서야 실패해 전체가 롤백된다.
+        if (bendPlan is not null) EnsureBendFamiliesLoaded(bendPlan);
+
         using (_transaction)
         {
             try
@@ -53,12 +58,27 @@ public sealed class ModelPipeAlignmentUseCase
                     PipeAlignmentOutputMode.PipingSystem => (_pipeRepo.PlaceAlong(loaded.Alignments, Require(request.PipingSystemTypeName, "파이프 시스템 유형"), Require(request.PipeTypeName, "PipeType"), request.LevelName, request.IntervalMm / 1000d, origin), 0, (IReadOnlyList<string>)Array.Empty<string>()),
                     _ => throw new ArgumentOutOfRangeException(nameof(request.OutputMode))
                 };
-                if (request.OutputMode == PipeAlignmentOutputMode.Beam && bendPlan is not null) PlaceBendFittings(bendPlan, origin);
+                var placementWarnings = request.OutputMode == PipeAlignmentOutputMode.Beam && bendPlan is not null
+                    ? PlaceBendFittings(bendPlan, origin)
+                    : Array.Empty<string>();
                 _transaction.Commit();
-                return new PipeAlignmentModelingResult(request.OutputMode, count, skipped, loaded.Warnings.Concat(repoWarnings).ToList(), bendPlan?.Placements.Count ?? 0);
+                return new PipeAlignmentModelingResult(request.OutputMode, count, skipped, loaded.Warnings.Concat(repoWarnings).Concat(placementWarnings).ToList(), bendPlan?.Placements.Count ?? 0);
             }
             catch { _transaction.Rollback(); throw; }
         }
+    }
+
+    private void EnsureBendFamiliesLoaded(BendTrimPlan bendPlan)
+    {
+        var pairs = bendPlan.Placements
+            .Where(x => x.FamilyName is not null && x.TypeName is not null)
+            .Select(x => (x.FamilyName!, x.TypeName!))
+            .ToList();
+        if (pairs.Count == 0) return;
+
+        var missing = _adaptiveBendRepo.FindMissingSymbols(pairs);
+        if (missing.Count > 0)
+            throw new InvalidOperationException($"다음 곡관 패밀리·타입을 문서에서 찾을 수 없습니다(로드 필요): {string.Join(", ", missing.Select(x => $"{x.FamilyName}:{x.TypeName}"))}");
     }
 
     /// <summary>
@@ -82,6 +102,7 @@ public sealed class ModelPipeAlignmentUseCase
         var nodes = PipeNetworkClassifier.Classify(graph);
         var resolutions = BendResolver.ResolveAll(nodes, settings, request.Form);
         var plan = BendTrimPlanner.Plan(alignments, graph, resolutions, snapTolerance);
+        warnings.AddRange(plan.Warnings);
 
         // 곡관을 넣지 못한 절점은 직관이 절점까지 그대로 붙는다. 배치 결과만 보면 알 수 없으므로 집계해 남긴다.
         var skipped = resolutions.Count(x => x.Kind == BendResolutionKind.Unresolved)
@@ -98,15 +119,15 @@ public sealed class ModelPipeAlignmentUseCase
     }
 
     /// <summary>카탈로그에 패밀리·타입이 등록된 절점만 골라 5점 가변 곡관을 배치한다.</summary>
-    private void PlaceBendFittings(BendTrimPlan plan, AlignmentPlacementOrigin origin)
+    private IReadOnlyList<string> PlaceBendFittings(BendTrimPlan plan, AlignmentPlacementOrigin origin)
     {
         var placeable = plan.Placements.Where(x => x.FamilyName is not null && x.TypeName is not null).ToList();
-        if (placeable.Count == 0) return;
+        if (placeable.Count == 0) return Array.Empty<string>();
 
         var bendPlans = placeable.Select(x => new AdaptiveBendPlacementPlan(
             x.NodeId, x.FamilyName!, x.TypeName!, x.Points, x.DiameterMm, x.WallThicknessMm,
             x.RotXYDeg, x.RotXZDeg)).ToList();
-        _adaptiveBendRepo.Place(bendPlans, origin);
+        return _adaptiveBendRepo.Place(bendPlans, origin).Warnings;
     }
 
     private (int Count, int Skipped, IReadOnlyList<string> Warnings) ToDirectShape(IReadOnlyList<PipeAlignment> alignments, AlignmentPlacementOrigin origin)

@@ -107,6 +107,24 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
         }
         public IEnumerable<string> GetPipingSystemTypeNames() => GetNames(typeof(PipingSystemType));
         public IEnumerable<string> GetPipeTypeNames() => GetNames(typeof(PipeType));
+        public IEnumerable<string> GetPipeAccessoryTypeNames() => GetFamilySymbolNames(BuiltInCategory.OST_PipeAccessory);
+        public IEnumerable<string> GetGenericModelTypeNames() => GetFamilySymbolNames(BuiltInCategory.OST_GenericModel);
+
+        private IEnumerable<string> GetFamilySymbolNames(BuiltInCategory category)
+        {
+            var doc = _docProvider(); if (doc is null) return Enumerable.Empty<string>();
+            try
+            {
+                // OfCategory(...).Cast<FamilySymbol>()는 카테고리에 FamilySymbol이 아닌 ElementType이 섞이면
+                // InvalidCastException으로 조용히 빈 목록을 반환한다. GetColumnTypeNames 등과 같은
+                // OfClass(FamilySymbol) 선先필터 방식으로 통일해 그 위험을 없앤다.
+                return new FilteredElementCollector(doc).OfClass(typeof(FamilySymbol)).WhereElementIsElementType()
+                    .Cast<FamilySymbol>()
+                    .Where(x => x.Category != null && x.Category.Id.Value == (int)category)
+                    .Select(x => $"{x.Family.Name} : {x.Name}").Distinct().OrderBy(x => x).ToList();
+            }
+            catch { return Enumerable.Empty<string>(); }
+        }
         private IEnumerable<string> GetNames(Type type)
         {
             var doc = _docProvider(); if (doc is null) return Enumerable.Empty<string>();

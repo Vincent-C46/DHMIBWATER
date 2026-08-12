@@ -33,7 +33,8 @@ public sealed record AlignmentBendPlan(int AlignmentIndex, IReadOnlyList<VertexT
 
 /// <param name="Plans">인덱스 = 입력 <see cref="PipeAlignment"/> 인덱스.</param>
 /// <param name="Placements">곡관이 실제로 들어가는 자리. 배치 단계가 소비한다.</param>
-public sealed record BendTrimPlan(IReadOnlyList<AlignmentBendPlan> Plans, IReadOnlyList<BendPlacement> Placements);
+/// <param name="Warnings">기하 계산이 안 돼 자리를 비운 절점 안내(예: 편각이 0에 가까워 이등분선이 정의되지 않는 경우).</param>
+public sealed record BendTrimPlan(IReadOnlyList<AlignmentBendPlan> Plans, IReadOnlyList<BendPlacement> Placements, IReadOnlyList<string> Warnings);
 
 /// <summary>
 /// 절점 곡관 판정 결과를 <b>폴리선 정점</b>에 되돌려, 정점별 직관 차감량과 곡관 배치점을 만든다.
@@ -70,6 +71,7 @@ public static class BendTrimPlanner
 
         var plans = new List<AlignmentBendPlan>(alignments.Count);
         var placements = new List<BendPlacement>();
+        var warnings = new List<string>();
 
         for (var a = 0; a < alignments.Count; a++)
         {
@@ -89,11 +91,23 @@ public static class BendTrimPlanner
 
                 var shortLeg = bend.LayingLengthMm;
                 var longLeg = bend.LongLegLengthMm;
-                trims[v] = new VertexTrim(shortLeg * MmToCoordinate, longLeg * MmToCoordinate);
 
-                var points = BendArcGeometry.Compute(
-                    vertices[v], upstream, downstream,
-                    bend.StandardAngleDeg, bend.CenterlineRadiusMm, shortLeg, longLeg);
+                BendArcPoints points;
+                try
+                {
+                    points = BendArcGeometry.Compute(
+                        vertices[v], upstream, downstream,
+                        bend.StandardAngleDeg, bend.CenterlineRadiusMm, shortLeg, longLeg);
+                }
+                catch (ArgumentException)
+                {
+                    // 편각이 0에 가까워 이등분선이 정의되지 않는 극단치(예: 허용굴곡을 0에 가깝게 설정한 경우).
+                    // 곡관 자리를 비우지 못하므로 직관을 절점까지 그대로 붙인다 — 치수 미입력 절점과 같은 처리다.
+                    warnings.Add($"절점 {nodeId.Value}(정점 {v}): 편각이 너무 작아 곡관 기하를 계산할 수 없어 자리를 비웠습니다.");
+                    continue;
+                }
+
+                trims[v] = new VertexTrim(shortLeg * MmToCoordinate, longLeg * MmToCoordinate);
 
                 // P1~P5 각 점의 접선 방향에서 rot_XY_n/rot_XZ_n(도)을 구한다. P1·P2/P4·P5는 직선 구간이라 같은 값이다.
                 var tangents = BendOrientation.Tangents(upstream, downstream, bend.StandardAngleDeg);
@@ -111,7 +125,7 @@ public static class BendTrimPlanner
             plans.Add(new AlignmentBendPlan(a, trims));
         }
 
-        return new BendTrimPlan(plans, placements);
+        return new BendTrimPlan(plans, placements, warnings);
     }
 
     private static Vector3D? Direction(Point3D from, Point3D to)

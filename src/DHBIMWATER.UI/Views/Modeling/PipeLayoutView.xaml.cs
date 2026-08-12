@@ -14,8 +14,8 @@ public partial class PipeLayoutView : Window
     private void OnEdgeMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         var position = e.GetPosition(LayoutCanvas);
-        if (_viewModel.IsDrawing) _viewModel.HandleCanvasClick(position);
-        else if (((FrameworkElement)sender).DataContext is PipeEdgeItem edge) _viewModel.SelectEdge(edge.Id, position);
+        if (_viewModel.IsDrawing || _viewModel.IsPlacingFitting) _viewModel.HandleCanvasClick(position);
+        else if (((FrameworkElement)sender).DataContext is PipeEdgeItem edge) _viewModel.SelectEdge(edge.Id);
         LayoutCanvas.Focus();
         e.Handled = true;
     }

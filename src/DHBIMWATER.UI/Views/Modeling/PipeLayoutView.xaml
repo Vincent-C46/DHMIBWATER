@@ -4,11 +4,12 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="clr-namespace:DHBIMWATER.UI.Controls"
+        xmlns:converters="clr-namespace:DHBIMWATER.UI.Converters"
         xmlns:vm="clr-namespace:DHBIMWATER.UI.ViewModels.Modeling"
         mc:Ignorable="d" d:DataContext="{d:DesignInstance vm:PipeLayoutViewModel}"
         Title="DHBIM WATER - Pipe Layout" Width="1100" Height="720" WindowStartupLocation="CenterScreen"
         Background="#F4F7F9" WindowStyle="None" FontFamily="Segoe UI, Malgun Gothic" PreviewKeyDown="OnPreviewKeyDown">
-    <Window.Resources><ResourceDictionary><BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="/DHBIMWATER.UI;component/Styles/Generic.xaml"/></ResourceDictionary.MergedDictionaries></ResourceDictionary></Window.Resources>
+    <Window.Resources><ResourceDictionary><BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/><converters:StringEqualsToVisibilityConverter x:Key="StringEqualsToVisibilityConverter"/><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="/DHBIMWATER.UI;component/Styles/Generic.xaml"/></ResourceDictionary.MergedDictionaries></ResourceDictionary></Window.Resources>
     <WindowChrome.WindowChrome><WindowChrome CaptionHeight="0" CornerRadius="15" GlassFrameThickness="1" UseAeroCaptionButtons="False"/></WindowChrome.WindowChrome>
     <Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
         <controls:TitleBar Grid.Row="0"/>
@@ -41,11 +42,24 @@
                     </Grid>
                     <Line X1="{Binding PreviewX1}" Y1="{Binding PreviewY1}" X2="{Binding PreviewX2}" Y2="{Binding PreviewY2}" Stroke="#E67E22" StrokeThickness="3" StrokeDashArray="6,3" IsHitTestVisible="False" Visibility="{Binding IsPreviewVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                     <TextBlock Canvas.Left="{Binding PreviewLengthX}" Canvas.Top="{Binding PreviewLengthY}" Margin="4,-20,0,0" Text="{Binding PreviewLength}" FontSize="11" FontWeight="SemiBold" Foreground="#D35400" Background="#FFFCF8" IsHitTestVisible="False" Visibility="{Binding IsPreviewVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    <!-- 부속 배치 미리보기: 리스트에서 패밀리를 고르면 커서가 붙는 선 위 지점에 도형 + 시작점부터의 임시치수를 보여준다 -->
+                    <Line X1="{Binding FittingDimX1}" Y1="{Binding FittingDimY1}" X2="{Binding FittingDimX2}" Y2="{Binding FittingDimY2}" Stroke="#F39C12" StrokeThickness="1" StrokeDashArray="3,2" IsHitTestVisible="False" Visibility="{Binding IsFittingPreviewVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    <TextBlock Canvas.Left="{Binding FittingPreviewX}" Canvas.Top="{Binding FittingPreviewY}" Margin="8,-18,0,0" Text="{Binding FittingDimLabel}" FontSize="10" FontWeight="SemiBold" Foreground="#B9770E" Background="#FEF9E7" IsHitTestVisible="False" Visibility="{Binding IsFittingPreviewVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    <Grid Canvas.Left="{Binding FittingPreviewX}" Canvas.Top="{Binding FittingPreviewY}" Width="18" Height="18" Margin="-9,-9,0,0" IsHitTestVisible="False" Visibility="{Binding IsFittingPreviewVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <Polygon Points="9,1 17,9 9,17 1,9" Fill="#F39C12" Stroke="White" StrokeThickness="1.5" Visibility="{Binding FittingPreviewShape, Converter={StaticResource StringEqualsToVisibilityConverter}, ConverterParameter=Diamond}"/>
+                        <Rectangle Width="14" Height="14" Margin="2" Fill="#2980B9" Stroke="White" StrokeThickness="1.5" Visibility="{Binding FittingPreviewShape, Converter={StaticResource StringEqualsToVisibilityConverter}, ConverterParameter=Square}"/>
+                    </Grid>
                     <ItemsControl ItemsSource="{Binding Edges}" IsHitTestVisible="True"><ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas/></ItemsPanelTemplate></ItemsControl.ItemsPanel><ItemsControl.ItemTemplate><DataTemplate><Canvas><Line X1="{Binding X1}" Y1="{Binding Y1}" X2="{Binding X2}" Y2="{Binding Y2}" Stroke="{Binding Stroke}" StrokeThickness="4" MouseLeftButtonDown="OnEdgeMouseLeftButtonDown"/><TextBlock Canvas.Left="{Binding LengthX}" Canvas.Top="{Binding LengthY}" Margin="4,-20,0,0" Text="{Binding LengthLabel}" FontSize="11" FontWeight="SemiBold" Foreground="#1B4F72" Background="#F8FBFD" IsHitTestVisible="False"/></Canvas></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
-                    <ItemsControl ItemsSource="{Binding InlineFittings}" IsHitTestVisible="False"><ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas/></ItemsPanelTemplate></ItemsControl.ItemsPanel><ItemsControl.ItemTemplate><DataTemplate><Border Canvas.Left="{Binding X}" Canvas.Top="{Binding Y}" Width="14" Height="14" Background="#2C3E50" CornerRadius="7" ToolTip="{Binding TypeKey}"/></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+                    <!-- 배치된 부속: 배관 부속류=다이아몬드, 일반모델=사각형(P&ID 관습적 표기, 실제 패밀리 아이콘 대신 카테고리 도형만 표시) -->
+                    <ItemsControl ItemsSource="{Binding InlineFittings}" IsHitTestVisible="False"><ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas/></ItemsPanelTemplate></ItemsControl.ItemsPanel><ItemsControl.ItemTemplate><DataTemplate>
+                        <Grid Canvas.Left="{Binding X}" Canvas.Top="{Binding Y}" Width="14" Height="14" Margin="-7,-7,0,0" ToolTip="{Binding FamilyTypeName}">
+                            <Polygon Points="7,0 14,7 7,14 0,7" Fill="#F39C12" Stroke="White" StrokeThickness="1" Visibility="{Binding TypeKey, Converter={StaticResource StringEqualsToVisibilityConverter}, ConverterParameter=배관 부속류}"/>
+                            <Rectangle Width="12" Height="12" Margin="1" Fill="#2980B9" Stroke="White" StrokeThickness="1" Visibility="{Binding TypeKey, Converter={StaticResource StringEqualsToVisibilityConverter}, ConverterParameter=일반모델}"/>
+                        </Grid>
+                    </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
                     <ItemsControl ItemsSource="{Binding Nodes}" IsHitTestVisible="False"><ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas/></ItemsPanelTemplate></ItemsControl.ItemsPanel><ItemsControl.ItemTemplate><DataTemplate><StackPanel Canvas.Left="{Binding X}" Canvas.Top="{Binding Y}" Margin="-7,-7,0,0"><Ellipse Width="14" Height="14" Fill="{Binding Color}" Stroke="White" StrokeThickness="2"/><TextBlock Text="{Binding Label}" FontSize="10" Foreground="#34495E"/></StackPanel></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
                 </Canvas>
-                <Border VerticalAlignment="Top" HorizontalAlignment="Left" Background="#EAF2F8" CornerRadius="5" Padding="8"><TextBlock Text="연두색 십자선의 교차점은 배관 원점(0,0)입니다. 빈 화면에서는 원점만 100mm 스냅됩니다. 노드: 회색 Cap · 파랑 Inline · 주황 Elbow · 보라 Tee · 빨강 Cross" FontSize="11"/></Border>
+                <Border VerticalAlignment="Top" HorizontalAlignment="Left" Background="#EAF2F8" CornerRadius="5" Padding="8"><TextBlock Text="연두색 십자선은 배관 X/Y 기준선이며, 근처점 선택 시 100mm 이내에서 스냅됩니다. 교차점은 원점(0,0)입니다. 노드: 회색 Cap · 파랑 Inline · 주황 Elbow · 보라 Tee · 빨강 Cross" FontSize="11"/></Border>
             </Grid></Border>
             <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="16"><ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel>
                 <TextBlock Text="외곽 레이아웃" FontWeight="Bold" Foreground="#4A6FA5" FontSize="16"/>
@@ -61,7 +75,7 @@
                     </StackPanel>
                 </Border>
                 <TextBlock Text="인라인 부속품" FontWeight="Bold" Foreground="#4A6FA5" FontSize="16"/>
-                <TextBlock Text="선택 엣지에 순서대로 추가됩니다." Foreground="#7F8C8D" FontSize="11" Margin="0,4,0,12"/>
+                <TextBlock Text="아래 목록에서 패밀리를 고른 뒤 선 위를 클릭하면 그 자리에 배치됩니다. Esc로 배치 모드를 취소합니다." Foreground="#7F8C8D" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,12"/>
                 <Border Background="#F7F9FB" BorderBrush="#DCE6EE" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,10">
                     <StackPanel>
                         <CheckBox Content="직교 + 45° 각도 스냅" Style="{StaticResource PrimaryCheckBoxStyle}" IsChecked="{Binding UseAngleSnap}" Margin="0,0,0,8"/>
@@ -84,9 +98,20 @@
                 <ComboBox ItemsSource="{Binding OutputModes}" SelectedItem="{Binding OutputMode}" Style="{StaticResource PrimaryComboBoxStyle}" Margin="0,4,0,8"/>
                 <Grid Margin="0,0,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="75"/><ColumnDefinition Width="24"/></Grid.ColumnDefinitions><TextBlock Text="표고" VerticalAlignment="Center"/><TextBox Grid.Column="1" Style="{StaticResource PrimaryTextBoxStyle}" Text="{Binding Elevation, UpdateSourceTrigger=LostFocus}"/><TextBlock Grid.Column="2" Text="mm" Margin="4,0"/></Grid>
                 <Grid Margin="0,0,0,10"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="75"/><ColumnDefinition Width="24"/></Grid.ColumnDefinitions><TextBlock Text="관경" VerticalAlignment="Center"/><TextBox Grid.Column="1" Style="{StaticResource PrimaryTextBoxStyle}" Text="{Binding DiameterMm, UpdateSourceTrigger=LostFocus}"/><TextBlock Grid.Column="2" Text="mm" Margin="4,0"/></Grid>
-                <ComboBox ItemsSource="{Binding FittingTypes}" SelectedItem="{Binding SelectedFittingType}" Style="{StaticResource PrimaryComboBoxStyle}"/>
-                <Button Content="+ 부속품 추가" Command="{Binding AddFittingCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,8,0,12"/>
-                <ListBox Style="{StaticResource PrimaryListBoxStyle}" ItemsSource="{Binding InlineFittings}" Height="300"><ListBox.ItemTemplate><DataTemplate><DockPanel Margin="3"><Button Content="삭제" Style="{StaticResource CancelButtonStyle}" DockPanel.Dock="Right" Command="{Binding DataContext.RemoveFittingCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/><TextBlock Text="{Binding Order}" Width="24"/><TextBlock Text="{Binding TypeKey}"/></DockPanel></DataTemplate></ListBox.ItemTemplate></ListBox>
+                <TextBlock Text="격자 스냅 단위 (직접 입력 가능)" FontWeight="SemiBold"/>
+                <Grid Margin="0,4,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="24"/></Grid.ColumnDefinitions>
+                    <ComboBox IsEditable="True" IsTextSearchEnabled="False" ItemsSource="{Binding GridSnapOptions}" Text="{Binding GridSnapMm, Mode=TwoWay, UpdateSourceTrigger=LostFocus, ValidatesOnExceptions=True}" Style="{StaticResource PrimaryComboBoxStyle}"/>
+                    <TextBlock Grid.Column="1" Text="mm" Margin="4,0" VerticalAlignment="Center"/>
+                </Grid>
+                <TextBlock Text="부속 카테고리" FontWeight="SemiBold"/>
+                <StackPanel Orientation="Horizontal" Margin="0,4,0,8">
+                    <RadioButton Content="배관 부속류" IsChecked="{Binding UseValveAccessoryCategory, Mode=TwoWay}" Margin="0,0,16,0" VerticalAlignment="Center"/>
+                    <RadioButton Content="일반모델" IsChecked="{Binding UseGenericModelCategory, Mode=TwoWay}" VerticalAlignment="Center"/>
+                </StackPanel>
+                <TextBlock Text="배치할 패밀리 (선택 후 선 위 클릭)" FontWeight="SemiBold"/>
+                <ListBox Style="{StaticResource PrimaryListBoxStyle}" ItemsSource="{Binding FamilyTypeNames}" SelectedItem="{Binding SelectedFamilyTypeName}" Height="90" Margin="0,4,0,12"/>
+                <TextBlock Text="배치된 부속품" FontWeight="Bold" Foreground="#4A6FA5" FontSize="16" Margin="0,0,0,4"/>
+                <ListBox Style="{StaticResource PrimaryListBoxStyle}" ItemsSource="{Binding InlineFittings}" Height="220"><ListBox.ItemTemplate><DataTemplate><DockPanel Margin="3"><Button Content="삭제" Style="{StaticResource CancelButtonStyle}" DockPanel.Dock="Right" Command="{Binding DataContext.RemoveFittingCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/><TextBlock Text="{Binding Order}" Width="24"/><TextBlock Text="{Binding TypeKey}" ToolTip="{Binding FamilyTypeName}"/></DockPanel></DataTemplate></ListBox.ItemTemplate></ListBox>
             </StackPanel></ScrollViewer></Border>
         </Grid>
         <Grid Grid.Row="2" Margin="20,0,20,16"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{Binding Status}" VerticalAlignment="Center" Foreground="#34495E"/><StackPanel Grid.Column="1" Orientation="Horizontal"><Button Content="그리기 취소" Style="{StaticResource CancelButtonStyle}" Command="{Binding CancelDrawingCommand}" Margin="0,0,8,0"/><Button Content="초기화" Style="{StaticResource CancelButtonStyle}" Command="{Binding ClearCommand}" Margin="0,0,8,0"/><Button Content="모델 생성" Command="{Binding CreateModelCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/><Button Content="닫기" Style="{StaticResource CancelButtonStyle}" Command="{Binding CloseCommand}"/></StackPanel></Grid>

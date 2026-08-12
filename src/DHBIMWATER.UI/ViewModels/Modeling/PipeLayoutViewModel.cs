@@ -1,4 +1,5 @@
-    using DHBIMWATER.Core.Piping;
+using DHBIMWATER.Application.Interfaces;
+using DHBIMWATER.Core.Piping;
 using DHBIMWATER.UI.Base;
 using DHBIMWATER.UI.Commands;
 using DHBIMWATER.UI.Utilities;
@@ -10,11 +11,19 @@ namespace DHBIMWATER.UI.ViewModels.Modeling;
 
 public sealed class PipeLayoutViewModel : ViewModelBase
 {
+    private readonly IElementTypeQueryRepo _typeRepo;
     private readonly PipeNetwork _network = new();
     private Point? _segmentStart;
     private PipeEdgeItem? _selectedEdge;
-    private double _selectedFittingT = 0.5;
-    private string _selectedFittingType = "밸브";
+    private bool _useValveAccessoryCategory = true;
+    private string? _selectedFamilyTypeName;
+    private double _gridSnapMm = 1;
+    private Guid? _fittingPreviewEdgeId;
+    private double _fittingPreviewT;
+    private bool _isFittingPreviewVisible;
+    private double _fittingPreviewX, _fittingPreviewY, _fittingDimX1, _fittingDimY1, _fittingDimX2, _fittingDimY2;
+    private string _fittingPreviewShape = "Diamond";
+    private string _fittingDimLabel = "0";
     private string _status = "캔버스를 클릭하여 배관 시작점을 지정하세요.";
     private double _elevation;
     private double _referenceX, _referenceY;
@@ -35,9 +44,10 @@ public sealed class PipeLayoutViewModel : ViewModelBase
     private bool _arrowFromTop;
     private bool _snapOutline = true;
 
-    public PipeLayoutViewModel()
+    public PipeLayoutViewModel(IElementTypeQueryRepo typeRepo)
     {
-        FittingTypes = new ObservableCollection<string>(["밸브", "플랜지", "유량계", "감압밸브"]);
+        _typeRepo = typeRepo;
+        FamilyTypeNames = [];
         Edges = [];
         Nodes = [];
         InlineFittings = [];
@@ -46,25 +56,25 @@ public sealed class PipeLayoutViewModel : ViewModelBase
         TempDimensions = [];
         PickOutlineCommand = new RelayCommand(_ => PickOutline(), _ => PickOutlineAction is not null);
         ClearOutlineCommand = new RelayCommand(_ => ClearOutline(), _ => HasOutline);
-        AddFittingCommand = new RelayCommand(_ => AddFitting(), _ => SelectedEdge is not null);
         RemoveFittingCommand = new RelayCommand(x => RemoveFitting(x as InlineFittingItem));
         ClearCommand = new RelayCommand(_ => Clear());
         CancelDrawingCommand = new RelayCommand(_ => CancelDrawing());
         CloseCommand = new RelayCommand(_ => CloseAction?.Invoke());
         CreateModelCommand = new RelayCommand(_ => CreateModel(), _ => _network.Edges.Count > 0 && CreateModelAction is not null);
+        RefreshFamilyTypeNames();
     }
 
     public CanvasModelTransform Transform { get; } = new();
     public ObservableCollection<PipeEdgeItem> Edges { get; }
     public ObservableCollection<PipeNodeItem> Nodes { get; }
     public ObservableCollection<InlineFittingItem> InlineFittings { get; }
-    public ObservableCollection<string> FittingTypes { get; }
+    /// <summary>선택된 카테고리(배관 부속류/일반모델)에 로드된 패밀리 목록. "패밀리명 : 타입명" 형식.</summary>
+    public ObservableCollection<string> FamilyTypeNames { get; }
     public ObservableCollection<OutlineWallItem> OutlineWalls { get; }
     public ObservableCollection<OutlineArrowItem> OutlineArrows { get; }
     public ObservableCollection<TempDimensionItem> TempDimensions { get; }
     public ICommand PickOutlineCommand { get; }
     public ICommand ClearOutlineCommand { get; }
-    public ICommand AddFittingCommand { get; }
     public ICommand RemoveFittingCommand { get; }
     public ICommand ClearCommand { get; }
     public ICommand CancelDrawingCommand { get; }
@@ -92,7 +102,37 @@ public sealed class PipeLayoutViewModel : ViewModelBase
     public double ReferenceScreenY => Transform.PanOrigin.Y;
     public double DiameterMm { get => _diameterMm; set => SetProperty(ref _diameterMm, value); }
     public PipeOutputMode OutputMode { get => _outputMode; set => SetProperty(ref _outputMode, value); }
+    /// <summary>true면 배관부속(Pipe Accessory) 카테고리, false면 일반모델(Generic Model) 카테고리를 보여준다. 기본값 true.</summary>
+    public bool UseValveAccessoryCategory
+    {
+        get => _useValveAccessoryCategory;
+        set
+        {
+            if (!SetProperty(ref _useValveAccessoryCategory, value)) return;
+            OnPropertyChanged(nameof(UseGenericModelCategory));
+            FittingPreviewShape = value ? "Diamond" : "Square";
+            RefreshFamilyTypeNames();
+        }
+    }
+    /// <summary><see cref="UseValveAccessoryCategory"/>의 반대편 라디오 버튼 바인딩용.</summary>
+    public bool UseGenericModelCategory
+    {
+        get => !_useValveAccessoryCategory;
+        set => UseValveAccessoryCategory = !value;
+    }
     public Array OutputModes { get; } = Enum.GetValues(typeof(PipeOutputMode));
+    /// <summary>선 그리기·부속 배치 시 치수가 반올림되는 격자 단위(mm). 프리셋 외의 양수도 직접 입력할 수 있다.</summary>
+    public double[] GridSnapOptions { get; } = [1, 10, 100];
+    public double GridSnapMm
+    {
+        get => _gridSnapMm;
+        set
+        {
+            if (!double.IsFinite(value) || value <= 0)
+                throw new ArgumentOutOfRangeException(nameof(value), "격자 스냅 단위는 0보다 큰 숫자여야 합니다.");
+            SetProperty(ref _gridSnapMm, value);
+        }
+    }
     public bool UseAngleSnap { get => _useAngleSnap; set => SetProperty(ref _useAngleSnap, value); }
     public bool SnapReferencePoint { get => _snapReferencePoint; set => SetProperty(ref _snapReferencePoint, value); }
     public bool SnapEndpoint { get => _snapEndpoint; set => SetProperty(ref _snapEndpoint, value); }
@@ -119,11 +159,34 @@ public sealed class PipeLayoutViewModel : ViewModelBase
         get => _selectedEdge;
         private set { if (SetProperty(ref _selectedEdge, value)) RefreshFittings(); }
     }
-    public string SelectedFittingType { get => _selectedFittingType; set => SetProperty(ref _selectedFittingType, value); }
+    /// <summary>배치할 배관부속 FamilySymbol("패밀리명 : 타입명"). 리스트에서 고르면 배치 모드로 들어간다(카탈로그 매핑 없음).</summary>
+    public string? SelectedFamilyTypeName
+    {
+        get => _selectedFamilyTypeName;
+        set
+        {
+            if (!SetProperty(ref _selectedFamilyTypeName, value)) return;
+            OnPropertyChanged(nameof(IsPlacingFitting));
+            if (string.IsNullOrWhiteSpace(value)) HideFittingPreview();
+        }
+    }
+    /// <summary>true면 리스트에서 패밀리를 선택한 상태 — 캔버스 클릭이 선 그리기가 아니라 부속 배치로 동작한다.</summary>
+    public bool IsPlacingFitting => !string.IsNullOrWhiteSpace(SelectedFamilyTypeName);
+    public bool IsFittingPreviewVisible { get => _isFittingPreviewVisible; private set => SetProperty(ref _isFittingPreviewVisible, value); }
+    public double FittingPreviewX { get => _fittingPreviewX; private set => SetProperty(ref _fittingPreviewX, value); }
+    public double FittingPreviewY { get => _fittingPreviewY; private set => SetProperty(ref _fittingPreviewY, value); }
+    /// <summary>미리보기 도형 종류. 배관 부속류="Diamond"(P&ID 관습적 다이아몬드), 일반모델="Square".</summary>
+    public string FittingPreviewShape { get => _fittingPreviewShape; private set => SetProperty(ref _fittingPreviewShape, value); }
+    public double FittingDimX1 { get => _fittingDimX1; private set => SetProperty(ref _fittingDimX1, value); }
+    public double FittingDimY1 { get => _fittingDimY1; private set => SetProperty(ref _fittingDimY1, value); }
+    public double FittingDimX2 { get => _fittingDimX2; private set => SetProperty(ref _fittingDimX2, value); }
+    public double FittingDimY2 { get => _fittingDimY2; private set => SetProperty(ref _fittingDimY2, value); }
+    public string FittingDimLabel { get => _fittingDimLabel; private set => SetProperty(ref _fittingDimLabel, value); }
     public string Status { get => _status; private set => SetProperty(ref _status, value); }
 
     public void HandleCanvasClick(Point point)
     {
+        if (IsPlacingFitting) { PlacePreviewedFitting(); return; }
         if (_segmentStart is null)
         {
             var rawStart = Transform.ToModel(point);
@@ -146,7 +209,10 @@ public sealed class PipeLayoutViewModel : ViewModelBase
 
     public void HandleCanvasMove(Point point)
     {
-        var raw = Transform.ToModel(point); var snapped = FindSnapPoint(raw);
+        var raw = Transform.ToModel(point);
+        if (IsPlacingFitting && _segmentStart is null) { UpdateFittingPreview(raw); return; }
+        HideFittingPreview();
+        var snapped = FindSnapPoint(raw);
         if (snapped is not null)
         {
             var marker = Transform.ToScreen(snapped);
@@ -156,20 +222,90 @@ public sealed class PipeLayoutViewModel : ViewModelBase
 
         if (_segmentStart is null) { TempDimensions.Clear(); return; }
         var start = Transform.ToModel(_segmentStart.Value);
-        var end = Constrain(start, raw);
-        UpdateTempDimensions(snapped ?? end);   // 임시치수는 그리는 중에만 표시한다
+        var end = snapped ?? Constrain(start, raw);
+        UpdateTempDimensions(end);   // 임시치수는 그리는 중에만 표시한다
         var screen = Transform.ToScreen(end);
         PreviewX1 = _segmentStart.Value.X; PreviewY1 = _segmentStart.Value.Y; PreviewX2 = screen.X; PreviewY2 = screen.Y;
         PreviewLengthX = (PreviewX1 + PreviewX2) / 2; PreviewLengthY = (PreviewY1 + PreviewY2) / 2; PreviewLength = $"{start.DistanceTo(end) / 1000:N3} m"; IsPreviewVisible = true;
     }
 
+    /// <summary>OSNAP으로 스냅되지 않은 자유 좌표를 <see cref="GridSnapMm"/> 격자에 맞춘다.
+    /// 각도 스냅이 켜져 있으면 각도는 그대로 두고 길이만 반올림하고, 꺼져 있으면 X·Y를 각각 반올림한다.
+    /// OSNAP 결과(끝점·중간점 등 기존 지오메트리에 정확히 붙는 점)에는 적용하지 않는다(호출부에서 snapped ?? Constrain(...) 순서로 보장).</summary>
     private DHBIMWATER.Core.Geometry.Point2D Constrain(DHBIMWATER.Core.Geometry.Point2D start, DHBIMWATER.Core.Geometry.Point2D end)
     {
-        if (!UseAngleSnap) return end;
         var dx = end.X - start.X; var dy = end.Y - start.Y; var length = Math.Sqrt(dx * dx + dy * dy);
         if (length < double.Epsilon) return end;
+        if (!UseAngleSnap)
+        {
+            var x = start.X + Math.Round(dx / GridSnapMm) * GridSnapMm;
+            var y = start.Y + Math.Round(dy / GridSnapMm) * GridSnapMm;
+            return new(x, y);
+        }
         var angle = Math.Round(Math.Atan2(dy, dx) / (Math.PI / 4)) * Math.PI / 4;
-        return new(start.X + length * Math.Cos(angle), start.Y + length * Math.Sin(angle));
+        var snappedLength = Math.Round(length / GridSnapMm) * GridSnapMm;
+        return new(start.X + snappedLength * Math.Cos(angle), start.Y + snappedLength * Math.Sin(angle));
+    }
+
+    /// <summary>커서에 가장 가까운 엣지 위의 점을 찾고(허용오차 <see cref="PipeTopologyBuilder.SnapTolerance"/>),
+    /// 엣지 시작점부터의 거리를 <see cref="GridSnapMm"/> 격자로 반올림해 배치 미리보기를 갱신한다.</summary>
+    private void UpdateFittingPreview(DHBIMWATER.Core.Geometry.Point2D cursor)
+    {
+        var target = FindNearestEdgePoint(cursor);
+        if (target is null) { HideFittingPreview(); return; }
+        var (edge, t, point, startPosition) = target.Value;
+        _fittingPreviewEdgeId = edge.Id; _fittingPreviewT = t;
+        var screen = Transform.ToScreen(point);
+        FittingPreviewX = screen.X; FittingPreviewY = screen.Y;
+        IsFittingPreviewVisible = true;
+
+        var dimStart = Transform.ToScreen(startPosition);
+        FittingDimX1 = dimStart.X; FittingDimY1 = dimStart.Y; FittingDimX2 = screen.X; FittingDimY2 = screen.Y;
+        FittingDimLabel = $"{point.DistanceTo(startPosition):N0} mm";
+        Status = "클릭하면 이 위치에 부속을 배치합니다. Esc로 배치를 취소합니다.";
+    }
+
+    private void HideFittingPreview()
+    {
+        if (!IsFittingPreviewVisible) return;
+        IsFittingPreviewVisible = false;
+        _fittingPreviewEdgeId = null;
+    }
+
+    private (PipeEdge Edge, double T, DHBIMWATER.Core.Geometry.Point2D Point, DHBIMWATER.Core.Geometry.Point2D StartPosition)? FindNearestEdgePoint(DHBIMWATER.Core.Geometry.Point2D cursor)
+    {
+        PipeEdge? bestEdge = null; double bestT = 0, bestDistance = double.MaxValue;
+        DHBIMWATER.Core.Geometry.Point2D? bestStart = null, bestEnd = null;
+        foreach (var edge in _network.Edges)
+        {
+            var start = _network.Nodes.First(x => x.Id == edge.StartNodeId).Position;
+            var end = _network.Nodes.First(x => x.Id == edge.EndNodeId).Position;
+            var t = Math.Clamp(Segment2D.ParameterOnSegment(cursor, start, end), 0, 1);
+            var point = new DHBIMWATER.Core.Geometry.Point2D(start.X + (end.X - start.X) * t, start.Y + (end.Y - start.Y) * t);
+            var distance = point.DistanceTo(cursor);
+            if (distance > PipeTopologyBuilder.SnapTolerance || distance >= bestDistance) continue;
+            bestEdge = edge; bestT = t; bestDistance = distance; bestStart = start; bestEnd = end;
+        }
+        if (bestEdge is null) return null;
+
+        var startPosition = bestStart!;
+        var endPosition = bestEnd!;
+        var length = startPosition.DistanceTo(endPosition);
+        if (length < double.Epsilon) return (bestEdge, bestT, startPosition, startPosition);
+        var distanceFromStart = length * bestT;
+        var snappedDistance = Math.Clamp(Math.Round(distanceFromStart / GridSnapMm) * GridSnapMm, 0, length);
+        var snappedT = snappedDistance / length;
+        var snappedPoint = new DHBIMWATER.Core.Geometry.Point2D(startPosition.X + (endPosition.X - startPosition.X) * snappedT, startPosition.Y + (endPosition.Y - startPosition.Y) * snappedT);
+        return (bestEdge, snappedT, snappedPoint, startPosition);
+    }
+
+    private void PlacePreviewedFitting()
+    {
+        if (_fittingPreviewEdgeId is null || string.IsNullOrWhiteSpace(SelectedFamilyTypeName)) return;
+        var category = UseValveAccessoryCategory ? "배관 부속류" : "일반모델";
+        _network.AddInlineFitting(_fittingPreviewEdgeId.Value, category, SelectedFamilyTypeName, _fittingPreviewT);
+        RefreshGraph();
+        Status = "부속을 배치했습니다. 계속 배치하거나 Esc로 종료하세요.";
     }
     public void HandleCanvasSizeChanged(double width, double height)
     {
@@ -194,14 +330,24 @@ public sealed class PipeLayoutViewModel : ViewModelBase
         var referencePoint = new DHBIMWATER.Core.Geometry.Point2D(0, 0);
         var referenceSnap = SnapReferencePoint && point.DistanceTo(referencePoint) <= PipeTopologyBuilder.SnapTolerance ? referencePoint : null;
 
-        // 네트워크·기준점·외곽선 후보 중 커서에 가장 가까운 것을 고른다.
+        // 네트워크·기준점·연두색 기준선·외곽선 후보 중 커서에 가장 가까운 것을 고른다.
         DHBIMWATER.Core.Geometry.Point2D? best = null;
-        foreach (var candidate in OutlineSnapCandidates(point).Concat(ArrowSnapCandidates(point)).Append(networkSnap).Append(referenceSnap))
+        foreach (var candidate in OutlineSnapCandidates(point).Concat(ArrowSnapCandidates(point)).Concat(ReferenceLineSnapCandidates(point)).Append(networkSnap).Append(referenceSnap))
         {
             if (candidate is null) continue;
             if (best is null || point.DistanceTo(candidate) < point.DistanceTo(best)) best = candidate;
         }
         return best;
+    }
+
+    /// <summary>연두색 X/Y 기준선에 내린 수선의 발을 근처점 후보로 낸다. 두 기준선은 캔버스 모델 좌표의 X=0, Y=0이다.</summary>
+    private IEnumerable<DHBIMWATER.Core.Geometry.Point2D?> ReferenceLineSnapCandidates(DHBIMWATER.Core.Geometry.Point2D point)
+    {
+        if (!SnapNearest) yield break;
+        if (Math.Abs(point.X) <= PipeTopologyBuilder.SnapTolerance)
+            yield return new DHBIMWATER.Core.Geometry.Point2D(0, point.Y);
+        if (Math.Abs(point.Y) <= PipeTopologyBuilder.SnapTolerance)
+            yield return new DHBIMWATER.Core.Geometry.Point2D(point.X, 0);
     }
 
     private IEnumerable<DHBIMWATER.Core.Geometry.Point2D?> OutlineSnapCandidates(DHBIMWATER.Core.Geometry.Point2D point)
@@ -335,21 +481,16 @@ public sealed class PipeLayoutViewModel : ViewModelBase
             TempDimensions.Add(new TempDimensionItem(a.X, a.Y, b.X, b.Y, measure.Value.DistanceMm, (a.X + b.X) / 2, (a.Y + b.Y) / 2));
         }
     }
-    public void SelectEdge(Guid edgeId, Point? position = null)
+    public void SelectEdge(Guid edgeId)
     {
         SelectedEdge = Edges.FirstOrDefault(x => x.Id == edgeId);
-        if (SelectedEdge is not null && position is not null)
-        {
-            var dx = SelectedEdge.X2 - SelectedEdge.X1; var dy = SelectedEdge.Y2 - SelectedEdge.Y1;
-            var lengthSquared = dx * dx + dy * dy;
-            _selectedFittingT = lengthSquared <= double.Epsilon ? 0.5 : Math.Clamp(((position.Value.X - SelectedEdge.X1) * dx + (position.Value.Y - SelectedEdge.Y1) * dy) / lengthSquared, 0, 1);
-        }
         RefreshGraph();
     }
 
     public void HandleEscape()
     {
         if (IsDrawing) { CancelDrawing(); return; }
+        if (IsPlacingFitting) { SelectedFamilyTypeName = null; Status = "부속 배치를 취소했습니다."; return; }
         if (SelectedEdge is null) return;
         SelectedEdge = null;
         RefreshGraph();
@@ -365,23 +506,27 @@ public sealed class PipeLayoutViewModel : ViewModelBase
         Status = "선택한 배관을 삭제했습니다.";
     }
 
-    private void AddFitting()
+    /// <summary>라디오 버튼으로 고른 카테고리("배관 부속류"/"일반모델")의 패밀리를 전부 보여준다.
+    /// 하위 분류 필터링 없이 카테고리 전체를 노출한다(확정 사항, 2026-08-12). 파이프 출력방식(OutputMode)과는 무관하다.</summary>
+    private void RefreshFamilyTypeNames()
     {
-        if (SelectedEdge is null) return;
-        _network.AddInlineFitting(SelectedEdge.Id, SelectedFittingType, _selectedFittingT);
-        RefreshGraph();
-        SelectedEdge = Edges.FirstOrDefault(x => x.Id == SelectedEdge.Id);
+        var names = UseValveAccessoryCategory ? _typeRepo.GetPipeAccessoryTypeNames() : _typeRepo.GetGenericModelTypeNames();
+        FamilyTypeNames.Clear();
+        foreach (var name in names) FamilyTypeNames.Add(name);
+        SelectedFamilyTypeName = null;
     }
 
     private void RemoveFitting(InlineFittingItem? fitting)
     {
-        if (fitting is null || SelectedEdge is null) return;
+        if (fitting is null) return;
         // TODO: 분할 후에도 엣지 ID를 보존하는 Phase 2 편집 API를 추가할 수 있다.
-        var edge = _network.Edges.First(x => x.Id == SelectedEdge.Id);
-        var retained = edge.InlineFittings.Where(x => x.Id != fitting.Id).Select((x, i) => x with { Order = i }).ToList();
+        var edge = _network.Edges.FirstOrDefault(x => x.Id == fitting.EdgeId);
+        if (edge is null) return;
+        var wasSelected = SelectedEdge?.Id == edge.Id;
         _network.RemoveInlineFitting(edge.Id, fitting.Id);
         RefreshGraph();
-        SelectedEdge = Edges.FirstOrDefault(x => x.StartNodeId == edge.StartNodeId && x.EndNodeId == edge.EndNodeId);
+        if (wasSelected)
+            SelectedEdge = Edges.FirstOrDefault(x => x.StartNodeId == edge.StartNodeId && x.EndNodeId == edge.EndNodeId);
     }
 
     private void CreateModel()
@@ -390,7 +535,18 @@ public sealed class PipeLayoutViewModel : ViewModelBase
         Status = "Revit 모델 생성 요청을 전송했습니다.";
     }
 
-    private void Clear() { _network.Clear(); SelectedEdge = null; RefreshGraph(); Status = "그래프를 초기화했습니다."; }
+    private void Clear()
+    {
+        _network.Clear();
+        _segmentStart = null;
+        SelectedEdge = null;
+        IsPreviewVisible = false;
+        IsSnapMarkerVisible = false;
+        HideFittingPreview();
+        TempDimensions.Clear();
+        RefreshGraph();
+        Status = "그래프를 초기화했습니다.";
+    }
     private void CancelDrawing() { _segmentStart = null; IsPreviewVisible = false; IsSnapMarkerVisible = false; TempDimensions.Clear(); Status = "그리기를 취소했습니다."; }
 
     private string GetSnapMarkerSymbol(DHBIMWATER.Core.Geometry.Point2D raw, DHBIMWATER.Core.Geometry.Point2D snapped)
@@ -438,15 +594,18 @@ public sealed class PipeLayoutViewModel : ViewModelBase
         RefreshFittings();
     }
 
+    /// <summary>전체 네트워크의 부속을 보여준다(선택된 엣지만이 아니라). 클릭-배치 흐름에는 엣지 선택 단계가 없으므로
+    /// 배치 직후에도 캔버스·사이드바에 남아 있어야 한다.</summary>
     private void RefreshFittings()
     {
         InlineFittings.Clear();
-        if (SelectedEdge is null) return;
-        var edge = _network.Edges.FirstOrDefault(x => x.Id == SelectedEdge.Id);
-        var display = Edges.FirstOrDefault(x => x.Id == SelectedEdge.Id);
-        if (edge is null || display is null) return;
-        foreach (var fitting in edge.InlineFittings.OrderBy(x => x.Order))
-            InlineFittings.Add(new InlineFittingItem(fitting.Id, fitting.TypeKey, fitting.T, fitting.Order, display.X1 + (display.X2 - display.X1) * fitting.T, display.Y1 + (display.Y2 - display.Y1) * fitting.T));
+        foreach (var edge in _network.Edges)
+        {
+            var display = Edges.FirstOrDefault(x => x.Id == edge.Id);
+            if (display is null) continue;
+            foreach (var fitting in edge.InlineFittings.OrderBy(x => x.Order))
+                InlineFittings.Add(new InlineFittingItem(fitting.Id, edge.Id, fitting.TypeKey, fitting.FamilyTypeName, fitting.T, fitting.Order, display.X1 + (display.X2 - display.X1) * fitting.T, display.Y1 + (display.Y2 - display.Y1) * fitting.T));
+        }
     }
 }
 
@@ -462,7 +621,7 @@ public sealed record PipeNodeItem(Guid Id, double X, double Y, int Degree, NodeK
     public string Label => $"{NodeKind} ({Degree})";
     public string Color => NodeKind switch { NodeKind.Cap => "#7F8C8D", NodeKind.Inline => "#3498DB", NodeKind.Elbow => "#F39C12", NodeKind.Tee => "#9B59B6", _ => "#E74C3C" };
 }
-public sealed record InlineFittingItem(Guid Id, string TypeKey, double T, int Order, double X, double Y);
+public sealed record InlineFittingItem(Guid Id, Guid EdgeId, string TypeKey, string FamilyTypeName, double T, int Order, double X, double Y);
 
 /// <summary>외곽 벽체 한 장의 화면 표시. 내측면(기준선)은 실선, 외측면은 두께 표현용 보조선이다.</summary>
 public sealed record OutlineWallItem(

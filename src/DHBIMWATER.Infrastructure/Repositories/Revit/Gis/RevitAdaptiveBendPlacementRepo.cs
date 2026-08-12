@@ -20,12 +20,14 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
     private readonly Func<Document?> _doc;
     public RevitAdaptiveBendPlacementRepo(Func<Document?> doc) => _doc = doc;
 
-    public int Place(IReadOnlyList<AdaptiveBendPlacementPlan> plans, AlignmentPlacementOrigin origin)
+    public AdaptiveBendPlacementResult Place(IReadOnlyList<AdaptiveBendPlacementPlan> plans, AlignmentPlacementOrigin origin)
     {
-        if (plans.Count == 0) return 0;
+        if (plans.Count == 0) return new AdaptiveBendPlacementResult(0, Array.Empty<string>());
         var doc = _doc() ?? throw new InvalidOperationException("활성 Revit 문서가 없습니다.");
         var basePoint = AlignmentPlacementMapper.GetProjectBasePoint(doc);
         var symbols = new Dictionary<(string Family, string Type), FamilySymbol>();
+        // 패밀리별로 한 번만 경고하면 충분하다 — 절점마다 같은 파라미터 누락 메시지가 반복되면 오히려 안 읽힌다.
+        var missingParameters = new HashSet<(string Family, string Type, string Parameter)>();
         var count = 0;
 
         foreach (var plan in plans)
@@ -45,16 +47,35 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
             }
             doc.Regenerate();
 
-            SetLengthParameter(instance, OuterDiameterParameter, UC.MmToFt(plan.OuterDiameterMm));
-            SetLengthParameter(instance, WallThicknessParameter, UC.MmToFt(plan.WallThicknessMm));
+            SetLengthParameter(instance, plan, OuterDiameterParameter, UC.MmToFt(plan.OuterDiameterMm), missingParameters);
+            SetLengthParameter(instance, plan, WallThicknessParameter, UC.MmToFt(plan.WallThicknessMm), missingParameters);
             for (var i = 0; i < 5; i++)
             {
-                SetAngleParameter(instance, $"{RotationXyParameterPrefix}{i + 1}", plan.RotXYDeg[i]);
-                SetAngleParameter(instance, $"{RotationXzParameterPrefix}{i + 1}", plan.RotXZDeg[i]);
+                SetAngleParameter(instance, plan, $"{RotationXyParameterPrefix}{i + 1}", plan.RotXYDeg[i], missingParameters);
+                SetAngleParameter(instance, plan, $"{RotationXzParameterPrefix}{i + 1}", plan.RotXZDeg[i], missingParameters);
             }
             count++;
         }
-        return count;
+
+        var warnings = missingParameters
+            .GroupBy(x => (x.Family, x.Type))
+            .Select(g => $"곡관 패밀리 '{g.Key.Family}:{g.Key.Type}'에 {string.Join(", ", g.Select(x => x.Parameter))} 파라미터가 없거나 읽기전용이라 값을 설정하지 못했습니다.")
+            .ToList();
+        return new AdaptiveBendPlacementResult(count, warnings);
+    }
+
+    public IReadOnlyList<(string FamilyName, string TypeName)> FindMissingSymbols(IEnumerable<(string FamilyName, string TypeName)> pairs)
+    {
+        var doc = _doc();
+        var distinct = pairs.Distinct().ToList();
+        if (doc is null) return distinct;
+
+        var loaded = new FilteredElementCollector(doc)
+            .OfClass(typeof(FamilySymbol))
+            .Cast<FamilySymbol>()
+            .Select(x => (x.Family.Name, x.Name))
+            .ToHashSet();
+        return distinct.Where(x => !loaded.Contains(x)).ToList();
     }
 
     // 같은 (패밀리, 타입) 조합은 FilteredElementCollector 재조회 없이 캐시에서 재사용한다.
@@ -74,15 +95,17 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
         return symbol;
     }
 
-    private static void SetLengthParameter(FamilyInstance instance, string name, double valueFt)
+    private static void SetLengthParameter(FamilyInstance instance, AdaptiveBendPlacementPlan plan, string name, double valueFt, HashSet<(string, string, string)> missingParameters)
     {
         var param = instance.LookupParameter(name);
         if (param is { IsReadOnly: false }) param.Set(valueFt);
+        else missingParameters.Add((plan.FamilyName, plan.TypeName, name));
     }
 
-    private static void SetAngleParameter(FamilyInstance instance, string name, double degrees)
+    private static void SetAngleParameter(FamilyInstance instance, AdaptiveBendPlacementPlan plan, string name, double degrees, HashSet<(string, string, string)> missingParameters)
     {
         var param = instance.LookupParameter(name);
         if (param is { IsReadOnly: false }) param.Set(UC.DegToRad(degrees));
+        else missingParameters.Add((plan.FamilyName, plan.TypeName, name));
     }
 }

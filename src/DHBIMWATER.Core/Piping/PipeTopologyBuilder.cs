@@ -8,6 +8,7 @@ public enum PipeSnapMode { None = 0, Endpoint = 1, Midpoint = 2, Quadrant = 4, N
 public sealed class PipeTopologyBuilder
 {
     public const double SnapTolerance = 100.0;
+    private const double GeometryTolerance = 1e-6;
     private const double StraightAngleToleranceDegrees = 2.0;
     private readonly PipeNetwork _network;
 
@@ -44,18 +45,20 @@ public sealed class PipeTopologyBuilder
     public void AddSegment(Point2D start, Point2D end)
     {
         if (start.DistanceTo(end) <= SnapTolerance) return;
-        var startNode = GetOrCreateNode(start);
-        var endNode = GetOrCreateNode(end);
+        // UI에서 선택된 OSNAP 좌표는 이미 정확한 기존 좌표다. 여기서 다시 100mm 범위의 노드로
+        // 끌어당기면 다른 스냅 후보를 선택했거나 스냅을 끈 경우에도 선이 임의로 변형될 수 있다.
+        var startNode = GetOrCreateNode(start, GeometryTolerance);
+        var endNode = GetOrCreateNode(end, GeometryTolerance);
         var splitPoints = new List<(double T, PipeNode Node)> { (0, startNode), (1, endNode) };
 
         foreach (var edge in _network.Edges.ToList())
         {
             var a = _network.FindNode(edge.StartNodeId)!;
             var b = _network.FindNode(edge.EndNodeId)!;
-            var intersection = Segment2D.Intersect(startNode.Position, endNode.Position, a.Position, b.Position, SnapTolerance);
+            var intersection = Segment2D.Intersect(startNode.Position, endNode.Position, a.Position, b.Position, GeometryTolerance);
             if (intersection.Kind == SegmentIntersectionKind.Point && intersection.Point is not null)
             {
-                var node = GetOrCreateNode(intersection.Point);
+                var node = GetOrCreateNode(intersection.Point, GeometryTolerance);
                 splitPoints.Add((intersection.TOnFirst, node));
                 SplitEdgeAt(edge, node, intersection.TOnSecond);
             }
@@ -74,7 +77,7 @@ public sealed class PipeTopologyBuilder
         ClassifyNodes();
     }
 
-    public void AddInlineFitting(Guid edgeId, string typeKey, double desiredT)
+    public void AddInlineFitting(Guid edgeId, string typeKey, string familyTypeName, double desiredT)
     {
         var edge = _network.FindEdge(edgeId) ?? throw new ArgumentOutOfRangeException(nameof(edgeId));
         var start = _network.FindNode(edge.StartNodeId)!.Position;
@@ -82,7 +85,7 @@ public sealed class PipeTopologyBuilder
         var length = start.DistanceTo(end);
         var minSpacingT = Math.Min(0.45, 100 / length);
         var t = FindAvailableFittingT(edge.InlineFittings, desiredT, minSpacingT);
-        edge.AddFitting(new InlineFitting(typeKey, t, edge.InlineFittings.Count));
+        edge.AddFitting(new InlineFitting(typeKey, familyTypeName, t, edge.InlineFittings.Count));
     }
 
     private static double FindAvailableFittingT(IReadOnlyList<InlineFitting> fittings, double desiredT, double minSpacingT)
@@ -116,13 +119,16 @@ public sealed class PipeTopologyBuilder
         ClassifyNodes();
     }
 
-    private PipeNode GetOrCreateNode(Point2D position) => _network.Nodes.FirstOrDefault(x => x.Position.DistanceTo(position) <= SnapTolerance) ?? _network.AddNode(position);
+    private PipeNode GetOrCreateNode(Point2D position, double tolerance) => _network.Nodes.FirstOrDefault(x => x.Position.DistanceTo(position) <= tolerance) ?? _network.AddNode(position);
 
     private void AddIfOnSegment(List<(double T, PipeNode Node)> points, PipeNode node, Point2D start, Point2D end)
     {
         var t = Segment2D.ParameterOnSegment(node.Position, start, end);
         var projected = new Point2D(start.X + (end.X - start.X) * t, start.Y + (end.Y - start.Y) * t);
-        if (t >= -SnapTolerance && t <= 1 + SnapTolerance && projected.DistanceTo(node.Position) <= SnapTolerance) points.Add((Math.Clamp(t, 0, 1), node));
+        var length = start.DistanceTo(end);
+        var parameterTolerance = length <= double.Epsilon ? 0 : GeometryTolerance / length;
+        if (t >= -parameterTolerance && t <= 1 + parameterTolerance && projected.DistanceTo(node.Position) <= GeometryTolerance)
+            points.Add((Math.Clamp(t, 0, 1), node));
     }
 
     private void SplitEdgeAt(PipeEdge edge, PipeNode node, double t)

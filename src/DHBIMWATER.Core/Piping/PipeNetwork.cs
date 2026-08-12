@@ -18,7 +18,7 @@ public sealed class PipeNetwork
     public Point2D? FindSnapPoint(Point2D point, PipeSnapMode modes) => new PipeTopologyBuilder(this).FindSnapPoint(point, modes);
     public void AddSegment(Point2D start, Point2D end) => new PipeTopologyBuilder(this).AddSegment(start, end);
     public void RemoveSegment(Guid edgeId) => new PipeTopologyBuilder(this).RemoveSegment(edgeId);
-    public void AddInlineFitting(Guid edgeId, string typeKey, double desiredT) => new PipeTopologyBuilder(this).AddInlineFitting(edgeId, typeKey, desiredT);
+    public void AddInlineFitting(Guid edgeId, string typeKey, string familyTypeName, double desiredT) => new PipeTopologyBuilder(this).AddInlineFitting(edgeId, typeKey, familyTypeName, desiredT);
     public void RemoveInlineFitting(Guid edgeId, Guid fittingId) => new PipeTopologyBuilder(this).RemoveInlineFitting(edgeId, fittingId);
     public void Clear() { _nodes.Clear(); _edges.Clear(); }
     public PipeNetworkDefinition ToDefinition(double diameterMm, PipeOutputMode outputMode, Point2D referencePoint)
@@ -36,7 +36,7 @@ public sealed class PipeNetwork
             var end = FindNode(edge.EndNodeId)!;
             var point = new Point2D(start.Position.X + (end.Position.X - start.Position.X) * fitting.T,
                                     start.Position.Y + (end.Position.Y - start.Position.Y) * fitting.T);
-            return new FittingPlacementDefinition(fitting.Id, fitting.TypeKey, point, Elevation, edge.Id);
+            return new FittingPlacementDefinition(fitting.Id, fitting.TypeKey, fitting.FamilyTypeName, point, Elevation, edge.Id);
         })).ToList();
         return new PipeNetworkDefinition(nodes, edges, fittings, Elevation, diameterMm, outputMode, referencePoint);
     }
