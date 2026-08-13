@@ -8,7 +8,7 @@
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance vm:WaterTankViewModel, IsDesignTimeCreatable=False}"
         
-        Title="DHBIM WATER - WTank Builder" 
+        Title="DHBIMWATER - WTank Builder" 
         Height="Auto" Width="1100"  
         WindowStartupLocation="CenterScreen"
         Background="#F4F7F9" 

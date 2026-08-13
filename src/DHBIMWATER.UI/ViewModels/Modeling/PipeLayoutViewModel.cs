@@ -68,7 +68,7 @@ public sealed class PipeLayoutViewModel : ViewModelBase
     public ObservableCollection<PipeEdgeItem> Edges { get; }
     public ObservableCollection<PipeNodeItem> Nodes { get; }
     public ObservableCollection<InlineFittingItem> InlineFittings { get; }
-    /// <summary>선택된 카테고리(배관 부속류/일반모델)에 로드된 패밀리 목록. "패밀리명 : 타입명" 형식.</summary>
+    /// <summary>선택된 카테고리(배관 밸브류/일반모델)에 로드된 패밀리 목록. "패밀리명 : 타입명" 형식.</summary>
     public ObservableCollection<string> FamilyTypeNames { get; }
     public ObservableCollection<OutlineWallItem> OutlineWalls { get; }
     public ObservableCollection<OutlineArrowItem> OutlineArrows { get; }
@@ -114,7 +114,8 @@ public sealed class PipeLayoutViewModel : ViewModelBase
             RefreshFamilyTypeNames();
         }
     }
-    /// <summary><see cref="UseValveAccessoryCategory"/>의 반대편 라디오 버튼 바인딩용.</summary>
+    /// <summary><see cref="UseValveAccessoryCategory"/>의 반대편 값. 2026-08-13에 일반모델 선택을 UI에서
+    /// 제거해 현재 바인딩되는 곳은 없다(향후 복원 대비로 유지).</summary>
     public bool UseGenericModelCategory
     {
         get => !_useValveAccessoryCategory;
@@ -175,7 +176,7 @@ public sealed class PipeLayoutViewModel : ViewModelBase
     public bool IsFittingPreviewVisible { get => _isFittingPreviewVisible; private set => SetProperty(ref _isFittingPreviewVisible, value); }
     public double FittingPreviewX { get => _fittingPreviewX; private set => SetProperty(ref _fittingPreviewX, value); }
     public double FittingPreviewY { get => _fittingPreviewY; private set => SetProperty(ref _fittingPreviewY, value); }
-    /// <summary>미리보기 도형 종류. 배관 부속류="Diamond"(P&ID 관습적 다이아몬드), 일반모델="Square".</summary>
+    /// <summary>미리보기 도형 종류. 배관 밸브류="Diamond"(P&ID 관습적 다이아몬드), 일반모델="Square".</summary>
     public string FittingPreviewShape { get => _fittingPreviewShape; private set => SetProperty(ref _fittingPreviewShape, value); }
     public double FittingDimX1 { get => _fittingDimX1; private set => SetProperty(ref _fittingDimX1, value); }
     public double FittingDimY1 { get => _fittingDimY1; private set => SetProperty(ref _fittingDimY1, value); }
@@ -302,7 +303,7 @@ public sealed class PipeLayoutViewModel : ViewModelBase
     private void PlacePreviewedFitting()
     {
         if (_fittingPreviewEdgeId is null || string.IsNullOrWhiteSpace(SelectedFamilyTypeName)) return;
-        var category = UseValveAccessoryCategory ? "배관 부속류" : "일반모델";
+        var category = UseValveAccessoryCategory ? "배관 밸브류" : "일반모델";
         _network.AddInlineFitting(_fittingPreviewEdgeId.Value, category, SelectedFamilyTypeName, _fittingPreviewT);
         RefreshGraph();
         Status = "부속을 배치했습니다. 계속 배치하거나 Esc로 종료하세요.";
@@ -506,7 +507,7 @@ public sealed class PipeLayoutViewModel : ViewModelBase
         Status = "선택한 배관을 삭제했습니다.";
     }
 
-    /// <summary>라디오 버튼으로 고른 카테고리("배관 부속류"/"일반모델")의 패밀리를 전부 보여준다.
+    /// <summary>선택된 카테고리("배관 밸브류"/"일반모델")의 패밀리를 전부 보여준다.
     /// 하위 분류 필터링 없이 카테고리 전체를 노출한다(확정 사항, 2026-08-12). 파이프 출력방식(OutputMode)과는 무관하다.</summary>
     private void RefreshFamilyTypeNames()
     {

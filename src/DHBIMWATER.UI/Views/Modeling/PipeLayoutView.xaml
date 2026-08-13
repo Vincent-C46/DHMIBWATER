@@ -7,7 +7,7 @@
         xmlns:converters="clr-namespace:DHBIMWATER.UI.Converters"
         xmlns:vm="clr-namespace:DHBIMWATER.UI.ViewModels.Modeling"
         mc:Ignorable="d" d:DataContext="{d:DesignInstance vm:PipeLayoutViewModel}"
-        Title="DHBIM WATER - Pipe Layout" Width="1100" Height="720" WindowStartupLocation="CenterScreen"
+        Title="DHBIMWATER - Pipe Layout" Width="1100" Height="720" WindowStartupLocation="CenterScreen"
         Background="#F4F7F9" WindowStyle="None" FontFamily="Segoe UI, Malgun Gothic" PreviewKeyDown="OnPreviewKeyDown">
     <Window.Resources><ResourceDictionary><BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/><converters:StringEqualsToVisibilityConverter x:Key="StringEqualsToVisibilityConverter"/><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="/DHBIMWATER.UI;component/Styles/Generic.xaml"/></ResourceDictionary.MergedDictionaries></ResourceDictionary></Window.Resources>
     <WindowChrome.WindowChrome><WindowChrome CaptionHeight="0" CornerRadius="15" GlassFrameThickness="1" UseAeroCaptionButtons="False"/></WindowChrome.WindowChrome>
@@ -50,10 +50,10 @@
                         <Rectangle Width="14" Height="14" Margin="2" Fill="#2980B9" Stroke="White" StrokeThickness="1.5" Visibility="{Binding FittingPreviewShape, Converter={StaticResource StringEqualsToVisibilityConverter}, ConverterParameter=Square}"/>
                     </Grid>
                     <ItemsControl ItemsSource="{Binding Edges}" IsHitTestVisible="True"><ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas/></ItemsPanelTemplate></ItemsControl.ItemsPanel><ItemsControl.ItemTemplate><DataTemplate><Canvas><Line X1="{Binding X1}" Y1="{Binding Y1}" X2="{Binding X2}" Y2="{Binding Y2}" Stroke="{Binding Stroke}" StrokeThickness="4" MouseLeftButtonDown="OnEdgeMouseLeftButtonDown"/><TextBlock Canvas.Left="{Binding LengthX}" Canvas.Top="{Binding LengthY}" Margin="4,-20,0,0" Text="{Binding LengthLabel}" FontSize="11" FontWeight="SemiBold" Foreground="#1B4F72" Background="#F8FBFD" IsHitTestVisible="False"/></Canvas></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
-                    <!-- 배치된 부속: 배관 부속류=다이아몬드, 일반모델=사각형(P&ID 관습적 표기, 실제 패밀리 아이콘 대신 카테고리 도형만 표시) -->
+                    <!-- 배치된 부속: 배관 밸브류=다이아몬드, 일반모델=사각형(P&ID 관습적 표기, 실제 패밀리 아이콘 대신 카테고리 도형만 표시) -->
                     <ItemsControl ItemsSource="{Binding InlineFittings}" IsHitTestVisible="False"><ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas/></ItemsPanelTemplate></ItemsControl.ItemsPanel><ItemsControl.ItemTemplate><DataTemplate>
                         <Grid Canvas.Left="{Binding X}" Canvas.Top="{Binding Y}" Width="14" Height="14" Margin="-7,-7,0,0" ToolTip="{Binding FamilyTypeName}">
-                            <Polygon Points="7,0 14,7 7,14 0,7" Fill="#F39C12" Stroke="White" StrokeThickness="1" Visibility="{Binding TypeKey, Converter={StaticResource StringEqualsToVisibilityConverter}, ConverterParameter=배관 부속류}"/>
+                            <Polygon Points="7,0 14,7 7,14 0,7" Fill="#F39C12" Stroke="White" StrokeThickness="1" Visibility="{Binding TypeKey, Converter={StaticResource StringEqualsToVisibilityConverter}, ConverterParameter=배관 밸브류}"/>
                             <Rectangle Width="12" Height="12" Margin="1" Fill="#2980B9" Stroke="White" StrokeThickness="1" Visibility="{Binding TypeKey, Converter={StaticResource StringEqualsToVisibilityConverter}, ConverterParameter=일반모델}"/>
                         </Grid>
                     </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
@@ -100,14 +100,12 @@
                 <Grid Margin="0,0,0,10"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="75"/><ColumnDefinition Width="24"/></Grid.ColumnDefinitions><TextBlock Text="관경" VerticalAlignment="Center"/><TextBox Grid.Column="1" Style="{StaticResource PrimaryTextBoxStyle}" Text="{Binding DiameterMm, UpdateSourceTrigger=LostFocus}"/><TextBlock Grid.Column="2" Text="mm" Margin="4,0"/></Grid>
                 <TextBlock Text="격자 스냅 단위 (직접 입력 가능)" FontWeight="SemiBold"/>
                 <Grid Margin="0,4,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="24"/></Grid.ColumnDefinitions>
-                    <ComboBox IsEditable="True" IsTextSearchEnabled="False" ItemsSource="{Binding GridSnapOptions}" Text="{Binding GridSnapMm, Mode=TwoWay, UpdateSourceTrigger=LostFocus, ValidatesOnExceptions=True}" Style="{StaticResource PrimaryComboBoxStyle}"/>
+                    <ComboBox IsTextSearchEnabled="False" ItemsSource="{Binding GridSnapOptions}" Text="{Binding GridSnapMm, Mode=TwoWay, UpdateSourceTrigger=LostFocus, ValidatesOnExceptions=True}" Style="{StaticResource EditableComboBoxStyle}"/>
                     <TextBlock Grid.Column="1" Text="mm" Margin="4,0" VerticalAlignment="Center"/>
                 </Grid>
-                <TextBlock Text="부속 카테고리" FontWeight="SemiBold"/>
-                <StackPanel Orientation="Horizontal" Margin="0,4,0,8">
-                    <RadioButton Content="배관 부속류" IsChecked="{Binding UseValveAccessoryCategory, Mode=TwoWay}" Margin="0,0,16,0" VerticalAlignment="Center"/>
-                    <RadioButton Content="일반모델" IsChecked="{Binding UseGenericModelCategory, Mode=TwoWay}" VerticalAlignment="Center"/>
-                </StackPanel>
+                <!-- 부속 카테고리는 배관 밸브류(OST_PipeAccessory) 고정. 일반모델 선택은 2026-08-13 UI에서 제거
+                     (ViewModel의 UseGenericModelCategory 경로는 향후 복원을 위해 코드로만 남겨둠) -->
+                <TextBlock Text="부속 카테고리 : 배관 밸브류" FontWeight="SemiBold" Margin="0,0,0,8"/>
                 <TextBlock Text="배치할 패밀리 (선택 후 선 위 클릭)" FontWeight="SemiBold"/>
                 <ListBox Style="{StaticResource PrimaryListBoxStyle}" ItemsSource="{Binding FamilyTypeNames}" SelectedItem="{Binding SelectedFamilyTypeName}" Height="90" Margin="0,4,0,12"/>
                 <TextBlock Text="배치된 부속품" FontWeight="Bold" Foreground="#4A6FA5" FontSize="16" Margin="0,0,0,4"/>

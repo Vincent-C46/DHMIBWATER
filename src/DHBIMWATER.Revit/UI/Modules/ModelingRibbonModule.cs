@@ -18,12 +18,16 @@ namespace DHBIMWATER.Revit.UI.Modules
             PushButtonData valveRoomBtn = new PushButtonData("ValveRoomCommand", "밸브실\n모델링", Assembly.GetExecutingAssembly().Location, RevitCommandType<ValveRoomCommand>.FullName);
             PushButtonData pipeLayoutBtn = new PushButtonData("PipeLayoutCommand", "밸브실\n배관", Assembly.GetExecutingAssembly().Location, RevitCommandType<PipeLayoutCommand>.FullName);
 
+            PushButtonData coordinateLinkBtn = new PushButtonData("CoordinateLinkCommand", "기준점\n통합 링크", Assembly.GetExecutingAssembly().Location, RevitCommandType<CoordinateLinkCommand>.FullName);
+
+
             reservoirBtn.LargeImage = RibbonButtonImages.GetIcon("water-tap.png");
             pumpingStationBtn.LargeImage = RibbonButtonImages.GetIcon("pump.png");
             pipingBtn.LargeImage = RibbonButtonImages.GetIcon("pipe_2.png");
 
             valveRoomBtn.LargeImage = RibbonButtonImages.GetIcon("valve.png");
             pipeLayoutBtn.LargeImage = RibbonButtonImages.GetIcon("pipe.png");
+            coordinateLinkBtn.LargeImage = RibbonButtonImages.GetIcon("link.png");
 
             return
             [
@@ -32,6 +36,7 @@ namespace DHBIMWATER.Revit.UI.Modules
                 panel.AddItem(pipingBtn),
                 panel.AddItem(valveRoomBtn),
                 panel.AddItem(pipeLayoutBtn),
+                panel.AddItem(coordinateLinkBtn),
             ];
         }
     }
