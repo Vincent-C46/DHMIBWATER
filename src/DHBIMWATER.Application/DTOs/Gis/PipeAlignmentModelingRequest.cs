@@ -2,7 +2,8 @@ using DHBIMWATER.Core.Gis;
 
 namespace DHBIMWATER.Application.DTOs.Gis;
 
-public enum PipeAlignmentOutputMode { DirectShape, Beam, PipingSystem }
+/// <summary>Adaptive — 직관 2점 가변 + 곡관 5점 가변. (구 Beam: 구조 프레이밍 배치, 2026-08-18 교체)</summary>
+public enum PipeAlignmentOutputMode { DirectShape, Adaptive, PipingSystem }
 
 /// <summary>엑셀 시트 1개를 관로 선형으로 읽기 위한 열 매핑. X·Y·Z는 필수, 나머지는 선택.</summary>
 /// <param name="StationColumnIndex">선택. 체이니지 정렬 검증용.</param>
@@ -26,15 +27,23 @@ public sealed record PipeAlignmentModelingRequest
     public ZSource ZSource { get; init; } = ZSource.GeometryZ;
     public PipeAlignmentOutputMode OutputMode { get; init; } = PipeAlignmentOutputMode.DirectShape;
     public double IntervalMm { get; init; } = 6000;
-    public string? BeamTypeName { get; init; }
-    /// <summary>빔 인스턴스에 직경(mm)을 기록할 파라미터명. null이면 기록하지 않는다.</summary>
-    public string? BeamDiameterParameterName { get; init; }
-    /// <summary>빔 인스턴스에 관종을 기록할 파라미터명. null이면 기록하지 않는다.</summary>
-    public string? BeamKindParameterName { get; init; }
+    /// <summary>직관 2점 가변 패밀리·타입("패밀리명 : 타입명").</summary>
+    public string? StraightFamilyTypeName { get; init; }
+    /// <summary>직관 인스턴스에 호칭지름(mm)을 기록할 파라미터명. null이면 기록하지 않는다.</summary>
+    public string? StraightDiameterParameterName { get; init; }
+    /// <summary>직관 인스턴스에 관종을 기록할 파라미터명. null이면 기록하지 않는다.</summary>
+    public string? StraightKindParameterName { get; init; }
+    /// <summary>직관 제원표의 외경 OD를 기록할 파라미터명. null이면 기록하지 않는다.</summary>
+    public string? StraightOuterDiameterParameterName { get; init; }
+    /// <summary>직관 제원표의 두께를 기록할 파라미터명. null이면 기록하지 않는다.</summary>
+    public string? StraightThicknessParameterName { get; init; }
+    /// <summary>5점 가변 곡관 패밀리명. 유형은 곡관 치수표 행에서 선택한다.</summary>
+    public string? BendFamilyName { get; init; }
+    public string? BendDiameterParameterName { get; init; }
+    public string? BendWallThicknessParameterName { get; init; }
     public string? PipingSystemTypeName { get; init; }
     public string? PipeTypeName { get; init; }
     public string? LevelName { get; init; }
-    public bool AlignTangent { get; init; } = true;
     /// <summary>절점 병합 허용오차(mm). 곡관 자리를 찾을 때 진단과 같은 그래프를 재현하려면 진단에서 쓴 값과 같아야 한다.</summary>
     public double SnapToleranceMm { get; init; } = 10;
     /// <summary>곡관 치수 조회에 쓸 형식. 같은 각도라도 A형/B형은 t가 다르다.</summary>
@@ -48,3 +57,7 @@ public sealed record PipeAlignmentModelingResult(PipeAlignmentOutputMode OutputM
 public sealed record PipeAlignmentCreateDefinition(IReadOnlyList<PipeAlignment> Alignments, double ReferenceX, double ReferenceY, ZDatum ZDatum);
 public sealed record PipeAlignmentCreateResult(int CreatedCount, int SkippedSegments, IReadOnlyList<string> Warnings);
 public sealed record AlignmentPlacementOrigin(double X, double Y, ZDatum ZDatum);
+
+/// <param name="Count">실제로 배치된 직관 수.</param>
+/// <param name="Warnings">직관 규격 또는 매핑 파라미터를 적용하지 못한 경우의 안내.</param>
+public sealed record AlignmentStraightPlacementResult(int Count, IReadOnlyList<string> Warnings);

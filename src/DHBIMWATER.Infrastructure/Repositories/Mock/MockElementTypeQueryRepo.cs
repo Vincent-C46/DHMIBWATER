@@ -19,7 +19,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Mock
                 "Mock 보 타입 4 - 600x900"
             };
         }
-        public IEnumerable<string> GetAdaptiveBendTypeNames() => new[] { "Mock 5점 곡관 : DN100", "Mock 5점 곡관 : DN200", "Mock 3점 곡관 : DN300" };
+        public IEnumerable<string> GetAdaptiveComponentTypeNames() => new[] { "Mock 5점 곡관 : DN100", "Mock 5점 곡관 : DN200", "Mock 3점 곡관 : DN300" };
         public int GetAdaptiveBendPointCount(string familyTypeName) => familyTypeName.StartsWith("Mock 5점 곡관", StringComparison.Ordinal) ? 5 : familyTypeName.StartsWith("Mock 3점 곡관", StringComparison.Ordinal) ? 3 : -1;
 
         public IEnumerable<string> GetColumnTypeNames()
@@ -33,6 +33,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Mock
             };
         }
         public IEnumerable<string> GetBeamInstanceParameterNames(string beamTypeName) => new[] { "직경", "관종", "주석", "설명" };
+        public IEnumerable<string> GetAdaptiveInstanceParameterNames(string familyTypeName) => new[] { "DN", "관종", "주석", "설명" };
         public IEnumerable<string> GetPipingSystemTypeNames() => new[] { "Mock 파이프 시스템 1 - 급수" };
         public IEnumerable<string> GetPipeTypeNames() => new[] { "Mock PipeType 1" };
         public IEnumerable<string> GetPipeAccessoryTypeNames() => new[] { "Mock 밸브 : DN100", "Mock 밸브 : DN200", "Mock 플랜지 : DN100" };

@@ -8,7 +8,7 @@ namespace DHBIMWATER.UI.Tests.Gis;
 public class AlignmentPlacementSupportTests
 {
     [Fact]
-    public void ReferencePoint_rounds_first_vertex_away_from_zero_at_midpoint()
+    public void ReferencePoint_takes_plan_coordinates_of_first_vertex_and_drops_elevation()
     {
         var alignments = new[]
         {
@@ -19,7 +19,11 @@ public class AlignmentPlacementSupportTests
 
         var reference = AlignmentReferencePoint.FromFirstVertex(alignments);
 
-        Assert.Equal((124d, -457d, 11d), reference);
+        // 기준점은 PBP 위치에 그대로 대응하므로 정수 반올림하지 않는다(소수 5자리 오차 제거만).
+        // 표고는 기준점에 포함하지 않고 정점 Z로만 결정한다.
+        Assert.NotNull(reference);
+        Assert.Equal(123.5, reference!.Value.X);
+        Assert.Equal(-456.5, reference.Value.Y);
     }
 
     [Fact]

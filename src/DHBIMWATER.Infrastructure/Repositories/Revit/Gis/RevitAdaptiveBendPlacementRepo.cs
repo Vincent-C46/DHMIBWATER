@@ -12,8 +12,6 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Gis;
 /// </summary>
 internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRepo
 {
-    private const string OuterDiameterParameter = "OD";
-    private const string WallThicknessParameter = "thk";
     private const string RotationXyParameterPrefix = "rot_XY_";
     private const string RotationXzParameterPrefix = "rot_XZ_";
 
@@ -28,6 +26,9 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
         var symbols = new Dictionary<(string Family, string Type), FamilySymbol>();
         // 패밀리별로 한 번만 경고하면 충분하다 — 절점마다 같은 파라미터 누락 메시지가 반복되면 오히려 안 읽힌다.
         var missingParameters = new HashSet<(string Family, string Type, string Parameter)>();
+        var overrideWarnings = new List<string>();
+        var overrideView = ResolveOverrideView(doc);
+        var solidFillPatternId = FindSolidFillPatternId(doc);
         var count = 0;
 
         foreach (var plan in plans)
@@ -43,17 +44,21 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
             {
                 var refPoint = (ReferencePoint)doc.GetElement(pointIds[i]);
                 // ZDatum 보정(관 크라운/인버트)은 인접 직관과 같은 OD를 넣어야 Z가 어긋나지 않는다.
-                refPoint.Position = AlignmentPlacementMapper.ToXyz(points[i], plan.OuterDiameterMm, origin.X, origin.Y, origin.ZDatum, basePoint);
+                refPoint.Position = AlignmentPlacementMapper.ToXyz(points[i], plan.DiameterMm, origin.X, origin.Y, origin.ZDatum, basePoint);
             }
             doc.Regenerate();
 
-            SetLengthParameter(instance, plan, OuterDiameterParameter, UC.MmToFt(plan.OuterDiameterMm), missingParameters);
-            SetLengthParameter(instance, plan, WallThicknessParameter, UC.MmToFt(plan.WallThicknessMm), missingParameters);
+            if (plan.DiameterParameterName is not null)
+                SetLengthParameter(instance, plan, plan.DiameterParameterName, UC.MmToFt(plan.DiameterMm), missingParameters);
+            if (plan.WallThicknessParameterName is not null)
+                SetLengthParameter(instance, plan, plan.WallThicknessParameterName, UC.MmToFt(plan.WallThicknessEMm), missingParameters);
             for (var i = 0; i < 5; i++)
             {
                 SetAngleParameter(instance, plan, $"{RotationXyParameterPrefix}{i + 1}", plan.RotXYDeg[i], missingParameters);
                 SetAngleParameter(instance, plan, $"{RotationXzParameterPrefix}{i + 1}", plan.RotXZDeg[i], missingParameters);
             }
+            if (!plan.IsAcceptable)
+                ApplyExceededOverride(overrideView, instance.Id, solidFillPatternId, plan.NodeId, overrideWarnings);
             count++;
         }
 
@@ -61,6 +66,7 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
             .GroupBy(x => (x.Family, x.Type))
             .Select(g => $"곡관 패밀리 '{g.Key.Family}:{g.Key.Type}'에 {string.Join(", ", g.Select(x => x.Parameter))} 파라미터가 없거나 읽기전용이라 값을 설정하지 못했습니다.")
             .ToList();
+        warnings.AddRange(overrideWarnings);
         return new AdaptiveBendPlacementResult(count, warnings);
     }
 
@@ -107,5 +113,36 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
         var param = instance.LookupParameter(name);
         if (param is { IsReadOnly: false }) param.Set(UC.DegToRad(degrees));
         else missingParameters.Add((plan.FamilyName, plan.TypeName, name));
+    }
+
+    private static View3D? ResolveOverrideView(Document doc)
+    {
+        if (doc.ActiveView is View3D active && !active.IsTemplate) return active;
+        return new FilteredElementCollector(doc).OfClass(typeof(View3D)).Cast<View3D>()
+            .FirstOrDefault(x => !x.IsTemplate && string.Equals(x.Name, "{3D}", StringComparison.Ordinal));
+    }
+
+    private static ElementId FindSolidFillPatternId(Document doc) => new FilteredElementCollector(doc)
+        .OfClass(typeof(FillPatternElement)).Cast<FillPatternElement>()
+        .FirstOrDefault(x => x.GetFillPattern().IsSolidFill)?.Id ?? ElementId.InvalidElementId;
+
+    private static void ApplyExceededOverride(View3D? view, ElementId elementId, ElementId solidFillPatternId, int nodeId, List<string> warnings)
+    {
+        if (view is null)
+        {
+            if (!warnings.Any()) warnings.Add("허용 초과 곡관을 표시할 3D 뷰를 찾지 못해 적색 재지정을 건너뛰었습니다.");
+            return;
+        }
+        try
+        {
+            var red = new Autodesk.Revit.DB.Color(229, 57, 53);
+            var settings = new OverrideGraphicSettings().SetProjectionLineColor(red).SetSurfaceForegroundPatternColor(red);
+            if (solidFillPatternId != ElementId.InvalidElementId) settings.SetSurfaceForegroundPatternId(solidFillPatternId);
+            view.SetElementOverrides(elementId, settings);
+        }
+        catch (Exception ex)
+        {
+            warnings.Add($"절점 {nodeId}: 3D 뷰 적색 표시를 적용하지 못했습니다({ex.Message}).");
+        }
     }
 }

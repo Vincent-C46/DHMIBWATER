@@ -28,7 +28,7 @@ public sealed class AnalyzePipeNetworkUseCase
         if (settings is null)
         {
             settings = BendSettings.Default;
-            warnings.Add("허용굴곡 설정이 저장되지 않아 기본값으로 판정했습니다.");
+            warnings.Add("관로 규격 설정이 저장되지 않아 빈 기본값으로 판정했습니다.");
         }
 
         var graph = PipeNetworkBuilder.Build(loaded.Alignments, request.SnapToleranceMm / 1000d);
@@ -40,7 +40,7 @@ public sealed class AnalyzePipeNetworkUseCase
         var unresolved = resolutions.Values.Count(x => x.Kind == BendResolutionKind.Unresolved);
         var conflicts = resolutions.Values.Where(x => !x.IsSizeConsistent).ToList();
 
-        if (standard > 0 && resolutions.Values.All(x => !x.HasFittingSize))
+        if (resolutions.Values.Any(x => x.Kind != BendResolutionKind.None) && resolutions.Values.All(x => !x.HasFittingSize))
             warnings.Add("곡관 치수가 입력되지 않아 직관 구간 차감이 적용되지 않습니다.");
 
         foreach (var conflict in conflicts)
@@ -76,7 +76,7 @@ public sealed class AnalyzePipeNetworkUseCase
     }
 
     private static double LayingLength(IReadOnlyDictionary<int, BendResolution> resolutions, int nodeId)
-        => resolutions.TryGetValue(nodeId, out var r) && r.Kind == BendResolutionKind.Standard ? r.LayingLengthMm : 0d;
+        => resolutions.TryGetValue(nodeId, out var r) && r.Kind != BendResolutionKind.None ? r.LayingLengthMm : 0d;
 
     /// <summary>사용자가 눈으로 확인해야 하는 절점만 담는다. 정상 Tee/Cross/Straight는 집계에만 반영한다.</summary>
     private static IReadOnlyList<PipeNetworkNodeReport> BuildAttention(IReadOnlyList<NodeClassification> nodes, IReadOnlyDictionary<int, BendResolution> resolutions)

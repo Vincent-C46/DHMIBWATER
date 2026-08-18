@@ -8,7 +8,6 @@ namespace DHBIMWATER.Core.Gis;
 /// <param name="UpstreamLegMm">상류 쪽 차감량 t(mm).</param>
 /// <param name="DownstreamLegMm">하류 쪽 차감량 t+s(mm). A형은 t와 같다.</param>
 /// <param name="WallThicknessMm">e — 곡관 벽 두께(mm). 카탈로그에 없으면 0.</param>
-/// <param name="FamilyName">곡관 패밀리명. 카탈로그 미등록이면 null — 배치 단계가 실물 배치를 건너뛴다.</param>
 /// <param name="TypeName">곡관 타입명. 카탈로그 미등록이면 null.</param>
 /// <param name="RotXYDeg">P1~P5 각 점의 rot_XY(도). 인덱스는 <see cref="Points"/>의 Start/ArcStart/ArcMid/ArcEnd/End 순서와 같다.</param>
 /// <param name="RotXZDeg">P1~P5 각 점의 rot_XZ(도). 인덱스는 <paramref name="RotXYDeg"/>와 같다.</param>
@@ -23,8 +22,8 @@ public sealed record BendPlacement(
     double UpstreamLegMm,
     double DownstreamLegMm,
     double WallThicknessMm,
-    string? FamilyName,
     string? TypeName,
+    bool IsAcceptable,
     IReadOnlyList<double> RotXYDeg,
     IReadOnlyList<double> RotXZDeg);
 
@@ -62,10 +61,9 @@ public static class BendTrimPlanner
     {
         if (snapTolerance <= 0) throw new ArgumentOutOfRangeException(nameof(snapTolerance), "스냅 허용오차는 0보다 커야 합니다.");
 
-        // 곡관이 실제로 들어가는 절점만 남긴다. Unresolved와 치수 미입력(t=0, R=0)은 곡관을 넣지 않으므로
-        // 직관도 차감하지 않고 절점까지 그대로 붙인다(사용자 결정 2026-08-03).
+        // 허용 초과(Unresolved)도 최근접 곡관을 배치한다. 치수 미입력만 배치하지 않는다.
         var placeable = resolutions
-            .Where(x => x.Kind == BendResolutionKind.Standard && x.HasFittingSize && x.LayingLengthMm > 0)
+            .Where(x => x.Kind != BendResolutionKind.None && x.HasFittingSize && x.LayingLengthMm > 0)
             .ToDictionary(x => x.NodeId);
         var lookup = new NodeLookup(graph.Nodes, snapTolerance);
 
@@ -119,7 +117,7 @@ public static class BendTrimPlanner
                     nodeId.Value, a, v, bend.StandardAngleDeg,
                     alignments[a].DiameterMm, alignments[a].PipeKind,
                     points, shortLeg, longLeg,
-                    bend.WallThicknessMm, bend.FamilyName, bend.TypeName, rotXy, rotXz));
+                    bend.WallThicknessMm, bend.TypeName, bend.IsAcceptable, rotXy, rotXz));
             }
 
             plans.Add(new AlignmentBendPlan(a, trims));

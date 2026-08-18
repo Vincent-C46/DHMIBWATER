@@ -107,7 +107,7 @@
                                     <DataGridTemplateColumn Header="관종(수동)" Width="120">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}" Text="{Binding PipeKind, UpdateSourceTrigger=PropertyChanged}" Visibility="{Binding KindField, Converter={StaticResource StringEqualsToVisibility}, ConverterParameter={x:Static vm:PipeAlignmentSourceFileItem.ManualFieldOption}}"/>
+                                                <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" ItemsSource="{Binding PipeKinds, Mode=OneWay}" SelectedItem="{Binding PipeKind, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Visibility="{Binding KindField, Converter={StaticResource StringEqualsToVisibility}, ConverterParameter={x:Static vm:PipeAlignmentSourceFileItem.ManualFieldOption}}"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
@@ -142,7 +142,7 @@
                                     <DataGridTemplateColumn Header="관종(수동)" Width="120">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}" Text="{Binding PipeKind, UpdateSourceTrigger=PropertyChanged}" Visibility="{Binding KindField, Converter={StaticResource StringEqualsToVisibility}, ConverterParameter={x:Static vm:PipeAlignmentSourceFileItem.ManualFieldOption}}"/>
+                                                <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" ItemsSource="{Binding PipeKinds, Mode=OneWay}" SelectedItem="{Binding PipeKind, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Visibility="{Binding KindField, Converter={StaticResource StringEqualsToVisibility}, ConverterParameter={x:Static vm:PipeAlignmentSourceFileItem.ManualFieldOption}}"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
@@ -177,7 +177,7 @@
                                     <DataGridTemplateColumn Header="관종(수동)" Width="120">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}" Text="{Binding PipeKind, UpdateSourceTrigger=PropertyChanged}" Visibility="{Binding KindField, Converter={StaticResource StringEqualsToVisibility}, ConverterParameter={x:Static vm:PipeAlignmentSourceFileItem.ManualFieldOption}}"/>
+                                                <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" ItemsSource="{Binding PipeKinds, Mode=OneWay}" SelectedItem="{Binding PipeKind, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Visibility="{Binding KindField, Converter={StaticResource StringEqualsToVisibility}, ConverterParameter={x:Static vm:PipeAlignmentSourceFileItem.ManualFieldOption}}"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
@@ -214,18 +214,26 @@
                     <StackPanel Margin="16">
                         <StackPanel Orientation="Horizontal">
                             <RadioButton Content="DirectShape (선형 형상)" IsChecked="{Binding IsDirectShape}" GroupName="Output"/>
-                            <RadioButton Content="구조 프레임 (빔)" Margin="18,0" IsChecked="{Binding IsBeam}" GroupName="Output"/>
+                            <RadioButton Content="가변 패밀리 (직관 2점 + 곡관 5점)" Margin="18,0" IsChecked="{Binding IsAdaptive}" GroupName="Output"/>
                             <RadioButton Content="파이프 (MEP)" Margin="18,0" IsChecked="{Binding IsPiping}" GroupName="Output"/>
                         </StackPanel>
                         <TextBlock Margin="0,16,0,5" Text="DirectShape는 선형 전체를 생성하고 DH_* 공유매개변수를 기록합니다." Visibility="{Binding IsDirectShape, Converter={StaticResource BoolToVisibility}}"/>
-                        <StackPanel Visibility="{Binding IsBeam, Converter={StaticResource BoolToVisibility}}">
-                            <TextBlock Text="빔 유형"/>
-                            <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" ItemsSource="{Binding BeamTypeNames}" SelectedItem="{Binding BeamTypeName}"/>
-                            <TextBlock Text="직경 파라미터" Margin="0,8,0,3"/>
-                            <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" ItemsSource="{Binding BeamParameterOptions}" SelectedItem="{Binding BeamDiameterParameterName}" ToolTip="빔 유형 선택 시 후보 이름으로 자동 매칭을 시도합니다. 필요하면 직접 선택하세요."/>
+                        <StackPanel Visibility="{Binding IsAdaptive, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="직관 패밀리 (2점 가변)"/>
+                            <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" ItemsSource="{Binding StraightFamilyNames, Mode=OneWay}" SelectedItem="{Binding StraightFamilyName, Mode=TwoWay}"/>
+                            <TextBlock Text="유형" Margin="0,8,0,3"/>
+                            <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" ItemsSource="{Binding StraightTypeNames, Mode=OneWay}" SelectedItem="{Binding StraightTypeName, Mode=TwoWay}" ToolTip="직관은 Adaptive Point가 2개인 유형이어야 합니다."/>
+                            <TextBlock Foreground="#B26B00" TextWrapping="Wrap" Margin="0,4,0,0" Text="{Binding StraightPointCountNotice}" Visibility="{Binding HasStraightPointCountNotice, Converter={StaticResource BoolToVisibility}}"/>
+                            <TextBlock Text="호칭지름 파라미터" Margin="0,8,0,3"/>
+                            <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" ItemsSource="{Binding StraightParameterOptions}" SelectedItem="{Binding StraightDiameterParameterName}" ToolTip="직관 패밀리 선택 시 후보 이름으로 자동 매칭을 시도합니다. 필요하면 직접 선택하세요."/>
                             <TextBlock Text="관종 파라미터" Margin="0,8,0,3"/>
-                            <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" ItemsSource="{Binding BeamParameterOptions}" SelectedItem="{Binding BeamKindParameterName}" ToolTip="빔 유형 선택 시 후보 이름으로 자동 매칭을 시도합니다. 필요하면 직접 선택하세요."/>
-                            <CheckBox Content="선형 접선 방향 회전" Style="{StaticResource PrimaryCheckBoxStyle}" IsChecked="{Binding AlignTangent}" Margin="0,8,0,0"/>
+                            <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" ItemsSource="{Binding StraightParameterOptions}" SelectedItem="{Binding StraightKindParameterName}" ToolTip="직관 패밀리 선택 시 후보 이름으로 자동 매칭을 시도합니다. 필요하면 직접 선택하세요."/>
+                            <TextBlock Text="외경 OD 파라미터" Margin="0,8,0,3"/>
+                            <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" ItemsSource="{Binding StraightParameterOptions, Mode=OneWay}" SelectedItem="{Binding StraightOuterDiameterParameterName, Mode=TwoWay}"/>
+                            <TextBlock Text="직관 두께 파라미터" Margin="0,8,0,3"/>
+                            <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" ItemsSource="{Binding StraightParameterOptions, Mode=OneWay}" SelectedItem="{Binding StraightThicknessParameterName, Mode=TwoWay}"/>
+                            <TextBlock Text="배치 간격 (m)" Margin="0,8,0,3"/>
+                            <TextBox Style="{StaticResource PrimaryTextBoxStyle}" Text="{Binding IntervalM}" Width="150" HorizontalAlignment="Left" ToolTip="직관을 이 간격으로 분절해 배치합니다. 곡관이 들어가는 정점에서는 그 자리만큼 직관을 만들지 않습니다."/>
                         </StackPanel>
                         <StackPanel Visibility="{Binding IsPiping, Converter={StaticResource BoolToVisibility}}">
                             <TextBlock Text="파이프 시스템"/>
@@ -236,67 +244,25 @@
                         <StackPanel Visibility="{Binding IsDirectShape, Converter={StaticResource BoolToVisibility}}">
                             <TextBlock Text="레벨" Margin="0,12,0,3"/>
                             <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" ItemsSource="{Binding LevelNames}" SelectedItem="{Binding LevelName}"/>
-                            <TextBlock Text="배치 간격 (m)" Margin="0,8,0,3"/>
-                            <TextBox Style="{StaticResource PrimaryTextBoxStyle}" Text="{Binding IntervalM}" Width="150"/>
+                            <!-- 배치 간격은 DirectShape에서 쓰지 않아(선형 전체를 그대로 형상화) 가변 패밀리 패널로 옮겼다. -->
+
                         </StackPanel>
                     </StackPanel>
                 </TabItem>
-                <TabItem Header="곡관 설정" Visibility="{Binding IsBeam, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                <TabItem Header="관 · 곡관 설정" Visibility="{Binding IsAdaptive, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
                     <StackPanel Margin="12">
                         <TextBlock Foreground="#B26B00" Text="{Binding SettingsNotice}" TextWrapping="Wrap"/>
                         <StackPanel Orientation="Horizontal" Margin="0,8">
-                            <Button Content="허용굴곡 행 추가" Style="{StaticResource PrimaryButtonStyle}" Command="{Binding AddToleranceRowCommand}"/>
-                            <Button Content="행 삭제" Style="{StaticResource CancelButtonStyle}" Margin="8,0" Command="{Binding RemoveToleranceRowCommand}"/>
-                        </StackPanel>
-                        <DataGrid Height="180" ItemsSource="{Binding Tolerances}" SelectedItem="{Binding SelectedTolerance}" AutoGenerateColumns="True"/>
-                        <StackPanel Orientation="Horizontal" Margin="0,10,0,8">
-                            <Button Content="곡관 치수 행 추가" Style="{StaticResource PrimaryButtonStyle}" Command="{Binding AddFittingRowCommand}"/>
-                            <Button Content="행 삭제" Style="{StaticResource CancelButtonStyle}" Margin="8,0" Command="{Binding RemoveFittingRowCommand}"/>
+                            <Button Content="관·곡관 규격표…" Style="{StaticResource PrimaryButtonStyle}" Command="{Binding OpenPipeSpecsCommand}"/>
+                            <Button Content="허용굴곡 설정…" Style="{StaticResource PrimaryButtonStyle}" Margin="8,0" Command="{Binding OpenJointSettingsCommand}"/>
                             <Button Content="설정 저장" Style="{StaticResource PrimaryButtonStyle}" Margin="18,0" Command="{Binding SaveCommand}"/>
                         </StackPanel>
-                        <DataGrid Height="180" ItemsSource="{Binding Fittings, Mode=OneWay}" SelectedItem="{Binding SelectedFitting, Mode=TwoWay}" AutoGenerateColumns="False">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="관종" Binding="{Binding PipeKind, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                <DataGridTextColumn Header="직경(mm)" Binding="{Binding DiameterMm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                <DataGridTextColumn Header="각도(°)" Binding="{Binding AngleDeg, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                <DataGridTemplateColumn Header="형식">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <ComboBox ItemsSource="{Binding DataContext.Forms, Mode=OneWay, RelativeSource={RelativeSource AncestorType=DataGrid}}" SelectedItem="{Binding Form, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="t(mm)" Binding="{Binding LayingLengthMm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                <DataGridTextColumn Header="R(mm)" Binding="{Binding CenterlineRadiusMm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                <DataGridTextColumn Header="s(mm)" Binding="{Binding ExtraLegLengthMm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                <DataGridTextColumn Header="T(mm)" Binding="{Binding TangentLengthMm, Mode=OneWay}" IsReadOnly="True"/>
-                                <DataGridTextColumn Header="t+s(mm)" Binding="{Binding LongLegLengthMm, Mode=OneWay}" IsReadOnly="True"/>
-                                <DataGridTextColumn Header="e(mm)" Binding="{Binding WallThicknessMm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                <DataGridTemplateColumn Header="곡관 패밀리 : 타입" Width="180">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <ComboBox ItemsSource="{Binding DataContext.AdaptiveBendTypeNames, Mode=OneWay, RelativeSource={RelativeSource AncestorType=DataGrid}}" SelectedItem="{Binding FamilyTypeName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTemplateColumn Header="Adaptive Point" Width="110">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding AdaptivePointStatus, Mode=OneWay}">
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="Foreground" Value="#2E7D32"/>
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding HasAdaptivePointWarning, Mode=OneWay}" Value="True"><Setter Property="Foreground" Value="#C62828"/></DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                            </DataGrid.Columns>
-                        </DataGrid>
+                        <TextBlock Text="곡관 패밀리 (5점 가변)" Margin="0,14,0,3"/>
+                        <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" ItemsSource="{Binding BendFamilyNames, Mode=OneWay}" SelectedItem="{Binding BendFamilyName, Mode=TwoWay}"/>
+                        <TextBlock Text="호칭지름 DN 파라미터" Margin="0,8,0,3"/>
+                        <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" ItemsSource="{Binding BendParameterOptions, Mode=OneWay}" SelectedItem="{Binding BendDiameterParameterName, Mode=TwoWay}"/>
+                        <TextBlock Text="곡관 벽두께(e) 파라미터" Margin="0,8,0,3"/>
+                        <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" ItemsSource="{Binding BendParameterOptions, Mode=OneWay}" SelectedItem="{Binding BendWallThicknessParameterName, Mode=TwoWay}"/>
                     </StackPanel>
                 </TabItem>
                 <!-- 진단 탭: 임시 숨김. 다시 노출하려면 Visibility 속성 제거 -->

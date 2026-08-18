@@ -4,7 +4,7 @@ using DHBIMWATER.Core.Gis;
 
 namespace DHBIMWATER.Application.UseCases.Gis;
 
-/// <summary>허용굴곡 표와 곡관 치수 카탈로그를 한 트랜잭션에 함께 저장한다.</summary>
+/// <summary>직관·곡관 규격과 Joint 허용굴곡 설정을 한 트랜잭션에 함께 저장한다.</summary>
 public sealed class SaveBendSettingsUseCase
 {
     private readonly ITransactionContext _transaction;
@@ -19,7 +19,7 @@ public sealed class SaveBendSettingsUseCase
         {
             try
             {
-                _transaction.Begin("곡관 설정 저장");
+                _transaction.Begin("관로 규격 설정 저장");
                 _repo.Save(settings);
                 _transaction.Commit();
             }

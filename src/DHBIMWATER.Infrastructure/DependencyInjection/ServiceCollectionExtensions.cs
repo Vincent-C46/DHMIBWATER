@@ -60,7 +60,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IAlignmentSourceReader, DwgAlignmentReader>();
         services.AddTransient<IAlignmentSourceReader, ExcelAlignmentReader>();
         services.AddTransient<IExcelAlignmentSourceReader, ExcelAlignmentReader>();
-        services.AddTransient<IAlignmentBeamPlacementRepo, RevitAlignmentBeamPlacementRepo>();
+        services.AddTransient<IAlignmentStraightPlacementRepo, RevitAlignmentStraightPlacementRepo>();
         services.AddTransient<IAlignmentPipePlacementRepo, RevitAlignmentPipePlacementRepo>();
         services.AddTransient<IBendSettingsRepo, RevitBendSettingsRepo>();
         services.AddTransient<IAdaptiveBendPlacementRepo, RevitAdaptiveBendPlacementRepo>();
@@ -111,10 +111,10 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IAlignmentSourceReader, DwgAlignmentReader>();
         services.AddTransient<IAlignmentSourceReader, ExcelAlignmentReader>();
         services.AddTransient<IExcelAlignmentSourceReader, ExcelAlignmentReader>();
-        services.AddTransient<IAlignmentBeamPlacementRepo, MockAlignmentBeamPlacementRepo>();
+        services.AddTransient<IAlignmentStraightPlacementRepo, MockAlignmentStraightPlacementRepo>();
         services.AddTransient<IAlignmentPipePlacementRepo, MockAlignmentPipePlacementRepo>();
         services.AddTransient<IAlignmentSourceReader, DxfAlignmentReader>();
-        services.AddTransient<IAlignmentBeamPlacementRepo, RevitAlignmentBeamPlacementRepo>();
+        services.AddTransient<IAlignmentStraightPlacementRepo, RevitAlignmentStraightPlacementRepo>();
         services.AddTransient<IAlignmentPipePlacementRepo, RevitAlignmentPipePlacementRepo>();
         // TODO: Mock 블록에 Revit Repo가 덮어쓰기 등록됨 — 별도 확인 필요
         services.AddTransient<IBendSettingsRepo, MockBendSettingsRepo>();

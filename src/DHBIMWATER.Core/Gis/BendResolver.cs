@@ -2,98 +2,99 @@ namespace DHBIMWATER.Core.Gis;
 
 public enum BendResolutionKind
 {
-    /// <summary>편각이 허용굴곡 안 — 곡관 없이 직관 편차로 흡수한다.</summary>
+    /// <summary>곡관 불필요(Joint 허용굴곡 내).</summary>
     None,
-    /// <summary>표준 곡관 1개로 해결된다.</summary>
+    /// <summary>표준 곡관과 Joint 허용굴곡으로 해결된다.</summary>
     Standard,
-    /// <summary>어느 표준각의 허용범위에도 들지 않는다. 곡관을 넣지 않고 사용자 확인 대상으로 남긴다.</summary>
+    /// <summary>최근접 표준 곡관을 배치하되 허용 초과로 표시한다.</summary>
     Unresolved
 }
 
-/// <param name="StandardAngleDeg">Standard면 선정된 표준각, Unresolved면 가장 가까운 표준각, None이면 0.</param>
-/// <param name="ResidualDeg">편각과 StandardAngleDeg의 차(부호 포함). None이면 편각 그대로.</param>
-/// <param name="LayingLengthMm">
-/// t — Standard일 때 선정된 곡관의 절점~짧은 쪽 관 끝 거리(mm). None/Unresolved/치수 미입력이면 0.
-/// 배치 단계에서 이 값만큼 직관 구간을 줄이고 그 지점부터 다시 interval로 분절한다.
-/// </param>
-/// <param name="CenterlineRadiusMm">R — 중심선 호의 곡률반경(mm). 호 중점 P2 계산에 쓴다. 치수 미입력이면 0.</param>
-/// <param name="TangentLengthMm">T = R·tan(θ/2). 계산값이며 입력값이 아니다.</param>
-/// <param name="HasFittingSize">카탈로그에서 t·R을 찾았는지. false면 직관 차감도 호 계산도 할 수 없다.</param>
-/// <param name="ExtraLegLengthMm">
-/// s — 긴 쪽에만 더 붙는 직관부(mm). A형은 0. 긴 쪽 차감량은 <see cref="LongLegLengthMm"/>다.
-/// 어느 방향이 긴 쪽인지는 이 레코드가 정하지 않는다. 절점 편각만으로는 정할 수 없고
-/// 폴리선 진행 방향이 필요해 <see cref="BendTrimPlanner"/>가 결정한다.
-/// </param>
-/// <param name="WallThicknessMm">e — 곡관 벽 두께(mm). Standard·HasFittingSize일 때만 카탈로그 값이 들어간다.</param>
-/// <param name="FamilyName">카탈로그에 등록된 곡관 패밀리명. 미등록이면 null — 실물 배치를 건너뛴다.</param>
-/// <param name="TypeName">카탈로그에 등록된 곡관 타입명. 미등록이면 null.</param>
 public sealed record BendResolution(
     int NodeId,
     BendResolutionKind Kind,
     double DeflectionDeg,
     double StandardAngleDeg,
-    double ToleranceDeg,
+    double AllowableDeg,
     double ResidualDeg,
     double LayingLengthMm,
     double CenterlineRadiusMm,
     double TangentLengthMm,
     bool HasFittingSize,
+    string JointType,
+    JointApplicationMode ApplicationMode,
+    double EffectiveAllowableDeg,
+    bool IsAcceptable,
     double ExtraLegLengthMm = 0d,
     double WallThicknessMm = 0d,
-    string? FamilyName = null,
     string? TypeName = null)
 {
-    /// <summary>긴 쪽 관 끝까지의 거리 t + s(mm).</summary>
     public double LongLegLengthMm => LayingLengthMm > 0d ? LayingLengthMm + ExtraLegLengthMm : 0d;
-
-    /// <summary>
-    /// t &lt; T면 호가 곡관 몸통 밖으로 나가므로 치수가 성립하지 않는다.
-    /// 짧은 쪽으로 판정한다 — 짧은 쪽이 성립하면 긴 쪽(t+s)은 자동으로 성립한다.
-    /// 사용자 결정(2026-07-31)에 따라 모델링은 진행하되 호출부에서 경고를 띄운다.
-    /// </summary>
     public bool IsSizeConsistent => !HasFittingSize || LayingLengthMm + 1e-9 >= TangentLengthMm;
 }
 
-/// <summary>편각과 허용굴곡 설정으로 절점에 들어갈 곡관을 판정한다. Revit 의존 없는 순수 계산이다.</summary>
+/// <summary>편각과 Joint 허용굴곡 설정으로 절점에 들어갈 곡관을 판정한다.</summary>
 public static class BendResolver
 {
-    // TODO: 곡관 조합 해법 미정 (PROGRESS.md 참조) — 표준각 어디에도 안 맞는 편각은 Unresolved로만 표시한다.
+    public static IReadOnlyList<double> StandardAngles { get; } = new[] { 11.25, 22.5, 45d, 90d };
+
+    /// <summary>표에서 유효 허용굴곡을 조회한다. 판정 계산은 하지 않는다.</summary>
+    public static double? GetAllowableDeflection(JointDeflectionTable table, string jointType, double dn, JointApplicationMode mode)
+        => table.EffectiveAllowableFor(jointType, dn, mode);
+
+    /// <summary>선정 곡관의 잔여각이 유효 허용굴곡 안인지 계산한다.</summary>
+    public static bool EvaluateFitting(double actualAngleDeg, double fittingAngleDeg, double effectiveAllowableDeg)
+        => Math.Abs(actualAngleDeg - fittingAngleDeg) <= effectiveAllowableDeg + 1e-9;
 
     public static BendResolution Resolve(NodeClassification node, BendSettings settings, BendForm form)
     {
         if (node.Kind != NodeKind.Bend)
             throw new ArgumentException("곡관 판정은 Bend 절점에서만 정의된다.", nameof(node));
 
-        var theta = node.DeflectionDeg;
-        var tolerance = settings.Tolerance.ToleranceFor(node.PipeKind, node.MaxDiameterMm);
+        var actual = node.DeflectionDeg;
+        var jointType = settings.ActiveJointType;
+        var singleAllowable = settings.JointDeflections.AllowableFor(jointType, node.MaxDiameterMm) ?? 0d;
+        var effectiveValue = GetAllowableDeflection(settings.JointDeflections, jointType, node.MaxDiameterMm, settings.ApplicationMode);
+        var hasDeflectionSetting = effectiveValue.HasValue;
+        var effective = effectiveValue ?? 0d;
 
-        if (theta <= tolerance)
-            return new BendResolution(node.NodeId, BendResolutionKind.None, theta, 0d, tolerance, theta, 0d, 0d, 0d, false);
+        if (hasDeflectionSetting && actual <= effective + 1e-9)
+            return Empty(node, BendResolutionKind.None, actual, 0d, singleAllowable, actual, jointType, settings.ApplicationMode, effective, true);
 
-        // 가장 가까운 표준각. 동률(정확히 중간)이면 작은 각을 고른다 — StandardAngles가 오름차순이고 비교가 strict라서 유지된다.
-        var nearest = BendToleranceTable.StandardAngles[0];
-        foreach (var angle in BendToleranceTable.StandardAngles)
-            if (Math.Abs(theta - angle) < Math.Abs(theta - nearest)) nearest = angle;
+        var acceptable = StandardAngles
+            .Select(angle => new { Angle = angle, Residual = Math.Abs(actual - angle) })
+            .Where(x => hasDeflectionSetting && EvaluateFitting(actual, x.Angle, effective))
+            .OrderBy(x => x.Residual)
+            .ThenBy(x => x.Angle)
+            .FirstOrDefault();
 
-        var residual = theta - nearest;
-        if (Math.Abs(residual) > tolerance)
-            return new BendResolution(node.NodeId, BendResolutionKind.Unresolved, theta, nearest, tolerance, residual, 0d, 0d, 0d, false);
-
-        var fitting = settings.Fittings.Find(node.PipeKind, node.MaxDiameterMm, nearest, form);
+        var selectedAngle = acceptable?.Angle ?? StandardAngles
+            .OrderBy(angle => Math.Abs(actual - angle))
+            .ThenBy(angle => angle)
+            .First();
+        var isAcceptable = acceptable is not null;
+        var kind = isAcceptable ? BendResolutionKind.Standard : BendResolutionKind.Unresolved;
+        var residual = actual - selectedAngle;
+        var fitting = settings.Fittings.Find(node.MaxDiameterMm, selectedAngle, form);
         if (fitting is null)
-            return new BendResolution(node.NodeId, BendResolutionKind.Standard, theta, nearest, tolerance, residual, 0d, 0d, 0d, false);
+            return Empty(node, kind, actual, selectedAngle, singleAllowable, residual, jointType, settings.ApplicationMode, effective, isAcceptable);
 
-        var tangent = TangentLength(fitting.CenterlineRadiusMm, nearest);
+        var tangent = TangentLength(fitting.CenterlineRadiusMm, selectedAngle);
         return new BendResolution(
-            node.NodeId, BendResolutionKind.Standard, theta, nearest, tolerance, residual,
-            fitting.LayingLengthMm, fitting.CenterlineRadiusMm, tangent, true, fitting.ExtraLegLengthMm,
-            fitting.WallThicknessMm, fitting.FamilyName, fitting.TypeName);
+            node.NodeId, kind, actual, selectedAngle, singleAllowable, residual,
+            fitting.LayingLengthMm, fitting.CenterlineRadiusMm, tangent, true,
+            jointType, settings.ApplicationMode, effective, isAcceptable,
+            fitting.ExtraLegLengthMm, fitting.WallThicknessMm, fitting.TypeName);
     }
 
     public static IReadOnlyList<BendResolution> ResolveAll(IReadOnlyList<NodeClassification> nodes, BendSettings settings, BendForm form)
         => nodes.Where(x => x.Kind == NodeKind.Bend).Select(x => Resolve(x, settings, form)).ToList();
 
-    /// <summary>접선길이 T = R·tan(θ/2). 절점에서 호의 시작점까지의 거리다.</summary>
     public static double TangentLength(double radiusMm, double angleDeg)
         => radiusMm * Math.Tan(angleDeg * Math.PI / 360d);
+
+    private static BendResolution Empty(NodeClassification node, BendResolutionKind kind, double actual, double standardAngle,
+        double allowable, double residual, string jointType, JointApplicationMode mode, double effective, bool isAcceptable)
+        => new(node.NodeId, kind, actual, standardAngle, allowable, residual, 0d, 0d, 0d, false,
+            jointType, mode, effective, isAcceptable);
 }

@@ -1,0 +1,61 @@
+<Window x:Class="DHBIMWATER.UI.Views.Modeling.PipeSpecTableView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:controls="clr-namespace:DHBIMWATER.UI.Controls" Title="관·곡관 규격표 — 주철관 핸드북" Width="1040" Height="650" WindowStartupLocation="CenterOwner" WindowStyle="None" Background="#F4F7F9">
+    <Window.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="/DHBIMWATER.UI;component/Styles/Generic.xaml"/></ResourceDictionary.MergedDictionaries></ResourceDictionary></Window.Resources>
+    <WindowChrome.WindowChrome><WindowChrome CaptionHeight="0" CornerRadius="15" GlassFrameThickness="1" UseAeroCaptionButtons="False"/></WindowChrome.WindowChrome>
+    <Grid>
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+        <controls:TitleBar/>
+        <Border Grid.Row="1" Background="White" CornerRadius="15" Margin="20,12" Padding="14">
+            <TabControl Style="{StaticResource PrimaryTabControlStyle}">
+                <TabItem Header="직관 제원">
+                    <DockPanel Margin="8">
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+                            <Button Content="행 추가" Style="{StaticResource PrimaryButtonStyle}" Command="{Binding AddStraightCommand}"/>
+                            <Button Content="행 삭제" Style="{StaticResource CancelButtonStyle}" Margin="8,0" Command="{Binding RemoveStraightCommand}"/>
+                        </StackPanel>
+                        <DataGrid ItemsSource="{Binding StraightRows, Mode=OneWay}" SelectedItem="{Binding SelectedStraight, Mode=TwoWay}" AutoGenerateColumns="False" CanUserAddRows="False">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="DN(mm)" Binding="{Binding DiameterMm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                <DataGridTextColumn Header="OD(mm)" Binding="{Binding OuterDiameterMm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                <DataGridTextColumn Header="상수 1종" Binding="{Binding Water1, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                <DataGridTextColumn Header="상수 2종" Binding="{Binding Water2, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                <DataGridTextColumn Header="상수 3종" Binding="{Binding Water3, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                <DataGridTextColumn Header="상수 4종" Binding="{Binding Water4, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                <DataGridTextColumn Header="하수 1종" Binding="{Binding Sewer1, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                <DataGridTextColumn Header="하수 2종" Binding="{Binding Sewer2, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                <DataGridTextColumn Header="하수 3종" Binding="{Binding Sewer3, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </TabItem>
+                <TabItem Header="곡관 치수">
+                    <DockPanel Margin="8">
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+                            <Button Content="행 추가" Style="{StaticResource PrimaryButtonStyle}" Command="{Binding AddFittingCommand}"/>
+                            <Button Content="행 삭제" Style="{StaticResource CancelButtonStyle}" Margin="8,0" Command="{Binding RemoveFittingCommand}"/>
+                        </StackPanel>
+                        <DataGrid ItemsSource="{Binding FittingRows, Mode=OneWay}" SelectedItem="{Binding SelectedFitting, Mode=TwoWay}" AutoGenerateColumns="False" CanUserAddRows="False">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="DN" Binding="{Binding DiameterMm, Mode=TwoWay}"/>
+                                <DataGridTextColumn Header="각도(°)" Binding="{Binding AngleDeg, Mode=TwoWay}"/>
+                                <DataGridTemplateColumn Header="형식"><DataGridTemplateColumn.CellTemplate><DataTemplate><ComboBox ItemsSource="{Binding DataContext.Forms, Mode=OneWay, RelativeSource={RelativeSource AncestorType=DataGrid}}" SelectedItem="{Binding Form, Mode=TwoWay}"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+                                <DataGridTextColumn Header="e(mm)" Binding="{Binding WallThicknessMm, Mode=TwoWay}"/>
+                                <DataGridTextColumn Header="t(mm)" Binding="{Binding LayingLengthMm, Mode=TwoWay}"/>
+                                <DataGridTextColumn Header="R(mm)" Binding="{Binding CenterlineRadiusMm, Mode=TwoWay}"/>
+                                <DataGridTextColumn Header="s(mm)" Binding="{Binding ExtraLegLengthMm, Mode=TwoWay}"/>
+                                <DataGridTextColumn Header="T(mm)" Binding="{Binding TangentLengthMm, Mode=OneWay}" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="t+s(mm)" Binding="{Binding LongLegLengthMm, Mode=OneWay}" IsReadOnly="True"/>
+                                <DataGridTemplateColumn Header="곡관 유형" Width="150"><DataGridTemplateColumn.CellTemplate><DataTemplate><ComboBox ItemsSource="{Binding DataContext.BendTypeNames, Mode=OneWay, RelativeSource={RelativeSource AncestorType=DataGrid}}" SelectedItem="{Binding TypeName, Mode=TwoWay}"/></DataTemplate></DataGridTemplateColumn.CellTemplate></DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Adaptive Point" Binding="{Binding AdaptivePointStatus, Mode=OneWay}" IsReadOnly="True"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </TabItem>
+            </TabControl>
+        </Border>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="20,0,20,16">
+            <Button Content="기본값 복원" Style="{StaticResource CancelButtonStyle}" Command="{Binding RestoreCommand}" Margin="0,0,18,0"/>
+            <Button Content="취소" Style="{StaticResource CancelButtonStyle}" Command="{Binding CancelCommand}" Margin="0,0,8,0"/>
+            <Button Content="확인" Style="{StaticResource PrimaryButtonStyle}" Command="{Binding SaveCommand}"/>
+        </StackPanel>
+    </Grid>
+</Window>

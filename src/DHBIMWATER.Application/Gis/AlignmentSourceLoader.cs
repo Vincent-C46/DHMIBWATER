@@ -28,6 +28,7 @@ public sealed class AlignmentSourceLoader
             var layers = file.Layers is { Count: > 0 } ? new HashSet<string>(file.Layers, StringComparer.OrdinalIgnoreCase) : null;
             var failed = 0;
             string? example = null;
+            var unknownKinds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var feature in read.Features)
             {
                 if (layers is not null && (!feature.Attributes.TryGetValue("LAYER", out var layer) || !layers.Contains(layer))) continue;
@@ -36,6 +37,12 @@ public sealed class AlignmentSourceLoader
                 var parsed = AlignmentAttributeParser.ParseDiameter(rawDiameter);
                 if (string.IsNullOrWhiteSpace(kind)) kind = parsed.Kind;
                 if (string.IsNullOrWhiteSpace(kind)) kind = file.PipeKind;
+                if (!string.IsNullOrWhiteSpace(kind))
+                {
+                    var normalizedKind = PipeKindCatalog.Normalize(kind);
+                    if (normalizedKind is not null) kind = normalizedKind;
+                    else unknownKinds.Add(kind);
+                }
                 double diameterMm; bool diameterResolved;
                 if (parsed.Success) { diameterMm = parsed.DiameterMm; diameterResolved = true; }
                 else if (file.ManualDiameterMm is > 0) { diameterMm = file.ManualDiameterMm.Value; diameterResolved = true; }
@@ -53,6 +60,8 @@ public sealed class AlignmentSourceLoader
                 var value = string.IsNullOrWhiteSpace(example) ? "값 없음" : example;
                 warnings.Add($"{Path.GetFileName(file.FilePath)}: 직경 필드 '{field}' 값을 해석하지 못한 레코드 {failed}건 (예: '{value}'). 곡관 판정과 관저·관정 보정이 부정확합니다.");
             }
+            if (unknownKinds.Count > 0)
+                warnings.Add($"{Path.GetFileName(file.FilePath)}: 고정 관종 목록에 없는 값({string.Join(", ", unknownKinds)}). 입력 파일 탭에서 관종을 선택하세요.");
         }
         return new AlignmentLoadResult(alignments, unresolved, warnings);
     }

@@ -8,16 +8,20 @@ using DHBIMWATER.Core.Gis;
 namespace DHBIMWATER.Infrastructure.Repositories.Revit.Gis;
 
 /// <summary>
-/// 허용굴곡 표와 곡관 치수 카탈로그를 DataStorage 엘리먼트 1개에 ExtensibleStorage로 저장한다.
+/// 직관 제원·Joint 허용굴곡·곡관 치수와 판정 옵션을 ExtensibleStorage로 저장한다.
 /// Transaction은 열지 않는다 — 반드시 UseCase 트랜잭션 안에서 호출된다.
 /// </summary>
 public sealed class RevitBendSettingsRepo : IBendSettingsRepo
 {
-    private static readonly Guid SchemaGuid = new("6B1E9C74-2A38-4F55-9E0D-7C4A81F26B33");
-    private const string SchemaName = "DHBIMWATER_BendSettings";
-    private const string StorageName = "DHBIMWATER_BendSettings";
-    private const string ToleranceField = "Tolerances";
+    // V1은 관종 기반 허용굴곡이라 의미가 달라 마이그레이션하지 않는다.
+    private static readonly Guid BendSettingsSchemaGuidV2 = new("B42E5D80-1D2F-4AE0-9D12-7A4F63C9E281");
+    private const string SchemaName = "DHBIMWATER_BendSettings_V2";
+    private const string StorageName = "DHBIMWATER_BendSettings_V2";
+    private const string StraightPipeField = "StraightPipeSpecs";
+    private const string JointDeflectionField = "JointDeflections";
     private const string FittingField = "Fittings";
+    private const string ActiveJointTypeField = "ActiveJointType";
+    private const string ApplicationModeField = "ApplicationMode";
 
     /// <summary>BendForm을 "AType"처럼 이름으로 남겨 스키마 변경에 견디게 한다.</summary>
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -31,7 +35,7 @@ public sealed class RevitBendSettingsRepo : IBendSettingsRepo
     public BendSettings? Load()
     {
         var doc = _doc() ?? throw new InvalidOperationException("활성 Revit 문서를 찾을 수 없습니다.");
-        var schema = Schema.Lookup(SchemaGuid);
+        var schema = Schema.Lookup(BendSettingsSchemaGuidV2);
         if (schema is null) return null;
 
         var storage = FindStorage(doc);
@@ -40,13 +44,14 @@ public sealed class RevitBendSettingsRepo : IBendSettingsRepo
         var entity = storage.GetEntity(schema);
         if (!entity.IsValid()) return null;
 
-        var tolerances = Deserialize<BendToleranceEntry>(entity.Get<string>(schema.GetField(ToleranceField)));
-        // Fittings 필드는 나중에 추가됐다. 구버전 데이터에는 없을 수 있으므로 빈 카탈로그로 복원한다.
-        var fittings = schema.GetField(FittingField) is null
-            ? new List<BendFittingEntry>()
-            : Deserialize<BendFittingEntry>(entity.Get<string>(schema.GetField(FittingField)));
-
-        return new BendSettings(new BendToleranceTable(tolerances), new BendFittingCatalog(fittings));
+        var straight = Deserialize<StraightPipeSpec>(entity.Get<string>(schema.GetField(StraightPipeField)));
+        var joints = Deserialize<JointDeflectionSpec>(entity.Get<string>(schema.GetField(JointDeflectionField)));
+        var fittings = Deserialize<BendFittingEntry>(entity.Get<string>(schema.GetField(FittingField)));
+        var activeJointType = entity.Get<string>(schema.GetField(ActiveJointTypeField));
+        var modeText = entity.Get<string>(schema.GetField(ApplicationModeField));
+        var mode = Enum.TryParse<JointApplicationMode>(modeText, out var parsed) ? parsed : JointApplicationMode.SingleJoint;
+        return new BendSettings(new StraightPipeSpecTable(straight), new JointDeflectionTable(joints),
+            new BendFittingCatalog(fittings), string.IsNullOrWhiteSpace(activeJointType) ? JointTypeCatalog.KpMechanical : activeJointType, mode);
     }
 
     public void Save(BendSettings settings)
@@ -56,8 +61,11 @@ public sealed class RevitBendSettingsRepo : IBendSettingsRepo
         var storage = FindStorage(doc) ?? CreateStorage(doc);
 
         var entity = new Entity(schema);
-        entity.Set(schema.GetField(ToleranceField), JsonSerializer.Serialize(settings.Tolerance.Entries, JsonOptions));
+        entity.Set(schema.GetField(StraightPipeField), JsonSerializer.Serialize(settings.StraightPipes.Entries, JsonOptions));
+        entity.Set(schema.GetField(JointDeflectionField), JsonSerializer.Serialize(settings.JointDeflections.Entries, JsonOptions));
         entity.Set(schema.GetField(FittingField), JsonSerializer.Serialize(settings.Fittings.Entries, JsonOptions));
+        entity.Set(schema.GetField(ActiveJointTypeField), settings.ActiveJointType);
+        entity.Set(schema.GetField(ApplicationModeField), settings.ApplicationMode.ToString());
         storage.SetEntity(entity);
     }
 
@@ -80,15 +88,18 @@ public sealed class RevitBendSettingsRepo : IBendSettingsRepo
 
     private static Schema GetOrCreateSchema()
     {
-        var schema = Schema.Lookup(SchemaGuid);
+        var schema = Schema.Lookup(BendSettingsSchemaGuidV2);
         if (schema != null) return schema;
 
-        var builder = new SchemaBuilder(SchemaGuid);
+        var builder = new SchemaBuilder(BendSettingsSchemaGuidV2);
         builder.SetSchemaName(SchemaName);
         builder.SetReadAccessLevel(AccessLevel.Public);
         builder.SetWriteAccessLevel(AccessLevel.Public);
-        builder.AddSimpleField(ToleranceField, typeof(string));
+        builder.AddSimpleField(StraightPipeField, typeof(string));
+        builder.AddSimpleField(JointDeflectionField, typeof(string));
         builder.AddSimpleField(FittingField, typeof(string));
+        builder.AddSimpleField(ActiveJointTypeField, typeof(string));
+        builder.AddSimpleField(ApplicationModeField, typeof(string));
         return builder.Finish();
     }
 }

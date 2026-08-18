@@ -60,11 +60,39 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
                 return Enumerable.Empty<string>();
             }
         }
-        public IEnumerable<string> GetAdaptiveBendTypeNames()
+        public IEnumerable<string> GetAdaptiveComponentTypeNames()
         {
             var doc = _docProvider(); if (doc is null) return Enumerable.Empty<string>();
             try { return new FilteredElementCollector(doc).OfClass(typeof(FamilySymbol)).Cast<FamilySymbol>().Where(x => AdaptiveComponentFamilyUtils.IsAdaptiveComponentFamily(x.Family)).Select(x => $"{x.Family.Name} : {x.Name}").Distinct().OrderBy(x => x).ToList(); }
             catch { return Enumerable.Empty<string>(); }
+        }
+        /// <summary>가변 패밀리 인스턴스에 쓸 수 있는 파라미터명. 배치된 인스턴스가 있으면 그것을, 없으면 유형을 근거로 한다.</summary>
+        public IEnumerable<string> GetAdaptiveInstanceParameterNames(string familyTypeName)
+        {
+            var doc = _docProvider();
+            if (doc is null || string.IsNullOrWhiteSpace(familyTypeName)) return Enumerable.Empty<string>();
+            var separator = familyTypeName.LastIndexOf(" : ", StringComparison.Ordinal);
+            if (separator <= 0 || separator >= familyTypeName.Length - 3) return Enumerable.Empty<string>();
+            var familyName = familyTypeName.Substring(0, separator);
+            var typeName = familyTypeName.Substring(separator + 3);
+            try
+            {
+                var symbol = new FilteredElementCollector(doc).OfClass(typeof(FamilySymbol)).Cast<FamilySymbol>()
+                    .FirstOrDefault(x => x.Family.Name == familyName && x.Name == typeName);
+                if (symbol is null) return Enumerable.Empty<string>();
+
+                // 인스턴스 전용 파라미터는 유형 자체에서 조회할 수 없어, 이미 배치된 인스턴스가 있으면 그걸 우선 쓴다.
+                // TODO: 배치된 인스턴스가 하나도 없는 유형은 유형 파라미터만 후보로 보여준다(인스턴스 전용 파라미터 누락 가능).
+                var sampleInstance = new FilteredElementCollector(doc).OfClass(typeof(FamilyInstance)).Cast<FamilyInstance>()
+                    .FirstOrDefault(x => x.Symbol.Id == symbol.Id);
+                var source = (Element?)sampleInstance ?? symbol;
+                return source.Parameters.Cast<Parameter>().Select(p => p.Definition?.Name).Where(n => !string.IsNullOrWhiteSpace(n))
+                    .Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(n => n).ToList()!;
+            }
+            catch
+            {
+                return Enumerable.Empty<string>();
+            }
         }
         public int GetAdaptiveBendPointCount(string familyTypeName)
         {

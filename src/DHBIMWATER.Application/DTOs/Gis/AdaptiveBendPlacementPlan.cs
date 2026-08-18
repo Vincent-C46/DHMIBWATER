@@ -6,8 +6,8 @@ namespace DHBIMWATER.Application.DTOs.Gis;
 /// Revit Adaptive Component 곡관 배치에 필요한 값. <see cref="BendPlacement"/>에서 카탈로그 부속 정보
 /// (FamilyName/TypeName)가 확인된 것만 여기로 넘어온다.
 /// </summary>
-/// <param name="OuterDiameterMm">DN — 곡관 패밀리의 OD 인스턴스 매개변수에 대응.</param>
-/// <param name="WallThicknessMm">e — 곡관 패밀리의 thk 인스턴스 매개변수에 대응.</param>
+/// <param name="DiameterMm">호칭지름 DN.</param>
+/// <param name="WallThicknessEMm">곡관 치수표의 벽두께 e.</param>
 /// <param name="RotXYDeg">P1~P5 각 점의 rot_XY_n(도). <see cref="Points"/>의 5점 순서와 인덱스가 같다.</param>
 /// <param name="RotXZDeg">P1~P5 각 점의 rot_XZ_n(도). <see cref="RotXYDeg"/>와 인덱스가 같다.</param>
 public sealed record AdaptiveBendPlacementPlan(
@@ -15,8 +15,11 @@ public sealed record AdaptiveBendPlacementPlan(
     string FamilyName,
     string TypeName,
     BendArcPoints Points,
-    double OuterDiameterMm,
-    double WallThicknessMm,
+    double DiameterMm,
+    double WallThicknessEMm,
+    string? DiameterParameterName,
+    string? WallThicknessParameterName,
+    bool IsAcceptable,
     IReadOnlyList<double> RotXYDeg,
     IReadOnlyList<double> RotXZDeg);
 

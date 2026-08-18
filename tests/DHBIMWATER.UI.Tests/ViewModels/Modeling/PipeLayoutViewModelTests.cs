@@ -89,7 +89,8 @@ public sealed class PipeLayoutViewModelTests
         public IEnumerable<string> GetWallTypeNames() => [];
         public IEnumerable<string> GetColumnTypeNames() => [];
         public IEnumerable<string> GetBeamTypeNames() => [];
-        public IEnumerable<string> GetAdaptiveBendTypeNames() => [];
+        public IEnumerable<string> GetAdaptiveComponentTypeNames() => [];
+        public IEnumerable<string> GetAdaptiveInstanceParameterNames(string familyTypeName) => [];
         public int GetAdaptiveBendPointCount(string familyTypeName) => -1;
         public IEnumerable<string> GetPipingSystemTypeNames() => [];
         public IEnumerable<string> GetPipeTypeNames() => [];

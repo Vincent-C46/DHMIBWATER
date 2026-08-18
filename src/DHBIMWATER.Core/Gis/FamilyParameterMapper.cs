@@ -9,7 +9,13 @@ public static class FamilyParameterMapper
         { "직경", "관경", "구경", "Diameter", "DIAMETER", "D" };
     private static readonly HashSet<string> KindParameterCandidates = new(StringComparer.OrdinalIgnoreCase)
         { "관종", "재질", "재료", "종류", "PipeKind", "Material" };
+    private static readonly HashSet<string> OuterDiameterParameterCandidates = new(StringComparer.OrdinalIgnoreCase)
+        { "OD", "외경", "OuterDiameter", "Outer Diameter" };
+    private static readonly HashSet<string> ThicknessParameterCandidates = new(StringComparer.OrdinalIgnoreCase)
+        { "thk", "두께", "관두께", "Thickness", "WallThickness", "e" };
 
     public static string? GuessDiameterParameter(IEnumerable<string> parameterNames) => parameterNames.FirstOrDefault(DiameterParameterCandidates.Contains);
     public static string? GuessKindParameter(IEnumerable<string> parameterNames) => parameterNames.FirstOrDefault(KindParameterCandidates.Contains);
+    public static string? GuessOuterDiameterParameter(IEnumerable<string> parameterNames) => parameterNames.FirstOrDefault(OuterDiameterParameterCandidates.Contains);
+    public static string? GuessThicknessParameter(IEnumerable<string> parameterNames) => parameterNames.FirstOrDefault(ThicknessParameterCandidates.Contains);
 }
