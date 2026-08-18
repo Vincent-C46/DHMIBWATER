@@ -32,7 +32,10 @@ public sealed class ModelPipeAlignmentUseCase
         var reference = request.ReferenceX == 0 && request.ReferenceY == 0
             ? AlignmentReferencePoint.FromFirstVertex(loaded.Alignments)
             : ((double X, double Y)?)(request.ReferenceX, request.ReferenceY);
-        var (settings, settingsSource) = _bendSettings.Load();
+        var settingsResolution = request.CurrentBendSettings is null
+            ? _bendSettings.Load()
+            : new BendSettingsResolution(request.CurrentBendSettings, BendSettingsSource.Project);
+        var (settings, settingsSource) = settingsResolution;
         var origin = new AlignmentPlacementOrigin(reference?.X ?? 0, reference?.Y ?? 0, request.ZDatum, settings.StraightPipes);
         var infoContext = new PipeInfoParameterContext(settings.ActiveJointType, settings.ApplicationMode, request.ZDatum, request.Form);
         var elevationWarnings = GetElevationWarnings(loaded.Alignments, request, settings.StraightPipes);
@@ -45,7 +48,11 @@ public sealed class ModelPipeAlignmentUseCase
 
         // 트랜잭션을 열기 전에 카탈로그가 가리키는 곡관 패밀리가 실제로 이 문서에 로드돼 있는지 확인한다.
         // 그렇지 않으면 직관 배치까지 다 끝낸 뒤 곡관 배치 단계에서야 실패해 전체가 롤백된다.
-        if (bendPlan is not null) EnsureBendFamiliesLoaded(bendPlan, request.BendFamilyName);
+        if (bendPlan is not null)
+        {
+            EnsureBendConfiguration(bendPlan, request.BendFamilyName);
+            EnsureBendFamiliesLoaded(bendPlan, request.BendFamilyName);
+        }
 
         using (_transaction)
         {
@@ -62,14 +69,29 @@ public sealed class ModelPipeAlignmentUseCase
                     PipeAlignmentOutputMode.PipingSystem => (_pipeRepo.PlaceAlong(loaded.Alignments, Require(request.PipingSystemTypeName, "파이프 시스템 유형"), Require(request.PipeTypeName, "PipeType"), request.LevelName, request.IntervalMm / 1000d, origin), 0, (IReadOnlyList<string>)Array.Empty<string>()),
                     _ => throw new ArgumentOutOfRangeException(nameof(request.OutputMode))
                 };
-                var placementWarnings = request.OutputMode == PipeAlignmentOutputMode.Adaptive && bendPlan is not null
+                var bendResult = request.OutputMode == PipeAlignmentOutputMode.Adaptive && bendPlan is not null
                     ? PlaceBendFittings(bendPlan, loaded.Alignments, origin, request, infoContext)
-                    : Array.Empty<string>();
+                    : new AdaptiveBendPlacementResult(0, Array.Empty<string>());
                 _transaction.Commit();
-                return new PipeAlignmentModelingResult(request.OutputMode, count, skipped, loaded.Warnings.Concat(elevationWarnings).Concat(repoWarnings).Concat(placementWarnings).ToList(), bendPlan?.Placements.Count ?? 0);
+                return new PipeAlignmentModelingResult(request.OutputMode, count, skipped, loaded.Warnings.Concat(elevationWarnings).Concat(repoWarnings).Concat(bendResult.Warnings).ToList(), bendResult.Count);
             }
             catch { _transaction.Rollback(); throw; }
         }
+    }
+
+    private static void EnsureBendConfiguration(BendTrimPlan bendPlan, string? familyName)
+    {
+        if (bendPlan.Placements.Count == 0) return;
+        if (string.IsNullOrWhiteSpace(familyName))
+            throw new InvalidOperationException("배치할 곡관이 있습니다. 5점 가변 곡관 패밀리를 선택하세요.");
+
+        var missingTypes = bendPlan.Placements
+            .Where(x => string.IsNullOrWhiteSpace(x.TypeName))
+            .Select(x => $"{x.PipeKind}/DN{x.DiameterMm:0.##}/{x.AngleDeg:0.##}°")
+            .Distinct()
+            .ToList();
+        if (missingTypes.Count > 0)
+            throw new InvalidOperationException($"다음 곡관 규격의 유형을 관·곡관 규격표에서 선택하세요: {string.Join(", ", missingTypes)}");
     }
 
     private void EnsureBendFamiliesLoaded(BendTrimPlan bendPlan, string? familyName)
@@ -118,10 +140,10 @@ public sealed class ModelPipeAlignmentUseCase
     }
 
     /// <summary>카탈로그에 패밀리·타입이 등록된 절점만 골라 5점 가변 곡관을 배치한다.</summary>
-    private IReadOnlyList<string> PlaceBendFittings(BendTrimPlan plan, IReadOnlyList<PipeAlignment> alignments, AlignmentPlacementOrigin origin, PipeAlignmentModelingRequest request, PipeInfoParameterContext infoContext)
+    private AdaptiveBendPlacementResult PlaceBendFittings(BendTrimPlan plan, IReadOnlyList<PipeAlignment> alignments, AlignmentPlacementOrigin origin, PipeAlignmentModelingRequest request, PipeInfoParameterContext infoContext)
     {
         var placeable = plan.Placements.Where(x => !string.IsNullOrWhiteSpace(request.BendFamilyName) && x.TypeName is not null).ToList();
-        if (placeable.Count == 0) return Array.Empty<string>();
+        if (placeable.Count == 0) return new AdaptiveBendPlacementResult(0, Array.Empty<string>());
 
         var bendPlans = placeable.Select(x =>
         {
@@ -133,7 +155,7 @@ public sealed class ModelPipeAlignmentUseCase
                 x.RotXYDeg, x.RotXZDeg, x.PipeKind, alignment.SourceFile, alignment.RecordNumber, spec?.OuterDiameterMm,
                 x.DeflectionDeg, x.AngleDeg, x.EffectiveAllowableDeg, x.ResidualDeg, x.CenterlineRadiusMm, x.LayingLengthMm);
         }).ToList();
-        return _adaptiveBendRepo.Place(bendPlans, origin, infoContext).Warnings;
+        return _adaptiveBendRepo.Place(bendPlans, origin, infoContext);
     }
 
     private (int Count, int Skipped, IReadOnlyList<string> Warnings) ToDirectShape(IReadOnlyList<PipeAlignment> alignments, AlignmentPlacementOrigin origin)

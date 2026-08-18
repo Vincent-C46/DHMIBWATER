@@ -48,9 +48,14 @@ public sealed record PipeAlignmentModelingRequest
     public double SnapToleranceMm { get; init; } = 10;
     /// <summary>곡관 치수 조회에 쓸 형식. 같은 각도라도 A형/B형은 t가 다르다.</summary>
     public BendForm Form { get; init; } = BendForm.AType;
+    /// <summary>
+    /// 모델링 창에서 현재 편집 중인 관·곡관 설정. 저장 여부와 관계없이 같은 화면에서 실행한 모델링에는 이 값을 사용한다.
+    /// null은 UI 외 호출부와의 호환용이며, 이때 UseCase가 저장소 설정을 읽는다.
+    /// </summary>
+    public BendSettings? CurrentBendSettings { get; init; }
 }
 
-/// <param name="BendCount">직관을 비워 자리를 남긴 곡관 수. 곡관 실물 배치는 아직 하지 않는다.</param>
+/// <param name="BendCount">실제로 생성되어 커밋된 5점 가변 곡관 수.</param>
 public sealed record PipeAlignmentModelingResult(PipeAlignmentOutputMode OutputMode, int CreatedCount, int SkippedSegments, IReadOnlyList<string> Warnings, int BendCount = 0);
 
 /// <summary>배치되는 관로 요소에 기록할 DH_* 정보 매개변수 중 관로 전체가 공유하는 값.</summary>

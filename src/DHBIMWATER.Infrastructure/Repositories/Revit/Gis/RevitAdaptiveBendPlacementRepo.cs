@@ -40,6 +40,9 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
             var pointIds = AdaptiveComponentInstanceUtils.GetInstancePlacementPointElementRefIds(instance);
             if (pointIds.Count != 5)
                 throw new InvalidOperationException($"곡관 패밀리 '{plan.FamilyName}:{plan.TypeName}'의 Adaptive Point가 5개가 아닙니다({pointIds.Count}개).");
+            if (plan.RotXYDeg.Count != 5 || plan.RotXZDeg.Count != 5)
+                throw new InvalidOperationException($"절점 {plan.NodeId}의 회전값은 XY/XZ 각각 5개여야 합니다.");
+            var rotationParameters = ResolveRotationParameters(instance, plan);
 
             var points = new[] { plan.Points.Start, plan.Points.ArcStart, plan.Points.ArcMid, plan.Points.ArcEnd, plan.Points.End };
             for (var i = 0; i < 5; i++)
@@ -80,9 +83,11 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
                 SetLengthParameter(instance, plan, plan.WallThicknessParameterName, UC.MmToFt(plan.WallThicknessEMm), missingParameters);
             for (var i = 0; i < 5; i++)
             {
-                SetAngleParameter(instance, plan, $"{RotationXyParameterPrefix}{i + 1}", plan.RotXYDeg[i], missingParameters);
-                SetAngleParameter(instance, plan, $"{RotationXzParameterPrefix}{i + 1}", plan.RotXZDeg[i], missingParameters);
+                SetRequiredAngleParameter(rotationParameters[i].Xy, plan, $"{RotationXyParameterPrefix}{i + 1}", plan.RotXYDeg[i]);
+                SetRequiredAngleParameter(rotationParameters[i].Xz, plan, $"{RotationXzParameterPrefix}{i + 1}", plan.RotXZDeg[i]);
             }
+            // 회전 파라미터가 형상 수식을 구동하므로 커밋까지 미루지 않고 여기서 형상을 갱신한다.
+            doc.Regenerate();
             if (!plan.IsAcceptable)
                 ApplyExceededOverride(overrideView, instance.Id, solidFillPatternId, plan.NodeId, overrideWarnings);
             count++;
@@ -123,7 +128,13 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
             .Cast<FamilySymbol>()
             .FirstOrDefault(x => x.Family.Name == familyName && x.Name == typeName)
             ?? throw new InvalidOperationException($"곡관 패밀리를 찾을 수 없습니다: {familyName} - {typeName}");
-        if (!symbol.IsActive) symbol.Activate();
+        if (!AdaptiveComponentFamilyUtils.IsAdaptiveComponentFamily(symbol.Family))
+            throw new InvalidOperationException($"'{familyName}:{typeName}'은 가변(Adaptive Component) 패밀리가 아닙니다.");
+        if (!symbol.IsActive)
+        {
+            symbol.Activate();
+            doc.Regenerate();
+        }
 
         cache[key] = symbol;
         return symbol;
@@ -132,15 +143,35 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
     private static void SetLengthParameter(FamilyInstance instance, AdaptiveBendPlacementPlan plan, string name, double valueFt, HashSet<(string, string, string)> missingParameters)
     {
         var param = instance.LookupParameter(name);
-        if (param is { IsReadOnly: false }) param.Set(valueFt);
-        else missingParameters.Add((plan.FamilyName, plan.TypeName, name));
+        if (param is not { IsReadOnly: false } || param.StorageType != StorageType.Double || !param.Set(valueFt))
+            missingParameters.Add((plan.FamilyName, plan.TypeName, name));
     }
 
-    private static void SetAngleParameter(FamilyInstance instance, AdaptiveBendPlacementPlan plan, string name, double degrees, HashSet<(string, string, string)> missingParameters)
+    private static (Parameter Xy, Parameter Xz)[] ResolveRotationParameters(FamilyInstance instance, AdaptiveBendPlacementPlan plan)
     {
-        var param = instance.LookupParameter(name);
-        if (param is { IsReadOnly: false }) param.Set(UC.DegToRad(degrees));
-        else missingParameters.Add((plan.FamilyName, plan.TypeName, name));
+        var result = new (Parameter Xy, Parameter Xz)[5];
+        for (var i = 0; i < 5; i++)
+            result[i] = (
+                RequireAngleParameter(instance, plan, $"{RotationXyParameterPrefix}{i + 1}"),
+                RequireAngleParameter(instance, plan, $"{RotationXzParameterPrefix}{i + 1}"));
+        return result;
+    }
+
+    private static Parameter RequireAngleParameter(FamilyInstance instance, AdaptiveBendPlacementPlan plan, string name)
+    {
+        var param = instance.LookupParameter(name)
+            ?? throw new InvalidOperationException($"곡관 패밀리 '{plan.FamilyName}:{plan.TypeName}'에 인스턴스 각도 파라미터 '{name}'이 없습니다.");
+        if (param.IsReadOnly)
+            throw new InvalidOperationException($"곡관 패밀리 '{plan.FamilyName}:{plan.TypeName}'의 '{name}' 파라미터가 읽기전용입니다.");
+        if (param.StorageType != StorageType.Double || !param.Definition.GetDataType().Equals(SpecTypeId.Angle))
+            throw new InvalidOperationException($"곡관 패밀리 '{plan.FamilyName}:{plan.TypeName}'의 '{name}'은 쓰기 가능한 각도(Angle) 인스턴스 파라미터여야 합니다.");
+        return param;
+    }
+
+    private static void SetRequiredAngleParameter(Parameter param, AdaptiveBendPlacementPlan plan, string name, double degrees)
+    {
+        if (!param.Set(UC.DegToRad(degrees)))
+            throw new InvalidOperationException($"곡관 패밀리 '{plan.FamilyName}:{plan.TypeName}'의 '{name}'에 회전값 {degrees:0.###}°를 기록하지 못했습니다.");
     }
 
     private static View3D? ResolveOverrideView(Document doc)

@@ -136,4 +136,34 @@ public class BendResolverTests
         Assert.Equal(0.210, center.DistanceTo(arc.ArcMid), 12);
         Assert.Equal(17.30, arc.ExternalMm, 2);
     }
+
+    [Fact]
+    public void Bend_orientation_follows_each_horizontal_control_point()
+    {
+        var tangents = BendOrientation.Tangents(
+            new Vector3D(-1, 0, 0),
+            new Vector3D(0, 1, 0),
+            90);
+        var rotations = tangents.Select(BendOrientation.Compute).ToList();
+
+        var expected = new[] { 0d, 0d, 45d, 90d, 90d };
+        for (var i = 0; i < expected.Length; i++) Assert.Equal(expected[i], rotations[i].RotXYDeg, 8);
+        Assert.All(rotations, x => Assert.Equal(0d, x.RotXZDeg, 8));
+    }
+
+    [Fact]
+    public void Bend_orientation_preserves_vertical_slope_at_straight_legs()
+    {
+        var rise = Math.Sqrt(0.5);
+        var tangents = BendOrientation.Tangents(
+            new Vector3D(-rise, 0, -rise),
+            new Vector3D(0, rise, rise),
+            90);
+        var rotations = tangents.Select(BendOrientation.Compute).ToList();
+
+        Assert.Equal(45d, rotations[0].RotXZDeg, 8);
+        Assert.Equal(45d, rotations[1].RotXZDeg, 8);
+        Assert.Equal(45d, rotations[3].RotXZDeg, 8);
+        Assert.Equal(45d, rotations[4].RotXZDeg, 8);
+    }
 }
