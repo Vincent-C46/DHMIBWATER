@@ -1,4 +1,5 @@
 using Autodesk.Revit.DB;
+using System.IO;
 using DHBIMWATER.Application.DTOs.Gis;
 using DHBIMWATER.Application.Interfaces.Gis;
 using DHBIMWATER.Core.Gis;
@@ -18,7 +19,7 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
     private readonly Func<Document?> _doc;
     public RevitAdaptiveBendPlacementRepo(Func<Document?> doc) => _doc = doc;
 
-    public AdaptiveBendPlacementResult Place(IReadOnlyList<AdaptiveBendPlacementPlan> plans, AlignmentPlacementOrigin origin)
+    public AdaptiveBendPlacementResult Place(IReadOnlyList<AdaptiveBendPlacementPlan> plans, AlignmentPlacementOrigin origin, PipeInfoParameterContext? info = null)
     {
         if (plans.Count == 0) return new AdaptiveBendPlacementResult(0, Array.Empty<string>());
         var doc = _doc() ?? throw new InvalidOperationException("활성 Revit 문서가 없습니다.");
@@ -26,6 +27,7 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
         var symbols = new Dictionary<(string Family, string Type), FamilySymbol>();
         // 패밀리별로 한 번만 경고하면 충분하다 — 절점마다 같은 파라미터 누락 메시지가 반복되면 오히려 안 읽힌다.
         var missingParameters = new HashSet<(string Family, string Type, string Parameter)>();
+        var writer = new PipeParameterWriter();
         var overrideWarnings = new List<string>();
         var overrideView = ResolveOverrideView(doc);
         var solidFillPatternId = FindSolidFillPatternId(doc);
@@ -44,6 +46,31 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
             {
                 var refPoint = (ReferencePoint)doc.GetElement(pointIds[i]);
                 refPoint.Position = AlignmentPlacementMapper.ToXyz(points[i], plan.ZOffsetM, origin.X, origin.Y, basePoint);
+            }
+            if (info is { Enabled: true })
+            {
+                writer.Text(instance, PipeAlignmentParameters.Addin, PipeAlignmentParameters.AddinValue);
+                writer.Text(instance, PipeAlignmentParameters.Part, PipeAlignmentParameters.BendPartValue);
+                writer.Text(instance, PipeAlignmentParameters.AlignmentId, $"{Path.GetFileNameWithoutExtension(plan.SourceFile)}#{plan.RecordNumber}");
+                writer.Text(instance, PipeAlignmentParameters.NominalDiameter, PipeAlignmentParameters.DiameterText(plan.DiameterMm));
+                writer.Text(instance, PipeAlignmentParameters.Material, MaterialLabelOf(plan.PipeKind));
+                writer.Text(instance, PipeAlignmentParameters.Grade, plan.PipeKind);
+                writer.LengthMm(instance, PipeAlignmentParameters.OuterDiameter, plan.OuterDiameterMm);
+                writer.LengthMm(instance, PipeAlignmentParameters.WallThickness, plan.WallThicknessEMm);
+                writer.Text(instance, PipeAlignmentParameters.JointType, info.JointType);
+                writer.Text(instance, PipeAlignmentParameters.ElevationDatum, PipeAlignmentParameters.Label(info.ZDatum));
+                writer.Text(instance, PipeAlignmentParameters.SourceFile, Path.GetFileName(plan.SourceFile));
+                writer.Text(instance, PipeAlignmentParameters.RecordNumber, plan.RecordNumber);
+                writer.Integer(instance, PipeAlignmentParameters.NodeId, plan.NodeId);
+                writer.AngleDeg(instance, PipeAlignmentParameters.ActualDeflection, plan.DeflectionDeg);
+                writer.AngleDeg(instance, PipeAlignmentParameters.StandardAngle, plan.StandardAngleDeg);
+                writer.AngleDeg(instance, PipeAlignmentParameters.AllowableDeflection, plan.EffectiveAllowableDeg);
+                writer.AngleDeg(instance, PipeAlignmentParameters.ResidualDeflection, plan.ResidualDeg);
+                writer.YesNo(instance, PipeAlignmentParameters.IsAcceptable, plan.IsAcceptable);
+                writer.Text(instance, PipeAlignmentParameters.JointApplication, PipeAlignmentParameters.Label(info.ApplicationMode));
+                writer.LengthMm(instance, PipeAlignmentParameters.CenterlineRadius, plan.CenterlineRadiusMm);
+                writer.Text(instance, PipeAlignmentParameters.BendFormName, PipeAlignmentParameters.Label(info.Form));
+                writer.LengthMm(instance, PipeAlignmentParameters.LayingLength, plan.LayingLengthMm);
             }
             doc.Regenerate();
 
@@ -66,6 +93,8 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
             .Select(g => $"곡관 패밀리 '{g.Key.Family}:{g.Key.Type}'에 {string.Join(", ", g.Select(x => x.Parameter))} 파라미터가 없거나 읽기전용이라 값을 설정하지 못했습니다.")
             .ToList();
         warnings.AddRange(overrideWarnings);
+        if (writer.Missing.Count > 0)
+            warnings.Add($"프로젝트 매개변수 {string.Join(", ", writer.Missing.OrderBy(x => x))}를 곡관 인스턴스에 기록하지 못했습니다(바인딩 실패 또는 읽기전용).");
         return new AdaptiveBendPlacementResult(count, warnings);
     }
 
@@ -144,4 +173,6 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
             warnings.Add($"절점 {nodeId}: 3D 뷰 적색 표시를 적용하지 못했습니다({ex.Message}).");
         }
     }
+
+    private static string MaterialLabelOf(string pipeKind) => PipeKindCatalog.MaterialOf(pipeKind) is { } material ? PipeAlignmentParameters.Label(material) : string.Empty;
 }
