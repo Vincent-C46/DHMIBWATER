@@ -50,7 +50,9 @@ public class BendResolverTests
     [Fact]
     public void Missing_joint_setting_marks_even_exact_angle_unacceptable()
     {
-        var settings = new BendSettings(StraightPipeSpecTable.Default, JointDeflectionTable.Default,
+        // 허용굴곡 미설정 상태를 빈 표로 명시한다.
+        // (2026-08-18 이전에는 JointDeflectionTable.Default가 빈 표라 그것을 썼지만, 이제 핸드북 값이 들어 있다.)
+        var settings = new BendSettings(StraightPipeSpecTable.Default, new JointDeflectionTable(Array.Empty<JointDeflectionSpec>()),
             new BendFittingCatalog(new[] { new BendFittingEntry(100, 45, BendForm.AType, 130, 210) }),
             JointTypeCatalog.KpMechanical, JointApplicationMode.SingleJoint);
         var result = BendResolver.Resolve(Bend(45), settings, BendForm.AType);

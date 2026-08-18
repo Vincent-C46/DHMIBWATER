@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1786513677094,
+  "lastScanned": 1787018408647,
   "projectRoot": "F:\\02_Work\\04_Addin\\DHBIMWATER",
   "techStack": {
     "languages": [],
@@ -39,8 +39,8 @@
     "docs": {
       "path": "docs",
       "purpose": "Documentation",
-      "fileCount": 36,
-      "lastAccessed": 1786513676352,
+      "fileCount": 41,
+      "lastAccessed": 1787018408245,
       "keyFiles": [
         "02_컨트럴등록.md",
         "03_뷰모델구현.md",
@@ -53,7 +53,7 @@
       "path": "installer",
       "purpose": null,
       "fileCount": 6,
-      "lastAccessed": 1786513676379,
+      "lastAccessed": 1787018408246,
       "keyFiles": [
         "README.md",
         "DHBIMWATER_2025.nsi",
@@ -66,29 +66,29 @@
       "path": "sandbox",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1786513676403,
+      "lastAccessed": 1787018408247,
       "keyFiles": []
     },
     "src": {
       "path": "src",
       "purpose": "Source code",
       "fileCount": 0,
-      "lastAccessed": 1786513676426,
+      "lastAccessed": 1787018408248,
       "keyFiles": []
     },
     "tests": {
       "path": "tests",
       "purpose": "Test files",
       "fileCount": 0,
-      "lastAccessed": 1786513676437,
+      "lastAccessed": 1787018408250,
       "keyFiles": []
     }
   },
   "hotPaths": [
     {
       "path": "PROGRESS.md",
-      "accessCount": 26,
-      "lastAccessed": 1786607750346,
+      "accessCount": 31,
+      "lastAccessed": 1787041049486,
       "type": "file"
     },
     {
@@ -99,8 +99,8 @@
     },
     {
       "path": "docs\\29_가변패밀리배치_허용굴곡판정_지시서.md",
-      "accessCount": 24,
-      "lastAccessed": 1786607737823,
+      "accessCount": 25,
+      "lastAccessed": 1786607907552,
       "type": "file"
     },
     {
@@ -123,8 +123,8 @@
     },
     {
       "path": "src\\DHBIMWATER.Application\\UseCases\\Gis\\ModelPipeAlignmentUseCase.cs",
-      "accessCount": 6,
-      "lastAccessed": 1786597676807,
+      "accessCount": 7,
+      "lastAccessed": 1787021123768,
       "type": "file"
     },
     {
@@ -140,16 +140,16 @@
       "type": "file"
     },
     {
+      "path": "src",
+      "accessCount": 5,
+      "lastAccessed": 1787037163615,
+      "type": "directory"
+    },
+    {
       "path": "C:\\Users\\admin\\.claude\\projects\\F--02-Work-04-Addin-DHBIMWATER\\memory\\project_dhboost_link_integration.md",
       "accessCount": 3,
       "lastAccessed": 1786581265220,
       "type": "file"
-    },
-    {
-      "path": "src",
-      "accessCount": 3,
-      "lastAccessed": 1786597670481,
-      "type": "directory"
     },
     {
       "path": "src\\DHBIMWATER.UI\\ViewModels\\Modeling\\PipeAlignmentModelingViewModel.cs",
@@ -168,6 +168,12 @@
       "accessCount": 3,
       "lastAccessed": 1786600672860,
       "type": "file"
+    },
+    {
+      "path": "src\\DHBIMWATER.UI\\Views\\Modeling\\PipeAlignmentModelingView.xaml",
+      "accessCount": 3,
+      "lastAccessed": 1787021364459,
+      "type": "directory"
     },
     {
       "path": "src\\DHBIMWATER.Application\\UseCases\\Gis\\AnalyzePipeNetworkUseCase.cs",
@@ -212,12 +218,6 @@
       "type": "file"
     },
     {
-      "path": "src\\DHBIMWATER.UI\\Views\\Modeling\\PipeAlignmentModelingView.xaml",
-      "accessCount": 2,
-      "lastAccessed": 1786597656467,
-      "type": "directory"
-    },
-    {
       "path": "src\\DHBIMWATER.Core\\Gis\\BendToleranceTable.cs",
       "accessCount": 2,
       "lastAccessed": 1786597656902,
@@ -258,6 +258,12 @@
       "accessCount": 2,
       "lastAccessed": 1786606066779,
       "type": "file"
+    },
+    {
+      "path": "",
+      "accessCount": 2,
+      "lastAccessed": 1787037165138,
+      "type": "directory"
     },
     {
       "path": "src\\DHBIMWATER.Core\\Piping\\InlineFitting.cs",
@@ -312,12 +318,6 @@
       "accessCount": 1,
       "lastAccessed": 1786517063666,
       "type": "file"
-    },
-    {
-      "path": "",
-      "accessCount": 1,
-      "lastAccessed": 1786517072945,
-      "type": "directory"
     },
     {
       "path": "src\\DHBIMWATER.Infrastructure\\Repositories\\Mock\\MockAdaptiveBendPlacementRepo.cs",

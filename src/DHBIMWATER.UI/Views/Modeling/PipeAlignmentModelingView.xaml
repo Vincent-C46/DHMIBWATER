@@ -6,6 +6,8 @@
             </ResourceDictionary.MergedDictionaries>
             <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
             <converters:StringEqualsToVisibilityConverter x:Key="StringEqualsToVisibility"/>
+            <converters:ZDatumDisplayNameConverter x:Key="ZDatumDisplayName"/>
+            <converters:EnumEqualsToBrushConverter x:Key="EnumEqualsToBrush"/>
         </ResourceDictionary>
     </Window.Resources>
     <WindowChrome.WindowChrome>
@@ -202,9 +204,34 @@
                             <TextBox Style="{StaticResource PrimaryTextBoxStyle}" Text="{Binding ProjectionDetails, Mode=OneWay}" IsReadOnly="True" Height="60" TextWrapping="Wrap"/>
                             <TextBlock Margin="0,8,0,3" Text="평면 기준점 X·Y (m, 소수 5자리=0.01mm) — 첫 파일 첫 정점에서 자동 산출하며 수정할 수 있습니다. 이 점이 프로젝트 기준점에 놓이고, 높이는 정점 Z값으로만 결정됩니다."/>
                             <StackPanel Orientation="Horizontal">
-                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}" Width="170" Text="{Binding ReferenceX, StringFormat={}{0:0.00000}}"/>
-                                <TextBox Style="{StaticResource PrimaryTextBoxStyle}" Width="170" Margin="8,0" Text="{Binding ReferenceY, StringFormat={}{0:0.00000}}"/>
-                                <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" Width="140" Margin="8,0" ItemsSource="{Binding ZDatums}" SelectedItem="{Binding ZDatum}"/>
+                                <StackPanel VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBox Style="{StaticResource PrimaryTextBoxStyle}" Width="170" Text="{Binding ReferenceX, StringFormat={}{0:0.00000}}"/>
+                                        <TextBox Style="{StaticResource PrimaryTextBoxStyle}" Width="170" Margin="8,0" Text="{Binding ReferenceY, StringFormat={}{0:0.00000}}"/>
+                                    </StackPanel>
+                                    <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" Width="210" Margin="0,8,0,0" HorizontalAlignment="Left" ItemsSource="{Binding ZDatums, Mode=OneWay}" SelectedItem="{Binding ZDatum, Mode=TwoWay}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Converter={StaticResource ZDatumDisplayName}, Mode=OneWay}"/>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </StackPanel>
+                                <Canvas Width="150" Height="110" Margin="18,0,0,0" IsHitTestVisible="False">
+                                    <Ellipse Canvas.Left="5" Canvas.Top="15" Width="80" Height="80" Stroke="#52606A" StrokeThickness="2" Fill="#F7FAFC"/>
+                                    <Ellipse Canvas.Left="20" Canvas.Top="30" Width="50" Height="50" Stroke="#7B8790" StrokeThickness="2" Fill="White"/>
+                                    <Line X1="5" Y1="55" X2="85" Y2="55" Stroke="#7B8790" StrokeDashArray="3,2"/>
+                                    <Ellipse Canvas.Left="41" Canvas.Top="11" Width="8" Height="8" Fill="{Binding ZDatum, Mode=OneWay, Converter={StaticResource EnumEqualsToBrush}, ConverterParameter=OutsideTop}"/>
+                                    <Ellipse Canvas.Left="41" Canvas.Top="26" Width="8" Height="8" Fill="{Binding ZDatum, Mode=OneWay, Converter={StaticResource EnumEqualsToBrush}, ConverterParameter=Crown}"/>
+                                    <Ellipse Canvas.Left="41" Canvas.Top="51" Width="8" Height="8" Fill="{Binding ZDatum, Mode=OneWay, Converter={StaticResource EnumEqualsToBrush}, ConverterParameter=Centerline}"/>
+                                    <Ellipse Canvas.Left="41" Canvas.Top="76" Width="8" Height="8" Fill="{Binding ZDatum, Mode=OneWay, Converter={StaticResource EnumEqualsToBrush}, ConverterParameter=Invert}"/>
+                                    <Ellipse Canvas.Left="41" Canvas.Top="91" Width="8" Height="8" Fill="{Binding ZDatum, Mode=OneWay, Converter={StaticResource EnumEqualsToBrush}, ConverterParameter=OutsideBottom}"/>
+                                    <TextBlock Canvas.Left="92" Canvas.Top="7" FontSize="10" Text="외부 맨 위"/>
+                                    <TextBlock Canvas.Left="92" Canvas.Top="23" FontSize="10" Text="크라운"/>
+                                    <TextBlock Canvas.Left="92" Canvas.Top="48" FontSize="10" Text="중심선"/>
+                                    <TextBlock Canvas.Left="92" Canvas.Top="73" FontSize="10" Text="관저고"/>
+                                    <TextBlock Canvas.Left="92" Canvas.Top="89" FontSize="10" Text="외부 맨 아래"/>
+                                </Canvas>
                             </StackPanel>
                             <CheckBox Content="프로젝트 공유좌표에도 기준점 적용" Style="{StaticResource PrimaryCheckBoxStyle}" IsChecked="{Binding ApplySharedCoordinates}" Margin="0,8,0,0"/>
                         </StackPanel>

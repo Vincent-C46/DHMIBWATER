@@ -32,7 +32,6 @@ internal sealed class RevitAlignmentStraightPlacementRepo : IAlignmentStraightPl
         var basePoint = AlignmentPlacementMapper.GetProjectBasePoint(doc);
         // 파라미터는 형상이 확정된 뒤(최종 Regenerate 이후) 한꺼번에 설정한다.
         var placed = new List<(FamilyInstance Instance, double DiameterMm, string PipeKind, StraightPipeSpec? Spec)>();
-        var missingSpecs = new HashSet<(string PipeKind, double DiameterMm)>();
         var pending = 0;
 
         // SampleSegments로 intervalM(6m)마다 끊어 시작/끝점을 잇는다.
@@ -41,13 +40,12 @@ internal sealed class RevitAlignmentStraightPlacementRepo : IAlignmentStraightPl
         {
             var alignment = alignments[index];
             var spec = specs.Find(alignment.PipeKind, alignment.DiameterMm);
-            if (spec is null) missingSpecs.Add((alignment.PipeKind, alignment.DiameterMm));
+            var zOffsetM = origin.GetZOffsetM(alignment);
             var vertexTrims = trims is not null && index < trims.Count ? trims[index] : null;
             foreach (var segment in AlignmentIntervalSampler.SampleSegments(alignment.Vertices, intervalM, vertexTrims))
             {
-                var outsideDiameter = spec?.OuterDiameterMm > 0 ? spec.OuterDiameterMm : alignment.DiameterMm;
-                var start = ToXyz(segment.Start, outsideDiameter, origin, basePoint);
-                var end = ToXyz(segment.End, outsideDiameter, origin, basePoint);
+                var start = ToXyz(segment.Start, zOffsetM, origin, basePoint);
+                var end = ToXyz(segment.End, zOffsetM, origin, basePoint);
                 if (start.DistanceTo(end) < minLengthFt) continue;
 
                 var instance = AdaptiveComponentInstanceUtils.CreateAdaptiveComponentInstance(doc, symbol);
@@ -74,8 +72,6 @@ internal sealed class RevitAlignmentStraightPlacementRepo : IAlignmentStraightPl
         }
 
         var warnings = new List<string>();
-        if (missingSpecs.Count > 0)
-            warnings.Add($"직관 제원이 없어 OD·두께를 기록하지 못한 관종/DN {missingSpecs.Count}건: {string.Join(", ", missingSpecs.Select(x => $"{x.PipeKind}/DN{x.DiameterMm:0.##}"))}");
         if (missingParameters.Count > 0)
             warnings.Add($"직관 패밀리 '{straightFamilyTypeName}'에 {string.Join(", ", missingParameters.OrderBy(x => x))} 파라미터가 없거나 읽기전용이라 값을 설정하지 못했습니다.");
         return new AlignmentStraightPlacementResult(placed.Count, warnings);
@@ -114,6 +110,6 @@ internal sealed class RevitAlignmentStraightPlacementRepo : IAlignmentStraightPl
         }
     }
 
-    private static XYZ ToXyz(DHBIMWATER.Core.Geometry.Point3D point, double diameterMm, AlignmentPlacementOrigin origin, XYZ basePoint)
-        => AlignmentPlacementMapper.ToXyz(point, diameterMm, origin.X, origin.Y, origin.ZDatum, basePoint);
+    private static XYZ ToXyz(DHBIMWATER.Core.Geometry.Point3D point, double zOffsetM, AlignmentPlacementOrigin origin, XYZ basePoint)
+        => AlignmentPlacementMapper.ToXyz(point, zOffsetM, origin.X, origin.Y, basePoint);
 }

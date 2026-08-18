@@ -20,6 +20,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<AlignmentSourceLoader>();
         services.AddTransient<ModelPipeAlignmentUseCase>();
         services.AddTransient<AnalyzePipeNetworkUseCase>();
+        services.AddTransient<BendSettingsProvider>();
         services.AddTransient<SaveBendSettingsUseCase>();
 
         return services;

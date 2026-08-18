@@ -19,12 +19,13 @@ public sealed class RevitPipeAlignmentCommandRepo : IPipeAlignmentCommandRepo
         var created = 0; var skipped = 0; var warnings = new List<string>();
         foreach (var alignment in definition.Alignments)
         {
+            var zOffsetM = definition.Origin.GetZOffsetM(alignment);
             if (alignment.Vertices.Count < 2) { warnings.Add($"{alignment.SourceFile} 레코드 {alignment.RecordNumber}: 정점이 2개 미만이라 건너뛰었습니다."); continue; }
             var lines = new List<GeometryObject>();
             for (var i = 1; i < alignment.Vertices.Count; i++)
             {
-                var start = ToXyz(alignment.Vertices[i - 1], alignment.DiameterMm, definition, basePoint);
-                var end = ToXyz(alignment.Vertices[i], alignment.DiameterMm, definition, basePoint);
+                var start = ToXyz(alignment.Vertices[i - 1], zOffsetM, definition.Origin, basePoint);
+                var end = ToXyz(alignment.Vertices[i], zOffsetM, definition.Origin, basePoint);
                 if (start.DistanceTo(end) < MinimumSegmentFeet) { skipped++; continue; }
                 lines.Add(Line.CreateBound(start, end));
             }
@@ -46,8 +47,8 @@ public sealed class RevitPipeAlignmentCommandRepo : IPipeAlignmentCommandRepo
         return new PipeAlignmentCreateResult(created, skipped, warnings);
     }
 
-    private static XYZ ToXyz(DHBIMWATER.Core.Geometry.Point3D point, double diameterMm, PipeAlignmentCreateDefinition definition, XYZ basePoint)
-        => AlignmentPlacementMapper.ToXyz(point, diameterMm, definition.ReferenceX, definition.ReferenceY, definition.ZDatum, basePoint);
+    private static XYZ ToXyz(DHBIMWATER.Core.Geometry.Point3D point, double zOffsetM, AlignmentPlacementOrigin origin, XYZ basePoint)
+        => AlignmentPlacementMapper.ToXyz(point, zOffsetM, origin.X, origin.Y, basePoint);
 
     private static double CalculateLengthMm(IReadOnlyList<DHBIMWATER.Core.Geometry.Point3D> vertices) => vertices.Zip(vertices.Skip(1), (a, b) => a.DistanceTo(b)).Sum() * 1000;
     private static void SetText(Element element, string name, string value) => element.LookupParameter(name)?.Set(value ?? string.Empty);

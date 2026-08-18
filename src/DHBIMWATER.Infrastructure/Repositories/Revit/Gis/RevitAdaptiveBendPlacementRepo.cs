@@ -43,8 +43,7 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
             for (var i = 0; i < 5; i++)
             {
                 var refPoint = (ReferencePoint)doc.GetElement(pointIds[i]);
-                // ZDatum 보정(관 크라운/인버트)은 인접 직관과 같은 OD를 넣어야 Z가 어긋나지 않는다.
-                refPoint.Position = AlignmentPlacementMapper.ToXyz(points[i], plan.DiameterMm, origin.X, origin.Y, origin.ZDatum, basePoint);
+                refPoint.Position = AlignmentPlacementMapper.ToXyz(points[i], plan.ZOffsetM, origin.X, origin.Y, basePoint);
             }
             doc.Regenerate();
 

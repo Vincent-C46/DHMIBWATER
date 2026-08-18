@@ -38,6 +38,9 @@ public sealed class StraightPipeSpecTable
         (700, 738), (800, 842), (900, 945), (1000, 1048), (1100, 1144), (1200, 1255)
     };
 
+    /// <summary>핸드북에 수록된 호칭지름 목록. 허용굴곡표·곡관 규격표도 같은 DN 축을 쓴다.</summary>
+    public static IReadOnlyList<double> NominalDiameters { get; } = Diameters.Select(x => x.Dn).ToList();
+
     /// <summary><see cref="Diameters"/>의 DN600 위치. 상수 4종관은 DN600부터 수록된다.</summary>
     private const int Dn600Index = 11;
 

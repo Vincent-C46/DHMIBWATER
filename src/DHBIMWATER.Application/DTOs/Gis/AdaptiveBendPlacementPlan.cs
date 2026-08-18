@@ -8,6 +8,7 @@ namespace DHBIMWATER.Application.DTOs.Gis;
 /// </summary>
 /// <param name="DiameterMm">호칭지름 DN.</param>
 /// <param name="WallThicknessEMm">곡관 치수표의 벽두께 e.</param>
+/// <param name="ZOffsetM">인접 직관과 동일한 중심선 Z 환산 오프셋(m).</param>
 /// <param name="RotXYDeg">P1~P5 각 점의 rot_XY_n(도). <see cref="Points"/>의 5점 순서와 인덱스가 같다.</param>
 /// <param name="RotXZDeg">P1~P5 각 점의 rot_XZ_n(도). <see cref="RotXYDeg"/>와 인덱스가 같다.</param>
 public sealed record AdaptiveBendPlacementPlan(
@@ -17,11 +18,22 @@ public sealed record AdaptiveBendPlacementPlan(
     BendArcPoints Points,
     double DiameterMm,
     double WallThicknessEMm,
+    double ZOffsetM,
     string? DiameterParameterName,
     string? WallThicknessParameterName,
     bool IsAcceptable,
     IReadOnlyList<double> RotXYDeg,
-    IReadOnlyList<double> RotXZDeg);
+    IReadOnlyList<double> RotXZDeg,
+    string PipeKind = "",
+    string SourceFile = "",
+    string RecordNumber = "",
+    double? OuterDiameterMm = null,
+    double DeflectionDeg = 0d,
+    double StandardAngleDeg = 0d,
+    double EffectiveAllowableDeg = 0d,
+    double ResidualDeg = 0d,
+    double CenterlineRadiusMm = 0d,
+    double LayingLengthMm = 0d);
 
 /// <param name="Count">실제로 배치된 곡관 수.</param>
 /// <param name="Warnings">OD/thk/rot_XY_/rot_XZ_ 등 패밀리 인스턴스 파라미터를 찾지 못하거나 읽기전용이라 값을 못 넣은 경우의 안내.</param>

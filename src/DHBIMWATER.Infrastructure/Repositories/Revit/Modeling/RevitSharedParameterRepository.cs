@@ -26,13 +26,12 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             if (definitions == null || definitions.Count == 0) return;
 
             Document? doc = _doc();
+            if (doc == null) return;
             var app = doc.Application;
 
             var version = app.VersionNumber;
             string sharedParameterFileName = "DHBIMWATER_sharedParameters.txt";
             string sharedParameterFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), $@"Autodesk\Revit\Addins\{version}\{sharedParameterFileName}");
-
-            if (doc == null) return;
 
             string previousFilePath = app.SharedParametersFilename;
 
@@ -92,12 +91,12 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
 
                     ExternalDefinitionCreationOptions options = new ExternalDefinitionCreationOptions(def.Name, specType);
 
-                    options.GUID = guidDict.TryGetValue(def.Name, out var guid) ? guid : Guid.NewGuid();  // 지정된 GUID가 없으면 새로 생성
+                    options.GUID = def.Guid ?? (guidDict.TryGetValue(def.Name, out var guid) ? guid : Guid.NewGuid());
                     options.UserModifiable = def.UserModifiable;
                     options.Visible = true;
 
                     // 공유 매개변수 생성
-                    Definition sharedDef = group.Definitions.Create(options);
+                    Definition sharedDef = group.Definitions.get_Item(def.Name) ?? group.Definitions.Create(options);
                     //if (sharedDef == null) continue;
                     #endregion
 

@@ -1,6 +1,5 @@
 using Autodesk.Revit.DB;
 using DHBIMWATER.Core.Geometry;
-using DHBIMWATER.Core.Gis;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
 namespace DHBIMWATER.Infrastructure.Helpers;
@@ -25,17 +24,9 @@ public static class AlignmentPlacementMapper
     }
 
     /// <param name="basePoint">GetProjectBasePoint 결과. 정점마다 재조회하지 않도록 호출부에서 1회 조회해 넘긴다.</param>
-    public static XYZ ToXyz(Point3D point, double diameterMm, double referenceX, double referenceY, ZDatum zDatum, XYZ basePoint)
-    {
-        var z = zDatum switch
-        {
-            ZDatum.Invert => point.Z + diameterMm / 2000.0,
-            ZDatum.Crown => point.Z - diameterMm / 2000.0,
-            _ => point.Z
-        };
-        return new XYZ(
+    public static XYZ ToXyz(Point3D point, double zOffsetM, double referenceX, double referenceY, XYZ basePoint)
+        => new(
             basePoint.X + UC.MToFt(point.X - referenceX),
             basePoint.Y + UC.MToFt(point.Y - referenceY),
-            basePoint.Z + UC.MToFt(z));
-    }
+            basePoint.Z + UC.MToFt(point.Z + zOffsetM));
 }

@@ -24,11 +24,12 @@ internal sealed class RevitAlignmentPipePlacementRepo : IAlignmentPipePlacementR
         var count = 0;
         foreach (var alignment in alignments)
         {
+            var zOffsetM = origin.GetZOffsetM(alignment);
             Pipe? previous = null;
             foreach (var segment in AlignmentIntervalSampler.SampleSegments(alignment.Vertices, intervalM))
             {
-                var start = ToXyz(segment.Start, alignment.DiameterMm, origin, basePoint);
-                var end = ToXyz(segment.End, alignment.DiameterMm, origin, basePoint);
+                var start = ToXyz(segment.Start, zOffsetM, origin, basePoint);
+                var end = ToXyz(segment.End, zOffsetM, origin, basePoint);
                 if (start.DistanceTo(end) < minLengthFt) continue;
                 var pipe = Pipe.Create(doc, system.Id, type.Id, level.Id, start, end);
                 if (alignment.DiameterMm > 0) pipe.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM)?.Set(UC.MmToFt(alignment.DiameterMm));
@@ -50,6 +51,6 @@ internal sealed class RevitAlignmentPipePlacementRepo : IAlignmentPipePlacementR
             System.Diagnostics.Debug.WriteLine($"선형 파이프 구간 연결 생략: {ex.Message}");
         }
     }
-    private static XYZ ToXyz(DHBIMWATER.Core.Geometry.Point3D point, double diameterMm, AlignmentPlacementOrigin origin, XYZ basePoint)
-        => AlignmentPlacementMapper.ToXyz(point, diameterMm, origin.X, origin.Y, origin.ZDatum, basePoint);
+    private static XYZ ToXyz(DHBIMWATER.Core.Geometry.Point3D point, double zOffsetM, AlignmentPlacementOrigin origin, XYZ basePoint)
+        => AlignmentPlacementMapper.ToXyz(point, zOffsetM, origin.X, origin.Y, basePoint);
 }

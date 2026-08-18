@@ -12,10 +12,10 @@ namespace DHBIMWATER.Application.UseCases.Gis;
 public sealed class AnalyzePipeNetworkUseCase
 {
     private readonly AlignmentSourceLoader _loader;
-    private readonly IBendSettingsRepo _settingsRepo;
+    private readonly BendSettingsProvider _settings;
 
-    public AnalyzePipeNetworkUseCase(AlignmentSourceLoader loader, IBendSettingsRepo settingsRepo)
-    { _loader = loader; _settingsRepo = settingsRepo; }
+    public AnalyzePipeNetworkUseCase(AlignmentSourceLoader loader, BendSettingsProvider settings)
+    { _loader = loader; _settings = settings; }
 
     public PipeNetworkDiagnosisResult Execute(PipeNetworkDiagnosisRequest request)
     {
@@ -24,12 +24,11 @@ public sealed class AnalyzePipeNetworkUseCase
         var loaded = _loader.Load(request.Files);
         var warnings = loaded.Warnings.ToList();
 
-        var settings = _settingsRepo.Load();
-        if (settings is null)
-        {
-            settings = BendSettings.Default;
-            warnings.Add("관로 규격 설정이 저장되지 않아 빈 기본값으로 판정했습니다.");
-        }
+        var (settings, source) = _settings.Load();
+        if (source == BendSettingsSource.BuiltInDefault)
+            warnings.Add("관로 규격 설정이 저장되지 않아 내장 기본값으로 판정했습니다.");
+        if (settings.Fittings.IsPlaceholder)
+            warnings.Add("곡관 치수가 실제 규격이 아니라 임시값입니다. 주철관 핸드북 곡관 규격표를 입력한 뒤 결과를 사용하세요.");
 
         var graph = PipeNetworkBuilder.Build(loaded.Alignments, request.SnapToleranceMm / 1000d);
         var nodes = PipeNetworkClassifier.Classify(graph);

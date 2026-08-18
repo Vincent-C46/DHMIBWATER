@@ -25,7 +25,14 @@ public sealed record BendPlacement(
     string? TypeName,
     bool IsAcceptable,
     IReadOnlyList<double> RotXYDeg,
-    IReadOnlyList<double> RotXZDeg);
+    IReadOnlyList<double> RotXZDeg,
+    double DeflectionDeg = 0d,
+    double EffectiveAllowableDeg = 0d,
+    double ResidualDeg = 0d,
+    double CenterlineRadiusMm = 0d,
+    double LayingLengthMm = 0d,
+    string JointType = "",
+    JointApplicationMode ApplicationMode = JointApplicationMode.SingleJoint);
 
 /// <param name="Trims">인덱스 = 폴리선 정점 인덱스. 차감이 없는 정점은 <see cref="VertexTrim.None"/>다.</param>
 public sealed record AlignmentBendPlan(int AlignmentIndex, IReadOnlyList<VertexTrim> Trims);
@@ -117,7 +124,9 @@ public static class BendTrimPlanner
                     nodeId.Value, a, v, bend.StandardAngleDeg,
                     alignments[a].DiameterMm, alignments[a].PipeKind,
                     points, shortLeg, longLeg,
-                    bend.WallThicknessMm, bend.TypeName, bend.IsAcceptable, rotXy, rotXz));
+                    bend.WallThicknessMm, bend.TypeName, bend.IsAcceptable, rotXy, rotXz,
+                    bend.DeflectionDeg, bend.EffectiveAllowableDeg, bend.ResidualDeg,
+                    bend.CenterlineRadiusMm, bend.LayingLengthMm, bend.JointType, bend.ApplicationMode));
             }
 
             plans.Add(new AlignmentBendPlan(a, trims));

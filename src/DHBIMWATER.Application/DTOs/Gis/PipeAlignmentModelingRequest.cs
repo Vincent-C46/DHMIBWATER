@@ -22,7 +22,7 @@ public sealed record PipeAlignmentModelingRequest
     public double ReferenceX { get; init; }
     public double ReferenceY { get; init; }
     public bool ApplySharedCoordinates { get; init; }
-    public ZDatum ZDatum { get; init; } = ZDatum.AsIs;
+    public ZDatum ZDatum { get; init; } = ZDatum.Invert;
     /// <summary>TODO: ZSource 미소비 — Phase 2.</summary>
     public ZSource ZSource { get; init; } = ZSource.GeometryZ;
     public PipeAlignmentOutputMode OutputMode { get; init; } = PipeAlignmentOutputMode.DirectShape;
@@ -53,10 +53,20 @@ public sealed record PipeAlignmentModelingRequest
 /// <param name="BendCount">직관을 비워 자리를 남긴 곡관 수. 곡관 실물 배치는 아직 하지 않는다.</param>
 public sealed record PipeAlignmentModelingResult(PipeAlignmentOutputMode OutputMode, int CreatedCount, int SkippedSegments, IReadOnlyList<string> Warnings, int BendCount = 0);
 
+/// <summary>배치되는 관로 요소에 기록할 DH_* 정보 매개변수 중 관로 전체가 공유하는 값.</summary>
+public sealed record PipeInfoParameterContext(string JointType, JointApplicationMode ApplicationMode, ZDatum ZDatum, BendForm Form, bool Enabled = true);
+
 // Repo 인터페이스 계약을 보존하는 기존 DTO 정의다.
-public sealed record PipeAlignmentCreateDefinition(IReadOnlyList<PipeAlignment> Alignments, double ReferenceX, double ReferenceY, ZDatum ZDatum);
+public sealed record PipeAlignmentCreateDefinition(IReadOnlyList<PipeAlignment> Alignments, AlignmentPlacementOrigin Origin);
 public sealed record PipeAlignmentCreateResult(int CreatedCount, int SkippedSegments, IReadOnlyList<string> Warnings);
-public sealed record AlignmentPlacementOrigin(double X, double Y, ZDatum ZDatum);
+public sealed record AlignmentPlacementOrigin(double X, double Y, ZDatum ZDatum, StraightPipeSpecTable StraightPipeSpecs)
+{
+    /// <summary>선형별 직관 제원으로 계산한 중심선 Z 오프셋(m). 모든 배치 경로가 이 값을 공유한다.</summary>
+    public double GetZOffsetM(PipeAlignment alignment) => GetZOffsetM(alignment.PipeKind, alignment.DiameterMm);
+
+    public double GetZOffsetM(string pipeKind, double diameterMm)
+        => PipeElevationDatum.OffsetMm(ZDatum, StraightPipeSpecs.Find(pipeKind, diameterMm), diameterMm) / 1000d;
+}
 
 /// <param name="Count">실제로 배치된 직관 수.</param>
 /// <param name="Warnings">직관 규격 또는 매핑 파라미터를 적용하지 못한 경우의 안내.</param>
