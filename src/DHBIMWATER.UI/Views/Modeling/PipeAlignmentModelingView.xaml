@@ -291,6 +291,8 @@
                         <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" ItemsSource="{Binding BendParameterOptions, Mode=OneWay}" SelectedItem="{Binding BendDiameterParameterName, Mode=TwoWay}"/>
                         <TextBlock Text="곡관 벽두께(e) 파라미터" Margin="0,8,0,3"/>
                         <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" ItemsSource="{Binding BendParameterOptions, Mode=OneWay}" SelectedItem="{Binding BendWallThicknessParameterName, Mode=TwoWay}"/>
+                        <TextBlock Text="곡관 외경(OD) 파라미터 — 곡관 형상을 구동하는 값입니다" Margin="0,8,0,3"/>
+                        <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" ItemsSource="{Binding BendParameterOptions, Mode=OneWay}" SelectedItem="{Binding BendOuterDiameterParameterName, Mode=TwoWay}"/>
                     </StackPanel>
                 </TabItem>
                 <!-- 진단 탭: 임시 숨김. 다시 노출하려면 Visibility 속성 제거 -->

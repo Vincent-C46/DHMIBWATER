@@ -29,6 +29,8 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
         var missingParameters = new HashSet<(string Family, string Type, string Parameter)>();
         var writer = new PipeParameterWriter();
         var overrideWarnings = new List<string>();
+        // OD를 못 구한 (관종, DN) 조합. 절점마다 반복 경고하지 않도록 조합 단위로 묶는다.
+        var missingOuterDiameter = new HashSet<(string PipeKind, double DiameterMm)>();
         var overrideView = ResolveOverrideView(doc);
         var solidFillPatternId = FindSolidFillPatternId(doc);
         var count = 0;
@@ -81,6 +83,11 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
                 SetLengthParameter(instance, plan, plan.DiameterParameterName, UC.MmToFt(plan.DiameterMm), missingParameters);
             if (plan.WallThicknessParameterName is not null)
                 SetLengthParameter(instance, plan, plan.WallThicknessParameterName, UC.MmToFt(plan.WallThicknessEMm), missingParameters);
+            // OD는 곡관 형상 구동값이다. 직관 제원표에 (관종, DN)이 없으면 OuterDiameterMm이 null이라 형상이 기본값으로 남는다.
+            if (plan.OuterDiameterParameterName is not null && plan.OuterDiameterMm is { } outerDiameterMm)
+                SetLengthParameter(instance, plan, plan.OuterDiameterParameterName, UC.MmToFt(outerDiameterMm), missingParameters);
+            else if (plan.OuterDiameterParameterName is not null)
+                missingOuterDiameter.Add((plan.PipeKind, plan.DiameterMm));
             for (var i = 0; i < 5; i++)
             {
                 SetRequiredAngleParameter(rotationParameters[i].Xy, plan, $"{RotationXyParameterPrefix}{i + 1}", plan.RotXYDeg[i]);
@@ -97,6 +104,9 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
             .GroupBy(x => (x.Family, x.Type))
             .Select(g => $"곡관 패밀리 '{g.Key.Family}:{g.Key.Type}'에 {string.Join(", ", g.Select(x => x.Parameter))} 파라미터가 없거나 읽기전용이라 값을 설정하지 못했습니다.")
             .ToList();
+        if (missingOuterDiameter.Count > 0)
+            warnings.Add($"직관 제원표에 외경 OD가 없어 곡관 형상이 패밀리 기본값으로 남은 관종/DN {missingOuterDiameter.Count}건: "
+                + string.Join(", ", missingOuterDiameter.OrderBy(x => x.PipeKind).ThenBy(x => x.DiameterMm).Select(x => $"{x.PipeKind}/DN{x.DiameterMm:0.##}")));
         warnings.AddRange(overrideWarnings);
         if (writer.Missing.Count > 0)
             warnings.Add($"프로젝트 매개변수 {string.Join(", ", writer.Missing.OrderBy(x => x))}를 곡관 인스턴스에 기록하지 못했습니다(바인딩 실패 또는 읽기전용).");

@@ -50,10 +50,11 @@ public sealed class ModelPipeAlignmentUseCase
 
         // 트랜잭션을 열기 전에 카탈로그가 가리키는 곡관 패밀리가 실제로 이 문서에 로드돼 있는지 확인한다.
         // 그렇지 않으면 직관 배치까지 다 끝낸 뒤 곡관 배치 단계에서야 실패해 전체가 롤백된다.
+        IReadOnlyList<string> bendConfigWarnings = Array.Empty<string>();
         if (bendPlan is not null)
         {
-            EnsureBendConfiguration(bendPlan, request.BendFamilyName, request.Form);
-            EnsureBendFamiliesLoaded(bendPlan, request.BendFamilyName);
+            bendConfigWarnings = EnsureBendConfiguration(bendPlan, request.BendFamilyName, request.BendDefaultTypeName, request.Form);
+            EnsureBendFamiliesLoaded(bendPlan, request.BendFamilyName, request.BendDefaultTypeName);
         }
 
         using (_transaction)
@@ -75,19 +76,20 @@ public sealed class ModelPipeAlignmentUseCase
                     ? PlaceBendFittings(bendPlan, loaded.Alignments, origin, request, infoContext)
                     : new AdaptiveBendPlacementResult(0, Array.Empty<string>());
                 _transaction.Commit();
-                return new PipeAlignmentModelingResult(request.OutputMode, count, skipped, loaded.Warnings.Concat(elevationWarnings).Concat(repoWarnings).Concat(bendResult.Warnings).ToList(), bendResult.Count);
+                return new PipeAlignmentModelingResult(request.OutputMode, count, skipped, loaded.Warnings.Concat(elevationWarnings).Concat(bendConfigWarnings).Concat(repoWarnings).Concat(bendResult.Warnings).ToList(), bendResult.Count);
             }
             catch { _transaction.Rollback(); throw; }
         }
     }
 
     /// <summary>
-    /// 곡관 유형은 관·곡관 규격표의 "곡관 유형" 열에서만 채워지고, 조회 키는 (형식, DN, 표준각도)의 완전일치다.
-    /// 그래서 미선택 안내에는 어떤 형식의 어느 행을 채워야 하는지까지 적는다. 형식이 다르면 값을 넣어도 조회되지 않는다.
+    /// 곡관 유형은 FamilySymbol을 고르는 용도일 뿐이고 형상은 OD·thk 인스턴스 파라미터가 결정한다(사용자 확인 2026-08-19).
+    /// 그래서 규격표에 유형이 비어 있어도 모델링을 중단하지 않고 패밀리의 기본 유형으로 대체한 뒤 경고만 남긴다.
     /// </summary>
-    private static void EnsureBendConfiguration(BendTrimPlan bendPlan, string? familyName, BendForm form)
+    /// <returns>기본 유형으로 대체한 규격 안내. 대체가 없으면 빈 목록.</returns>
+    private static IReadOnlyList<string> EnsureBendConfiguration(BendTrimPlan bendPlan, string? familyName, string? defaultTypeName, BendForm form)
     {
-        if (bendPlan.Placements.Count == 0) return;
+        if (bendPlan.Placements.Count == 0) return Array.Empty<string>();
         if (string.IsNullOrWhiteSpace(familyName))
             throw new InvalidOperationException("배치할 곡관이 있습니다. 5점 가변 곡관 패밀리를 선택하세요.");
 
@@ -96,22 +98,31 @@ public sealed class ModelPipeAlignmentUseCase
             .Select(x => $"DN{x.DiameterMm:0.##} / {x.AngleDeg:0.##}°")
             .Distinct()
             .ToList();
-        if (missingTypes.Count == 0) return;
+        if (missingTypes.Count == 0) return Array.Empty<string>();
 
         var formLabel = PipeAlignmentParameters.Label(form);
-        throw new InvalidOperationException(
-            $"곡관 유형이 지정되지 않아 배치할 수 없는 규격이 {missingTypes.Count}건 있습니다({formLabel} 기준).\n\n"
-            + $"미지정 규격: {string.Join(", ", missingTypes)}\n\n"
-            + $"[관·곡관 규격표]를 열어 형식 열이 '{formLabel}'인 위 행의 '곡관 유형'을 선택한 뒤 [확인] → [저장]하세요. "
-            + $"형식이 다른 행(예: {PipeAlignmentParameters.Label(form == BendForm.AType ? BendForm.BType : BendForm.AType)})에 넣은 값은 이 조회에 쓰이지 않습니다.\n"
-            + $"유형 목록이 비어 있으면 규격표를 닫고 곡관 패밀리('{familyName}')를 먼저 선택한 뒤 규격표를 다시 여세요.");
+        if (string.IsNullOrWhiteSpace(defaultTypeName))
+            throw new InvalidOperationException(
+                $"곡관 유형이 지정되지 않은 규격이 {missingTypes.Count}건 있는데({formLabel} 기준), "
+                + $"대체할 기본 유형도 없습니다. 곡관 패밀리 '{familyName}'에 유형이 하나도 없거나 패밀리를 읽지 못한 상태입니다.\n\n"
+                + $"미지정 규격: {string.Join(", ", missingTypes)}");
+
+        return new[]
+        {
+            $"규격표에 곡관 유형이 없는 {missingTypes.Count}건({formLabel} 기준)은 기본 유형 '{defaultTypeName}'으로 배치했습니다. "
+            + "곡관 형상은 유형이 아니라 OD·두께 파라미터가 결정하므로 치수에는 영향이 없습니다.\n"
+            + $"해당 규격: {string.Join(", ", missingTypes)}"
+        };
     }
 
-    private void EnsureBendFamiliesLoaded(BendTrimPlan bendPlan, string? familyName)
+    private void EnsureBendFamiliesLoaded(BendTrimPlan bendPlan, string? familyName, string? defaultTypeName)
     {
         var pairs = bendPlan.Placements
-            .Where(x => !string.IsNullOrWhiteSpace(familyName) && x.TypeName is not null)
-            .Select(x => (familyName!, x.TypeName!))
+            .Where(x => !string.IsNullOrWhiteSpace(familyName))
+            .Select(x => (familyName!, TypeName: string.IsNullOrWhiteSpace(x.TypeName) ? defaultTypeName : x.TypeName))
+            .Where(x => x.TypeName is not null)
+            .Select(x => (x.Item1, x.TypeName!))
+            .Distinct()
             .ToList();
         if (pairs.Count == 0) return;
 
@@ -129,7 +140,7 @@ public sealed class ModelPipeAlignmentUseCase
 
         var warnings = new List<string>();
         if (usesDefault) warnings.Add("저장된 관로 규격 설정이 없어 내장 기본값으로 판정했습니다.");
-        if (settings.Fittings.IsPlaceholder) warnings.Add("곡관 치수가 실제 규격이 아니라 임시값입니다. 배치된 곡관의 길이·곡률반경은 검토용으로만 쓰세요.");
+        if (settings.Fittings.IsLegacyPlaceholder) warnings.Add("저장된 곡관 치수가 핸드북 반영 이전의 임시값입니다. [관·곡관 규격표] 창에서 [기본값 복원] 후 저장해야 실제 규격으로 배치됩니다.");
 
         var snapTolerance = request.SnapToleranceMm / 1000d;
         var graph = PipeNetworkBuilder.Build(alignments, snapTolerance);
@@ -143,6 +154,7 @@ public sealed class ModelPipeAlignmentUseCase
             warnings.Add($"곡관 치수가 없어 배치하지 못한 절점 {skipped}곳은 직관을 절점까지 붙였습니다.");
 
         var missingFamily = plan.Placements.Count(x => string.IsNullOrWhiteSpace(request.BendFamilyName) || x.TypeName is null);
+        // TODO: 폴백 도입(docs/33)으로 이 경고의 TypeName 조건은 실제 생략 건수와 다르다. 경고 문구 정리 필요.
         if (missingFamily > 0)
             warnings.Add($"곡관 패밀리·타입이 설정되지 않아 실물 배치를 생략한 절점 {missingFamily}곳은 자리만 비웠습니다.");
         var exceeded = resolutions.Where(x => !x.IsAcceptable).Select(x => x.NodeId).ToList();
@@ -155,20 +167,41 @@ public sealed class ModelPipeAlignmentUseCase
     /// <summary>카탈로그에 패밀리·타입이 등록된 절점만 골라 5점 가변 곡관을 배치한다.</summary>
     private AdaptiveBendPlacementResult PlaceBendFittings(BendTrimPlan plan, IReadOnlyList<PipeAlignment> alignments, AlignmentPlacementOrigin origin, PipeAlignmentModelingRequest request, PipeInfoParameterContext infoContext)
     {
-        var placeable = plan.Placements.Where(x => !string.IsNullOrWhiteSpace(request.BendFamilyName) && x.TypeName is not null).ToList();
+        if (string.IsNullOrWhiteSpace(request.BendFamilyName)) return new AdaptiveBendPlacementResult(0, Array.Empty<string>());
+        // 유형 미지정은 기본 유형으로 대체한다. 둘 다 없으면 그 절점만 건너뛴다.
+        var placeable = plan.Placements
+            .Select(x => (Placement: x, TypeName: string.IsNullOrWhiteSpace(x.TypeName) ? request.BendDefaultTypeName : x.TypeName))
+            .Where(x => !string.IsNullOrWhiteSpace(x.TypeName))
+            .ToList();
         if (placeable.Count == 0) return new AdaptiveBendPlacementResult(0, Array.Empty<string>());
 
-        var bendPlans = placeable.Select(x =>
+        // OD는 곡관 형상 구동값이라 못 구하면 패밀리 기본 굵기로 남는다. (관종, DN)이 없으면 DN만으로 폴백한다(사용자 결정 2026-08-19).
+        var outerDiameterFallbacks = new HashSet<(string PipeKind, double DiameterMm, string SourceKind, double OuterDiameterMm)>();
+        var bendPlans = placeable.Select(item =>
         {
+            var x = item.Placement;
             var alignment = alignments[x.AlignmentIndex];
             var spec = origin.StraightPipeSpecs.Find(x.PipeKind, x.DiameterMm);
+            var outerDiameterMm = spec?.OuterDiameterMm;
+            if (outerDiameterMm is null && origin.StraightPipeSpecs.FindOuterDiameterByDiameter(x.DiameterMm) is { } fallback)
+            {
+                outerDiameterMm = fallback.OuterDiameterMm;
+                outerDiameterFallbacks.Add((x.PipeKind, x.DiameterMm, fallback.PipeKind, fallback.OuterDiameterMm));
+            }
             return new AdaptiveBendPlacementPlan(
-                x.NodeId, request.BendFamilyName!, x.TypeName!, x.Points, x.DiameterMm, x.WallThicknessMm,
-                origin.GetZOffsetM(x.PipeKind, x.DiameterMm), request.BendDiameterParameterName, request.BendWallThicknessParameterName, x.IsAcceptable,
-                x.RotXYDeg, x.RotXZDeg, x.PipeKind, alignment.SourceFile, alignment.RecordNumber, spec?.OuterDiameterMm,
+                x.NodeId, request.BendFamilyName!, item.TypeName!, x.Points, x.DiameterMm, x.WallThicknessMm,
+                origin.GetZOffsetM(x.PipeKind, x.DiameterMm), request.BendDiameterParameterName, request.BendWallThicknessParameterName, request.BendOuterDiameterParameterName, x.IsAcceptable,
+                x.RotXYDeg, x.RotXZDeg, x.PipeKind, alignment.SourceFile, alignment.RecordNumber, outerDiameterMm,
                 x.DeflectionDeg, x.AngleDeg, x.EffectiveAllowableDeg, x.ResidualDeg, x.CenterlineRadiusMm, x.LayingLengthMm);
         }).ToList();
-        return _adaptiveBendRepo.Place(bendPlans, origin, infoContext);
+        var result = _adaptiveBendRepo.Place(bendPlans, origin, infoContext);
+        if (outerDiameterFallbacks.Count == 0) return result;
+        // 다른 관종 값을 대신 쓴 것이므로 조용히 넘어가지 않고 어떤 관종에서 가져왔는지 알린다.
+        var fallbackNotice = $"직관 제원표에 없는 관종/DN {outerDiameterFallbacks.Count}건은 같은 DN의 다른 관종 외경으로 곡관을 배치했습니다(외경은 관종과 무관합니다): "
+            + string.Join(", ", outerDiameterFallbacks
+                .OrderBy(x => x.PipeKind).ThenBy(x => x.DiameterMm)
+                .Select(x => $"{x.PipeKind}/DN{x.DiameterMm:0.##} ← {x.SourceKind} {x.OuterDiameterMm:0.##}mm"));
+        return result with { Warnings = result.Warnings.Prepend(fallbackNotice).ToList() };
     }
 
     private (int Count, int Skipped, IReadOnlyList<string> Warnings) ToDirectShape(IReadOnlyList<PipeAlignment> alignments, AlignmentPlacementOrigin origin)

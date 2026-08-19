@@ -1,3 +1,5 @@
+using System;
+using System.Linq;
 using DHBIMWATER.Core.Gis;
 using Xunit;
 
@@ -40,11 +42,10 @@ public class BendDefaultTablesTests
                 Assert.NotNull(JointDeflectionTable.Default.AllowableFor(jointType, dn));
     }
 
-    /// <summary>임시 곡관값이라도 접선길이보다 배관길이가 짧으면 전 절점이 치수 불일치로 보고된다.</summary>
+    /// <summary>배관길이 t가 접선길이보다 짧으면 호가 곡관 몸통 밖으로 나가 전 절점이 치수 불일치로 보고된다.</summary>
     [Fact]
-    public void Placeholder_fittings_are_size_consistent_for_every_dn_angle_form()
+    public void Handbook_fittings_are_size_consistent_for_every_dn_angle_form()
     {
-        Assert.True(BendFittingCatalog.Default.IsPlaceholder);
         foreach (var entry in BendFittingCatalog.Default.Entries)
         {
             var tangent = BendResolver.TangentLength(entry.CenterlineRadiusMm, entry.AngleDeg);
@@ -54,11 +55,93 @@ public class BendDefaultTablesTests
         }
     }
 
-    [Fact]
-    public void Placeholder_flag_turns_off_when_catalog_is_edited()
+    /// <summary>핸드북 소켓곡관 표(docs/주철관핸드북(2020년판)_이형관.pdf)의 대표 행을 직접 확인한다.</summary>
+    [Theory]
+    // 4. 90° 소켓곡관
+    [InlineData(80, 90, 7.0, 75, 150)]
+    [InlineData(1200, 90, 20.4, 1165, 1270)]
+    // 5. 45° 소켓곡관
+    [InlineData(300, 45, 9.6, 300, 175)]
+    [InlineData(1200, 45, 20.4, 1195, 575)]
+    // 6. 22½° 소켓곡관
+    [InlineData(500, 22.5, 12.0, 495, 155)]
+    // 7. 11¼° 소켓곡관
+    [InlineData(100, 11.25, 7.2, 115, 55)]
+    [InlineData(1200, 11.25, 20.4, 1195, 175)]
+    public void Bend_default_matches_handbook_rows(double dn, double angle, double e, double radius, double laying)
     {
-        var edited = new BendFittingCatalog(
-            BendFittingCatalog.Default.Entries.Skip(1).ToList());
-        Assert.False(edited.IsPlaceholder);
+        foreach (var form in new[] { BendForm.AType, BendForm.BType })
+        {
+            var entry = BendFittingCatalog.Default.Find(dn, angle, form);
+            Assert.NotNull(entry);
+            Assert.Equal(e, entry!.WallThicknessMm);
+            Assert.Equal(radius, entry.CenterlineRadiusMm);
+            Assert.Equal(laying, entry.LayingLengthMm);
+        }
+    }
+
+    /// <summary>A형·B형은 치수가 같고 스피것 삽입부 s(200mm)만 B형에 붙는다.</summary>
+    [Fact]
+    public void Bend_default_covers_every_dn_and_angle_for_both_forms()
+    {
+        foreach (var dn in StraightPipeSpecTable.NominalDiameters)
+            foreach (var angle in JointDeflectionRule.StandardAngles)
+            {
+                var a = BendFittingCatalog.Default.Find(dn, angle, BendForm.AType);
+                var b = BendFittingCatalog.Default.Find(dn, angle, BendForm.BType);
+                Assert.NotNull(a);
+                Assert.NotNull(b);
+                Assert.Equal(a!.CenterlineRadiusMm, b!.CenterlineRadiusMm);
+                Assert.Equal(a.LayingLengthMm, b.LayingLengthMm);
+                Assert.Equal(a.WallThicknessMm, b.WallThicknessMm);
+                Assert.Equal(0d, a.ExtraLegLengthMm);
+                Assert.Equal(200d, b.ExtraLegLengthMm);
+            }
+        Assert.Equal(StraightPipeSpecTable.NominalDiameters.Count * JointDeflectionRule.StandardAngles.Count * 2,
+            BendFittingCatalog.Default.Entries.Count);
+    }
+
+    /// <summary>이형관 벽두께 e는 각도와 무관한 DN 단일값이며, 관종별 직관 두께와는 다른 계열이다.</summary>
+    [Fact]
+    public void Bend_wall_thickness_depends_on_dn_only()
+    {
+        foreach (var dn in StraightPipeSpecTable.NominalDiameters)
+        {
+            var thicknesses = JointDeflectionRule.StandardAngles
+                .Select(angle => BendFittingCatalog.Default.Find(dn, angle, BendForm.AType)!.WallThicknessMm)
+                .Distinct()
+                .ToList();
+            Assert.Single(thicknesses);
+        }
+        // DN300: 이형관 9.6 vs 상수 1종관 직관 8.8
+        Assert.Equal(9.6, BendFittingCatalog.Default.Find(300, 45, BendForm.AType)!.WallThicknessMm);
+        Assert.Equal(8.8, StraightPipeSpecTable.Default.Find(PipeKindCatalog.Water1, 300)!.ThicknessMm);
+    }
+
+    /// <summary>핸드북 반영 이전의 임시값이 저장된 프로젝트만 [기본값 복원] 안내 대상이다.</summary>
+    [Fact]
+    public void Legacy_placeholder_is_detected_only_for_the_old_temporary_table()
+    {
+        Assert.False(BendFittingCatalog.Default.IsLegacyPlaceholder);
+
+        var legacy = new BendFittingCatalog((
+            from dn in StraightPipeSpecTable.NominalDiameters
+            from form in new[] { (Form: BendForm.AType, Factor: 2.5), (Form: BendForm.BType, Factor: 1.5) }
+            from angle in JointDeflectionRule.StandardAngles
+            let radius = Math.Round(form.Factor * dn, 1)
+            select new BendFittingEntry(dn, angle, form.Form,
+                Math.Ceiling(BendResolver.TangentLength(radius, angle)) + 50d, radius, 0d,
+                StraightPipeSpecTable.Default.Find(PipeKindCatalog.Water1, dn)?.ThicknessMm ?? 0d)).ToList());
+        Assert.True(legacy.IsLegacyPlaceholder);
+    }
+
+    [Fact]
+    public void Straight_outer_diameter_can_be_resolved_by_dn_only()
+    {
+        var found = StraightPipeSpecTable.Default.FindOuterDiameterByDiameter(300);
+        Assert.NotNull(found);
+        Assert.Equal(326d, found!.Value.OuterDiameterMm);
+        Assert.Equal(PipeKindCatalog.Water1, found.Value.PipeKind);
+        Assert.Null(StraightPipeSpecTable.Default.FindOuterDiameterByDiameter(75));
     }
 }

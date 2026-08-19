@@ -47,6 +47,13 @@ public sealed record PipeAlignmentModelingRequest
     public string? BendFamilyName { get; init; }
     public string? BendDiameterParameterName { get; init; }
     public string? BendWallThicknessParameterName { get; init; }
+    /// <summary>곡관 인스턴스에 외경 OD(mm)를 기록할 파라미터명. 곡관 형상은 OD·thk로 구동되므로 사실상 필수다. null이면 기록하지 않는다.</summary>
+    public string? BendOuterDiameterParameterName { get; init; }
+    /// <summary>
+    /// 규격표에 곡관 유형이 지정되지 않은 규격에 대신 쓸 기본 유형명.
+    /// 곡관 형상은 유형이 아니라 OD·thk 인스턴스 파라미터가 결정하므로, 유형은 FamilySymbol을 고르는 용도일 뿐이다.
+    /// </summary>
+    public string? BendDefaultTypeName { get; init; }
     public string? PipingSystemTypeName { get; init; }
     public string? PipeTypeName { get; init; }
     public string? LevelName { get; init; }

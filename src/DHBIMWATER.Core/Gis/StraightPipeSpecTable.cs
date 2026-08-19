@@ -17,6 +17,16 @@ public sealed class StraightPipeSpecTable
         string.Equals(x.PipeKind, pipeKind, StringComparison.OrdinalIgnoreCase)
         && Math.Abs(x.DiameterMm - diameterMm) <= Epsilon);
 
+    /// <summary>
+    /// DN만으로 외경 DE를 찾는다. 핸드북상 DE는 관종과 무관한 DN 단일값이라, 규격표에 (관종, DN) 행이 없어도
+    /// 같은 DN의 다른 관종 행에서 그대로 쓸 수 있다. 표에 먼저 나오는 관종(기본 표에서는 상수 1종관) 행을 쓴다.
+    /// </summary>
+    /// <returns>(외경, 값을 가져온 관종). 그 DN이 표에 아예 없으면 null.</returns>
+    public (double OuterDiameterMm, string PipeKind)? FindOuterDiameterByDiameter(double diameterMm)
+        => Entries.FirstOrDefault(x => Math.Abs(x.DiameterMm - diameterMm) <= Epsilon) is { } entry
+            ? (entry.OuterDiameterMm, entry.PipeKind)
+            : null;
+
     /// <summary>같은 DN 행의 OD 불일치를 반환한다.</summary>
     public IReadOnlyList<double> FindOuterDiameterConflicts() => Entries
         .Where((entry, index) => Entries.Skip(index + 1).Any(other =>

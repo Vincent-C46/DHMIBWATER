@@ -9,6 +9,7 @@ namespace DHBIMWATER.Application.DTOs.Gis;
 /// <param name="DiameterMm">호칭지름 DN.</param>
 /// <param name="WallThicknessEMm">곡관 치수표의 벽두께 e.</param>
 /// <param name="ZOffsetM">인접 직관과 동일한 중심선 Z 환산 오프셋(m).</param>
+/// <param name="OuterDiameterParameterName">외경 OD를 기록할 인스턴스 파라미터명. 곡관 형상 구동값이다. null이면 기록하지 않는다.</param>
 /// <param name="RotXYDeg">P1~P5 각 점의 rot_XY_n(도). <see cref="Points"/>의 5점 순서와 인덱스가 같다.</param>
 /// <param name="RotXZDeg">P1~P5 각 점의 rot_XZ_n(도). <see cref="RotXYDeg"/>와 인덱스가 같다.</param>
 public sealed record AdaptiveBendPlacementPlan(
@@ -21,6 +22,7 @@ public sealed record AdaptiveBendPlacementPlan(
     double ZOffsetM,
     string? DiameterParameterName,
     string? WallThicknessParameterName,
+    string? OuterDiameterParameterName,
     bool IsAcceptable,
     IReadOnlyList<double> RotXYDeg,
     IReadOnlyList<double> RotXZDeg,

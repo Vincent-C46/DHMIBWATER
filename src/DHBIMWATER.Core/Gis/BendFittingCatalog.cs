@@ -29,10 +29,11 @@ public sealed class BendFittingCatalog
     public IReadOnlyList<BendFittingEntry> Entries { get; }
 
     /// <summary>
-    /// 임시 기본값 그대로인지. 사용자가 [기본값 복원] 후 저장하면 임시값이 프로젝트에 남는데
-    /// 그때도 경고가 유지되도록 출처가 아니라 <b>내용</b>으로 판단한다.
+    /// 저장된 값이 핸드북 반영 이전의 임시 곡관표(<see cref="LegacyPlaceholder"/>)와 같은지.
+    /// 임시값이 이미 프로젝트·마스터에 저장된 상태에서 기본값만 실제 규격으로 교체됐으므로,
+    /// 그런 프로젝트에는 [기본값 복원]으로 갱신하라고 안내해야 한다.
     /// </summary>
-    public bool IsPlaceholder => DefaultIsPlaceholder && Entries.SequenceEqual(Default.Entries);
+    public bool IsLegacyPlaceholder => Entries.SequenceEqual(LegacyPlaceholder.Entries);
 
     public BendFittingEntry? Find(double diameterMm, double angleDeg, BendForm form, PipeMaterial material = PipeMaterial.DuctileIron) => Entries.FirstOrDefault(x =>
         x.Material == material
@@ -41,24 +42,91 @@ public sealed class BendFittingCatalog
         && Math.Abs(x.AngleDeg - angleDeg) <= Epsilon);
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ⚠ 임시값 — 실제 규격 아님 (사용자 지시 2026-08-18)
+    // 주철관 핸드북(2020년판) 소켓곡관 규격 — 출처: docs/주철관핸드북(2020년판)_이형관.pdf
+    //   Ⅴ장 4. 90° / 5. 45° / 6. 22½° / 7. 11¼° 소켓곡관 표 (DN80~1200)
     //
-    // 주철관 핸드북 곡관 규격표를 아직 확보하지 못해, 판정·배치 파이프라인이 돌아가도록
-    // 형상만 성립하는 값을 넣어 둔 것이다. 수량 산출·간섭 검토·도면 제출에 그대로 쓰면 안 된다.
-    // 자료가 들어오면 아래 IsPlaceholder / 생성 블록을 통째로 실제 표로 교체한다.
+    // 열 대응
+    //   e → WallThicknessMm, R → CenterlineRadiusMm, t → LayingLengthMm(절점→관 끝), s → ExtraLegLengthMm
     //
-    // 생성 규칙 — 곡률반경 R = 계수 × DN, 배관길이 L = 접선길이(R·tan(θ/2)) + 여유 50mm.
-    // 여유를 두는 이유: L < 접선길이면 BendResolution.IsSizeConsistent가 false가 되어
-    // 전 절점이 치수 불일치로 보고된다. 임시값 때문에 그 경고가 묻히면 안 된다.
+    // 판단 근거 (2026-08-19 사용자 확인)
+    //   · A형(양쪽 소켓)과 B형(소켓+스피것)은 치수 e·R·t·s가 동일하고 무게만 다르다 → 같은 값을 두 형식에 전개한다.
+    //   · s=200은 도면상 B형 스피것 쪽에만 표기된다 → A형 0, B형 200.
+    //   · 표에 DE(외경) 열이 없다 → 곡관 외경은 직관 제원표(StraightPipeSpecTable)의 DE를 쓴다. DE는 관종 무관 DN 단일값이다.
+    //   · 이형관 벽두께 e는 관종과 무관한 단일값이며 4개 각도가 모두 같다. 직관 두께(관종별)와는 다른 계열이다.
     // ══════════════════════════════════════════════════════════════════════════
 
-    /// <summary>
-    /// <see cref="Default"/>가 실제 규격이 아니라 임시값인지. 실제 표로 교체할 때 false로 바꾼다.
-    /// 사용자 안내 문구를 분기하는 데 쓴다.
-    /// </summary>
-    public const bool DefaultIsPlaceholder = true;
+    /// <summary>이형관 벽두께 e — DN만의 함수다(각도·관종 무관).</summary>
+    private static readonly (double Dn, double WallThicknessMm)[] WallThickness =
+    {
+        (80, 7.0), (100, 7.2), (125, 7.5), (150, 7.8), (200, 8.4), (250, 9.0),
+        (300, 9.6), (350, 10.2), (400, 10.8), (450, 11.4), (500, 12.0), (600, 13.2),
+        (700, 14.4), (800, 15.6), (900, 16.8), (1000, 18.0), (1100, 19.2), (1200, 20.4)
+    };
 
-    /// <summary>형식별 곡률반경 계수(R = 계수 × DN). A형을 완만하게 둔 임시 구분이다.</summary>
+    /// <summary>B형 스피것 삽입부 s. 표 전 구간 200mm 고정이다.</summary>
+    private const double SpigotLengthMm = 200d;
+
+    /// <summary>11¼° 소켓곡관 — (DN, R, t).</summary>
+    private static readonly (double Dn, double RadiusMm, double LayingMm)[] Bend1125 =
+    {
+        (80, 75, 55), (100, 115, 55), (125, 125, 60), (150, 150, 60), (200, 185, 65), (250, 230, 75),
+        (300, 310, 80), (350, 345, 85), (400, 380, 90), (450, 415, 95), (500, 495, 100), (600, 570, 110),
+        (700, 685, 120), (800, 760, 135), (900, 875, 145), (1000, 995, 155), (1100, 1075, 165), (1200, 1195, 175)
+    };
+
+    /// <summary>22½° 소켓곡관 — (DN, R, t).</summary>
+    private static readonly (double Dn, double RadiusMm, double LayingMm)[] Bend225 =
+    {
+        (80, 85, 65), (100, 105, 65), (125, 130, 75), (150, 155, 80), (200, 195, 90), (250, 240, 100),
+        (300, 300, 110), (350, 345, 120), (400, 390, 135), (450, 435, 145), (500, 495, 155), (600, 590, 175),
+        (700, 695, 200), (800, 800, 220), (900, 890, 245), (1000, 995, 265), (1100, 1050, 295), (1200, 1150, 310)
+    };
+
+    /// <summary>45° 소켓곡관 — (DN, R, t).</summary>
+    private static readonly (double Dn, double RadiusMm, double LayingMm)[] Bend45 =
+    {
+        (80, 88, 80), (100, 100, 90), (125, 120, 100), (150, 145, 110), (200, 200, 135), (250, 245, 155),
+        (300, 300, 175), (350, 350, 200), (400, 400, 220), (450, 450, 245), (500, 495, 265), (600, 595, 310),
+        (700, 695, 355), (800, 795, 395), (900, 895, 440), (1000, 995, 485), (1100, 1095, 525), (1200, 1195, 575)
+    };
+
+    /// <summary>90° 소켓곡관 — (DN, R, t).</summary>
+    private static readonly (double Dn, double RadiusMm, double LayingMm)[] Bend90 =
+    {
+        (80, 75, 150), (100, 95, 170), (125, 120, 195), (150, 145, 220), (200, 195, 270), (250, 240, 320),
+        (300, 290, 370), (350, 340, 420), (400, 390, 470), (450, 435, 520), (500, 485, 570), (600, 580, 670),
+        (700, 680, 770), (800, 775, 870), (900, 870, 970), (1000, 970, 1070), (1100, 1070, 1170), (1200, 1165, 1270)
+    };
+
+    /// <summary>표준각도 순서는 <see cref="JointDeflectionRule.StandardAngles"/>와 같게 둔다(규격표 행 순서).</summary>
+    private static readonly (double AngleDeg, (double Dn, double RadiusMm, double LayingMm)[] Rows)[] AngleTables =
+    {
+        (11.25, Bend1125), (22.5, Bend225), (45d, Bend45), (90d, Bend90)
+    };
+
+    private static IEnumerable<BendFittingEntry> BuildHandbook() =>
+        from dn in StraightPipeSpecTable.NominalDiameters
+        from form in new[] { BendForm.AType, BendForm.BType }
+        from table in AngleTables
+        let row = table.Rows.First(x => Math.Abs(x.Dn - dn) <= Epsilon)
+        select new BendFittingEntry(
+            dn,
+            table.AngleDeg,
+            form,
+            row.LayingMm,
+            row.RadiusMm,
+            form == BendForm.BType ? SpigotLengthMm : 0d,
+            WallThickness.First(x => Math.Abs(x.Dn - dn) <= Epsilon).WallThicknessMm,
+            // 타입명은 문서에 로드된 곡관 패밀리에 따라 달라지므로 비워 두고 사용자가 규격표 창에서 고른다.
+            TypeName: null);
+
+    public static BendFittingCatalog Default { get; } = new(BuildHandbook().ToList());
+
+    // ── 구 임시값 감지 전용 (2026-08-18~19 사이에 저장된 프로젝트가 대상) ────────────
+    // 아래 블록은 배치에 쓰이지 않는다. 저장된 규격이 그 시기의 임시값 그대로인지 판별해
+    // [기본값 복원] 안내를 띄우는 데에만 쓴다. 안내가 충분히 돌고 나면 통째로 삭제할 수 있다.
+
+    /// <summary>구 임시표의 형식별 곡률반경 계수(R = 계수 × DN).</summary>
     private static readonly (BendForm Form, double RadiusFactor)[] PlaceholderForms =
     {
         (BendForm.AType, 2.5), (BendForm.BType, 1.5)
@@ -78,12 +146,10 @@ public sealed class BendFittingCatalog
             Math.Ceiling(BendResolver.TangentLength(radius, angle)) + PlaceholderLayingClearanceMm,
             radius,
             0d,
-            // 벽두께는 상수 1종관 직관 두께를 빌려 쓴다. 곡관 실제 두께와 다르다.
             StraightPipeSpecTable.Default.Find(PipeKindCatalog.Water1, dn)?.ThicknessMm ?? 0d,
-            // 타입명은 문서에 로드된 곡관 패밀리에 따라 달라지므로 비워 두고 사용자가 규격표 창에서 고른다.
             TypeName: null);
 
-    public static BendFittingCatalog Default { get; } = new(BuildPlaceholders().ToList());
+    private static BendFittingCatalog LegacyPlaceholder { get; } = new(BuildPlaceholders().ToList());
 }
 
 /// <summary>관로 규격과 판정 설정의 저장 단위.</summary>

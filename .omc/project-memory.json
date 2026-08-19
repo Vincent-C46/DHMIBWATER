@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1787018408647,
+  "lastScanned": 1787123538738,
   "projectRoot": "F:\\02_Work\\04_Addin\\DHBIMWATER",
   "techStack": {
     "languages": [],
@@ -39,8 +39,8 @@
     "docs": {
       "path": "docs",
       "purpose": "Documentation",
-      "fileCount": 41,
-      "lastAccessed": 1787018408245,
+      "fileCount": 48,
+      "lastAccessed": 1787123538424,
       "keyFiles": [
         "02_컨트럴등록.md",
         "03_뷰모델구현.md",
@@ -53,7 +53,7 @@
       "path": "installer",
       "purpose": null,
       "fileCount": 6,
-      "lastAccessed": 1787018408246,
+      "lastAccessed": 1787123538447,
       "keyFiles": [
         "README.md",
         "DHBIMWATER_2025.nsi",
@@ -66,324 +66,42 @@
       "path": "sandbox",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1787018408247,
+      "lastAccessed": 1787123538488,
       "keyFiles": []
     },
     "src": {
       "path": "src",
       "purpose": "Source code",
       "fileCount": 0,
-      "lastAccessed": 1787018408248,
+      "lastAccessed": 1787123538571,
       "keyFiles": []
     },
     "tests": {
       "path": "tests",
       "purpose": "Test files",
       "fileCount": 0,
-      "lastAccessed": 1787018408250,
+      "lastAccessed": 1787123538612,
       "keyFiles": []
     }
   },
   "hotPaths": [
     {
-      "path": "PROGRESS.md",
-      "accessCount": 31,
-      "lastAccessed": 1787041049486,
+      "path": "C:\\Users\\admin\\AppData\\Local\\Temp\\claude\\F--02-Work-04-Addin-DHBIMWATER\\7979e453-af99-4a2a-b898-3b4a3364c0f5\\scratchpad\\p3.png",
+      "accessCount": 1,
+      "lastAccessed": 1787123900934,
       "type": "file"
     },
     {
-      "path": "docs\\28_가변패밀리배치_허용굴곡판정_기획.md",
-      "accessCount": 25,
-      "lastAccessed": 1786607660381,
+      "path": "C:\\Users\\admin\\AppData\\Local\\Temp\\claude\\F--02-Work-04-Addin-DHBIMWATER\\7979e453-af99-4a2a-b898-3b4a3364c0f5\\scratchpad\\p3crop.png",
+      "accessCount": 1,
+      "lastAccessed": 1787123921754,
       "type": "file"
     },
     {
-      "path": "docs\\29_가변패밀리배치_허용굴곡판정_지시서.md",
-      "accessCount": 25,
-      "lastAccessed": 1786607907552,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.UI\\ViewModels\\Modeling\\PipeLayoutViewModel.cs",
-      "accessCount": 9,
-      "lastAccessed": 1786597463158,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.UI\\Views\\Modeling\\PipeLayoutView.xaml",
-      "accessCount": 7,
-      "lastAccessed": 1786597434768,
+      "path": "src/DHBIMWATER.Revit/Commands",
+      "accessCount": 1,
+      "lastAccessed": 1787124665391,
       "type": "directory"
-    },
-    {
-      "path": "src\\DHBIMWATER.Core\\Gis\\BendTrimPlanner.cs",
-      "accessCount": 7,
-      "lastAccessed": 1786606069783,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.Application\\UseCases\\Gis\\ModelPipeAlignmentUseCase.cs",
-      "accessCount": 7,
-      "lastAccessed": 1787021123768,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.Infrastructure\\Repositories\\Revit\\Gis\\RevitAdaptiveBendPlacementRepo.cs",
-      "accessCount": 6,
-      "lastAccessed": 1786597688006,
-      "type": "file"
-    },
-    {
-      "path": "docs\\28_가변패밀리배치_허용굴곡설정_목업.html",
-      "accessCount": 6,
-      "lastAccessed": 1786607602445,
-      "type": "file"
-    },
-    {
-      "path": "src",
-      "accessCount": 5,
-      "lastAccessed": 1787037163615,
-      "type": "directory"
-    },
-    {
-      "path": "C:\\Users\\admin\\.claude\\projects\\F--02-Work-04-Addin-DHBIMWATER\\memory\\project_dhboost_link_integration.md",
-      "accessCount": 3,
-      "lastAccessed": 1786581265220,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.UI\\ViewModels\\Modeling\\PipeAlignmentModelingViewModel.cs",
-      "accessCount": 3,
-      "lastAccessed": 1786597711658,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.Core\\Gis\\BendResolver.cs",
-      "accessCount": 3,
-      "lastAccessed": 1786600656247,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.Core\\Gis\\PipeNetworkClassifier.cs",
-      "accessCount": 3,
-      "lastAccessed": 1786600672860,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.UI\\Views\\Modeling\\PipeAlignmentModelingView.xaml",
-      "accessCount": 3,
-      "lastAccessed": 1787021364459,
-      "type": "directory"
-    },
-    {
-      "path": "src\\DHBIMWATER.Application\\UseCases\\Gis\\AnalyzePipeNetworkUseCase.cs",
-      "accessCount": 2,
-      "lastAccessed": 1786516803939,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.Core\\Gis\\PipeNetworkGraph.cs",
-      "accessCount": 2,
-      "lastAccessed": 1786516850714,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.Application\\DTOs\\Gis\\AdaptiveBendPlacementPlan.cs",
-      "accessCount": 2,
-      "lastAccessed": 1786517128576,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.Application\\Interfaces\\Gis\\IAdaptiveBendPlacementRepo.cs",
-      "accessCount": 2,
-      "lastAccessed": 1786517145503,
-      "type": "file"
-    },
-    {
-      "path": "C:\\Users\\admin\\.claude\\projects\\F--02-Work-04-Addin-DHBIMWATER\\memory\\MEMORY.md",
-      "accessCount": 2,
-      "lastAccessed": 1786524633408,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.Revit\\UI\\Modules\\UtilityRibbonModule.cs",
-      "accessCount": 2,
-      "lastAccessed": 1786582174200,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.UI\\Styles\\ComboBoxes.xaml",
-      "accessCount": 2,
-      "lastAccessed": 1786597396972,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.Core\\Gis\\BendToleranceTable.cs",
-      "accessCount": 2,
-      "lastAccessed": 1786597656902,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.Infrastructure\\Repositories\\Revit\\Modeling\\RevitAlignmentBeamPlacementRepo.cs",
-      "accessCount": 2,
-      "lastAccessed": 1786597682283,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.Application\\DTOs\\Gis\\PipeAlignmentModelingRequest.cs",
-      "accessCount": 2,
-      "lastAccessed": 1786597694230,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.UI\\ViewModels\\Modeling\\BendSettingsRows.cs",
-      "accessCount": 2,
-      "lastAccessed": 1786597695825,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.Infrastructure\\Repositories\\Revit\\Modeling\\RevitElementTypeQueryRepo.cs",
-      "accessCount": 2,
-      "lastAccessed": 1786597737925,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.UI",
-      "accessCount": 2,
-      "lastAccessed": 1786604096167,
-      "type": "directory"
-    },
-    {
-      "path": "src\\DHBIMWATER.Infrastructure\\Repositories\\Revit\\Gis\\RevitBendSettingsRepo.cs",
-      "accessCount": 2,
-      "lastAccessed": 1786606066779,
-      "type": "file"
-    },
-    {
-      "path": "",
-      "accessCount": 2,
-      "lastAccessed": 1787037165138,
-      "type": "directory"
-    },
-    {
-      "path": "src\\DHBIMWATER.Core\\Piping\\InlineFitting.cs",
-      "accessCount": 1,
-      "lastAccessed": 1786513802339,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.Core\\Piping\\PipeNetworkDefinition.cs",
-      "accessCount": 1,
-      "lastAccessed": 1786513872840,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.Infrastructure\\Repositories\\Revit\\Piping\\RevitPipeMepCommandRepo.cs",
-      "accessCount": 1,
-      "lastAccessed": 1786513890049,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.Revit",
-      "accessCount": 1,
-      "lastAccessed": 1786513997447,
-      "type": "directory"
-    },
-    {
-      "path": "src\\DHBIMWATER.Revit\\DependencyInjection",
-      "accessCount": 1,
-      "lastAccessed": 1786514024792,
-      "type": "directory"
-    },
-    {
-      "path": "src\\DHBIMWATER.Revit\\DependencyInjection\\ServiceContainer.cs",
-      "accessCount": 1,
-      "lastAccessed": 1786514034450,
-      "type": "directory"
-    },
-    {
-      "path": "src\\DHBIMWATER.Core\\Gis\\BendArcGeometry.cs",
-      "accessCount": 1,
-      "lastAccessed": 1786516432359,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.Core\\Gis\\BendOrientation.cs",
-      "accessCount": 1,
-      "lastAccessed": 1786516433566,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.Revit\\Commands\\PipeAlignmentModelingCommand.cs",
-      "accessCount": 1,
-      "lastAccessed": 1786517063666,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.Infrastructure\\Repositories\\Mock\\MockAdaptiveBendPlacementRepo.cs",
-      "accessCount": 1,
-      "lastAccessed": 1786517184837,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.Revit\\Commands\\QuantityCommand.cs",
-      "accessCount": 1,
-      "lastAccessed": 1786581406317,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.Revit\\UI\\Modules\\QuantityRibbonModule.cs",
-      "accessCount": 1,
-      "lastAccessed": 1786581447273,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.Revit\\Commands\\CoordinateLinkCommand.cs",
-      "accessCount": 1,
-      "lastAccessed": 1786582162100,
-      "type": "file"
-    },
-    {
-      "path": "docs\\27_DHBoost_기준점통합링크_연동_지시서.md",
-      "accessCount": 1,
-      "lastAccessed": 1786582681061,
-      "type": "file"
-    },
-    {
-      "path": "tests",
-      "accessCount": 1,
-      "lastAccessed": 1786597410149,
-      "type": "directory"
-    },
-    {
-      "path": "src\\DHBIMWATER.Infrastructure\\Helpers\\AlignmentPlacementMapper.cs",
-      "accessCount": 1,
-      "lastAccessed": 1786600477497,
-      "type": "directory"
-    },
-    {
-      "path": "docs\\Joint 허용굴곡 판정 기능 요구사항.md",
-      "accessCount": 1,
-      "lastAccessed": 1786600645264,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.Core\\Gis\\BendFittingCatalog.cs",
-      "accessCount": 1,
-      "lastAccessed": 1786600656451,
-      "type": "file"
-    },
-    {
-      "path": "docs\\09_관로모델링목업.html",
-      "accessCount": 1,
-      "lastAccessed": 1786601163219,
-      "type": "file"
-    },
-    {
-      "path": "docs\\24_곡관설정UI_지시서.md",
-      "accessCount": 1,
-      "lastAccessed": 1786606058511,
-      "type": "file"
     }
   ],
   "userDirectives": []
