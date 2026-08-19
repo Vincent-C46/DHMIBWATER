@@ -1,4 +1,4 @@
-using DHBIMWATER.Application.DTOs.Gis;
+﻿using DHBIMWATER.Application.DTOs.Gis;
 using DHBIMWATER.Application.Gis;
 using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Application.Interfaces.Gis;
@@ -29,9 +29,11 @@ public sealed class ModelPipeAlignmentUseCase
         if (request.OutputMode is PipeAlignmentOutputMode.Adaptive or PipeAlignmentOutputMode.PipingSystem && request.IntervalMm <= 0)
             throw new ArgumentOutOfRangeException(nameof(request.IntervalMm));
         var loaded = _loader.Load(request.Files);
-        var reference = request.ReferenceX == 0 && request.ReferenceY == 0
-            ? AlignmentReferencePoint.FromFirstVertex(loaded.Alignments)
-            : ((double X, double Y)?)(request.ReferenceX, request.ReferenceY);
+        // 기준점을 명시하지 않은 호출부에만 자동 산출을 적용한다.
+        // (0, 0)을 자동 산출로 대체하면 "원본 좌표 그대로 배치"를 요청할 수 없어 파일마다 오프셋이 달라진다.
+        var reference = request.ReferenceX is { } referenceX && request.ReferenceY is { } referenceY
+            ? ((double X, double Y)?)(referenceX, referenceY)
+            : AlignmentReferencePoint.FromFirstVertex(loaded.Alignments);
         var settingsResolution = request.CurrentBendSettings is null
             ? _bendSettings.Load()
             : new BendSettingsResolution(request.CurrentBendSettings, BendSettingsSource.Project);
@@ -50,7 +52,7 @@ public sealed class ModelPipeAlignmentUseCase
         // 그렇지 않으면 직관 배치까지 다 끝낸 뒤 곡관 배치 단계에서야 실패해 전체가 롤백된다.
         if (bendPlan is not null)
         {
-            EnsureBendConfiguration(bendPlan, request.BendFamilyName);
+            EnsureBendConfiguration(bendPlan, request.BendFamilyName, request.Form);
             EnsureBendFamiliesLoaded(bendPlan, request.BendFamilyName);
         }
 
@@ -79,7 +81,11 @@ public sealed class ModelPipeAlignmentUseCase
         }
     }
 
-    private static void EnsureBendConfiguration(BendTrimPlan bendPlan, string? familyName)
+    /// <summary>
+    /// 곡관 유형은 관·곡관 규격표의 "곡관 유형" 열에서만 채워지고, 조회 키는 (형식, DN, 표준각도)의 완전일치다.
+    /// 그래서 미선택 안내에는 어떤 형식의 어느 행을 채워야 하는지까지 적는다. 형식이 다르면 값을 넣어도 조회되지 않는다.
+    /// </summary>
+    private static void EnsureBendConfiguration(BendTrimPlan bendPlan, string? familyName, BendForm form)
     {
         if (bendPlan.Placements.Count == 0) return;
         if (string.IsNullOrWhiteSpace(familyName))
@@ -87,11 +93,18 @@ public sealed class ModelPipeAlignmentUseCase
 
         var missingTypes = bendPlan.Placements
             .Where(x => string.IsNullOrWhiteSpace(x.TypeName))
-            .Select(x => $"{x.PipeKind}/DN{x.DiameterMm:0.##}/{x.AngleDeg:0.##}°")
+            .Select(x => $"DN{x.DiameterMm:0.##} / {x.AngleDeg:0.##}°")
             .Distinct()
             .ToList();
-        if (missingTypes.Count > 0)
-            throw new InvalidOperationException($"다음 곡관 규격의 유형을 관·곡관 규격표에서 선택하세요: {string.Join(", ", missingTypes)}");
+        if (missingTypes.Count == 0) return;
+
+        var formLabel = PipeAlignmentParameters.Label(form);
+        throw new InvalidOperationException(
+            $"곡관 유형이 지정되지 않아 배치할 수 없는 규격이 {missingTypes.Count}건 있습니다({formLabel} 기준).\n\n"
+            + $"미지정 규격: {string.Join(", ", missingTypes)}\n\n"
+            + $"[관·곡관 규격표]를 열어 형식 열이 '{formLabel}'인 위 행의 '곡관 유형'을 선택한 뒤 [확인] → [저장]하세요. "
+            + $"형식이 다른 행(예: {PipeAlignmentParameters.Label(form == BendForm.AType ? BendForm.BType : BendForm.AType)})에 넣은 값은 이 조회에 쓰이지 않습니다.\n"
+            + $"유형 목록이 비어 있으면 규격표를 닫고 곡관 패밀리('{familyName}')를 먼저 선택한 뒤 규격표를 다시 여세요.");
     }
 
     private void EnsureBendFamiliesLoaded(BendTrimPlan bendPlan, string? familyName)

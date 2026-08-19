@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Windows.Input;
 using DHBIMWATER.Application.DTOs.Gis;
 using DHBIMWATER.Application.Gis;
@@ -238,19 +238,46 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
     private int CountUnresolved() { var count = 0; foreach (var item in Files) { if (item.ManualDiameterMm is > 0) continue; var diameterField = ResolvedField(item.DiameterField); foreach (var feature in item.ReadResult.Features) { if (diameterField is null || !feature.Attributes.TryGetValue(diameterField, out var value) || !AlignmentAttributeParser.ParseDiameter(value).Success) count++; } } return count; }
     private void NotifyFileMappingChanged() { OnPropertyChanged(nameof(DiameterUnresolvedCount)); OnPropertyChanged(nameof(HasDiameterUnresolved)); }
     private PipeNetworkDiagnosisResult? RunDiagnosis(bool showWarnings = true) { if (Files.Count == 0) { _dialog.Warn("입력 확인", "하나 이상의 SHP, DXF 또는 DWG 파일을 추가하세요."); return null; } if (SnapToleranceMm <= 0) { _dialog.Warn("입력 확인", "스냅 허용오차는 0보다 커야 합니다."); return null; } try { var result = _analyze.Execute(new PipeNetworkDiagnosisRequest { Files = SourceFiles(), SnapToleranceMm = SnapToleranceMm, Form = Form }); Attention.Clear(); foreach (var report in result.Attention) Attention.Add(report); Summary = $"절점 {result.NodeCount} / 간선 {result.EdgeCount}\n{string.Join(", ", result.KindCounts.OrderBy(x => x.Key).Select(x => $"{x.Key} {x.Value}"))}\n곡관 판정 — 표준 {result.BendStandardCount}, 생략 {result.BendNoneCount}, 미해결 {result.BendUnresolvedCount}\n경고 {result.Warnings.Count}건"; if (showWarnings && result.Warnings.Count > 0) _dialog.Info("진단 경고", string.Join("\n", result.Warnings.Take(20)) + (result.Warnings.Count > 20 ? $"\n… 외 {result.Warnings.Count - 20}건" : string.Empty)); return result; } catch (Exception ex) { _dialog.Warn("관로 네트워크 진단", $"진단에 실패했습니다.\n{ex.Message}"); return null; } }
-    private void RequestModeling() { if (Files.Count == 0) { _dialog.Warn("입력 확인", "하나 이상의 SHP, DXF 또는 DWG 파일을 추가하세요."); return; } if (OutputMode is PipeAlignmentOutputMode.Adaptive or PipeAlignmentOutputMode.PipingSystem && IntervalM <= 0) { _dialog.Warn("입력 확인", "배치 간격은 0보다 커야 합니다."); return; } var diagnosis = RunDiagnosis(false); if (diagnosis is null) return; if ((diagnosis.BendUnresolvedCount > 0 || diagnosis.SizeConflictCount > 0 || diagnosis.Warnings.Any(x => x.Contains("직관이 들어갈 자리가 없습니다"))) && !_dialog.Confirm("사전 진단 경고", $"허용 초과 곡관 {diagnosis.BendUnresolvedCount}건, 치수 모순 {diagnosis.SizeConflictCount}건을 확인했습니다. 계속 모델링할까요?")) return; ConfirmSharedCoordinates(); RequestedModeling = new PipeAlignmentModelingRequest { Files = SourceFiles(), ReferenceX = ReferenceX, ReferenceY = ReferenceY, ApplySharedCoordinates = ApplySharedCoordinates, ZDatum = ZDatum, OutputMode = OutputMode, IntervalMm = IntervalM * 1000, StraightFamilyTypeName = Combine(StraightFamilyName, StraightTypeName), StraightDiameterParameterName = ResolvedParameter(StraightDiameterParameterName), StraightKindParameterName = ResolvedParameter(StraightKindParameterName), StraightOuterDiameterParameterName = ResolvedParameter(StraightOuterDiameterParameterName), StraightThicknessParameterName = ResolvedParameter(StraightThicknessParameterName), BendFamilyName = BendFamilyName, BendDiameterParameterName = ResolvedParameter(BendDiameterParameterName), BendWallThicknessParameterName = ResolvedParameter(BendWallThicknessParameterName), PipingSystemTypeName = PipingSystemTypeName, PipeTypeName = PipeTypeName, LevelName = LevelName, SnapToleranceMm = SnapToleranceMm, Form = Form, CurrentBendSettings = _settings }; CloseAction?.Invoke(); }
-    /// <summary>공유좌표 미적용 상태에서 PBP 공유좌표가 (0,0)이면 실제 위치에서 멀리 떨어져 모델링된다는 점을 알리고, 승낙 시 체크박스를 켠다.</summary>
-    private void ConfirmSharedCoordinates()
+    private void RequestModeling() { if (Files.Count == 0) { _dialog.Warn("입력 확인", "하나 이상의 SHP, DXF 또는 DWG 파일을 추가하세요."); return; } if (OutputMode is PipeAlignmentOutputMode.Adaptive or PipeAlignmentOutputMode.PipingSystem && IntervalM <= 0) { _dialog.Warn("입력 확인", "배치 간격은 0보다 커야 합니다."); return; } var diagnosis = RunDiagnosis(false); if (diagnosis is null) return; if ((diagnosis.BendUnresolvedCount > 0 || diagnosis.SizeConflictCount > 0 || diagnosis.Warnings.Any(x => x.Contains("직관이 들어갈 자리가 없습니다"))) && !_dialog.Confirm("사전 진단 경고", $"허용 초과 곡관 {diagnosis.BendUnresolvedCount}건, 치수 모순 {diagnosis.SizeConflictCount}건을 확인했습니다. 계속 모델링할까요?")) return; var reference = ResolveReference(); RequestedModeling = new PipeAlignmentModelingRequest { Files = SourceFiles(), ReferenceX = reference.X, ReferenceY = reference.Y, ApplySharedCoordinates = ApplySharedCoordinates, ZDatum = ZDatum, OutputMode = OutputMode, IntervalMm = IntervalM * 1000, StraightFamilyTypeName = Combine(StraightFamilyName, StraightTypeName), StraightDiameterParameterName = ResolvedParameter(StraightDiameterParameterName), StraightKindParameterName = ResolvedParameter(StraightKindParameterName), StraightOuterDiameterParameterName = ResolvedParameter(StraightOuterDiameterParameterName), StraightThicknessParameterName = ResolvedParameter(StraightThicknessParameterName), BendFamilyName = BendFamilyName, BendDiameterParameterName = ResolvedParameter(BendDiameterParameterName), BendWallThicknessParameterName = ResolvedParameter(BendWallThicknessParameterName), PipingSystemTypeName = PipingSystemTypeName, PipeTypeName = PipeTypeName, LevelName = LevelName, SnapToleranceMm = SnapToleranceMm, Form = Form, CurrentBendSettings = _settings }; CloseAction?.Invoke(); }
+    /// <summary>
+    /// 실제로 배치에 쓸 평면 기준점을 확정한다. 형상은 항상 (정점 - 기준점)만큼 프로젝트 기준점(PBP)에서 떨어져 놓이므로,
+    /// 파일마다 기준점이 달라지면 같은 문서 안에서도 관로가 서로 어긋난다. 그래서 체크 해제 상태에서는
+    /// 화면 기준점(= 이번 파일의 첫 정점)을 쓰지 않고 문서에 이미 잡힌 공유좌표를 따라간다.
+    /// </summary>
+    private (double? X, double? Y) ResolveReference()
     {
-        if (ApplySharedCoordinates) return;
+        if (ApplySharedCoordinates) return (ReferenceX, ReferenceY);
         try
         {
             var (eastWest, northSouth) = _projectLocationQuery.GetProjectBasePointSharedPosition();
-            if (Math.Abs(eastWest) < 1e-4 && Math.Abs(northSouth) < 1e-4
-                && _dialog.Confirm("공유좌표 확인", "현재 프로젝트 기준점의 공유좌표가 (0, 0)으로 지정되어 있어, 모델이 실제 위치에서 멀리 떨어져 모델링됩니다.\n프로젝트 공유좌표에도 기준점을 적용하시겠습니까?"))
+            if (Math.Abs(eastWest) >= 1e-4 || Math.Abs(northSouth) >= 1e-4)
+                return AlignToExistingSharedCoordinates(eastWest, northSouth);
+
+            if (_dialog.Confirm("공유좌표 확인", "현재 프로젝트 기준점의 공유좌표가 (0, 0)입니다.\n\n[예] 기준점(X, Y)을 프로젝트 공유좌표로 기록하고, 그 점이 프로젝트 기준점에 놓이도록 배치합니다.\n[아니오] 기준점을 적용하지 않고 원본 좌표 그대로 배치합니다. 모델이 내부 원점에서 매우 멀어져 Revit 정밀도 경고가 발생할 수 있습니다."))
+            {
                 ApplySharedCoordinates = true;
+                return (ReferenceX, ReferenceY);
+            }
+            // '아니오' = 좌표 이동 없음. 원본 좌표를 그대로 배치해야 이후 다른 파일을 가져와도 서로 정합한다.
+            return (0d, 0d);
         }
-        catch { /* PBP 조회에 실패해도 모델링 자체는 막지 않는다 */ }
+        catch { return (ReferenceX, ReferenceY); /* PBP 조회에 실패해도 모델링 자체는 막지 않는다 */ }
+    }
+
+    /// <summary>문서에 이미 공유좌표가 잡혀 있으면 그 좌표를 기준점으로 삼아, 먼저 임포트한 관로와 같은 위치에 놓이게 한다.</summary>
+    private (double? X, double? Y) AlignToExistingSharedCoordinates(double eastWest, double northSouth)
+    {
+        var x = Math.Round(eastWest, 5, MidpointRounding.AwayFromZero);
+        var y = Math.Round(northSouth, 5, MidpointRounding.AwayFromZero);
+        if (Math.Abs(x - ReferenceX) >= 1e-4 || Math.Abs(y - ReferenceY) >= 1e-4)
+        {
+            _dialog.Info("공유좌표 확인",
+                $"이 문서에는 이미 공유좌표가 설정되어 있습니다(프로젝트 기준점 = {x:0.00000}, {y:0.00000}).\n"
+                + $"화면의 기준점({ReferenceX:0.00000}, {ReferenceY:0.00000}) 대신 이 좌표를 기준으로 배치해 기존 모델과 위치를 맞춥니다.\n\n"
+                + "화면 기준점으로 배치하려면 [프로젝트 공유좌표에도 기준점 적용]을 체크하세요(문서의 공유좌표가 새 기준점으로 덮어써집니다).");
+            ReferenceX = x; ReferenceY = y;
+        }
+        return (x, y);
     }
     /// <summary>프로젝트 → 마스터 → 내장 기본값 순으로 읽고, 어느 것을 썼는지 안내한다.</summary>
     private void LoadSettings()
@@ -268,7 +295,7 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
             SettingsNotice = (SettingsNotice + " 곡관 치수는 실제 규격이 아닌 임시값입니다 — 핸드북 곡관 규격표 입력 필요.").Trim();
         UpdateBendParameterOptions();
     }
-    private void OpenPipeSpecs() { var vm = new PipeSpecTableViewModel(_settings, BendTypeNames, typeName => _typeRepo.GetAdaptiveBendPointCount(Combine(BendFamilyName, typeName) ?? string.Empty)); ShowDialog(new PipeSpecTableView(vm)); if (vm.Result is not null) _settings = vm.Result; }
+    private void OpenPipeSpecs() { var vm = new PipeSpecTableViewModel(_settings, BendTypeOptions(), typeName => _typeRepo.GetAdaptiveBendPointCount(Combine(BendFamilyName, typeName) ?? string.Empty)); ShowDialog(new PipeSpecTableView(vm)); if (vm.Result is not null) _settings = vm.Result; }
     private void OpenJointSettings() { var vm = new JointDeflectionSettingsViewModel(_settings); ShowDialog(new JointDeflectionSettingsView(vm)); if (vm.Result is not null) _settings = vm.Result; }
     private void ShowDialog(System.Windows.Window dialog) { var owner = System.Windows.Application.Current.Windows.OfType<System.Windows.Window>().FirstOrDefault(x => x is PipeAlignmentModelingView); if (owner is not null) dialog.Owner = owner; dialog.ShowDialog(); if (owner is not null) owner.Activate(); }
     private void SaveSettings()
@@ -290,6 +317,9 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
         catch (Exception ex) { _dialog.Warn("관로 규격 설정", $"저장에 실패했습니다.\n{ex.Message}"); }
     }
     private static IReadOnlyList<string> Families(IEnumerable<string> values) => values.Select(x => x.Split(new[] { " : " }, 2, StringSplitOptions.None)[0]).Distinct().OrderBy(x => x).ToList();
+    /// <summary>규격표의 곡관 유형 콤보박스는 어느 패밀리의 유형인지 보이도록 "패밀리 : 유형"으로 표시하고, 저장값은 유형명만 쓴다.</summary>
+    private IReadOnlyList<BendTypeOption> BendTypeOptions()
+        => BendTypeNames.Select(x => new BendTypeOption(Combine(BendFamilyName, x) ?? x, x)).ToList();
     private IReadOnlyList<string> TypesFor(string? family) => string.IsNullOrWhiteSpace(family) ? Array.Empty<string>() : AdaptiveComponentTypeNames.Where(x => x.StartsWith(family + " : ", StringComparison.Ordinal)).Select(x => x[(family.Length + 3)..]).ToList();
     private static string? Combine(string? family, string? type) => string.IsNullOrWhiteSpace(family) || string.IsNullOrWhiteSpace(type) ? null : $"{family} : {type}";
 }

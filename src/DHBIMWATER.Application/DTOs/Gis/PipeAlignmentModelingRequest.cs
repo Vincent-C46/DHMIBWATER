@@ -19,8 +19,14 @@ public sealed record AlignmentSourceFile(string FilePath, string PipeKind, strin
 public sealed record PipeAlignmentModelingRequest
 {
     public required IReadOnlyList<AlignmentSourceFile> Files { get; init; }
-    public double ReferenceX { get; init; }
-    public double ReferenceY { get; init; }
+    /// <summary>
+    /// 평면 기준점(원본 좌표계, m). 이 점이 프로젝트 기준점(PBP)에 놓이도록 전체 형상을 평행이동한다.
+    /// null이면 첫 유효 정점에서 자동 산출한다. (0, 0)은 "이동하지 않음"(원본 좌표 그대로 배치)을 뜻하며,
+    /// 자동 산출로 대체되지 않는다 — 호출부가 좌표 이동 여부를 명시적으로 결정할 수 있어야 하기 때문이다.
+    /// </summary>
+    public double? ReferenceX { get; init; }
+    public double? ReferenceY { get; init; }
+    /// <summary>기준점을 프로젝트 공유좌표에도 기록할지 여부. 형상 배치 위치는 ReferenceX·Y가 결정하며 이 값과 무관하다.</summary>
     public bool ApplySharedCoordinates { get; init; }
     public ZDatum ZDatum { get; init; } = ZDatum.Invert;
     /// <summary>TODO: ZSource 미소비 — Phase 2.</summary>

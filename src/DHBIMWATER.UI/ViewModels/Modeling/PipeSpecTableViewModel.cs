@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Windows.Input;
 using DHBIMWATER.Core.Gis;
 using DHBIMWATER.UI.Base;
@@ -6,13 +6,19 @@ using DHBIMWATER.UI.Commands;
 
 namespace DHBIMWATER.UI.ViewModels.Modeling;
 
+/// <summary>
+/// 곡관 유형 콤보박스 항목. 화면에는 "패밀리 : 유형"으로 보이지만 카탈로그에 저장되는 값은 유형명뿐이다
+/// (패밀리는 모델링 창의 [5점 가변 곡관 패밀리]에서 한 번만 지정한다).
+/// </summary>
+public sealed record BendTypeOption(string Display, string TypeName);
+
 public sealed class PipeSpecTableViewModel : ViewModelBase
 {
     private readonly BendSettings _source;
     private readonly Func<string, int> _pointCount;
-    public PipeSpecTableViewModel(BendSettings source, IReadOnlyList<string> bendTypeNames, Func<string, int> pointCount)
+    public PipeSpecTableViewModel(BendSettings source, IReadOnlyList<BendTypeOption> bendTypeOptions, Func<string, int> pointCount)
     {
-        _source = source; BendTypeNames = bendTypeNames; _pointCount = pointCount;
+        _source = source; BendTypeOptions = bendTypeOptions; _pointCount = pointCount;
         AddStraightCommand = new RelayCommand(_ => StraightRows.Add(new StraightPipeSpecRow()));
         RemoveStraightCommand = new RelayCommand(_ => { if (SelectedStraight is not null) StraightRows.Remove(SelectedStraight); });
         AddFittingCommand = new RelayCommand(_ => FittingRows.Add(NewFittingRow()));
@@ -23,7 +29,7 @@ public sealed class PipeSpecTableViewModel : ViewModelBase
     }
     public ObservableCollection<StraightPipeSpecRow> StraightRows { get; } = new();
     public ObservableCollection<BendFittingRow> FittingRows { get; } = new();
-    public IReadOnlyList<string> BendTypeNames { get; }
+    public IReadOnlyList<BendTypeOption> BendTypeOptions { get; }
     public IReadOnlyList<BendForm> Forms { get; } = Enum.GetValues<BendForm>();
     public StraightPipeSpecRow? SelectedStraight { get; set; }
     public BendFittingRow? SelectedFitting { get; set; }
