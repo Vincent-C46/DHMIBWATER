@@ -6,6 +6,9 @@ namespace DHBIMWATER.Core.Gis;
 /// <summary>직경 필드 값 파싱 결과. Kind는 값에서 관종이 분리된 경우에만 채워진다.</summary>
 public readonly record struct DiameterParseResult(bool Success, double DiameterMm, string? Kind);
 
+/// <summary>등급 확정 결과. IsNormalized가 false면 규격표 조회에 쓸 수 없는 값이다.</summary>
+public readonly record struct KindResolution(string? Kind, bool IsNormalized);
+
 public static class AlignmentAttributeParser
 {
     // GIS 납품 데이터는 관종과 관경을 한 셀에 합쳐 보내는 경우가 많다(예: "상수_D300").
@@ -44,6 +47,23 @@ public static class AlignmentAttributeParser
         // 해석 실패 시 Kind를 채우면 원본 문자열이 통째로 관종명이 된다(예: PipeKind = "PVC D300").
         // 클래스 계약대로 분리에 성공한 경우에만 Kind를 채우고, 실패 시에는 호출부의 수동 관종으로 넘긴다.
         return new DiameterParseResult(false, 0, null);
+    }
+
+    /// <summary>
+    /// 등급(상수 1종관 등)을 확정한다. 후보를 관종 필드 → 사용자 수동 선택 → 직경 값에서 분리된 값 순으로 보되,
+    /// <see cref="PipeKindCatalog.Normalize"/>에 성공하는 첫 값을 채택한다.
+    /// 우선순위 판단에 정규화 성공 여부를 쓰는 이유 — <see cref="ParseDiameter"/>가 '상수_D300'에서 떼어 내는
+    /// "상수"·"하수"는 용도 구분이지 등급이 아니라 절대 정규화되지 않는다. 이 값을 단순 우선순위로 앞세우면
+    /// 파일 탭에서 고른 등급이 통째로 무시돼(2026-08-20 확인) 규격표 조회가 전건 실패한다.
+    /// </summary>
+    /// <returns>정규화에 성공한 등급. 하나도 없으면 비어 있지 않은 첫 후보를 그대로 담고 IsNormalized=false.</returns>
+    public static KindResolution ResolveKind(string? fieldKind, string? manualKind, string? parsedKind)
+    {
+        var candidates = new[] { fieldKind, manualKind, parsedKind };
+        foreach (var candidate in candidates)
+            if (PipeKindCatalog.Normalize(candidate) is { } normalized) return new KindResolution(normalized, true);
+        // 정규화되는 후보가 없을 때만 원본을 남긴다 — 규격 조회는 실패하지만 어떤 값이었는지는 사용자에게 보여야 한다.
+        return new KindResolution(candidates.FirstOrDefault(x => !string.IsNullOrWhiteSpace(x)), false);
     }
 
     public static string? GuessDiameterField(IEnumerable<string> fieldNames) => fieldNames.FirstOrDefault(DiameterFields.Contains);

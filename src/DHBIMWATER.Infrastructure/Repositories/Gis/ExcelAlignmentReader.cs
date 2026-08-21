@@ -51,7 +51,6 @@ public sealed class ExcelAlignmentReader : IExcelAlignmentSourceReader
         var warnings = new List<string>();
         double? previousStation = null;
         var stationOutOfOrder = 0;
-        string? diameterRaw = null, kindRaw = null, fittingRaw = null;
 
         for (var r = mapping.DataStartRow; r <= lastRow; r++)
         {
@@ -73,13 +72,6 @@ public sealed class ExcelAlignmentReader : IExcelAlignmentSourceReader
                     previousStation = station;
                 }
             }
-            // 시트 전체 = 관로 1개(레코드 1개)라 직경·관종은 값 하나만 필요하다. 데이터 영역에서 처음 찾은 값을 그대로 쓴다.
-            if (mapping.DiameterColumnIndex is { } diameterColumn && string.IsNullOrWhiteSpace(diameterRaw))
-            { var value = sheet.Cell(r, diameterColumn + 1).GetString(); if (!string.IsNullOrWhiteSpace(value)) diameterRaw = value; }
-            if (mapping.KindColumnIndex is { } kindColumn && string.IsNullOrWhiteSpace(kindRaw))
-            { var value = sheet.Cell(r, kindColumn + 1).GetString(); if (!string.IsNullOrWhiteSpace(value)) kindRaw = value; }
-            if (mapping.FittingColumnIndex is { } fittingColumn && string.IsNullOrWhiteSpace(fittingRaw))
-            { var value = sheet.Cell(r, fittingColumn + 1).GetString(); if (!string.IsNullOrWhiteSpace(value)) fittingRaw = value; }
         }
 
         if (stationOutOfOrder > 0) warnings.Add($"{mapping.SheetName}: 측점(Station)이 행 순서와 다르게 역행하는 구간이 {stationOutOfOrder}건 있습니다.");
@@ -87,10 +79,6 @@ public sealed class ExcelAlignmentReader : IExcelAlignmentSourceReader
 
         var attributes = new Dictionary<string, string>();
         var fields = new List<ShapefileFieldInfo>();
-        if (diameterRaw is not null) { attributes["직경"] = diameterRaw; fields.Add(new ShapefileFieldInfo("직경", 'C', 0, 0)); }
-        if (kindRaw is not null) { attributes["관종"] = kindRaw; fields.Add(new ShapefileFieldInfo("관종", 'C', 0, 0)); }
-        // 피팅(이형관) 배치 로직은 아직 없다 — 값만 속성으로 보관해 이후 매칭 배치 기능에서 쓴다.
-        if (fittingRaw is not null) { attributes["피팅명"] = fittingRaw; fields.Add(new ShapefileFieldInfo("피팅명", 'C', 0, 0)); }
 
         var features = vertices.Count >= 2
             ? new List<PipeAlignment> { new(vertices, string.Empty, 0, Path.GetFileName(filePath), "1", attributes) }

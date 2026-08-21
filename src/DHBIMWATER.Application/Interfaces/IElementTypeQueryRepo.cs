@@ -20,8 +20,12 @@ namespace DHBIMWATER.Application.Interfaces
         int GetAdaptiveBendPointCount(string familyTypeName);
         IEnumerable<string> GetPipingSystemTypeNames();
         IEnumerable<string> GetPipeTypeNames();
+        IEnumerable<string> GetLevelNames();
         /// <summary>프로젝트에 로드된 배관부속(Pipe Accessory) 패밀리의 타입명 목록. "패밀리명 : 타입명" 형식으로 반환한다.</summary>
         IEnumerable<string> GetPipeAccessoryTypeNames();
+        /// <summary>배관부속 familyTypeName("패밀리명 : 타입명") 인스턴스에 값을 쓸 수 있는 파라미터명 목록.
+        /// PipeLayout의 단관 길이 파라미터 후보로 쓴다.</summary>
+        IEnumerable<string> GetPipeAccessoryInstanceParameterNames(string familyTypeName);
         /// <summary>프로젝트에 로드된 일반모델(Generic Model) 패밀리의 타입명 목록. "패밀리명 : 타입명" 형식으로 반환한다.</summary>
         IEnumerable<string> GetGenericModelTypeNames();
         IEnumerable<string> GetFoundationTypeNames();

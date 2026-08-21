@@ -14,10 +14,8 @@ public interface IAlignmentStraightPlacementRepo
     /// null이면 차감 없이 절점까지 붙인다 — 곡관 판정 이전 호출부의 기존 동작이다.
     /// </param>
     /// <param name="diameterParameterName">인스턴스에 호칭지름(mm)을 기록할 파라미터명. null이면 기록하지 않는다.</param>
-    /// <param name="kindParameterName">인스턴스에 관종을 기록할 파라미터명. null이면 기록하지 않는다.</param>
     AlignmentStraightPlacementResult PlaceAlong(IReadOnlyList<PipeAlignment> alignments, string straightFamilyTypeName, double intervalM, AlignmentPlacementOrigin origin,
         StraightPipeSpecTable specs, IReadOnlyList<IReadOnlyList<VertexTrim>>? trims = null,
-        string? diameterParameterName = null, string? kindParameterName = null,
-        string? outerDiameterParameterName = null, string? thicknessParameterName = null,
+        string? diameterParameterName = null, string? outerDiameterParameterName = null, string? thicknessParameterName = null,
         PipeInfoParameterContext? info = null);
 }

@@ -39,21 +39,29 @@ public sealed class JointDeflectionRow : ViewModelBase
 
 public sealed class BendFittingRow : ViewModelBase
 {
-    private double _diameterMm, _angleDeg = 45d, _layingLengthMm, _centerlineRadiusMm, _extraLegLengthMm, _wallThicknessMm;
-    private string _typeName = string.Empty, _adaptivePointStatus = "미확인";
-    private BendForm _form = BendForm.AType;
+    private double _diameterMm, _angleDeg = 45d, _layingLengthMm, _centerlineRadiusMm, _wallThicknessMm, _weightKpMechanicalKg, _weightTytonKg;
+    private BendForm _form = BendForm.BType;
     public double DiameterMm { get => _diameterMm; set => SetProperty(ref _diameterMm, value); }
     public double AngleDeg { get => _angleDeg; set { if (SetProperty(ref _angleDeg, value)) OnPropertyChanged(nameof(TangentLengthMm)); } }
-    public BendForm Form { get => _form; set => SetProperty(ref _form, value); }
+    /// <summary>기본은 B형(소켓+스피것). A형이 필요한 자리만 사용자가 바꾸며, 바뀌면 그 형식의 핸드북 무게로 다시 채운다.</summary>
+    public BendForm Form { get => _form; set { if (SetProperty(ref _form, value)) { OnPropertyChanged(nameof(LongLegLengthMm)); OnPropertyChanged(nameof(ExtraLegLengthMm)); RefreshWeightDefaults(); } } }
     public double LayingLengthMm { get => _layingLengthMm; set { if (SetProperty(ref _layingLengthMm, value)) OnPropertyChanged(nameof(LongLegLengthMm)); } }
     public double CenterlineRadiusMm { get => _centerlineRadiusMm; set { if (SetProperty(ref _centerlineRadiusMm, value)) OnPropertyChanged(nameof(TangentLengthMm)); } }
-    public double ExtraLegLengthMm { get => _extraLegLengthMm; set { if (SetProperty(ref _extraLegLengthMm, value)) OnPropertyChanged(nameof(LongLegLengthMm)); } }
+    /// <summary>s — B형만 200mm, A형은 0. 핸드북 고정값이라 계산만 하고 편집 대상이 아니다.</summary>
+    public double ExtraLegLengthMm => Form == BendForm.BType ? 200d : 0d;
     public double WallThicknessMm { get => _wallThicknessMm; set => SetProperty(ref _wallThicknessMm, value); }
-    public string TypeName { get => _typeName; set { if (SetProperty(ref _typeName, value)) RefreshAdaptivePointStatus(); } }
-    public string AdaptivePointStatus { get => _adaptivePointStatus; private set { if (SetProperty(ref _adaptivePointStatus, value)) OnPropertyChanged(nameof(HasAdaptivePointWarning)); } }
-    public bool HasAdaptivePointWarning => !string.IsNullOrWhiteSpace(TypeName) && AdaptivePointStatus != "5점 확인" && AdaptivePointStatus != "미확인";
-    public Func<string, int>? AdaptivePointCountProvider { get; init; }
+    /// <summary>KP 메커니컬 조인트 기준 무게(kg). 현재 <see cref="Form"/>에 대응하는 값이다.</summary>
+    public double WeightKpMechanicalKg { get => _weightKpMechanicalKg; set => SetProperty(ref _weightKpMechanicalKg, value); }
+    /// <summary>타이튼 조인트 기준 무게(kg). 현재 <see cref="Form"/>에 대응하는 값이다.</summary>
+    public double WeightTytonKg { get => _weightTytonKg; set => SetProperty(ref _weightTytonKg, value); }
     public double LongLegLengthMm => Math.Round(LayingLengthMm + ExtraLegLengthMm, 1);
     public double TangentLengthMm => Math.Round(BendResolver.TangentLength(CenterlineRadiusMm, AngleDeg), 1);
-    private void RefreshAdaptivePointStatus() { var count = string.IsNullOrWhiteSpace(TypeName) ? -1 : AdaptivePointCountProvider?.Invoke(TypeName) ?? -1; AdaptivePointStatus = count < 0 ? "미확인" : count == 5 ? "5점 확인" : $"⚠ {count}점 (5점 필요)"; }
+    /// <summary>형식(A/B) 전환 시 그 형식의 핸드북 무게로 다시 채운다. 이후 사용자가 손으로 고치면 그 값을 유지한다.</summary>
+    public void RefreshWeightDefaults()
+    {
+        if (BendFittingCatalog.TryGetHandbookWeight(DiameterMm, AngleDeg, Form, out var kp, out var tyton))
+        {
+            WeightKpMechanicalKg = kp; WeightTytonKg = tyton;
+        }
+    }
 }

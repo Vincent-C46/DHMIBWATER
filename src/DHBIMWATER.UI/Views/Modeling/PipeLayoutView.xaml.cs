@@ -22,7 +22,15 @@ public partial class PipeLayoutView : Window
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
         if (e.OriginalSource is System.Windows.Controls.TextBox or System.Windows.Controls.ComboBox) return;
-        if (e.Key == Key.Escape) { _viewModel.HandleEscape(); e.Handled = true; }
+        if (e.Key == Key.Z && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+        {
+            if (_viewModel.UndoCommand.CanExecute(null)) _viewModel.UndoCommand.Execute(null);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Escape) { _viewModel.HandleEscape(); e.Handled = true; }
         else if (e.Key == Key.Delete) { _viewModel.DeleteSelectedEdge(); e.Handled = true; }
     }
+
+    private void OnValidationError(object sender, System.Windows.Controls.ValidationErrorEventArgs e)
+        => _viewModel.UpdateInputValidation(e.Action == System.Windows.Controls.ValidationErrorEventAction.Added);
 }

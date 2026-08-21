@@ -16,6 +16,7 @@ internal sealed class PipeLayoutRequestHandler : IExternalEventHandler
 
     /// <summary>피킹 결과를 ViewModel로 되돌리는 콜백. UI 스레드 마샬링은 호출측이 담당한다.</summary>
     public Action<ValveRoomOutline?>? OutlinePicked { get; set; }
+    public Action<bool, string>? ModelCreationCompleted { get; set; }
 
     public PipeLayoutRequestHandler(CreateValvePipingUseCase useCase, IValveRoomOutlinePickRepo outlinePick)
     {
@@ -34,7 +35,13 @@ internal sealed class PipeLayoutRequestHandler : IExternalEventHandler
                     if (PendingNetwork is null) return;
                     var network = PendingNetwork;
                     PendingNetwork = null;
-                    _useCase.Execute(network);
+                    var result = _useCase.Execute(network);
+                    // 경고는 배치 실패가 아니다(트랜잭션은 이미 커밋됐다). 성공으로 알리되 본문을 함께 보여준다.
+                    ModelCreationCompleted?.Invoke(true, result.Warnings.Count == 0
+                        ? result.Summary
+                        : $"{result.Summary} 확인 필요 {result.Warnings.Count}건.");
+                    if (result.Warnings.Count > 0)
+                        TaskDialog.Show("배관 생성 확인 필요", $"{result.Summary}\n\n- " + string.Join("\n- ", result.Warnings.Take(20)));
                     break;
 
                 case PipeLayoutRequestId.PickOutline:
@@ -45,6 +52,7 @@ internal sealed class PipeLayoutRequestHandler : IExternalEventHandler
         catch (Exception ex)
         {
             if (requestId == PipeLayoutRequestId.PickOutline) OutlinePicked?.Invoke(null);
+            if (requestId == PipeLayoutRequestId.CreateModel) ModelCreationCompleted?.Invoke(false, ex.Message);
             TaskDialog.Show(requestId == PipeLayoutRequestId.PickOutline ? "외곽 벽체 선택 오류" : "배관 생성 오류", ex.Message);
         }
     }

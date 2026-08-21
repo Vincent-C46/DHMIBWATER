@@ -22,7 +22,7 @@ public sealed class JointDeflectionRule : IBendingRule
     public static bool EvaluateFitting(double actualAngleDeg, double fittingAngleDeg, double effectiveAllowableDeg)
         => Math.Abs(actualAngleDeg - fittingAngleDeg) <= effectiveAllowableDeg + Epsilon;
 
-    public BendResolution Resolve(NodeClassification node, BendSettings settings, BendForm form)
+    public BendResolution Resolve(NodeClassification node, BendSettings settings)
     {
         if (node.Kind != NodeKind.Bend)
             throw new ArgumentException("곡관 판정은 Bend 절점에서만 정의된다.", nameof(node));
@@ -51,16 +51,17 @@ public sealed class JointDeflectionRule : IBendingRule
         var isAcceptable = acceptable is not null;
         var kind = isAcceptable ? BendResolutionKind.Standard : BendResolutionKind.Unresolved;
         var residual = actual - selectedAngle;
-        var fitting = settings.Fittings.Find(node.MaxDiameterMm, selectedAngle, form, Material);
+        var fitting = settings.Fittings.Find(node.MaxDiameterMm, selectedAngle, Material);
         if (fitting is null)
             return Empty(node, kind, actual, selectedAngle, singleAllowable, residual, jointType, settings.ApplicationMode, effective, isAcceptable);
 
         var tangent = BendResolver.TangentLength(fitting.CenterlineRadiusMm, selectedAngle);
+        var weightKg = jointType == JointTypeCatalog.Tyton ? fitting.WeightTytonKg : fitting.WeightKpMechanicalKg;
         return new BendResolution(
             node.NodeId, kind, actual, selectedAngle, singleAllowable, residual,
             fitting.LayingLengthMm, fitting.CenterlineRadiusMm, tangent, true,
             jointType, settings.ApplicationMode, effective, isAcceptable,
-            fitting.ExtraLegLengthMm, fitting.WallThicknessMm, fitting.TypeName);
+            fitting.ExtraLegLengthMm, fitting.WallThicknessMm, fitting.Form, weightKg);
     }
 
     private static BendResolution Empty(NodeClassification node, BendResolutionKind kind, double actual, double standardAngle,

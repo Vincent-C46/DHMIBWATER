@@ -1,5 +1,6 @@
 using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Core.Geometry;
+using DHBIMWATER.Core.Piping;
 using DHBIMWATER.UI.ViewModels.Modeling;
 using System.Windows;
 using Xunit;
@@ -81,6 +82,95 @@ public sealed class PipeLayoutViewModelTests
         Assert.Empty(vm.InlineFittings);
     }
 
+    [Fact]
+    public void UndoCommand_RestoresPreviousNetworkAfterDrawing()
+    {
+        var vm = CreateViewModel();
+        vm.HandleCanvasSizeChanged(1000, 1000);
+        vm.HandleCanvasClick(vm.Transform.ToScreen(new Point2D(0, 0)));
+        vm.HandleCanvasClick(vm.Transform.ToScreen(new Point2D(1000, 0)));
+        Assert.Single(vm.Edges);
+
+        vm.UndoCommand.Execute(null);
+
+        Assert.Empty(vm.Edges);
+        Assert.False(vm.UndoCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void ValidationSummary_ReportsNonOrthogonalThreeWayBranch()
+    {
+        var vm = CreateViewModel();
+        vm.HandleCanvasSizeChanged(1000, 1000);
+        Draw(vm, new(-1000, 0), new(1000, 0));
+        Draw(vm, new(0, 0), new(1000, 1000));
+
+        Assert.Contains("직교 T가 아닌 3방향 분기 1개", vm.ValidationSummary);
+    }
+
+    [Fact]
+    public void CreateModelCommand_UsesSelectedSegmentFamilies_AndWaitsForCompletion()
+    {
+        var vm = CreateViewModel();
+        vm.HandleCanvasSizeChanged(1000, 1000);
+        Draw(vm, new(0, 0), new(1000, 0));
+        PipeNetworkDefinition? request = null;
+        vm.CreateModelAction = value => request = value;
+
+        vm.CreateModelCommand.Execute(null);
+
+        Assert.NotNull(request);
+        Assert.Equal(PipeOutputMode.PipeAccessorySegment, request!.OutputMode);
+        Assert.Equal("1층", request.LevelName);
+
+        // 패밀리·파라미터는 스텁 목록 이름에서 자동 추정된다.
+        Assert.NotNull(request.SegmentFamilies);
+        Assert.Equal("직관 : DN100", request.SegmentFamilies!.StraightFamilyTypeName);
+        Assert.Equal("단관 : DN100", request.SegmentFamilies.ShortFamilyTypeName);
+        Assert.Equal("길이", request.SegmentFamilies.ShortLengthParameterName);
+
+        Assert.True(vm.IsCreating);
+        Assert.False(vm.CreateModelCommand.CanExecute(null));
+
+        vm.ApplyModelCreationResult(true, "완료");
+        Assert.False(vm.IsCreating);
+        Assert.Contains("완료", vm.Status);
+    }
+
+    [Fact]
+    public void Segment_family_selection_is_auto_guessed_from_the_accessory_list()
+    {
+        var vm = CreateViewModel();
+
+        Assert.Equal("직관 : DN100", vm.StraightFamilyTypeName);
+        Assert.Equal("단관 : DN100", vm.ShortFamilyTypeName);
+        Assert.Equal("곡관90 : DN100", vm.Bend90FamilyTypeName);
+        Assert.Equal("곡관45 : DN100", vm.Bend45FamilyTypeName);
+        Assert.Equal("T형 : DN100", vm.TeeFamilyTypeName);
+        Assert.Equal("길이", vm.ShortLengthParameterName);
+    }
+
+    [Fact]
+    public void Missing_short_length_parameter_blocks_model_creation()
+    {
+        var vm = CreateViewModel();
+        vm.HandleCanvasSizeChanged(1000, 1000);
+        Draw(vm, new(0, 0), new(1000, 0));
+        vm.CreateModelAction = _ => { };
+        Assert.True(vm.CreateModelCommand.CanExecute(null));
+
+        vm.ShortLengthParameterName = null;
+
+        Assert.False(vm.CreateModelCommand.CanExecute(null));
+        Assert.Contains("단관 길이 파라미터", vm.ValidationSummary);
+    }
+
+    private static void Draw(PipeLayoutViewModel vm, Point2D start, Point2D end)
+    {
+        vm.HandleCanvasClick(vm.Transform.ToScreen(start));
+        vm.HandleCanvasClick(vm.Transform.ToScreen(end));
+    }
+
     private static PipeLayoutViewModel CreateViewModel() => new(new StubElementTypeQueryRepo());
 
     private sealed class StubElementTypeQueryRepo : IElementTypeQueryRepo
@@ -92,9 +182,12 @@ public sealed class PipeLayoutViewModelTests
         public IEnumerable<string> GetAdaptiveComponentTypeNames() => [];
         public IEnumerable<string> GetAdaptiveInstanceParameterNames(string familyTypeName) => [];
         public int GetAdaptiveBendPointCount(string familyTypeName) => -1;
-        public IEnumerable<string> GetPipingSystemTypeNames() => [];
-        public IEnumerable<string> GetPipeTypeNames() => [];
-        public IEnumerable<string> GetPipeAccessoryTypeNames() => ["밸브 : DN100"];
+        public IEnumerable<string> GetPipingSystemTypeNames() => ["급수"];
+        public IEnumerable<string> GetPipeTypeNames() => ["배관"];
+        public IEnumerable<string> GetLevelNames() => ["1층"];
+        public IEnumerable<string> GetPipeAccessoryTypeNames() =>
+            ["밸브 : DN100", "직관 : DN100", "단관 : DN100", "곡관90 : DN100", "곡관45 : DN100", "T형 : DN100"];
+        public IEnumerable<string> GetPipeAccessoryInstanceParameterNames(string familyTypeName) => ["길이", "DN"];
         public IEnumerable<string> GetGenericModelTypeNames() => [];
         public IEnumerable<string> GetFoundationTypeNames() => [];
         public IEnumerable<string> GetBeamInstanceParameterNames(string beamTypeName) => [];

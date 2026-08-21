@@ -49,7 +49,7 @@
                         </StackPanel>
                         <StackPanel>
                             <TextBlock Style="{StaticResource LabelTextBlockStyle}" Text="미리보기 시트 (검증용 1개)"/>
-                            <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" ItemsSource="{Binding Sheets}" SelectedItem="{Binding PreviewSheet}" DisplayMemberPath="Name" MinWidth="180"/>
+                            <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" ItemsSource="{Binding CheckedSheets, Mode=OneWay}" SelectedItem="{Binding PreviewSheet, Mode=TwoWay}" DisplayMemberPath="Name" MinWidth="180"/>
                         </StackPanel>
                     </StackPanel>
 
@@ -67,15 +67,12 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
-                            <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource RequiredLabelTextBlockStyle}" Text="X" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource RequiredLabelTextBlockStyle}" Text="X (E/W)" VerticalAlignment="Center"/>
                             <ComboBox Grid.Row="0" Grid.Column="1" Style="{StaticResource PrimaryComboBoxStyle}" Margin="0,0,0,8" ItemsSource="{Binding ColumnOptions}" SelectedItem="{Binding XColumn}"/>
 
-                            <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource RequiredLabelTextBlockStyle}" Text="Y" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource RequiredLabelTextBlockStyle}" Text="Y (N/S)" VerticalAlignment="Center"/>
                             <ComboBox Grid.Row="1" Grid.Column="1" Style="{StaticResource PrimaryComboBoxStyle}" Margin="0,0,0,8" ItemsSource="{Binding ColumnOptions}" SelectedItem="{Binding YColumn}"/>
 
                             <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource RequiredLabelTextBlockStyle}" Text="Z" VerticalAlignment="Center"/>
@@ -84,14 +81,6 @@
                             <TextBlock Grid.Row="3" Grid.Column="0" Style="{StaticResource LabelTextBlockStyle}" Text="Station" VerticalAlignment="Center"/>
                             <ComboBox Grid.Row="3" Grid.Column="1" Style="{StaticResource PrimaryComboBoxStyle}" Margin="0,0,0,8" ItemsSource="{Binding OptionalColumnOptions}" SelectedItem="{Binding StationColumn}"/>
 
-                            <TextBlock Grid.Row="4" Grid.Column="0" Style="{StaticResource LabelTextBlockStyle}" Text="직경" VerticalAlignment="Center"/>
-                            <ComboBox Grid.Row="4" Grid.Column="1" Style="{StaticResource PrimaryComboBoxStyle}" Margin="0,0,0,8" ItemsSource="{Binding OptionalColumnOptions}" SelectedItem="{Binding DiameterColumn}"/>
-
-                            <TextBlock Grid.Row="5" Grid.Column="0" Style="{StaticResource LabelTextBlockStyle}" Text="관종" VerticalAlignment="Center"/>
-                            <ComboBox Grid.Row="5" Grid.Column="1" Style="{StaticResource PrimaryComboBoxStyle}" Margin="0,0,0,8" ItemsSource="{Binding OptionalColumnOptions}" SelectedItem="{Binding KindColumn}"/>
-
-                            <TextBlock Grid.Row="6" Grid.Column="0" Style="{StaticResource LabelTextBlockStyle}" Text="피팅명" VerticalAlignment="Center"/>
-                            <ComboBox Grid.Row="6" Grid.Column="1" Style="{StaticResource PrimaryComboBoxStyle}" ItemsSource="{Binding OptionalColumnOptions}" SelectedItem="{Binding FittingColumn}"/>
                         </Grid>
                     </GroupBox>
                 </StackPanel>

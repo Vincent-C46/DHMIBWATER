@@ -14,7 +14,7 @@ public interface IBendingRule
     PipeMaterial Material { get; }
 
     /// <summary>Bend 절점 하나에 들어갈 곡관을 판정한다.</summary>
-    BendResolution Resolve(NodeClassification node, BendSettings settings, BendForm form);
+    BendResolution Resolve(NodeClassification node, BendSettings settings);
 }
 
 /// <summary>관종에 맞는 판정 규칙을 고른다.</summary>

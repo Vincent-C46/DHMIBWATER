@@ -89,10 +89,12 @@ public class WaterTankViewModelTests
         public IEnumerable<string> GetAdaptiveInstanceParameterNames(string familyTypeName) => Array.Empty<string>();
         public int GetAdaptiveBendPointCount(string familyTypeName) => -1;
         public IEnumerable<string> GetPipeAccessoryTypeNames() => Array.Empty<string>();
+        public IEnumerable<string> GetPipeAccessoryInstanceParameterNames(string familyTypeName) => Array.Empty<string>();
         public IEnumerable<string> GetGenericModelTypeNames() => Array.Empty<string>();
         public IEnumerable<string> GetBeamInstanceParameterNames(string beamTypeName) => Array.Empty<string>();
         public IEnumerable<string> GetPipingSystemTypeNames() => Array.Empty<string>();
         public IEnumerable<string> GetPipeTypeNames() => Array.Empty<string>();
+        public IEnumerable<string> GetLevelNames() => Array.Empty<string>();
         public IEnumerable<string> GetFoundationTypeNames() => Array.Empty<string>();
     }
 
@@ -109,4 +111,3 @@ public class WaterTankViewModelTests
         public string? SaveFile(string title, string filter, string defaultFileName = "") => null;
     }
 }
-

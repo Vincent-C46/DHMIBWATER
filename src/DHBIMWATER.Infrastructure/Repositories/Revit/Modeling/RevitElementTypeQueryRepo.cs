@@ -73,6 +73,18 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
         private readonly Dictionary<string, IReadOnlyList<string>> _familyInstanceParameterCache = new();
 
         /// <summary>
+        /// Adaptive Point 개수 캐시. 키는 "문서Hash|패밀리명"이다.
+        /// Adaptive Point는 패밀리 문서에 정의돼 있어 <b>유형이 아니라 패밀리 단위로 같은 값</b>이므로 패밀리명으로 캐시한다.
+        /// <para>
+        /// 이 Repo는 Transient라 캐시 수명은 이 인스턴스를 쓰는 창 하나다. 관로 모델링 창은 모달(ShowDialog)이라
+        /// 창이 떠 있는 동안 패밀리를 편집·재로드할 수 없고, 창을 다시 열면 새 인스턴스가 만들어져 재조회한다.
+        /// TODO: 창을 모델리스로 바꾸면 편집된 패밀리의 점 개수가 낡은 값으로 남는다 — 캐시 무효화 수단이 필요하다
+        /// (위 <see cref="_familyInstanceParameterCache"/>도 같은 전제 위에 있다).
+        /// </para>
+        /// </summary>
+        private readonly Dictionary<string, int> _adaptivePointCountCache = new();
+
+        /// <summary>
         /// 가변 패밀리 인스턴스에 쓸 수 있는 파라미터명.
         /// 인스턴스 전용 파라미터는 FamilySymbol에서 조회되지 않아 다음 순서로 근거를 고른다.
         /// ① 같은 <b>패밀리</b>의 배치된 인스턴스(파라미터 집합은 유형이 아니라 패밀리 단위라 형제 유형도 유효하다)
@@ -140,15 +152,24 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             var doc = _docProvider(); if (doc is null || string.IsNullOrWhiteSpace(familyTypeName)) return -1;
             var separator = familyTypeName.LastIndexOf(" : ", StringComparison.Ordinal); if (separator <= 0 || separator >= familyTypeName.Length - 3) return -1;
             var familyName = familyTypeName[..separator]; var typeName = familyTypeName[(separator + 3)..];
+
+            // 점 개수는 패밀리 단위 값이라 형제 유형끼리 캐시를 공유한다(EditFamily 반복 방지).
+            var key = $"{doc.GetHashCode()}|{familyName}";
+            if (_adaptivePointCountCache.TryGetValue(key, out var cached)) return cached;
+
+            var count = -1;
             try
             {
                 var symbol = new FilteredElementCollector(doc).OfClass(typeof(FamilySymbol)).Cast<FamilySymbol>().FirstOrDefault(x => x.Family.Name == familyName && x.Name == typeName);
-                if (symbol is null) return -1;
+                if (symbol is null) return -1; // 유형이 없는 경우는 "확인 불가"라 캐시하지 않는다(다른 유형명으로는 조회될 수 있다).
                 var familyDocument = doc.EditFamily(symbol.Family);
-                try { return new FilteredElementCollector(familyDocument).OfCategory(BuiltInCategory.OST_AdaptivePoints).WhereElementIsNotElementType().GetElementCount(); }
+                try { count = new FilteredElementCollector(familyDocument).OfCategory(BuiltInCategory.OST_AdaptivePoints).WhereElementIsNotElementType().GetElementCount(); }
                 finally { familyDocument.Close(false); }
             }
-            catch { return -1; }
+            catch { count = -1; }
+
+            _adaptivePointCountCache[key] = count;
+            return count;
         }
         public IEnumerable<string> GetBeamInstanceParameterNames(string beamTypeName)
         {
@@ -176,7 +197,18 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
         }
         public IEnumerable<string> GetPipingSystemTypeNames() => GetNames(typeof(PipingSystemType));
         public IEnumerable<string> GetPipeTypeNames() => GetNames(typeof(PipeType));
+        public IEnumerable<string> GetLevelNames()
+        {
+            var doc = _docProvider(); if (doc is null) return Enumerable.Empty<string>();
+            try { return new FilteredElementCollector(doc).OfClass(typeof(Level)).Cast<Level>().OrderBy(x => x.Elevation).Select(x => x.Name).ToList(); }
+            catch { return Enumerable.Empty<string>(); }
+        }
         public IEnumerable<string> GetPipeAccessoryTypeNames() => GetFamilySymbolNames(BuiltInCategory.OST_PipeAccessory);
+
+        /// <summary>조회 로직은 카테고리와 무관하므로 Adaptive용 구현을 그대로 쓴다.
+        /// 호출부 의도를 드러내려고 이름만 분리해 둔다(중복 구현하지 않는다).</summary>
+        public IEnumerable<string> GetPipeAccessoryInstanceParameterNames(string familyTypeName)
+            => GetAdaptiveInstanceParameterNames(familyTypeName);
         public IEnumerable<string> GetGenericModelTypeNames() => GetFamilySymbolNames(BuiltInCategory.OST_GenericModel);
 
         private IEnumerable<string> GetFamilySymbolNames(BuiltInCategory category)

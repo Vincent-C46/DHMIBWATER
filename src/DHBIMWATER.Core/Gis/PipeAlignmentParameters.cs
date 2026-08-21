@@ -34,6 +34,7 @@ public static class PipeAlignmentParameters
     public const string CenterlineRadius = "DH_곡률반경";
     public const string BendFormName = "DH_곡관형식";
     public const string LayingLength = "DH_부설길이";
+    public const string Weight = "DH_무게";
 
     public const string AddinValue = "DHBIMWATER";
     public const string StraightPartValue = "직관";
@@ -55,6 +56,7 @@ public static class PipeAlignmentParameters
         [ResidualDeflection] = new("8f192977-1c4d-44df-b5d0-7aef46e1b120"), [IsAcceptable] = new("2d00a14e-573a-44ee-9c2d-4c9e60dc23dd"),
         [JointApplication] = new("7848d078-a439-4bba-ac20-68253e5b01be"), [CenterlineRadius] = new("dc55ce42-12ef-4416-b1c2-b3bf7e92c83f"),
         [BendFormName] = new("c1312dac-af34-464a-889c-a12fc906b1b0"), [LayingLength] = new("f9784b1d-8b57-45af-9221-868c51a08d6a"),
+        [Weight] = new("a6e1f5b0-9c1e-4d7a-8e2f-1b3c4d5e6f70"),
     };
 
     public static IReadOnlyList<SharedParameterDefinition> Definitions { get; } = new[]
@@ -64,6 +66,7 @@ public static class PipeAlignmentParameters
         LengthDef(Length), NumberDef(StartElevation), NumberDef(EndElevation), NumberDef(Slope), Def(NodeId, ParameterSpecType.Integer),
         Def(ActualDeflection, ParameterSpecType.Angle), Def(StandardAngle, ParameterSpecType.Angle), Def(AllowableDeflection, ParameterSpecType.Angle), Def(ResidualDeflection, ParameterSpecType.Angle),
         Def(IsAcceptable, ParameterSpecType.YesNo), Text(JointApplication), LengthDef(CenterlineRadius), Text(BendFormName), LengthDef(LayingLength),
+        NumberDef(Weight),
     };
 
     public static string DiameterText(double diameterMm) => $"DN{diameterMm:0.##}";

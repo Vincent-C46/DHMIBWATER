@@ -29,16 +29,19 @@ public static class BendArcGeometry
     /// <param name="angleDeg">곡관 각도 θ(=편각). 두 방향의 사잇각은 180−θ다.</param>
     /// <param name="radiusMm">R — 중심선 호의 곡률반경(mm).</param>
     /// <param name="layingLengthMm">t — 절점에서 관 끝까지의 거리(mm). 양방향 동일하다.</param>
-    /// <param name="mmToCoordinate">mm를 좌표 단위로 바꾸는 배율. 기본 0.001(mm→m).</param>
+    /// <remarks>
+    /// mmToCoordinate를 선택 인자로 두면 아래 7-인자 오버로드(양쪽 다리 길이가 다른 버전)와 인자 개수가 겹쳐
+    /// 호출부가 의도와 다른 오버로드로 바인딩될 수 있다(2026-08-20 실측 회귀 — 곡관 좌표가 470배 커지는 버그의 원인이었다).
+    /// 그래서 이 오버로드는 선택 인자를 두지 않는다.
+    /// </remarks>
     public static BendArcPoints Compute(
         Point3D node,
         Vector3D dirA,
         Vector3D dirB,
         double angleDeg,
         double radiusMm,
-        double layingLengthMm,
-        double mmToCoordinate = 0.001)
-        => Compute(node, dirA, dirB, angleDeg, radiusMm, layingLengthMm, layingLengthMm, mmToCoordinate);
+        double layingLengthMm)
+        => Compute(node, dirA, dirB, angleDeg, radiusMm, layingLengthMm, layingLengthMm, 0.001);
 
     /// <summary>
     /// 양쪽 관 끝 거리가 다른 곡관(B형 — 한쪽에 직관부 s가 더 붙는다)용.

@@ -11,8 +11,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Gis;
 /// <summary>
 /// 관로 직관을 2점 가변(Adaptive Component) 패밀리로 배치한다.
 /// 구조 프레이밍(빔) 배치를 대체한 것으로(2026-08-18), 곡관 5점 가변과 같은 표현 체계를 이룬다.
-/// 유형 복제 없이 인스턴스 파라미터로 호칭지름·관종을 기록하며, 레벨과 접선 회전은 쓰지 않는다
-/// (가변 컴포넌트는 Adaptive Point 좌표만으로 위치·방향이 결정된다).
+/// 유형 복제 없이 인스턴스 파라미터로 호칭지름·제원과 진행방향 회전을 기록한다.
 /// </summary>
 internal sealed class RevitAlignmentStraightPlacementRepo : IAlignmentStraightPlacementRepo
 {
@@ -23,7 +22,7 @@ internal sealed class RevitAlignmentStraightPlacementRepo : IAlignmentStraightPl
     public RevitAlignmentStraightPlacementRepo(Func<Document?> doc) => _doc = doc;
 
     public AlignmentStraightPlacementResult PlaceAlong(IReadOnlyList<PipeAlignment> alignments, string straightFamilyTypeName, double intervalM, AlignmentPlacementOrigin origin,
-        StraightPipeSpecTable specs, IReadOnlyList<IReadOnlyList<VertexTrim>>? trims = null, string? diameterParameterName = null, string? kindParameterName = null,
+        StraightPipeSpecTable specs, IReadOnlyList<IReadOnlyList<VertexTrim>>? trims = null, string? diameterParameterName = null,
         string? outerDiameterParameterName = null, string? thicknessParameterName = null, PipeInfoParameterContext? info = null)
     {
         var doc = _doc() ?? throw new InvalidOperationException("활성 Revit 문서가 없습니다.");
@@ -67,10 +66,10 @@ internal sealed class RevitAlignmentStraightPlacementRepo : IAlignmentStraightPl
         var writer = new PipeParameterWriter();
         foreach (var (instance, alignment, spec, segment) in placed)
         {
-            if (diameterParameterName is not null) SetParameter(instance, diameterParameterName, alignment.DiameterMm.ToString("0.##"), UC.MmToFt(alignment.DiameterMm), missingParameters);
-            if (kindParameterName is not null) SetParameter(instance, kindParameterName, alignment.PipeKind, null, missingParameters);
-            if (spec is not null && outerDiameterParameterName is not null) SetParameter(instance, outerDiameterParameterName, spec.OuterDiameterMm.ToString("0.##"), UC.MmToFt(spec.OuterDiameterMm), missingParameters);
-            if (spec is not null && thicknessParameterName is not null) SetParameter(instance, thicknessParameterName, spec.ThicknessMm.ToString("0.##"), UC.MmToFt(spec.ThicknessMm), missingParameters);
+            if (diameterParameterName is not null) SetParameter(instance, diameterParameterName, alignment.DiameterMm, missingParameters);
+            if (spec is not null && outerDiameterParameterName is not null) SetParameter(instance, outerDiameterParameterName, spec.OuterDiameterMm, missingParameters);
+            if (spec is not null && thicknessParameterName is not null) SetParameter(instance, thicknessParameterName, spec.ThicknessMm, missingParameters);
+            if (!TrySetRotations(instance, segment)) missingParameters.Add("rot_XY_n/rot_XZ_n");
             if (info is not { Enabled: true }) continue;
 
             var lengthM = segment.Start.DistanceTo(segment.End);
@@ -95,11 +94,19 @@ internal sealed class RevitAlignmentStraightPlacementRepo : IAlignmentStraightPl
         }
 
         var warnings = new List<string>();
+        var missingRotation = missingParameters.Remove("rot_XY_n/rot_XZ_n");
         if (missingParameters.Count > 0)
             warnings.Add($"직관 패밀리 '{straightFamilyTypeName}'에 {string.Join(", ", missingParameters.OrderBy(x => x))} 파라미터가 없거나 읽기전용이라 값을 설정하지 못했습니다.");
+        if (missingRotation)
+            warnings.Add($"직관 패밀리 '{straightFamilyTypeName}'에 rot_XY_n/rot_XZ_n 각도 파라미터가 없어 진행방향 회전을 적용하지 못했습니다.");
         if (writer.Missing.Count > 0)
             warnings.Add($"프로젝트 매개변수 {string.Join(", ", writer.Missing.OrderBy(x => x))}를 직관 인스턴스에 기록하지 못했습니다(바인딩 실패 또는 읽기전용).");
-        return new AlignmentStraightPlacementResult(placed.Count, warnings);
+        if (placed.Count > 0) doc.Regenerate();
+        var outerDiameters = placed
+            .Where(x => x.Spec is not null)
+            .GroupBy(x => (x.Alignment.PipeKind, x.Alignment.DiameterMm))
+            .ToDictionary(x => x.Key, x => x.First().Spec!.OuterDiameterMm);
+        return new AlignmentStraightPlacementResult(placed.Count, warnings, outerDiameters);
     }
 
     /// <summary>"패밀리명 : 타입명" 문자열로 FamilySymbol을 찾는다. 표기는 곡관 목록(GetAdaptiveComponentTypeNames)과 같다.</summary>
@@ -123,16 +130,29 @@ internal sealed class RevitAlignmentStraightPlacementRepo : IAlignmentStraightPl
         return symbol;
     }
 
-    // 매핑 대상 파라미터의 실제 자료형(길이·숫자·문자)은 패밀리마다 다를 수 있어 StorageType으로 분기한다.
-    private static void SetParameter(FamilyInstance instance, string name, string textValue, double? lengthValueFt, HashSet<string> missingParameters)
+    private static void SetParameter(FamilyInstance instance, string name, double valueMm, HashSet<string> missingParameters)
     {
-        var param = instance.LookupParameter(name);
-        if (param is not { IsReadOnly: false }) { missingParameters.Add(name); return; }
-        switch (param.StorageType)
-        {
-            case StorageType.Double when lengthValueFt is not null: param.Set(lengthValueFt.Value); break;
-            case StorageType.String: param.Set(textValue); break;
-        }
+        if (!AdaptiveParameterWriter.TryWrite(instance, name, valueMm.ToString("0.##"), UC.MmToFt(valueMm), (int)Math.Round(valueMm))) missingParameters.Add(name);
+    }
+
+    private static bool TrySetRotations(FamilyInstance instance, AlignmentSampleSegment segment)
+    {
+        var direction = new DHBIMWATER.Core.Geometry.Vector3D(
+            segment.End.X - segment.Start.X,
+            segment.End.Y - segment.Start.Y,
+            segment.End.Z - segment.Start.Z);
+        var (rotXy, rotXz) = BendOrientation.Compute(direction);
+        var numbered = TrySetAngle(instance, "rot_XY_1", rotXy) && TrySetAngle(instance, "rot_XY_2", rotXy)
+            && TrySetAngle(instance, "rot_XZ_1", rotXz) && TrySetAngle(instance, "rot_XZ_2", rotXz);
+        return numbered || (TrySetAngle(instance, "rot_XY", rotXy) && TrySetAngle(instance, "rot_XZ", rotXz));
+    }
+
+    private static bool TrySetAngle(FamilyInstance instance, string name, double degrees)
+    {
+        var parameter = instance.LookupParameter(name);
+        return parameter is { IsReadOnly: false, StorageType: StorageType.Double }
+            && parameter.Definition.GetDataType().Equals(SpecTypeId.Angle)
+            && parameter.Set(UC.DegToRad(degrees));
     }
 
     private static XYZ ToXyz(DHBIMWATER.Core.Geometry.Point3D point, double zOffsetM, AlignmentPlacementOrigin origin, XYZ basePoint)

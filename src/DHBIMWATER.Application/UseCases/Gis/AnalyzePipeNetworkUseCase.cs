@@ -32,7 +32,7 @@ public sealed class AnalyzePipeNetworkUseCase
 
         var graph = PipeNetworkBuilder.Build(loaded.Alignments, request.SnapToleranceMm / 1000d);
         var nodes = PipeNetworkClassifier.Classify(graph);
-        var resolutions = BendResolver.ResolveAll(nodes, settings, request.Form).ToDictionary(x => x.NodeId);
+        var resolutions = BendResolver.ResolveAll(nodes, settings).ToDictionary(x => x.NodeId);
 
         var standard = resolutions.Values.Count(x => x.Kind == BendResolutionKind.Standard);
         var none = resolutions.Values.Count(x => x.Kind == BendResolutionKind.None);

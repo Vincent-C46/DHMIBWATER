@@ -59,6 +59,34 @@ public sealed class PipeTopologyBuilderTests
         Assert.Contains(network.Nodes, x => x.Position == new Point2D(50, 50));
     }
 
+    [Fact]
+    public void TeeResolver_ReturnsCollinearMainAndOrthogonalBranch()
+    {
+        var network = new PipeNetwork();
+        network.AddSegment(new Point2D(-1000, 0), new Point2D(1000, 0));
+        network.AddSegment(new Point2D(0, 0), new Point2D(0, 1000));
+        var definition = network.ToDefinition(100, PipeOutputMode.MepPipe, new Point2D(0, 0));
+        var tee = Assert.Single(definition.Nodes, x => x.NodeKind == NodeKind.Tee);
+
+        var order = Assert.IsType<PipeTeeLegOrder>(PipeTeeResolver.Resolve(tee, definition.Edges));
+
+        var branch = Assert.Single(definition.Edges, x => x.Id == order.BranchEdgeId);
+        Assert.Equal(0, branch.Start.X, 6);
+        Assert.Equal(0, branch.End.X, 6);
+    }
+
+    [Fact]
+    public void TeeResolver_RejectsNonOrthogonalThreeWayBranch()
+    {
+        var network = new PipeNetwork();
+        network.AddSegment(new Point2D(-1000, 0), new Point2D(1000, 0));
+        network.AddSegment(new Point2D(0, 0), new Point2D(1000, 1000));
+        var definition = network.ToDefinition(100, PipeOutputMode.MepPipe, new Point2D(0, 0));
+        var tee = Assert.Single(definition.Nodes, x => x.NodeKind == NodeKind.Tee);
+
+        Assert.Null(PipeTeeResolver.Resolve(tee, definition.Edges));
+    }
+
     private static bool IsEdge(PipeNetwork network, PipeEdge edge, Point2D expectedStart, Point2D expectedEnd)
     {
         var start = network.Nodes.Single(x => x.Id == edge.StartNodeId).Position;

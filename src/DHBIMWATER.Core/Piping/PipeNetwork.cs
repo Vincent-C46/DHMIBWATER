@@ -21,7 +21,22 @@ public sealed class PipeNetwork
     public void AddInlineFitting(Guid edgeId, string typeKey, string familyTypeName, double desiredT) => new PipeTopologyBuilder(this).AddInlineFitting(edgeId, typeKey, familyTypeName, desiredT);
     public void RemoveInlineFitting(Guid edgeId, Guid fittingId) => new PipeTopologyBuilder(this).RemoveInlineFitting(edgeId, fittingId);
     public void Clear() { _nodes.Clear(); _edges.Clear(); }
-    public PipeNetworkDefinition ToDefinition(double diameterMm, PipeOutputMode outputMode, Point2D referencePoint)
+    public PipeNetwork DeepClone()
+    {
+        var clone = new PipeNetwork(Elevation);
+        clone._nodes.AddRange(_nodes.Select(x => new PipeNode(x.Id, x.Position) { Degree = x.Degree, NodeKind = x.NodeKind }));
+        clone._edges.AddRange(_edges.Select(x => new PipeEdge(x.Id, x.StartNodeId, x.EndNodeId, x.InlineFittings)));
+        return clone;
+    }
+
+    public PipeNetworkDefinition ToDefinition(
+        double diameterMm,
+        PipeOutputMode outputMode,
+        Point2D referencePoint,
+        string pipingSystemTypeName = "",
+        string pipeTypeName = "",
+        string levelName = "",
+        PipeSegmentFamilySelection? segmentFamilies = null)
     {
         var nodes = _nodes.Select(x => new PipeNodeDefinition(x.Id, x.Position, x.NodeKind)).ToList();
         var edges = _edges.Select(x =>
@@ -38,7 +53,8 @@ public sealed class PipeNetwork
                                     start.Position.Y + (end.Position.Y - start.Position.Y) * fitting.T);
             return new FittingPlacementDefinition(fitting.Id, fitting.TypeKey, fitting.FamilyTypeName, point, Elevation, edge.Id);
         })).ToList();
-        return new PipeNetworkDefinition(nodes, edges, fittings, Elevation, diameterMm, outputMode, referencePoint);
+        return new PipeNetworkDefinition(nodes, edges, fittings, Elevation, diameterMm, outputMode, referencePoint,
+            pipingSystemTypeName, pipeTypeName, levelName, segmentFamilies);
     }
 
     internal PipeNode AddNode(Point2D position) { var node = new PipeNode(Guid.NewGuid(), position); _nodes.Add(node); return node; }

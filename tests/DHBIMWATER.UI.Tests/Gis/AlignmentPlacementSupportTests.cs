@@ -140,7 +140,8 @@ EOF
 
             var alignment = Assert.Single(result.Features);
             Assert.Equal(2, alignment.Vertices.Count);
-            Assert.Equal("상수_D100", alignment.Attributes["Diameter"]);
+            Assert.Equal("상수", alignment.Attributes["KIND"]);
+            Assert.Equal("100", alignment.Attributes["DIAMETER"]);
         }
         finally
         {
@@ -148,4 +149,3 @@ EOF
         }
     }
 }
-

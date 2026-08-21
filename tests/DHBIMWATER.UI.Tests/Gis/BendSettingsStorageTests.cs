@@ -21,7 +21,7 @@ public class BendSettingsStorageTests
             var settings = new BendSettings(
                 new StraightPipeSpecTable(new[] { new StraightPipeSpec(PipeKindCatalog.Water1, 100, 118, 7.5) }),
                 new JointDeflectionTable(new[] { new JointDeflectionSpec(JointTypeCatalog.Tyton, 100, 5) }),
-                new BendFittingCatalog(new[] { new BendFittingEntry(100, 45, BendForm.BType, 120, 210, 10, 8, "45도") }),
+                new BendFittingCatalog(new[] { new BendFittingEntry(100, 45, BendForm.BType, 120, 210, WallThicknessMm: 8) }),
                 JointTypeCatalog.Tyton,
                 JointApplicationMode.BothJoints);
             store.Save(settings);
@@ -30,7 +30,6 @@ public class BendSettingsStorageTests
             Assert.NotNull(loaded);
             Assert.Equal(7.5, loaded!.StraightPipes.Find(PipeKindCatalog.Water1, 100)!.ThicknessMm);
             Assert.Equal(5, loaded.JointDeflections.AllowableFor(JointTypeCatalog.Tyton, 100));
-            Assert.Equal("45도", loaded.Fittings.Find(100, 45, BendForm.BType)!.TypeName);
             Assert.Equal(JointTypeCatalog.Tyton, loaded.ActiveJointType);
             Assert.Equal(JointApplicationMode.BothJoints, loaded.ApplicationMode);
         }

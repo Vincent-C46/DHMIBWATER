@@ -27,7 +27,8 @@ public sealed record BendResolution(
     bool IsAcceptable,
     double ExtraLegLengthMm = 0d,
     double WallThicknessMm = 0d,
-    string? TypeName = null)
+    BendForm Form = BendForm.BType,
+    double WeightKg = 0d)
 {
     public double LongLegLengthMm => LayingLengthMm > 0d ? LayingLengthMm + ExtraLegLengthMm : 0d;
     public bool IsSizeConsistent => !HasFittingSize || LayingLengthMm + 1e-9 >= TangentLengthMm;
@@ -50,11 +51,11 @@ public static class BendResolver
     public static bool EvaluateFitting(double actualAngleDeg, double fittingAngleDeg, double effectiveAllowableDeg)
         => JointDeflectionRule.EvaluateFitting(actualAngleDeg, fittingAngleDeg, effectiveAllowableDeg);
 
-    public static BendResolution Resolve(NodeClassification node, BendSettings settings, BendForm form)
-        => BendingRuleCatalog.For(MaterialOf(node)).Resolve(node, settings, form);
+    public static BendResolution Resolve(NodeClassification node, BendSettings settings)
+        => BendingRuleCatalog.For(MaterialOf(node)).Resolve(node, settings);
 
-    public static IReadOnlyList<BendResolution> ResolveAll(IReadOnlyList<NodeClassification> nodes, BendSettings settings, BendForm form)
-        => nodes.Where(x => x.Kind == NodeKind.Bend).Select(x => Resolve(x, settings, form)).ToList();
+    public static IReadOnlyList<BendResolution> ResolveAll(IReadOnlyList<NodeClassification> nodes, BendSettings settings)
+        => nodes.Where(x => x.Kind == NodeKind.Bend).Select(x => Resolve(x, settings)).ToList();
 
     public static double TangentLength(double radiusMm, double angleDeg)
         => radiusMm * Math.Tan(angleDeg * Math.PI / 360d);

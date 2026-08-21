@@ -30,14 +30,13 @@ public sealed class ExcelAlignmentMappingViewModel : ViewModelBase
     private readonly IDialogService _dialog;
     private int _headerRow = 1, _dataStartRow = 2;
     private ExcelSheetPickItem? _previewSheet;
-    private ExcelColumnOption? _xColumn, _yColumn, _zColumn, _stationColumn, _diameterColumn, _kindColumn, _fittingColumn;
+    private ExcelColumnOption? _xColumn, _yColumn, _zColumn, _stationColumn;
     private DataTable _previewTable = new();
 
     public ExcelAlignmentMappingViewModel(IExcelAlignmentSourceReader reader, IDialogService dialog, string filePath)
     {
         _reader = reader; _dialog = dialog; FilePath = filePath;
         foreach (var name in reader.GetSheetNames(filePath)) Sheets.Add(new ExcelSheetPickItem { Name = name, CheckedChanged = OnSheetCheckedChanged });
-        PreviewSheet = Sheets.FirstOrDefault();
         OkCommand = new RelayCommand(_ => Confirm());
         CancelCommand = new RelayCommand(_ => CloseAction?.Invoke());
         RefreshPreview();
@@ -46,8 +45,9 @@ public sealed class ExcelAlignmentMappingViewModel : ViewModelBase
     public string FilePath { get; }
     public string FileName => System.IO.Path.GetFileName(FilePath);
     public ObservableCollection<ExcelSheetPickItem> Sheets { get; } = new();
+    public IEnumerable<ExcelSheetPickItem> CheckedSheets => Sheets.Where(x => x.IsChecked);
     public ObservableCollection<ExcelColumnOption> ColumnOptions { get; } = new();
-    /// <summary>Station·직경·관종처럼 선택 사항인 열의 콤보박스가 공유하는 목록. 맨 앞에 "(사용 안 함)"을 둔다.</summary>
+    /// <summary>Station처럼 선택 사항인 열의 콤보박스 목록. 맨 앞에 "(사용 안 함)"을 둔다.</summary>
     public ObservableCollection<ExcelColumnOption> OptionalColumnOptions { get; } = new();
     public DataView PreviewView => _previewTable.DefaultView;
 
@@ -60,12 +60,6 @@ public sealed class ExcelAlignmentMappingViewModel : ViewModelBase
     public ExcelColumnOption? ZColumn { get => _zColumn; set { if (SetProperty(ref _zColumn, value)) OnPropertyChanged(nameof(CanConfirm)); } }
     /// <summary>선택 사항. null이면 "(사용 안 함)".</summary>
     public ExcelColumnOption? StationColumn { get => _stationColumn; set => SetProperty(ref _stationColumn, value); }
-    /// <summary>선택 사항. 지정하면 데이터 영역에서 처음 찾은 값을 관로 1개의 직경 필드값으로 쓴다. 메인 그리드에서는 "직경" 필드로 나타난다.</summary>
-    public ExcelColumnOption? DiameterColumn { get => _diameterColumn; set => SetProperty(ref _diameterColumn, value); }
-    /// <summary>선택 사항. DiameterColumn과 동일한 방식으로 관종을 읽는다. 메인 그리드에서는 "관종" 필드로 나타난다.</summary>
-    public ExcelColumnOption? KindColumn { get => _kindColumn; set => SetProperty(ref _kindColumn, value); }
-    /// <summary>선택 사항. DiameterColumn과 동일한 방식으로 피팅(이형관)명을 읽는다. 컬럼이 없으면 "(사용 안 함)"으로 둔다 — 배치 로직은 아직 없고 값만 보관한다.</summary>
-    public ExcelColumnOption? FittingColumn { get => _fittingColumn; set => SetProperty(ref _fittingColumn, value); }
 
     public int CheckedCount => Sheets.Count(x => x.IsChecked);
     public bool CanConfirm => CheckedCount > 0 && XColumn is not null && YColumn is not null && ZColumn is not null;
@@ -78,16 +72,17 @@ public sealed class ExcelAlignmentMappingViewModel : ViewModelBase
 
     private void OnSheetCheckedChanged()
     {
+        OnPropertyChanged(nameof(CheckedSheets));
         OnPropertyChanged(nameof(CheckedCount)); OnPropertyChanged(nameof(CanConfirm)); OnPropertyChanged(nameof(StatusText));
-        if (PreviewSheet is null || !PreviewSheet.IsChecked) PreviewSheet = Sheets.FirstOrDefault(x => x.IsChecked) ?? Sheets.FirstOrDefault();
+        if (PreviewSheet is null || !PreviewSheet.IsChecked) PreviewSheet = Sheets.FirstOrDefault(x => x.IsChecked);
     }
 
     private void RefreshPreview()
     {
         var previousX = XColumn?.Index; var previousY = YColumn?.Index; var previousZ = ZColumn?.Index;
-        var previousStation = StationColumn?.Index; var previousDiameter = DiameterColumn?.Index; var previousKind = KindColumn?.Index; var previousFitting = FittingColumn?.Index;
+        var previousStation = StationColumn?.Index;
         ColumnOptions.Clear(); OptionalColumnOptions.Clear();
-        if (PreviewSheet is null || HeaderRow < 1) { _previewTable = new DataTable(); OnPropertyChanged(nameof(PreviewView)); XColumn = YColumn = ZColumn = StationColumn = DiameterColumn = KindColumn = FittingColumn = null; return; }
+        if (PreviewSheet is null || HeaderRow < 1) { _previewTable = new DataTable(); OnPropertyChanged(nameof(PreviewView)); XColumn = YColumn = ZColumn = StationColumn = null; return; }
 
         IReadOnlyList<IReadOnlyList<string?>> rows;
         try { rows = _reader.PreviewRows(FilePath, PreviewSheet.Name, Math.Max(HeaderRow, DataStartRow) + 3); }
@@ -121,13 +116,13 @@ public sealed class ExcelAlignmentMappingViewModel : ViewModelBase
         OptionalColumnOptions.Add(new ExcelColumnOption(-1, "(사용 안 함)"));
         foreach (var option in ColumnOptions) OptionalColumnOptions.Add(option);
 
-        XColumn = ColumnOptions.FirstOrDefault(x => x.Index == previousX);
-        YColumn = ColumnOptions.FirstOrDefault(x => x.Index == previousY);
-        ZColumn = ColumnOptions.FirstOrDefault(x => x.Index == previousZ);
-        StationColumn = OptionalColumnOptions.FirstOrDefault(x => x.Index == previousStation) ?? OptionalColumnOptions.First();
-        DiameterColumn = OptionalColumnOptions.FirstOrDefault(x => x.Index == previousDiameter) ?? OptionalColumnOptions.First();
-        KindColumn = OptionalColumnOptions.FirstOrDefault(x => x.Index == previousKind) ?? OptionalColumnOptions.First();
-        FittingColumn = OptionalColumnOptions.FirstOrDefault(x => x.Index == previousFitting) ?? OptionalColumnOptions.First();
+        var headers = HeaderRow <= rows.Count ? rows[HeaderRow - 1] : Array.Empty<string?>();
+        XColumn = previousX is null ? GuessColumn(headers, XKeywords) : ColumnOptions.FirstOrDefault(x => x.Index == previousX);
+        YColumn = previousY is null ? GuessColumn(headers, YKeywords) : ColumnOptions.FirstOrDefault(x => x.Index == previousY);
+        ZColumn = previousZ is null ? GuessColumn(headers, ZKeywords) : ColumnOptions.FirstOrDefault(x => x.Index == previousZ);
+        StationColumn = previousStation is null
+            ? GuessColumn(headers, StationKeywords) ?? OptionalColumnOptions.First()
+            : OptionalColumnOptions.FirstOrDefault(x => x.Index == previousStation) ?? OptionalColumnOptions.First();
         OnPropertyChanged(nameof(CanConfirm)); OnPropertyChanged(nameof(StatusText));
     }
 
@@ -138,11 +133,8 @@ public sealed class ExcelAlignmentMappingViewModel : ViewModelBase
         if (DataStartRow <= HeaderRow) { _dialog.Warn("입력 확인", "데이터 시작 행은 헤더 행보다 커야 합니다."); return; }
         if (XColumn is null || YColumn is null || ZColumn is null) { _dialog.Warn("입력 확인", "X, Y, Z 열은 필수입니다."); return; }
         var station = StationColumn is { Index: >= 0 } ? StationColumn.Index : (int?)null;
-        var diameter = DiameterColumn is { Index: >= 0 } ? DiameterColumn.Index : (int?)null;
-        var kind = KindColumn is { Index: >= 0 } ? KindColumn.Index : (int?)null;
-        var fitting = FittingColumn is { Index: >= 0 } ? FittingColumn.Index : (int?)null;
         Result = Sheets.Where(x => x.IsChecked)
-            .Select(x => new ExcelAlignmentMapping(x.Name, HeaderRow, DataStartRow, XColumn.Index, YColumn.Index, ZColumn.Index, station, diameter, kind, fitting))
+            .Select(x => new ExcelAlignmentMapping(x.Name, HeaderRow, DataStartRow, XColumn.Index, YColumn.Index, ZColumn.Index, station))
             .ToList();
         CloseAction?.Invoke();
     }
@@ -153,4 +145,21 @@ public sealed class ExcelAlignmentMappingViewModel : ViewModelBase
         do { letter = (char)('A' + n % 26) + letter; n = n / 26 - 1; } while (n >= 0);
         return letter;
     }
+
+    private static readonly string[] XKeywords = ["X", "EAST", "E/W", "동서", "이스트"];
+    private static readonly string[] YKeywords = ["Y", "NORTH", "N/S", "남북", "노스"];
+    private static readonly string[] ZKeywords = ["Z", "표고", "고도", "EL", "ELEV", "LEVEL", "높이"];
+    private static readonly string[] StationKeywords = ["STA", "STATION", "측점", "누가거리", "CHAINAGE", "NO"];
+
+    private ExcelColumnOption? GuessColumn(IReadOnlyList<string?> headers, IEnumerable<string> keywords)
+    {
+        var normalizedKeywords = new HashSet<string>(keywords.Select(NormalizeHeader), StringComparer.OrdinalIgnoreCase);
+        for (var i = 0; i < headers.Count; i++)
+            if (normalizedKeywords.Contains(NormalizeHeader(headers[i])))
+                return ColumnOptions.FirstOrDefault(x => x.Index == i);
+        return null;
+    }
+
+    private static string NormalizeHeader(string? value)
+        => string.Concat((value ?? string.Empty).Where(x => !char.IsWhiteSpace(x))).ToUpperInvariant();
 }

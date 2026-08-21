@@ -8,7 +8,6 @@ namespace DHBIMWATER.Core.Gis;
 /// <param name="UpstreamLegMm">상류 쪽 차감량 t(mm).</param>
 /// <param name="DownstreamLegMm">하류 쪽 차감량 t+s(mm). A형은 t와 같다.</param>
 /// <param name="WallThicknessMm">e — 곡관 벽 두께(mm). 카탈로그에 없으면 0.</param>
-/// <param name="TypeName">곡관 타입명. 카탈로그 미등록이면 null.</param>
 /// <param name="RotXYDeg">P1~P5 각 점의 rot_XY(도). 인덱스는 <see cref="Points"/>의 Start/ArcStart/ArcMid/ArcEnd/End 순서와 같다.</param>
 /// <param name="RotXZDeg">P1~P5 각 점의 rot_XZ(도). 인덱스는 <paramref name="RotXYDeg"/>와 같다.</param>
 public sealed record BendPlacement(
@@ -22,7 +21,6 @@ public sealed record BendPlacement(
     double UpstreamLegMm,
     double DownstreamLegMm,
     double WallThicknessMm,
-    string? TypeName,
     bool IsAcceptable,
     IReadOnlyList<double> RotXYDeg,
     IReadOnlyList<double> RotXZDeg,
@@ -32,7 +30,9 @@ public sealed record BendPlacement(
     double CenterlineRadiusMm = 0d,
     double LayingLengthMm = 0d,
     string JointType = "",
-    JointApplicationMode ApplicationMode = JointApplicationMode.SingleJoint);
+    JointApplicationMode ApplicationMode = JointApplicationMode.SingleJoint,
+    BendForm Form = BendForm.BType,
+    double WeightKg = 0d);
 
 /// <param name="Trims">인덱스 = 폴리선 정점 인덱스. 차감이 없는 정점은 <see cref="VertexTrim.None"/>다.</param>
 public sealed record AlignmentBendPlan(int AlignmentIndex, IReadOnlyList<VertexTrim> Trims);
@@ -124,9 +124,10 @@ public static class BendTrimPlanner
                     nodeId.Value, a, v, bend.StandardAngleDeg,
                     alignments[a].DiameterMm, alignments[a].PipeKind,
                     points, shortLeg, longLeg,
-                    bend.WallThicknessMm, bend.TypeName, bend.IsAcceptable, rotXy, rotXz,
+                    bend.WallThicknessMm, bend.IsAcceptable, rotXy, rotXz,
                     bend.DeflectionDeg, bend.EffectiveAllowableDeg, bend.ResidualDeg,
-                    bend.CenterlineRadiusMm, bend.LayingLengthMm, bend.JointType, bend.ApplicationMode));
+                    bend.CenterlineRadiusMm, bend.LayingLengthMm, bend.JointType, bend.ApplicationMode,
+                    bend.Form, bend.WeightKg));
             }
 
             plans.Add(new AlignmentBendPlan(a, trims));

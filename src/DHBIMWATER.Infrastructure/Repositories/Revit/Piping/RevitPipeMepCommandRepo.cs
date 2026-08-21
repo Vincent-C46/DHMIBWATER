@@ -14,15 +14,18 @@ internal sealed class RevitPipeMepCommandRepo : IPipeCommandRepo
     public RevitPipeMepCommandRepo(Func<Document?> document) => _document = document;
     public PipeOutputMode OutputMode => PipeOutputMode.MepPipe;
 
-    public void CreateNetwork(PipeNetworkDefinition network)
+    public PipeCreationResult CreateNetwork(PipeNetworkDefinition network)
     {
         var document = _document() ?? throw new InvalidOperationException("활성 Revit 문서가 없습니다.");
-        var systemType = new FilteredElementCollector(document).OfClass(typeof(PipingSystemType)).Cast<PipingSystemType>().FirstOrDefault()
-            ?? throw new InvalidOperationException("프로젝트에 배관 시스템 타입이 없습니다.");
-        var pipeType = new FilteredElementCollector(document).OfClass(typeof(PipeType)).Cast<PipeType>().FirstOrDefault()
-            ?? throw new InvalidOperationException("프로젝트에 PipeType이 없습니다.");
-        var level = new FilteredElementCollector(document).OfClass(typeof(Level)).Cast<Level>().OrderBy(x => x.Elevation).FirstOrDefault()
-            ?? throw new InvalidOperationException("프로젝트에 Level이 없습니다.");
+        var systemType = new FilteredElementCollector(document).OfClass(typeof(PipingSystemType)).Cast<PipingSystemType>()
+            .FirstOrDefault(x => x.Name == network.PipingSystemTypeName)
+            ?? throw new InvalidOperationException($"배관 시스템 타입 '{network.PipingSystemTypeName}'을 찾을 수 없습니다.");
+        var pipeType = new FilteredElementCollector(document).OfClass(typeof(PipeType)).Cast<PipeType>()
+            .FirstOrDefault(x => x.Name == network.PipeTypeName)
+            ?? throw new InvalidOperationException($"PipeType '{network.PipeTypeName}'을 찾을 수 없습니다.");
+        var level = new FilteredElementCollector(document).OfClass(typeof(Level)).Cast<Level>()
+            .FirstOrDefault(x => x.Name == network.LevelName)
+            ?? throw new InvalidOperationException($"레벨 '{network.LevelName}'을 찾을 수 없습니다.");
         var pipes = new Dictionary<Guid, Pipe>();
         foreach (var edge in network.Edges)
         {
@@ -32,13 +35,17 @@ internal sealed class RevitPipeMepCommandRepo : IPipeCommandRepo
         }
         foreach (var node in network.Nodes) ConnectNode(document, node, network, pipes);
         foreach (var edge in network.Edges) PlaceInlineFittings(document, edge, network, pipes[edge.Id]);
+        return new PipeCreationResult($"배관 {network.Edges.Count}개를 생성했습니다.");
     }
 
     /// <summary>
-    /// 엣지 위 배관부속(밸브 등)을 시작점에서 가까운 순서로 배치한다. 각 부속마다 파이프를 그 지점에서
-    /// 분할(<see cref="PlumbingUtils.BreakCurve"/>)하고, 남는 두 커넥터에 부속 패밀리를 끼워 연결한다.
-    /// docs/26 §5-2 미결정 1: BreakCurve가 원본 ElementId를 시작쪽(첫 조각)에 유지한다는 가정으로 작성했다
-    /// — Revit 실행 검증에서 반대로 확인되면 currentPipe 갱신 순서를 뒤집어야 한다.
+    /// 엣지 위 배관부속(밸브 등)을 시작점에서 가까운 순서로 배치한다. 부속 인스턴스를 먼저 만들어 방향을 맞춘 뒤
+    /// 파이프를 그 지점에서 분할(<see cref="PlumbingUtils.BreakCurve"/>)하고, 남는 두 커넥터에 부속을 끼워 연결한다.
+    /// <para>인스턴스 생성·정렬을 분할보다 <b>먼저</b> 하는 이유 — 분할 직후에는 분할 지점에 열린 커넥터 2개가 생기는데
+    /// 그 자리에 부속을 만들면 Revit이 자동 연결해 버리고, 연결된 상태에서 회전·이동하면 파이프가 뒤집히면서
+    /// "덕트/배관이 반대 방향으로 수정되어 연결이 무효화됩니다" 예외로 트랜잭션 전체가 실패한다.</para>
+    /// <para>docs/26 §5-2 미결정 1(BreakCurve가 원본 ElementId를 어느 조각에 남기는지)은 가정하지 않고
+    /// 두 조각의 실제 좌표로 시작쪽·끝쪽을 판별한다.</para>
     /// </summary>
     private static void PlaceInlineFittings(Document document, PipeEdgeDefinition edge, PipeNetworkDefinition network, Pipe initialPipe)
     {
@@ -55,27 +62,45 @@ internal sealed class RevitPipeMepCommandRepo : IPipeCommandRepo
 
         foreach (var fitting in fittings)
         {
-            var point = ToXyz(fitting.Position, fitting.Elevation, network.ReferencePoint);
+            var rawPoint = ToXyz(fitting.Position, fitting.Elevation, network.ReferencePoint);
+            // ConnectNode가 앞서 엘보/티 부속을 연결하며 파이프 양 끝을 트리밍했을 수 있어, 원래 계산된 좌표가
+            // 더 이상 실제 파이프 커브 위에 있지 않을 수 있다(BreakCurve는 "point not on curve"로 실패한다).
+            // 현재 파이프의 실제 커브에 투영한 점을 사용해 항상 유효한 좌표를 넘긴다.
+            var pipeCurve = ((LocationCurve)currentPipe.Location).Curve;
+            var point = pipeCurve.Project(rawPoint).XYZPoint;
             var symbol = FindSymbol(document, fitting.FamilyTypeName)
                 ?? throw new InvalidOperationException($"배관부속 패밀리 '{fitting.FamilyTypeName}'를 찾을 수 없습니다. 프로젝트에 로드돼 있는지 확인하세요.");
             if (!symbol.IsActive) { symbol.Activate(); document.Regenerate(); }
 
-            var newPipeId = PlumbingUtils.BreakCurve(document, currentPipe.Id, point);
-            document.Regenerate();
-            var beforeConnector = FindOpenConnectorNear(currentPipe, point);
-            var afterPipe = (Pipe)document.GetElement(newPipeId);
-            var afterConnector = FindOpenConnectorNear(afterPipe, point);
-            if (beforeConnector is null || afterConnector is null)
-                throw new InvalidOperationException("파이프 분할 지점에서 열린 커넥터를 찾지 못했습니다.");
-
+            // 1) 분할 전에 인스턴스를 만들고 방향을 맞춘다(자동 연결 방지 — 위 요약 참조).
             var instance = document.Create.NewFamilyInstance(point, symbol, StructuralType.NonStructural);
             document.Regenerate();
+            DisconnectAll(instance);
             AlignFittingToPipe(document, instance, point, direction);
 
             var instanceConnectors = GetMepConnectors(instance);
             if (instanceConnectors.Count != 2)
                 throw new InvalidOperationException($"배관부속 '{fitting.FamilyTypeName}'의 커넥터 개수가 2개가 아닙니다. Pipe Accessory 패밀리인지 확인하세요.");
             var ordered = instanceConnectors.OrderBy(c => (c.Origin - point).DotProduct(direction)).ToList();
+
+            // 2) 연결하면 부속 반길이만큼 양쪽 파이프가 줄어든다. 남는 길이가 모자라면 Revit이 파이프를 뒤집으면서
+            //    "반대 방향으로 수정되어 연결이 무효화됩니다"로 실패하므로, 그 전에 원인을 알 수 있는 예외를 낸다.
+            EnsureStubLength(pipeCurve, point, direction, ordered[0].Origin.DistanceTo(ordered[1].Origin) / 2, fitting.FamilyTypeName);
+
+            // 3) 분할한 뒤 두 조각의 실제 좌표로 시작쪽·끝쪽을 판별한다(BreakCurve의 Id 유지 규칙을 가정하지 않는다).
+            var newPipeId = PlumbingUtils.BreakCurve(document, currentPipe.Id, point);
+            document.Regenerate();
+            var splitPipe = document.GetElement(newPipeId) as Pipe
+                ?? throw new InvalidOperationException("파이프 분할 결과를 찾지 못했습니다.");
+            var (beforePipe, afterPipe) = OffsetAlong(currentPipe, startXyz, direction) <= OffsetAlong(splitPipe, startXyz, direction)
+                ? (currentPipe, splitPipe)
+                : (splitPipe, currentPipe);
+
+            var beforeConnector = FindOpenConnectorNear(beforePipe, point);
+            var afterConnector = FindOpenConnectorNear(afterPipe, point);
+            if (beforeConnector is null || afterConnector is null)
+                throw new InvalidOperationException("파이프 분할 지점에서 열린 커넥터를 찾지 못했습니다.");
+
             ordered[0].ConnectTo(beforeConnector);
             ordered[1].ConnectTo(afterConnector);
 
@@ -112,6 +137,37 @@ internal sealed class RevitPipeMepCommandRepo : IPipeCommandRepo
         }
     }
 
+    /// <summary>배치 직후 Revit이 근처 열린 커넥터에 자동 연결했을 수 있다. 연결된 채로 회전·이동하면 파이프가
+    /// 뒤집히며 트랜잭션이 실패하므로, 정렬 전에 물리 연결을 모두 끊는다(연결이 없으면 아무 일도 하지 않는다).</summary>
+    private static void DisconnectAll(FamilyInstance instance)
+    {
+        foreach (var connector in GetMepConnectors(instance))
+            foreach (var reference in connector.AllRefs.Cast<Connector>()
+                         .Where(x => x.ConnectorType is ConnectorType.End or ConnectorType.Curve).ToList())
+                if (connector.IsConnectedTo(reference)) connector.DisconnectFrom(reference);
+    }
+
+    /// <summary>부속 양쪽에 남는 파이프 길이가 부속 반길이보다 짧으면, Revit의 모호한 "반대 방향" 오류 대신
+    /// 어느 부속을 어디로 옮겨야 하는지 알 수 있는 예외를 낸다.</summary>
+    private static void EnsureStubLength(Curve pipeCurve, XYZ point, XYZ direction, double halfLength, string familyTypeName)
+    {
+        var offsets = new[] { (pipeCurve.GetEndPoint(0) - point).DotProduct(direction), (pipeCurve.GetEndPoint(1) - point).DotProduct(direction) };
+        var available = Math.Min(Math.Abs(offsets.Min()), Math.Abs(offsets.Max()));
+        if (available >= halfLength) return;
+        throw new InvalidOperationException(
+            $"부속 '{familyTypeName}'을(를) 놓을 자리가 부족합니다. 배치 지점 양쪽에 부속 길이의 절반" +
+            $"({UC.FtToMm(halfLength):N0}mm) 이상이 남아야 하는데 현재 여유는 {UC.FtToMm(available):N0}mm입니다. " +
+            "부속을 선 가운데 쪽으로 옮기거나 배관을 더 길게 그리세요.");
+    }
+
+    /// <summary>파이프 중점이 <paramref name="origin"/>에서 진행 방향으로 얼마나 떨어져 있는지. 분할된 두 조각의
+    /// 시작쪽·끝쪽 판별에 쓴다.</summary>
+    private static double OffsetAlong(Pipe pipe, XYZ origin, XYZ direction)
+    {
+        var curve = ((LocationCurve)pipe.Location).Curve;
+        return (((curve.GetEndPoint(0) + curve.GetEndPoint(1)) / 2) - origin).DotProduct(direction);
+    }
+
     private static List<Connector> GetMepConnectors(FamilyInstance instance)
         => instance.MEPModel?.ConnectorManager?.Connectors.Cast<Connector>().ToList() ?? [];
 
@@ -130,15 +186,28 @@ internal sealed class RevitPipeMepCommandRepo : IPipeCommandRepo
 
     private static void ConnectNode(Document document, PipeNodeDefinition node, PipeNetworkDefinition network, IReadOnlyDictionary<Guid, Pipe> pipes)
     {
-        var connected = network.Edges.Where(x => IsAt(x.Start, node.Position) || IsAt(x.End, node.Position)).Select(x => FindConnector(pipes[x.Id], node.Position, x.Elevation, network.ReferencePoint)).Where(x => x is not null).Cast<Connector>().ToList();
+        var connected = network.Edges.Where(x => IsAt(x.Start, node.Position) || IsAt(x.End, node.Position))
+            .Select(x => (Edge: x, Connector: FindConnector(pipes[x.Id], node.Position, x.Elevation, network.ReferencePoint)))
+            .Where(x => x.Connector is not null)
+            .ToDictionary(x => x.Edge.Id, x => x.Connector!);
         try
         {
             switch (node.NodeKind)
             {
-                case NodeKind.Elbow when connected.Count == 2: document.Create.NewElbowFitting(connected[0], connected[1]); break;
-                case NodeKind.Tee when connected.Count == 3: document.Create.NewTeeFitting(connected[0], connected[1], connected[2]); break;
-                case NodeKind.Cross when connected.Count == 4: document.Create.NewCrossFitting(connected[0], connected[1], connected[2], connected[3]); break;
-                case NodeKind.Inline when connected.Count == 2: document.Create.NewUnionFitting(connected[0], connected[1]); break;
+                case NodeKind.Elbow when connected.Count == 2:
+                    document.Create.NewElbowFitting(connected.Values.ElementAt(0), connected.Values.ElementAt(1));
+                    break;
+                case NodeKind.Tee when connected.Count == 3:
+                    var order = PipeTeeResolver.Resolve(node, network.Edges)
+                        ?? throw new InvalidOperationException("직교 T로 판별할 수 없습니다. 주관은 일직선, 분기관은 90°로 그려야 합니다.");
+                    document.Create.NewTeeFitting(connected[order.MainEdge1Id], connected[order.MainEdge2Id], connected[order.BranchEdgeId]);
+                    break;
+                case NodeKind.Cross when connected.Count == 4:
+                    document.Create.NewCrossFitting(connected.Values.ElementAt(0), connected.Values.ElementAt(1), connected.Values.ElementAt(2), connected.Values.ElementAt(3));
+                    break;
+                case NodeKind.Inline when connected.Count == 2:
+                    document.Create.NewUnionFitting(connected.Values.ElementAt(0), connected.Values.ElementAt(1));
+                    break;
             }
         }
         catch (Exception ex)

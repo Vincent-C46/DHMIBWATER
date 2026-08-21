@@ -29,6 +29,7 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
         var missingParameters = new HashSet<(string Family, string Type, string Parameter)>();
         var writer = new PipeParameterWriter();
         var overrideWarnings = new List<string>();
+        var shapeParameterSuccesses = 0;
         // OD를 못 구한 (관종, DN) 조합. 절점마다 반복 경고하지 않도록 조합 단위로 묶는다.
         var missingOuterDiameter = new HashSet<(string PipeKind, double DiameterMm)>();
         var overrideView = ResolveOverrideView(doc);
@@ -74,18 +75,18 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
                 writer.YesNo(instance, PipeAlignmentParameters.IsAcceptable, plan.IsAcceptable);
                 writer.Text(instance, PipeAlignmentParameters.JointApplication, PipeAlignmentParameters.Label(info.ApplicationMode));
                 writer.LengthMm(instance, PipeAlignmentParameters.CenterlineRadius, plan.CenterlineRadiusMm);
-                writer.Text(instance, PipeAlignmentParameters.BendFormName, PipeAlignmentParameters.Label(info.Form));
+                writer.Text(instance, PipeAlignmentParameters.BendFormName, PipeAlignmentParameters.Label(plan.Form));
                 writer.LengthMm(instance, PipeAlignmentParameters.LayingLength, plan.LayingLengthMm);
+                writer.Number(instance, PipeAlignmentParameters.Weight, plan.WeightKg);
             }
-            doc.Regenerate();
 
             if (plan.DiameterParameterName is not null)
-                SetLengthParameter(instance, plan, plan.DiameterParameterName, UC.MmToFt(plan.DiameterMm), missingParameters);
+                SetShapeParameter(instance, plan, plan.DiameterParameterName, plan.DiameterMm, missingParameters, ref shapeParameterSuccesses);
             if (plan.WallThicknessParameterName is not null)
-                SetLengthParameter(instance, plan, plan.WallThicknessParameterName, UC.MmToFt(plan.WallThicknessEMm), missingParameters);
+                SetShapeParameter(instance, plan, plan.WallThicknessParameterName, plan.WallThicknessEMm, missingParameters, ref shapeParameterSuccesses);
             // OD는 곡관 형상 구동값이다. 직관 제원표에 (관종, DN)이 없으면 OuterDiameterMm이 null이라 형상이 기본값으로 남는다.
             if (plan.OuterDiameterParameterName is not null && plan.OuterDiameterMm is { } outerDiameterMm)
-                SetLengthParameter(instance, plan, plan.OuterDiameterParameterName, UC.MmToFt(outerDiameterMm), missingParameters);
+                SetShapeParameter(instance, plan, plan.OuterDiameterParameterName, outerDiameterMm, missingParameters, ref shapeParameterSuccesses);
             else if (plan.OuterDiameterParameterName is not null)
                 missingOuterDiameter.Add((plan.PipeKind, plan.DiameterMm));
             for (var i = 0; i < 5; i++)
@@ -93,7 +94,9 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
                 SetRequiredAngleParameter(rotationParameters[i].Xy, plan, $"{RotationXyParameterPrefix}{i + 1}", plan.RotXYDeg[i]);
                 SetRequiredAngleParameter(rotationParameters[i].Xz, plan, $"{RotationXzParameterPrefix}{i + 1}", plan.RotXZDeg[i]);
             }
-            // 회전 파라미터가 형상 수식을 구동하므로 커밋까지 미루지 않고 여기서 형상을 갱신한다.
+            // 회전 파라미터가 형상 수식을 구동하므로 커밋까지 미루지 않고(또는 다른 절점과 묶지 않고) 여기서 형상을 갱신한다.
+            // 절점을 묶어서 Regenerate를 늦추면 아직 회전값이 반영되지 않은 상태로 다음 절점 계산에 영향을 줄 수 있다
+            // (2026-08-20 배치 처리 시도 후 곡관 좌표가 비정상적으로 커지는 회귀 발견 — 원복).
             doc.Regenerate();
             if (!plan.IsAcceptable)
                 ApplyExceededOverride(overrideView, instance.Id, solidFillPatternId, plan.NodeId, overrideWarnings);
@@ -104,13 +107,21 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
             .GroupBy(x => (x.Family, x.Type))
             .Select(g => $"곡관 패밀리 '{g.Key.Family}:{g.Key.Type}'에 {string.Join(", ", g.Select(x => x.Parameter))} 파라미터가 없거나 읽기전용이라 값을 설정하지 못했습니다.")
             .ToList();
+        var representative = plans.GroupBy(x => (x.PipeKind, x.DiameterMm)).OrderByDescending(x => x.Count()).ThenBy(x => x.Key.PipeKind).ThenBy(x => x.Key.DiameterMm).First();
+        var representativePlan = representative.First();
+        warnings.Insert(0,
+            $"[정보] 곡관 형상 파라미터 — DN='{representativePlan.DiameterParameterName}', OD='{representativePlan.OuterDiameterParameterName}', thk='{representativePlan.WallThicknessParameterName}'\n"
+            + $"기록 예시({representative.Key.PipeKind}/DN{representative.Key.DiameterMm:0.##}): DN={representativePlan.DiameterMm:0.##}mm, OD={representativePlan.OuterDiameterMm:0.##}mm, e={representativePlan.WallThicknessEMm:0.##}mm / 기록 성공 {shapeParameterSuccesses}건, 실패 {missingParameters.Count}건");
         if (missingOuterDiameter.Count > 0)
             warnings.Add($"직관 제원표에 외경 OD가 없어 곡관 형상이 패밀리 기본값으로 남은 관종/DN {missingOuterDiameter.Count}건: "
                 + string.Join(", ", missingOuterDiameter.OrderBy(x => x.PipeKind).ThenBy(x => x.DiameterMm).Select(x => $"{x.PipeKind}/DN{x.DiameterMm:0.##}")));
         warnings.AddRange(overrideWarnings);
         if (writer.Missing.Count > 0)
             warnings.Add($"프로젝트 매개변수 {string.Join(", ", writer.Missing.OrderBy(x => x))}를 곡관 인스턴스에 기록하지 못했습니다(바인딩 실패 또는 읽기전용).");
-        return new AdaptiveBendPlacementResult(count, warnings);
+        var outerDiameters = plans.Where(x => x.OuterDiameterMm is not null)
+            .GroupBy(x => (x.PipeKind, x.DiameterMm))
+            .ToDictionary(x => x.Key, x => x.First().OuterDiameterMm!.Value);
+        return new AdaptiveBendPlacementResult(count, warnings, outerDiameters);
     }
 
     public IReadOnlyList<(string FamilyName, string TypeName)> FindMissingSymbols(IEnumerable<(string FamilyName, string TypeName)> pairs)
@@ -150,11 +161,10 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
         return symbol;
     }
 
-    private static void SetLengthParameter(FamilyInstance instance, AdaptiveBendPlacementPlan plan, string name, double valueFt, HashSet<(string, string, string)> missingParameters)
+    private static void SetShapeParameter(FamilyInstance instance, AdaptiveBendPlacementPlan plan, string name, double valueMm, HashSet<(string, string, string)> missingParameters, ref int successes)
     {
-        var param = instance.LookupParameter(name);
-        if (param is not { IsReadOnly: false } || param.StorageType != StorageType.Double || !param.Set(valueFt))
-            missingParameters.Add((plan.FamilyName, plan.TypeName, name));
+        if (AdaptiveParameterWriter.TryWrite(instance, name, valueMm.ToString("0.##"), UC.MmToFt(valueMm), (int)Math.Round(valueMm))) successes++;
+        else missingParameters.Add((plan.FamilyName, plan.TypeName, name));
     }
 
     private static (Parameter Xy, Parameter Xz)[] ResolveRotationParameters(FamilyInstance instance, AdaptiveBendPlacementPlan plan)

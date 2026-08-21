@@ -14,7 +14,7 @@ public sealed class CreateValvePipingUseCase
         _repositories = repositories.ToDictionary(x => x.OutputMode);
     }
 
-    public void Execute(PipeNetworkDefinition network)
+    public PipeCreationResult Execute(PipeNetworkDefinition network)
     {
         if (network.Edges.Count == 0) throw new InvalidOperationException("생성할 배관 세그먼트가 없습니다.");
         if (!_repositories.TryGetValue(network.OutputMode, out var repository))
@@ -25,8 +25,9 @@ public sealed class CreateValvePipingUseCase
             try
             {
                 _transaction.Begin("Create Valve Room Piping");
-                repository.CreateNetwork(network);
+                var result = repository.CreateNetwork(network);
                 _transaction.Commit();
+                return result;
             }
             catch
             {

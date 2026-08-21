@@ -7,9 +7,8 @@ namespace DHBIMWATER.Core.Gis;
 /// Revit 의존 없는 순수 계산이다.
 /// </summary>
 /// <remarks>
-/// 가정(2026-08-11, 검증 필요): rot_XY는 접선을 XY평면에 투영한 방향각(+X축 기준, Z축 회전),
-/// rot_XZ는 그 투영 대비 수직 기울기각이다. 패밀리 로컬축 기준·부호는 RFA 완성 후 Revit에서 직접
-/// 대조해야 하며, 맞지 않으면 <see cref="Compute"/>만 고치면 된다.
+/// rot_XY는 진행방향을 XY평면에 투영한 방향각(+X축 기준)이고, rot_XZ는 3D 진행방향과 그 XY 투영 사이의
+/// 경사각이다. 좌표 변환은 평행이동뿐이므로 GIS 방위각이 Revit 프로젝트 X축 기준 각과 같다(진북 회전은 반영하지 않는다).
 /// </remarks>
 public static class BendOrientation
 {

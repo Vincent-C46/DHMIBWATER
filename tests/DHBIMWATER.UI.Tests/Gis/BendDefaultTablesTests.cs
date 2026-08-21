@@ -70,34 +70,37 @@ public class BendDefaultTablesTests
     [InlineData(1200, 11.25, 20.4, 1195, 175)]
     public void Bend_default_matches_handbook_rows(double dn, double angle, double e, double radius, double laying)
     {
-        foreach (var form in new[] { BendForm.AType, BendForm.BType })
-        {
-            var entry = BendFittingCatalog.Default.Find(dn, angle, form);
-            Assert.NotNull(entry);
-            Assert.Equal(e, entry!.WallThicknessMm);
-            Assert.Equal(radius, entry.CenterlineRadiusMm);
-            Assert.Equal(laying, entry.LayingLengthMm);
-        }
+        var entry = BendFittingCatalog.Default.Find(dn, angle);
+        Assert.NotNull(entry);
+        Assert.Equal(e, entry!.WallThicknessMm);
+        Assert.Equal(radius, entry.CenterlineRadiusMm);
+        Assert.Equal(laying, entry.LayingLengthMm);
     }
 
-    /// <summary>A형·B형은 치수가 같고 스피것 삽입부 s(200mm)만 B형에 붙는다.</summary>
+    /// <summary>
+    /// 행은 DN×각도 하나뿐이다(2026-08-20, A형/B형 중복 행 폐지). 기본 형식은 B형이고,
+    /// A형으로 바꿔도 e·R·t는 그대로이며 s(스피것)·무게만 형식을 따라간다.
+    /// </summary>
     [Fact]
-    public void Bend_default_covers_every_dn_and_angle_for_both_forms()
+    public void Bend_default_has_one_row_per_dn_and_angle_defaulting_to_b_form()
     {
         foreach (var dn in StraightPipeSpecTable.NominalDiameters)
             foreach (var angle in JointDeflectionRule.StandardAngles)
             {
-                var a = BendFittingCatalog.Default.Find(dn, angle, BendForm.AType);
-                var b = BendFittingCatalog.Default.Find(dn, angle, BendForm.BType);
-                Assert.NotNull(a);
-                Assert.NotNull(b);
-                Assert.Equal(a!.CenterlineRadiusMm, b!.CenterlineRadiusMm);
-                Assert.Equal(a.LayingLengthMm, b.LayingLengthMm);
-                Assert.Equal(a.WallThicknessMm, b.WallThicknessMm);
-                Assert.Equal(0d, a.ExtraLegLengthMm);
-                Assert.Equal(200d, b.ExtraLegLengthMm);
+                var entry = BendFittingCatalog.Default.Find(dn, angle);
+                Assert.NotNull(entry);
+                Assert.Equal(BendForm.BType, entry!.Form);
+                Assert.Equal(200d, entry.ExtraLegLengthMm);
+
+                Assert.True(BendFittingCatalog.TryGetHandbookWeight(dn, angle, BendForm.AType, out var kpA, out var tytonA));
+                Assert.True(BendFittingCatalog.TryGetHandbookWeight(dn, angle, BendForm.BType, out var kpB, out var tytonB));
+                Assert.Equal(kpB, entry.WeightKpMechanicalKg);
+                Assert.Equal(tytonB, entry.WeightTytonKg);
+                // A형은 스피것이 없어 더 가볍다(같은 DN·각도).
+                Assert.True(kpA > kpB);
+                Assert.True(tytonA > tytonB);
             }
-        Assert.Equal(StraightPipeSpecTable.NominalDiameters.Count * JointDeflectionRule.StandardAngles.Count * 2,
+        Assert.Equal(StraightPipeSpecTable.NominalDiameters.Count * JointDeflectionRule.StandardAngles.Count,
             BendFittingCatalog.Default.Entries.Count);
     }
 
@@ -108,13 +111,13 @@ public class BendDefaultTablesTests
         foreach (var dn in StraightPipeSpecTable.NominalDiameters)
         {
             var thicknesses = JointDeflectionRule.StandardAngles
-                .Select(angle => BendFittingCatalog.Default.Find(dn, angle, BendForm.AType)!.WallThicknessMm)
+                .Select(angle => BendFittingCatalog.Default.Find(dn, angle)!.WallThicknessMm)
                 .Distinct()
                 .ToList();
             Assert.Single(thicknesses);
         }
         // DN300: 이형관 9.6 vs 상수 1종관 직관 8.8
-        Assert.Equal(9.6, BendFittingCatalog.Default.Find(300, 45, BendForm.AType)!.WallThicknessMm);
+        Assert.Equal(9.6, BendFittingCatalog.Default.Find(300, 45)!.WallThicknessMm);
         Assert.Equal(8.8, StraightPipeSpecTable.Default.Find(PipeKindCatalog.Water1, 300)!.ThicknessMm);
     }
 
@@ -130,7 +133,7 @@ public class BendDefaultTablesTests
             from angle in JointDeflectionRule.StandardAngles
             let radius = Math.Round(form.Factor * dn, 1)
             select new BendFittingEntry(dn, angle, form.Form,
-                Math.Ceiling(BendResolver.TangentLength(radius, angle)) + 50d, radius, 0d,
+                Math.Ceiling(BendResolver.TangentLength(radius, angle)) + 50d, radius,
                 StraightPipeSpecTable.Default.Find(PipeKindCatalog.Water1, dn)?.ThicknessMm ?? 0d)).ToList());
         Assert.True(legacy.IsLegacyPlaceholder);
     }

@@ -15,7 +15,7 @@ internal sealed class RevitPipeGenericModelCommandRepo : IPipeCommandRepo
     public RevitPipeGenericModelCommandRepo(Func<Document?> document) => _document = document;
     public PipeOutputMode OutputMode => PipeOutputMode.GenericModel;
 
-    public void CreateNetwork(PipeNetworkDefinition network)
+    public PipeCreationResult CreateNetwork(PipeNetworkDefinition network)
     {
         var document = _document() ?? throw new InvalidOperationException("활성 Revit 문서가 없습니다.");
         foreach (var edge in network.Edges)
@@ -41,6 +41,7 @@ internal sealed class RevitPipeGenericModelCommandRepo : IPipeCommandRepo
             shape.ApplicationDataId = fitting.Id.ToString();
             shape.SetShape([Line.CreateBound(point, point + XYZ.BasisZ * UC.MmToFt(50))]);
         }
+        return new PipeCreationResult($"배관 {network.Edges.Count}개를 생성했습니다.");
     }
 
     private static FamilySymbol? FindSymbol(Document document, string familyTypeName)

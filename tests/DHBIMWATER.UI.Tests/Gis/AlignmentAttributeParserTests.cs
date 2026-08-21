@@ -13,7 +13,7 @@ public class AlignmentAttributeParserTests
     [InlineData("100", true, 100, null)]
     [InlineData("100mm", true, 100, null)]
     [InlineData("100 MM", true, 100, null)]
-    [InlineData("주철관", false, 0, "주철관")]
+    [InlineData("주철관", false, 0, null)]
     public void ParseDiameter_ParsesSupportedFormats(string raw, bool success, double diameter, string? kind)
     {
         var result = AlignmentAttributeParser.ParseDiameter(raw);

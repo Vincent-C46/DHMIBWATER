@@ -25,26 +25,32 @@ public sealed class AlignmentSourceLoader
                 ? excelReader.Read(file.FilePath, file.ExcelMapping)
                 : reader.Read(file.FilePath);
             warnings.AddRange(read.Warnings);
-            var layers = file.Layers is { Count: > 0 } ? new HashSet<string>(file.Layers, StringComparer.OrdinalIgnoreCase) : null;
+            var layers = file.Layers is not null ? new HashSet<string>(file.Layers, StringComparer.Ordinal) : null;
+            // 방향 반전 대상. 레코드번호는 파일(엑셀은 시트) 단위로만 유일하므로 파일 루프 안에서 만든다.
+            var reversed = file.ReversedRecordNumbers is { Count: > 0 } ? new HashSet<string>(file.ReversedRecordNumbers, StringComparer.Ordinal) : null;
             var failed = 0;
             string? example = null;
             var unknownKinds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var feature in read.Features)
             {
                 if (layers is not null && (!feature.Attributes.TryGetValue("LAYER", out var layer) || !layers.Contains(layer))) continue;
-                var kind = ReadValue(feature, file.KindField);
                 var rawDiameter = ReadValue(feature, file.DiameterField);
                 var parsed = AlignmentAttributeParser.ParseDiameter(rawDiameter);
-                if (string.IsNullOrWhiteSpace(kind)) kind = parsed.Kind;
-                if (string.IsNullOrWhiteSpace(kind)) kind = file.PipeKind;
-                if (!string.IsNullOrWhiteSpace(kind))
-                {
-                    var normalizedKind = PipeKindCatalog.Normalize(kind);
-                    if (normalizedKind is not null) kind = normalizedKind;
-                    else unknownKinds.Add(kind);
-                }
+                var mappingKey = DiameterMappingKey.Of(rawDiameter);
+                ResolvedPipeSpecKey? mapped = null;
+                var hasMapping = file.DiameterMappings?.TryGetValue(mappingKey, out mapped) == true;
+                // DN과 등급은 독립적으로 확정된다. DN을 "지정 안 함"으로 둔 행에서도 등급 지정은 살아 있어야 한다.
+                var hasMappedDiameter = hasMapping && mapped!.DiameterMm is > 0;
+                var hasMappedKind = hasMapping && !string.IsNullOrWhiteSpace(mapped!.PipeKind);
+                var normalizedMappedKind = hasMappedKind ? PipeKindCatalog.Normalize(mapped!.PipeKind) : null;
+                var resolvedKind = hasMappedKind
+                    ? new KindResolution(normalizedMappedKind ?? mapped!.PipeKind!, normalizedMappedKind is not null)
+                    : AlignmentAttributeParser.ResolveKind(ReadValue(feature, file.KindField), file.PipeKind, parsed.Kind);
+                var kind = resolvedKind.Kind;
+                if (!resolvedKind.IsNormalized && kind is not null) unknownKinds.Add(kind);
                 double diameterMm; bool diameterResolved;
-                if (parsed.Success) { diameterMm = parsed.DiameterMm; diameterResolved = true; }
+                if (hasMappedDiameter) { diameterMm = mapped!.DiameterMm!.Value; diameterResolved = true; }
+                else if (parsed.Success) { diameterMm = parsed.DiameterMm; diameterResolved = true; }
                 else if (file.ManualDiameterMm is > 0) { diameterMm = file.ManualDiameterMm.Value; diameterResolved = true; }
                 else { diameterMm = 0d; diameterResolved = false; }
                 if (!diameterResolved)
@@ -52,7 +58,9 @@ public sealed class AlignmentSourceLoader
                     unresolved++; failed++;
                     example ??= rawDiameter;
                 }
-                alignments.Add(feature with { PipeKind = kind, DiameterMm = diameterMm });
+                // 정점 순서 반전 = 시작점·끝점 교환. 좌표값은 그대로 두므로 진단·모델링이 같은 방향을 공유한다.
+                var vertices = reversed?.Contains(feature.RecordNumber) == true ? feature.Vertices.Reverse().ToList() : feature.Vertices;
+                alignments.Add(feature with { PipeKind = kind, DiameterMm = diameterMm, Vertices = vertices });
             }
             if (failed > 0)
             {

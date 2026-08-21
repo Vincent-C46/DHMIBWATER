@@ -21,7 +21,7 @@ public class BendResolverTests
     [InlineData(16, 5, 11.25)]
     public void Deflection_within_allowable_selects_standard_angle(double theta, double allowable, double expected)
     {
-        var result = BendResolver.Resolve(Bend(theta), Settings(allowable), BendForm.AType);
+        var result = BendResolver.Resolve(Bend(theta), Settings(allowable));
         Assert.Equal(BendResolutionKind.Standard, result.Kind);
         Assert.Equal(expected, result.StandardAngleDeg);
         Assert.True(result.IsAcceptable);
@@ -30,7 +30,7 @@ public class BendResolverTests
     [Fact]
     public void Deflection_inside_joint_allowable_needs_no_bend()
     {
-        var result = BendResolver.Resolve(Bend(3), Settings(5), BendForm.AType);
+        var result = BendResolver.Resolve(Bend(3), Settings(5));
         Assert.Equal(BendResolutionKind.None, result.Kind);
         Assert.True(result.IsAcceptable);
     }
@@ -39,7 +39,7 @@ public class BendResolverTests
     public void Unacceptable_bend_keeps_nearest_fitting_size_for_placement()
     {
         var fitting = new BendFittingEntry(100, 11.25, BendForm.AType, 130, 210);
-        var result = BendResolver.Resolve(Bend(16), Settings(3, fittings: fitting), BendForm.AType);
+        var result = BendResolver.Resolve(Bend(16), Settings(3, fittings: fitting));
         Assert.Equal(BendResolutionKind.Unresolved, result.Kind);
         Assert.False(result.IsAcceptable);
         Assert.True(result.HasFittingSize);
@@ -55,7 +55,7 @@ public class BendResolverTests
         var settings = new BendSettings(StraightPipeSpecTable.Default, new JointDeflectionTable(Array.Empty<JointDeflectionSpec>()),
             new BendFittingCatalog(new[] { new BendFittingEntry(100, 45, BendForm.AType, 130, 210) }),
             JointTypeCatalog.KpMechanical, JointApplicationMode.SingleJoint);
-        var result = BendResolver.Resolve(Bend(45), settings, BendForm.AType);
+        var result = BendResolver.Resolve(Bend(45), settings);
         Assert.Equal(BendResolutionKind.Unresolved, result.Kind);
         Assert.False(result.IsAcceptable);
         Assert.Equal(0, result.EffectiveAllowableDeg);
@@ -88,7 +88,7 @@ public class BendResolverTests
             new JointDeflectionSpec(JointTypeCatalog.KpMechanical, 800, 3)
         });
         Assert.Null(straight.Find(PipeKindCatalog.Water1, 600));
-        Assert.Null(fittings.Find(600, 45, BendForm.AType));
+        Assert.Null(fittings.Find(600, 45));
         Assert.Null(joints.AllowableFor(JointTypeCatalog.KpMechanical, 600));
     }
 
@@ -96,8 +96,8 @@ public class BendResolverTests
     public void Pipe_kind_does_not_affect_fitting_or_joint_lookup()
     {
         var settings = Settings(5, fittings: new BendFittingEntry(100, 45, BendForm.AType, 130, 210));
-        var water = BendResolver.Resolve(Bend(45, pipeKind: PipeKindCatalog.Water1), settings, BendForm.AType);
-        var sewer = BendResolver.Resolve(Bend(45, pipeKind: PipeKindCatalog.Sewer3), settings, BendForm.AType);
+        var water = BendResolver.Resolve(Bend(45, pipeKind: PipeKindCatalog.Water1), settings);
+        var sewer = BendResolver.Resolve(Bend(45, pipeKind: PipeKindCatalog.Sewer3), settings);
         Assert.Equal(water.LayingLengthMm, sewer.LayingLengthMm);
         Assert.Equal(water.EffectiveAllowableDeg, sewer.EffectiveAllowableDeg);
     }
@@ -111,13 +111,13 @@ public class BendResolverTests
             new(2, new Point3D(0, 0, 0), NodeKind.Tee, 3, 0, 100, 100, ""),
             new(3, new Point3D(0, 0, 0), NodeKind.EndPoint, 1, 0, 100, 100, "")
         };
-        Assert.Single(BendResolver.ResolveAll(nodes, Settings(5), BendForm.AType));
+        Assert.Single(BendResolver.ResolveAll(nodes, Settings(5)));
     }
 
     [Fact]
     public void Laying_length_shorter_than_tangent_length_is_inconsistent()
     {
-        var result = BendResolver.Resolve(Bend(90), Settings(5, fittings: new BendFittingEntry(100, 90, BendForm.AType, 100, 210)), BendForm.AType);
+        var result = BendResolver.Resolve(Bend(90), Settings(5, fittings: new BendFittingEntry(100, 90, BendForm.AType, 100, 210)));
         Assert.False(result.IsSizeConsistent);
     }
 
