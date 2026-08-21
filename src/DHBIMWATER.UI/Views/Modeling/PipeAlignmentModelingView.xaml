@@ -234,12 +234,11 @@
                             </DataGrid.Columns>
                         </DataGrid>
                         <Grid Grid.Row="2" Margin="0,10,0,0">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                            <Button Content="자동추정 일괄 적용" Style="{StaticResource PrimaryButtonStyle}" Command="{Binding ApplyAutoDiametersCommand}"/>
-                            <ComboBox Grid.Column="1" Width="150" Margin="12,0,0,0" ItemsSource="{Binding MappingPipeKinds, Mode=OneWay}" SelectedItem="{Binding BulkMappingPipeKind, Mode=TwoWay}"/>
-                            <Button Grid.Column="2" Content="선택 행 등급 적용" Style="{StaticResource PrimaryButtonStyle}" Margin="8,0,0,0" Command="{Binding ApplyMappingKindCommand}"/>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <ComboBox Width="150" ItemsSource="{Binding MappingPipeKinds, Mode=OneWay}" SelectedItem="{Binding BulkMappingPipeKind, Mode=TwoWay}"/>
+                            <Button Grid.Column="1" Content="전체 일괄 적용" Style="{StaticResource PrimaryButtonStyle}" Margin="8,0,0,0" Command="{Binding ApplyBulkMappingCommand}" ToolTip="확정 DN은 자동추정값으로, 등급은 왼쪽에서 고른 값으로 표의 모든 행에 적용합니다."/>
                             <!-- 관·곡관 규격표 진입점은 [관 · 곡관 설정] 탭 하나로 통일했다(2026-08-20, 중복 진입점 정리). -->
-                            <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
+                            <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
                                 <TextBlock Foreground="#B26B00" Text="{Binding DiameterUnresolvedCount, StringFormat=⚠ 확정 안 한 표기 {0}건}" ToolTip="확정하지 않으면 자동추정값으로 배치되며 규격표 조회에 실패할 수 있습니다"/>
                                 <TextBlock Foreground="#B26B00" Margin="12,0,0,0" Text="{Binding SpecUnmatchedCount, StringFormat=⚠ 규격 미매칭 {0}건}"/>
                             </StackPanel>
@@ -253,7 +252,7 @@
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
-                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,10" Text="선형(레코드)마다 진행 방향을 지정합니다. [반전]을 체크하면 정점 순서가 뒤집혀 시작점과 끝점이 서로 바뀝니다(좌표값 자체는 변하지 않습니다). 진단과 모델링 모두 여기서 지정한 방향을 사용합니다."/>
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,10" Text="선형(레코드)마다 진행 방향을 지정합니다. [반전]을 체크하면 정점 순서가 뒤집혀 시작점과 끝점이 서로 바뀝니다(좌표값 자체는 변하지 않습니다). Ctrl·Shift로 여러 행을 선택한 뒤 그중 한 행의 [반전]을 클릭하면 선택한 행 전체가 같은 값이 됩니다. 진단과 모델링 모두 여기서 지정한 방향을 사용합니다."/>
                         <DataGrid Grid.Row="1" ItemsSource="{Binding DirectionRows, Mode=OneWay}" SelectionMode="Extended" AutoGenerateColumns="False" CanUserAddRows="False">
                             <DataGrid.RowStyle>
                                 <Style TargetType="DataGridRow">
@@ -275,11 +274,8 @@
                             </DataGrid.Columns>
                         </DataGrid>
                         <Grid Grid.Row="2" Margin="0,10,0,0">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <Button Content="선택 행 반전" Style="{StaticResource PrimaryButtonStyle}" Command="{Binding ReverseSelectedCommand}" ToolTip="선택한 행의 반전 여부를 각각 뒤집습니다."/>
-                            <Button Grid.Column="1" Content="선택 행 원래대로" Style="{StaticResource PrimaryButtonStyle}" Margin="8,0,0,0" Command="{Binding RestoreSelectedCommand}"/>
-                            <Button Grid.Column="2" Content="전체 해제" Style="{StaticResource PrimaryButtonStyle}" Margin="8,0,0,0" Command="{Binding ClearReversalsCommand}"/>
-                            <TextBlock Grid.Column="3" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="#3A6EA5" Text="{Binding ReversedCount, StringFormat=방향 반전 {0}건}"/>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="#3A6EA5" Text="{Binding ReversedCount, StringFormat=방향 반전 {0}건}"/>
                         </Grid>
                     </Grid>
                 </TabItem>

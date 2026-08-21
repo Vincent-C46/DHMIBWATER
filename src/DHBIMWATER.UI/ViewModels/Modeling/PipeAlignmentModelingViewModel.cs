@@ -73,7 +73,7 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
     private readonly IProjectLocationQueryRepo _projectLocationQuery; private readonly IElementTypeQueryRepo _typeRepo;
     private PipeAlignmentSourceFileItem? _selectedFile; private PipeAlignmentOutputMode _outputMode;
     private double _referenceX, _referenceY, _intervalM = 6, _snapToleranceMm = 10;
-    private bool _applySharedCoordinates; private ZDatum _zDatum = ZDatum.Invert;
+    private bool _applySharedCoordinates, _propagatingReversal; private ZDatum _zDatum = ZDatum.Invert;
     private string? _straightFamilyName, _straightTypeName, _bendFamilyTypeName, _pipingSystemTypeName, _pipeTypeName, _levelName, _summary, _settingsNotice;
     private string? _straightDiameterParameterName, _straightOuterDiameterParameterName, _straightThicknessParameterName, _straightPointCountNotice, _bendPointCountNotice;
     private string? _bendDiameterParameterName, _bendWallThicknessParameterName, _bendOuterDiameterParameterName;
@@ -89,8 +89,7 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
         _straightFamilyName = StraightFamilyNames.FirstOrDefault(); _straightTypeName = TypesFor(_straightFamilyName).FirstOrDefault(); _bendFamilyTypeName = AdaptiveComponentTypeNames.FirstOrDefault(x => _typeRepo.GetAdaptiveBendPointCount(x) == 5) ?? AdaptiveComponentTypeNames.FirstOrDefault(); _pipingSystemTypeName = PipingSystemTypeNames.FirstOrDefault(); _pipeTypeName = PipeTypeNames.FirstOrDefault(); _levelName = LevelNames.FirstOrDefault();
         UpdateStraightParameterOptions();
         AddCommand = new RelayCommand(_ => AddFile()); RemoveCommand = new RelayCommand(_ => RemoveFile()); RunCommand = new RelayCommand(_ => RunDiagnosis()); CreateCommand = new RelayCommand(_ => RequestModeling()); CancelCommand = new RelayCommand(_ => CloseAction?.Invoke());
-        ApplyAutoDiametersCommand = new RelayCommand(_ => ApplyAutoDiameters()); ApplyMappingKindCommand = new RelayCommand(_ => ApplyMappingKind());
-        ReverseSelectedCommand = new RelayCommand(_ => ReverseSelected()); RestoreSelectedCommand = new RelayCommand(_ => SetSelectedReversed(false)); ClearReversalsCommand = new RelayCommand(_ => ClearReversals());
+        ApplyBulkMappingCommand = new RelayCommand(_ => ApplyBulkMapping());
         OpenPipeSpecsCommand = new RelayCommand(_ => OpenPipeSpecs()); LoadSettings();
         Files.CollectionChanged += (_, _) => NotifyFilesByKindChanged();
     }
@@ -179,11 +178,7 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
     public ICommand CreateCommand { get; }
     public ICommand CancelCommand { get; }
     public ICommand OpenPipeSpecsCommand { get; }
-    public ICommand ApplyAutoDiametersCommand { get; }
-    public ICommand ApplyMappingKindCommand { get; }
-    public ICommand ReverseSelectedCommand { get; }
-    public ICommand RestoreSelectedCommand { get; }
-    public ICommand ClearReversalsCommand { get; }
+    public ICommand ApplyBulkMappingCommand { get; }
     public Action? CloseAction { get; set; }
     public PipeAlignmentModelingRequest? RequestedModeling { get; private set; }
 
@@ -326,15 +321,16 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
         OnPropertyChanged(nameof(DiameterUnresolvedCount)); OnPropertyChanged(nameof(HasDiameterUnresolved));
         OnPropertyChanged(nameof(SpecUnmatchedCount)); OnPropertyChanged(nameof(HasSpecUnmatched));
     }
-    private void ApplyAutoDiameters()
+    /// <summary>표의 전 행에 자동추정 DN과 콤보에서 고른 등급을 한 번에 적용한다(선택 행 개념 없음).</summary>
+    private void ApplyBulkMapping()
     {
-        foreach (var row in DiameterMappings.Where(x => x.AutoDiameterMm is > 0 && StraightPipeSpecTable.NominalDiameters.Any(d => Math.Abs(d - x.AutoDiameterMm.Value) <= 1e-6)))
-            row.DiameterMm = row.AutoDiameterMm;
-    }
-    private void ApplyMappingKind()
-    {
-        if (string.IsNullOrWhiteSpace(BulkMappingPipeKind)) return;
-        foreach (var row in DiameterMappings.Where(x => x.IsSelected)) row.PipeKind = BulkMappingPipeKind;
+        foreach (var row in DiameterMappings)
+        {
+            if (row.AutoDiameterMm is > 0 && StraightPipeSpecTable.NominalDiameters.Any(d => Math.Abs(d - row.AutoDiameterMm.Value) <= 1e-6))
+                row.DiameterMm = row.AutoDiameterMm;
+            if (!string.IsNullOrWhiteSpace(BulkMappingPipeKind))
+                row.PipeKind = BulkMappingPipeKind;
+        }
     }
     private void NotifyFileMappingChanged() { RebuildDiameterMappings(); RebuildDirectionRows(); }
 
@@ -361,7 +357,7 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
                     SourceStart = feature.Vertices[0], SourceEnd = feature.Vertices[^1],
                     VertexCount = feature.Vertices.Count, LengthM = PolylineLengthM(feature.Vertices),
                     IsReversed = preserved.Contains(key),
-                    Changed = () => OnPropertyChanged(nameof(ReversedCount))
+                    Changed = DirectionRowChanged
                 });
             }
         }
@@ -375,10 +371,24 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
         for (var i = 1; i < vertices.Count; i++) length += vertices[i - 1].DistanceTo(vertices[i]);
         return length;
     }
-    /// <summary>선택 행의 반전 여부를 뒤집는다(일부만 반전된 상태에서도 각 행이 개별로 토글된다).</summary>
-    private void ReverseSelected() { foreach (var row in DirectionRows.Where(x => x.IsSelected).ToList()) row.IsReversed = !row.IsReversed; }
-    private void SetSelectedReversed(bool reversed) { foreach (var row in DirectionRows.Where(x => x.IsSelected).ToList()) row.IsReversed = reversed; }
-    private void ClearReversals() { foreach (var row in DirectionRows.ToList()) row.IsReversed = false; }
+    /// <summary>
+    /// 체크박스로 바뀐 행이 다중 선택에 포함돼 있으면 선택한 나머지 행도 같은 값으로 맞춘다.
+    /// 선택에 없는 행을 클릭했을 때는 그 행만 바뀐다(선택과 무관한 단독 편집).
+    /// </summary>
+    private void DirectionRowChanged(AlignmentDirectionRow source)
+    {
+        if (!_propagatingReversal && source.IsSelected)
+        {
+            _propagatingReversal = true;
+            try
+            {
+                foreach (var row in DirectionRows.Where(x => x.IsSelected && !ReferenceEquals(x, source)).ToList())
+                    row.IsReversed = source.IsReversed;
+            }
+            finally { _propagatingReversal = false; }
+        }
+        OnPropertyChanged(nameof(ReversedCount));
+    }
     private PipeNetworkDiagnosisResult? RunDiagnosis(bool showWarnings = true) { if (Files.Count == 0) { _dialog.Warn("입력 확인", "하나 이상의 SHP, DXF 또는 DWG 파일을 추가하세요."); return null; } if (SnapToleranceMm <= 0) { _dialog.Warn("입력 확인", "스냅 허용오차는 0보다 커야 합니다."); return null; } try { var result = _analyze.Execute(new PipeNetworkDiagnosisRequest { Files = SourceFiles(), SnapToleranceMm = SnapToleranceMm }); Attention.Clear(); foreach (var report in result.Attention) Attention.Add(report); Summary = $"절점 {result.NodeCount} / 간선 {result.EdgeCount}\n{string.Join(", ", result.KindCounts.OrderBy(x => x.Key).Select(x => $"{x.Key} {x.Value}"))}\n곡관 판정 — 표준 {result.BendStandardCount}, 생략 {result.BendNoneCount}, 미해결 {result.BendUnresolvedCount}\n규격 미매칭 {SpecUnmatchedCount}건\n경고 {result.Warnings.Count}건"; if (showWarnings && result.Warnings.Count > 0) _dialog.Info("진단 경고", string.Join("\n", result.Warnings.Take(20)) + (result.Warnings.Count > 20 ? $"\n… 외 {result.Warnings.Count - 20}건" : string.Empty)); return result; } catch (Exception ex) { _dialog.Warn("관로 네트워크 진단", $"진단에 실패했습니다.\n{ex.Message}"); return null; } }
     private void RequestModeling()
     {

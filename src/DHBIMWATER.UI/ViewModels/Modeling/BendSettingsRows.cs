@@ -57,6 +57,7 @@ public sealed class BendFittingRow : ViewModelBase
     public double LongLegLengthMm => Math.Round(LayingLengthMm + ExtraLegLengthMm, 1);
     public double TangentLengthMm => Math.Round(BendResolver.TangentLength(CenterlineRadiusMm, AngleDeg), 1);
     /// <summary>형식(A/B) 전환 시 그 형식의 핸드북 무게로 다시 채운다. 이후 사용자가 손으로 고치면 그 값을 유지한다.</summary>
+    // 형식 열 제거(2026-08-21)로 현재 호출부 없음 — 무게 재계산이 필요해지면 여기서 이어간다.
     public void RefreshWeightDefaults()
     {
         if (BendFittingCatalog.TryGetHandbookWeight(DiameterMm, AngleDeg, Form, out var kp, out var tyton))

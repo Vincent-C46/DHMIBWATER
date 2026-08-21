@@ -35,7 +35,6 @@ public sealed class PipeSpecTableViewModel : ViewModelBase
     public ObservableCollection<BendFittingRow> FittingRows { get; } = new();
     /// <summary>허용굴곡 탭. 독립 창이던 시절의 ViewModel을 그대로 세 번째 탭으로 얹는다.</summary>
     public JointDeflectionSettingsViewModel Joint { get; }
-    public IReadOnlyList<BendForm> Forms { get; } = Enum.GetValues<BendForm>();
     public StraightPipeSpecRow? SelectedStraight { get; set; }
     public BendFittingRow? SelectedFitting { get; set; }
     public ICommand AddStraightCommand { get; } public ICommand RemoveStraightCommand { get; }

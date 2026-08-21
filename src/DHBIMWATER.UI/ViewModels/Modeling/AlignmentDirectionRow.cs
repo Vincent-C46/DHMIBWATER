@@ -29,11 +29,11 @@ public sealed class AlignmentDirectionRow : ViewModelBase
         {
             if (!SetProperty(ref _isReversed, value)) return;
             OnPropertyChanged(nameof(StartDisplay)); OnPropertyChanged(nameof(EndDisplay));
-            Changed?.Invoke();
+            Changed?.Invoke(this);
         }
     }
     public bool IsSelected { get => _isSelected; set => SetProperty(ref _isSelected, value); }
-    public Action? Changed { get; init; }
+    public Action<AlignmentDirectionRow>? Changed { get; init; }
 
     /// <summary>체크 즉시 시작·끝 표시가 바뀌어야 사용자가 방향을 확인할 수 있다.</summary>
     public string StartDisplay => Format(IsReversed ? SourceEnd : SourceStart);

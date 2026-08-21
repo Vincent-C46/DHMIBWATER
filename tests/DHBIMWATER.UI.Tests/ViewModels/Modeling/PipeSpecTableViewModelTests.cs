@@ -10,6 +10,46 @@ namespace DHBIMWATER.UI.Tests.ViewModels.Modeling;
 public sealed class PipeSpecTableViewModelTests
 {
     [Fact]
+    public void JointDeflections_SplitByJointTypeAndPreserveUnknownRows()
+    {
+        var unknown = new JointDeflectionSpec("구형 조인트", 250, 2.5);
+        var source = BendSettings.Default with
+        {
+            JointDeflections = new JointDeflectionTable(new[]
+            {
+                new JointDeflectionSpec(JointTypeCatalog.KpMechanical.ToLowerInvariant(), 100, 5),
+                new JointDeflectionSpec(JointTypeCatalog.Tyton, 200, 4),
+                unknown
+            })
+        };
+        var vm = new JointDeflectionSettingsViewModel(source);
+
+        Assert.Single(vm.KpRows);
+        Assert.Single(vm.TytonRows);
+        Assert.Equal(JointTypeCatalog.KpMechanical, vm.KpRows[0].JointType);
+        Assert.Equal(JointTypeCatalog.Tyton, vm.TytonRows[0].JointType);
+
+        var result = vm.BuildResult(source);
+        Assert.Contains(unknown, result.JointDeflections.Entries);
+    }
+
+    [Fact]
+    public void JointDeflections_AddCommandsTargetTheirOwnCollections()
+    {
+        var vm = new JointDeflectionSettingsViewModel(BendSettings.Default);
+        var kpCount = vm.KpRows.Count;
+        var tytonCount = vm.TytonRows.Count;
+
+        vm.AddKpCommand.Execute(null);
+        vm.AddTytonCommand.Execute(null);
+
+        Assert.Equal(kpCount + 1, vm.KpRows.Count);
+        Assert.Equal(tytonCount + 1, vm.TytonRows.Count);
+        Assert.Equal(JointTypeCatalog.KpMechanical, vm.KpRows[^1].JointType);
+        Assert.Equal(JointTypeCatalog.Tyton, vm.TytonRows[^1].JointType);
+    }
+
+    [Fact]
     public void Confirm_SavesProjectAndCloses()
     {
         var repo = new StubRepo();
