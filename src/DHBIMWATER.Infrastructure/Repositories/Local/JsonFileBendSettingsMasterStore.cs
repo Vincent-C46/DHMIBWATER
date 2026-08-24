@@ -43,7 +43,8 @@ public sealed class JsonFileBendSettingsMasterStore : IBendSettingsMasterStore
                 new JointDeflectionTable(dto.JointDeflections ?? new()),
                 new BendFittingCatalog(dto.Fittings ?? new()),
                 string.IsNullOrWhiteSpace(dto.ActiveJointType) ? JointTypeCatalog.KpMechanical : dto.ActiveJointType,
-                dto.ApplicationMode);
+                dto.ApplicationMode,
+                dto.ActiveBendConnection);
         }
         catch (Exception ex) when (ex is JsonException or System.IO.IOException or UnauthorizedAccessException)
         {
@@ -62,7 +63,8 @@ public sealed class JsonFileBendSettingsMasterStore : IBendSettingsMasterStore
             JointDeflections = settings.JointDeflections.Entries.ToList(),
             Fittings = settings.Fittings.Entries.ToList(),
             ActiveJointType = settings.ActiveJointType,
-            ApplicationMode = settings.ApplicationMode
+            ApplicationMode = settings.ApplicationMode,
+            ActiveBendConnection = settings.ActiveBendConnection
         };
         File.WriteAllText(_path, JsonSerializer.Serialize(dto, JsonOptions));
     }
@@ -75,5 +77,6 @@ public sealed class JsonFileBendSettingsMasterStore : IBendSettingsMasterStore
         public List<BendFittingEntry>? Fittings { get; set; }
         public string? ActiveJointType { get; set; }
         public JointApplicationMode ApplicationMode { get; set; }
+        public BendConnection ActiveBendConnection { get; set; } = BendConnection.Socket;
     }
 }

@@ -31,24 +31,40 @@
                     <DockPanel Margin="8">
                         <StackPanel DockPanel.Dock="Top" Margin="0,0,0,8">
                             <TextBlock Text="곡관 패밀리와 유형은 모델링 창의 [관 · 곡관 설정] 탭에서 한 번만 선택합니다." Margin="0,0,0,8"/>
-                            <TextBlock Text="핸드북 소켓곡관 표(DN80~1200 × 11¼·22½·45·90°)입니다. e·R·t는 A형·B형이 같아 형식 구분 없이 한 행으로 다룹니다(s는 200mm 고정)." TextWrapping="Wrap" Margin="0,0,0,8"/>
+                            <TextBlock Text="핸드북 이형관 표입니다. e·s는 두 계열이 같고 R·t만 다릅니다(s는 200mm 고정).&#10;소켓곡관 DN80~1200 × 11¼·22½·45·90° / 플랜지곡관 DN80~1200 × 45·90°.&#10;※ 핸드북에 11¼°·22½° 플랜지곡관은 없습니다. 배치에 쓸 접합 종류는 모델링 창에서 고릅니다." TextWrapping="Wrap" Margin="0,0,0,8"/>
                             <StackPanel Orientation="Horizontal">
                                 <Button Content="행 추가" Style="{StaticResource PrimaryButtonStyle}" Command="{Binding AddFittingCommand}"/>
                                 <Button Content="행 삭제" Style="{StaticResource CancelButtonStyle}" Margin="8,0" Command="{Binding RemoveFittingCommand}"/>
                             </StackPanel>
                         </StackPanel>
-                        <DataGrid ItemsSource="{Binding FittingRows, Mode=OneWay}" SelectedItem="{Binding SelectedFitting, Mode=TwoWay}" AutoGenerateColumns="False" CanUserAddRows="False">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="DN" Binding="{Binding DiameterMm, Mode=TwoWay}"/>
-                                <DataGridTextColumn Header="각도(°)" Binding="{Binding AngleDeg, Mode=TwoWay}"/>
-                                <DataGridTextColumn Header="e(mm)" Binding="{Binding WallThicknessMm, Mode=TwoWay}"/>
-                                <DataGridTextColumn Header="t(mm)" Binding="{Binding LayingLengthMm, Mode=TwoWay}"/>
-                                <DataGridTextColumn Header="R(mm)" Binding="{Binding CenterlineRadiusMm, Mode=TwoWay}"/>
-                                <DataGridTextColumn Header="s(mm)" Binding="{Binding ExtraLegLengthMm, Mode=OneWay}" IsReadOnly="True"/>
-                                <DataGridTextColumn Header="T(mm)" Binding="{Binding TangentLengthMm, Mode=OneWay}" IsReadOnly="True"/>
-                                <DataGridTextColumn Header="t+s(mm)" Binding="{Binding LongLegLengthMm, Mode=OneWay}" IsReadOnly="True"/>
-                            </DataGrid.Columns>
-                        </DataGrid>
+                        <TabControl SelectedIndex="{Binding SelectedFittingTabIndex, Mode=TwoWay}">
+                            <TabItem Header="소켓곡관">
+                                <DataGrid ItemsSource="{Binding SocketFittingRows, Mode=OneWay}" SelectedItem="{Binding SelectedSocketFitting, Mode=TwoWay}" AutoGenerateColumns="False" CanUserAddRows="False">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="DN" Binding="{Binding DiameterMm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <DataGridTextColumn Header="각도(°)" Binding="{Binding AngleDeg, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <DataGridTextColumn Header="e(mm)" Binding="{Binding WallThicknessMm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <DataGridTextColumn Header="t(mm)" Binding="{Binding LayingLengthMm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <DataGridTextColumn Header="R(mm)" Binding="{Binding CenterlineRadiusMm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <DataGridTextColumn Header="s(mm)" Binding="{Binding ExtraLegLengthMm, Mode=OneWay}" IsReadOnly="True"/>
+                                        <DataGridTextColumn Header="T(mm)" Binding="{Binding TangentLengthMm, Mode=OneWay}" IsReadOnly="True"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </TabItem>
+                            <TabItem Header="플랜지곡관">
+                                <DataGrid ItemsSource="{Binding FlangedFittingRows, Mode=OneWay}" SelectedItem="{Binding SelectedFlangedFitting, Mode=TwoWay}" AutoGenerateColumns="False" CanUserAddRows="False">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="DN" Binding="{Binding DiameterMm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <DataGridTextColumn Header="각도(°)" Binding="{Binding AngleDeg, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <DataGridTextColumn Header="e(mm)" Binding="{Binding WallThicknessMm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <DataGridTextColumn Header="t(mm)" Binding="{Binding LayingLengthMm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <DataGridTextColumn Header="R(mm)" Binding="{Binding CenterlineRadiusMm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <DataGridTextColumn Header="s(mm)" Binding="{Binding ExtraLegLengthMm, Mode=OneWay}" IsReadOnly="True"/>
+                                        <DataGridTextColumn Header="T(mm)" Binding="{Binding TangentLengthMm, Mode=OneWay}" IsReadOnly="True"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </TabItem>
+                        </TabControl>
                     </DockPanel>
                 </TabItem>
                 <TabItem Header="허용굴곡" DataContext="{Binding Joint}">
@@ -62,8 +78,8 @@
                             </StackPanel>
                         </StackPanel>
                         <Grid>
-                            <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-                            <Grid Margin="0,0,0,6">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <Grid Margin="0,0,8,0">
                                 <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
                                 <DockPanel Margin="0,0,0,6">
                                     <TextBlock Text="{Binding KpJointTypeName, Mode=OneWay}" FontWeight="Bold" VerticalAlignment="Center"/>
@@ -74,12 +90,12 @@
                                 </DockPanel>
                                 <DataGrid Grid.Row="1" ItemsSource="{Binding KpRows, Mode=OneWay}" SelectedItem="{Binding SelectedKpRow, Mode=TwoWay}" AutoGenerateColumns="False" CanUserAddRows="False">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="DN(mm)" Binding="{Binding DiameterMm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                        <DataGridTextColumn Header="허용굴곡 θ(°)" Binding="{Binding AllowableDeg, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <DataGridTextColumn Header="DN(mm)" Width="*" Binding="{Binding DiameterMm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <DataGridTextColumn Header="허용굴곡 θ(°)" Width="2*" Binding="{Binding AllowableDeg, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </Grid>
-                            <Grid Grid.Row="1" Margin="0,6,0,0">
+                            <Grid Grid.Column="1" Margin="8,0,0,0">
                                 <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
                                 <DockPanel Margin="0,0,0,6">
                                     <TextBlock Text="{Binding TytonJointTypeName, Mode=OneWay}" FontWeight="Bold" VerticalAlignment="Center"/>
@@ -90,8 +106,8 @@
                                 </DockPanel>
                                 <DataGrid Grid.Row="1" ItemsSource="{Binding TytonRows, Mode=OneWay}" SelectedItem="{Binding SelectedTytonRow, Mode=TwoWay}" AutoGenerateColumns="False" CanUserAddRows="False">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="DN(mm)" Binding="{Binding DiameterMm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                        <DataGridTextColumn Header="허용굴곡 θ(°)" Binding="{Binding AllowableDeg, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <DataGridTextColumn Header="DN(mm)" Width="*" Binding="{Binding DiameterMm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <DataGridTextColumn Header="허용굴곡 θ(°)" Width="2*" Binding="{Binding AllowableDeg, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </Grid>

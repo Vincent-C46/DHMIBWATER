@@ -37,21 +37,22 @@ public sealed class JointDeflectionRule : IBendingRule
         if (hasDeflectionSetting && actual <= effective + Epsilon)
             return Empty(node, BendResolutionKind.None, actual, 0d, singleAllowable, actual, jointType, settings.ApplicationMode, effective, true);
 
-        var acceptable = StandardAngles
+        var availableAngles = BendFittingCatalog.AnglesFor(settings.ActiveBendConnection);
+        var acceptable = availableAngles
             .Select(angle => new { Angle = angle, Residual = Math.Abs(actual - angle) })
             .Where(x => hasDeflectionSetting && EvaluateFitting(actual, x.Angle, effective))
             .OrderBy(x => x.Residual)
             .ThenBy(x => x.Angle)
             .FirstOrDefault();
 
-        var selectedAngle = acceptable?.Angle ?? StandardAngles
+        var selectedAngle = acceptable?.Angle ?? availableAngles
             .OrderBy(angle => Math.Abs(actual - angle))
             .ThenBy(angle => angle)
             .First();
         var isAcceptable = acceptable is not null;
         var kind = isAcceptable ? BendResolutionKind.Standard : BendResolutionKind.Unresolved;
         var residual = actual - selectedAngle;
-        var fitting = settings.Fittings.Find(node.MaxDiameterMm, selectedAngle, Material);
+        var fitting = settings.Fittings.Find(node.MaxDiameterMm, selectedAngle, Material, settings.ActiveBendConnection);
         if (fitting is null)
             return Empty(node, kind, actual, selectedAngle, singleAllowable, residual, jointType, settings.ApplicationMode, effective, isAcceptable);
 

@@ -23,7 +23,8 @@ public class BendSettingsStorageTests
                 new JointDeflectionTable(new[] { new JointDeflectionSpec(JointTypeCatalog.Tyton, 100, 5) }),
                 new BendFittingCatalog(new[] { new BendFittingEntry(100, 45, BendForm.BType, 120, 210, WallThicknessMm: 8) }),
                 JointTypeCatalog.Tyton,
-                JointApplicationMode.BothJoints);
+                JointApplicationMode.BothJoints,
+                BendConnection.Flanged);
             store.Save(settings);
 
             var loaded = store.Load();
@@ -32,6 +33,7 @@ public class BendSettingsStorageTests
             Assert.Equal(5, loaded.JointDeflections.AllowableFor(JointTypeCatalog.Tyton, 100));
             Assert.Equal(JointTypeCatalog.Tyton, loaded.ActiveJointType);
             Assert.Equal(JointApplicationMode.BothJoints, loaded.ApplicationMode);
+            Assert.Equal(BendConnection.Flanged, loaded.ActiveBendConnection);
         }
         finally { if (File.Exists(path)) File.Delete(path); }
     }

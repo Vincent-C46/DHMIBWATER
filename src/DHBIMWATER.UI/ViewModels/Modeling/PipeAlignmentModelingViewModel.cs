@@ -15,6 +15,11 @@ namespace DHBIMWATER.UI.ViewModels.Modeling;
 /// <summary>데이터 그리드를 분리해 보여주기 위한 소스 파일 구분. DXF는 DWG와 동일하게(레이어·XDATA 기반) 취급한다.</summary>
 public enum PipeAlignmentSourceKind { Shp, Dwg, Excel }
 
+public sealed record BendConnectionOption(string Label, BendConnection Value)
+{
+    public override string ToString() => Label;
+}
+
 /// <summary>DWG·DXF 파일 하나에 포함된 레이어의 다중선택 항목.</summary>
 public sealed class CadLayerOption : ViewModelBase
 {
@@ -61,6 +66,14 @@ public sealed class PipeAlignmentSourceFileItem : ViewModelBase
             LayerOptions.Add(new CadLayerOption { Name = layer, IsSelected = true, SelectionChanged = () => MappingChanged?.Invoke() });
     }
     public string Summary => $"레코드 {ReadResult.RecordCount:N0} · 정점 {ReadResult.VertexCount:N0} · 구간 {ReadResult.SegmentCount:N0}";
+    public string Details => $"{Summary}\n필드: {string.Join(", ", Fields)}\n레이어: {string.Join(", ", Layers)}\n샘플: {string.Join(", ", (ReadResult.SampleAttributes ?? new Dictionary<string, string>()).Select(x => $"{x.Key}={x.Value}"))}\n인코딩: {ReadResult.EncodingName}";
+    // WKT가 비는 원인은 두 가지다 — DXF라서 애초에 좌표계가 없는 경우와, SHP인데 형제 .prj가 없는 경우.
+    // 둘을 같은 문구로 뭉치면 .prj 누락을 놓치므로 확장자로 분기한다.
+    public string ProjectionDetails => !string.IsNullOrWhiteSpace(ReadResult.ProjectionWkt)
+        ? $"추천: {ReadResult.RecommendedEpsg ?? "없음"}\n{ReadResult.ProjectionWkt}"
+        : System.IO.Path.GetExtension(Path).Equals(".shp", StringComparison.OrdinalIgnoreCase)
+            ? "⚠ 형제 .prj 파일이 없어 좌표계를 확인할 수 없습니다. 좌표값이 어느 좌표계인지 직접 확인하세요."
+            : $"좌표계 정보 없음 ({System.IO.Path.GetExtension(Path).TrimStart('.').ToUpperInvariant()})";
     public Action? MappingChanged { get; init; }
 }
 
@@ -73,11 +86,13 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
     private readonly IProjectLocationQueryRepo _projectLocationQuery; private readonly IElementTypeQueryRepo _typeRepo;
     private PipeAlignmentSourceFileItem? _selectedFile; private PipeAlignmentOutputMode _outputMode;
     private double _referenceX, _referenceY, _intervalM = 6, _snapToleranceMm = 10;
+    private int _selectedTabIndex;
     private bool _applySharedCoordinates, _propagatingReversal; private ZDatum _zDatum = ZDatum.Invert;
     private string? _straightFamilyName, _straightTypeName, _bendFamilyTypeName, _pipingSystemTypeName, _pipeTypeName, _levelName, _summary, _settingsNotice;
     private string? _straightDiameterParameterName, _straightOuterDiameterParameterName, _straightThicknessParameterName, _straightPointCountNotice, _bendPointCountNotice;
     private string? _bendDiameterParameterName, _bendWallThicknessParameterName, _bendOuterDiameterParameterName;
     private string _bulkMappingPipeKind = string.Empty;
+    private BendConnectionOption? _bendConnectionOption;
     private IReadOnlyList<string> _straightParameterNames = Array.Empty<string>(), _bendParameterNames = Array.Empty<string>();
     private BendSettings _settings = BendSettings.Default;
 
@@ -88,7 +103,7 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
         AdaptiveComponentTypeNames = typeRepo.GetAdaptiveComponentTypeNames().ToList(); StraightFamilyNames = Families(AdaptiveComponentTypeNames); PipingSystemTypeNames = typeRepo.GetPipingSystemTypeNames().ToList(); PipeTypeNames = typeRepo.GetPipeTypeNames().ToList(); LevelNames = levelRepo.GetExistingLevelNames().ToList();
         _straightFamilyName = StraightFamilyNames.FirstOrDefault(); _straightTypeName = TypesFor(_straightFamilyName).FirstOrDefault(); _bendFamilyTypeName = AdaptiveComponentTypeNames.FirstOrDefault(x => _typeRepo.GetAdaptiveBendPointCount(x) == 5) ?? AdaptiveComponentTypeNames.FirstOrDefault(); _pipingSystemTypeName = PipingSystemTypeNames.FirstOrDefault(); _pipeTypeName = PipeTypeNames.FirstOrDefault(); _levelName = LevelNames.FirstOrDefault();
         UpdateStraightParameterOptions();
-        AddCommand = new RelayCommand(_ => AddFile()); RemoveCommand = new RelayCommand(_ => RemoveFile()); RunCommand = new RelayCommand(_ => RunDiagnosis()); CreateCommand = new RelayCommand(_ => RequestModeling()); CancelCommand = new RelayCommand(_ => CloseAction?.Invoke());
+        AddCommand = new RelayCommand(AddFile); RemoveCommand = new RelayCommand(_ => RemoveFile()); RunCommand = new RelayCommand(_ => RunDiagnosis()); CreateCommand = new RelayCommand(_ => RequestModeling()); CancelCommand = new RelayCommand(_ => CloseAction?.Invoke());
         ApplyBulkMappingCommand = new RelayCommand(_ => ApplyBulkMapping());
         OpenPipeSpecsCommand = new RelayCommand(_ => OpenPipeSpecs()); LoadSettings();
         Files.CollectionChanged += (_, _) => NotifyFilesByKindChanged();
@@ -99,6 +114,21 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
     public ObservableCollection<AlignmentDirectionRow> DirectionRows { get; } = new();
     public int ReversedCount => DirectionRows.Count(x => x.IsReversed);
     public IReadOnlyList<DiameterMappingOption> DiameterOptions { get; } = new[] { new DiameterMappingOption("(지정 안 함)", null) }.Concat(StraightPipeSpecTable.NominalDiameters.Select(x => new DiameterMappingOption($"DN{x:0.##}", (double?)x))).ToList();
+    public IReadOnlyList<BendConnectionOption> BendConnectionOptions { get; } = new[]
+    {
+        new BendConnectionOption("소켓곡관", BendConnection.Socket),
+        new BendConnectionOption("플랜지곡관", BendConnection.Flanged)
+    };
+    public BendConnectionOption? BendConnectionOption
+    {
+        get => _bendConnectionOption;
+        set
+        {
+            if (!SetProperty(ref _bendConnectionOption, value) || value is null) return;
+            _settings = _settings with { ActiveBendConnection = value.Value };
+            Summary = string.Empty;
+        }
+    }
     public IReadOnlyList<string> MappingPipeKinds => PipeKindCatalog.All;
     public string BulkMappingPipeKind { get => _bulkMappingPipeKind; set => SetProperty(ref _bulkMappingPipeKind, value); }
     // DataGrid 셀 편집(EditItem)은 IList를 지원하는 컬렉션 뷰가 필요하다. 지연 평가 IEnumerable(Where만 적용)을 그대로
@@ -118,8 +148,10 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
     public PipeAlignmentSourceFileItem? SelectedFile { get => _selectedFile; set { if (SetProperty(ref _selectedFile, value)) { OnPropertyChanged(nameof(SelectedFileDetails)); OnPropertyChanged(nameof(ProjectionDetails)); OnPropertyChanged(nameof(IsSelectedFileDwg)); } } }
     /// <summary>레이어 선택 입력란은 DWG·DXF 소스에서만 의미가 있다.</summary>
     public bool IsSelectedFileDwg => SelectedFile?.SourceKind == PipeAlignmentSourceKind.Dwg;
-    public PipeAlignmentOutputMode OutputMode { get => _outputMode; set { if (SetProperty(ref _outputMode, value)) { OnPropertyChanged(nameof(IsDirectShape)); OnPropertyChanged(nameof(IsAdaptive)); OnPropertyChanged(nameof(IsPiping)); OnPropertyChanged(nameof(HasSpecUnmatched)); } } }
+    public PipeAlignmentOutputMode OutputMode { get => _outputMode; set { if (SetProperty(ref _outputMode, value)) { OnPropertyChanged(nameof(IsDirectShape)); OnPropertyChanged(nameof(IsAdaptive)); OnPropertyChanged(nameof(IsPiping)); OnPropertyChanged(nameof(IsAlignmentDirectionVisible)); OnPropertyChanged(nameof(HasSpecUnmatched)); OnPropertyChanged(nameof(SpecUnmatchedCount)); if (IsDirectShape && SelectedTabIndex is 3 or 4) SelectedTabIndex = 0; } } }
     public bool IsDirectShape { get => OutputMode == PipeAlignmentOutputMode.DirectShape; set { if (value) OutputMode = PipeAlignmentOutputMode.DirectShape; } }
+    public bool IsAlignmentDirectionVisible => !IsDirectShape;
+    public int SelectedTabIndex { get => _selectedTabIndex; set => SetProperty(ref _selectedTabIndex, value); }
     /// <summary>직관 2점 가변 + 곡관 5점 가변 모드(구 빔 모드를 교체).</summary>
     public bool IsAdaptive { get => OutputMode == PipeAlignmentOutputMode.Adaptive; set { if (value) OutputMode = PipeAlignmentOutputMode.Adaptive; } }
     public bool IsPiping { get => OutputMode == PipeAlignmentOutputMode.PipingSystem; set { if (value) OutputMode = PipeAlignmentOutputMode.PipingSystem; } }
@@ -156,13 +188,8 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
     public double SnapToleranceMm { get => _snapToleranceMm; set => SetProperty(ref _snapToleranceMm, value); }
     public string Summary { get => _summary ?? string.Empty; private set => SetProperty(ref _summary, value); }
     public string SettingsNotice { get => _settingsNotice ?? string.Empty; private set => SetProperty(ref _settingsNotice, value); }
-    public string SelectedFileDetails => SelectedFile is null ? "파일을 추가하면 DBF/XDATA 필드와 샘플 속성이 표시됩니다." : $"{SelectedFile.Summary}\n필드: {string.Join(", ", SelectedFile.Fields)}\n레이어: {string.Join(", ", SelectedFile.Layers)}\n샘플: {string.Join(", ", (SelectedFile.ReadResult.SampleAttributes ?? new Dictionary<string, string>()).Select(x => $"{x.Key}={x.Value}"))}\n인코딩: {SelectedFile.ReadResult.EncodingName}";
-    // WKT가 비는 원인은 두 가지다 — DXF라서 애초에 좌표계가 없는 경우와, SHP인데 형제 .prj가 없는 경우.
-    // 둘을 같은 문구로 뭉치면 .prj 누락을 놓치므로 확장자로 분기한다.
-    public string ProjectionDetails => SelectedFile is null ? string.Empty
-        : !string.IsNullOrWhiteSpace(SelectedFile.ReadResult.ProjectionWkt) ? $"추천: {SelectedFile.ReadResult.RecommendedEpsg ?? "없음"}\n{SelectedFile.ReadResult.ProjectionWkt}"
-        : System.IO.Path.GetExtension(SelectedFile.Path).Equals(".shp", StringComparison.OrdinalIgnoreCase) ? "⚠ 형제 .prj 파일이 없어 좌표계를 확인할 수 없습니다. 좌표값이 어느 좌표계인지 직접 확인하세요."
-        : $"좌표계 정보 없음 ({System.IO.Path.GetExtension(SelectedFile.Path).TrimStart('.').ToUpperInvariant()})";
+    public string SelectedFileDetails => SelectedFile?.Details ?? "파일을 추가하면 DBF/XDATA 필드와 샘플 속성이 표시됩니다.";
+    public string ProjectionDetails => SelectedFile?.ProjectionDetails ?? string.Empty;
     public int DiameterUnresolvedCount => CountUnresolved(); public bool HasDiameterUnresolved => DiameterUnresolvedCount > 0;
     /// <summary>
     /// 직관 제원표에서 (등급, DN) 행을 찾지 못하는 레코드 수. 직경 문자열 파싱은 성공해도 이 조회가 실패하면
@@ -171,6 +198,7 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
     /// </summary>
     public int SpecUnmatchedCount => CountSpecUnmatched();
     public bool HasSpecUnmatched => SpecUnmatchedCount > 0
+        && OutputMode != PipeAlignmentOutputMode.DirectShape
         && (PipeElevationDatum.NeedsSpec(ZDatum) || OutputMode == PipeAlignmentOutputMode.Adaptive);
     public ICommand AddCommand { get; }
     public ICommand RemoveCommand { get; }
@@ -182,10 +210,15 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
     public Action? CloseAction { get; set; }
     public PipeAlignmentModelingRequest? RequestedModeling { get; private set; }
 
-    private void AddFile()
+    /// <summary>
+    /// 파일 추가. <paramref name="kind"/>는 [파일 추가 ▾] 드롭다운에서 넘어오는 소스 종류로,
+    /// 파일 대화상자 필터만 좁힌다(null이면 종전처럼 전체 형식). 선택 후 처리는 확장자로 판별해 종류와 무관하게 동일하다.
+    /// </summary>
+    private void AddFile(object? kind)
     {
-        var path = _fileDialog.OpenFile("관로 선형 파일 선택", "관로 선형 파일 (*.shp;*.dxf;*.dwg;*.xlsx)|*.shp;*.dxf;*.dwg;*.xlsx|모든 파일 (*.*)|*.*"); if (string.IsNullOrWhiteSpace(path)) return;
-        if (string.Equals(System.IO.Path.GetExtension(path), ".xlsx", StringComparison.OrdinalIgnoreCase)) { AddExcelFile(path); return; }
+        var (title, filter) = FileDialogFilter(kind as string);
+        var path = _fileDialog.OpenFile(title, filter); if (string.IsNullOrWhiteSpace(path)) return;
+        if (IsExcelSourcePath(path)) { AddExcelFile(path); return; }
         if (Files.Any(x => string.Equals(x.Path, path, StringComparison.OrdinalIgnoreCase))) return;
         try
         {
@@ -196,6 +229,22 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
         }
         catch (Exception ex) { _dialog.Warn("파일 읽기 실패", ex.Message); }
     }
+    /// <summary>엑셀 매핑 대화상자를 태워야 하는 소스인지. CSV도 시트 1개짜리 엑셀과 동일하게 취급한다.</summary>
+    private static bool IsExcelSourcePath(string path)
+    {
+        var extension = System.IO.Path.GetExtension(path);
+        return string.Equals(extension, ".xlsx", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(extension, ".csv", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static (string Title, string Filter) FileDialogFilter(string? kind) => kind switch
+    {
+        "Shp" => ("SHP 관로망 파일 선택", "Shapefile (*.shp)|*.shp"),
+        "Dwg" => ("DWG·DXF 도면 파일 선택", "AutoCAD 도면 (*.dwg;*.dxf)|*.dwg;*.dxf"),
+        "Excel" => ("엑셀·CSV 좌표표 선택", "엑셀·CSV (*.xlsx;*.csv)|*.xlsx;*.csv"),
+        _ => ("관로 선형 파일 선택", "관로 선형 파일 (*.shp;*.dxf;*.dwg;*.xlsx;*.csv)|*.shp;*.dxf;*.dwg;*.xlsx;*.csv|모든 파일 (*.*)|*.*"),
+    };
+
     private void AddExcelFile(string path)
     {
         ExcelAlignmentMappingViewModel mappingVm;
@@ -389,7 +438,7 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
         }
         OnPropertyChanged(nameof(ReversedCount));
     }
-    private PipeNetworkDiagnosisResult? RunDiagnosis(bool showWarnings = true) { if (Files.Count == 0) { _dialog.Warn("입력 확인", "하나 이상의 SHP, DXF 또는 DWG 파일을 추가하세요."); return null; } if (SnapToleranceMm <= 0) { _dialog.Warn("입력 확인", "스냅 허용오차는 0보다 커야 합니다."); return null; } try { var result = _analyze.Execute(new PipeNetworkDiagnosisRequest { Files = SourceFiles(), SnapToleranceMm = SnapToleranceMm }); Attention.Clear(); foreach (var report in result.Attention) Attention.Add(report); Summary = $"절점 {result.NodeCount} / 간선 {result.EdgeCount}\n{string.Join(", ", result.KindCounts.OrderBy(x => x.Key).Select(x => $"{x.Key} {x.Value}"))}\n곡관 판정 — 표준 {result.BendStandardCount}, 생략 {result.BendNoneCount}, 미해결 {result.BendUnresolvedCount}\n규격 미매칭 {SpecUnmatchedCount}건\n경고 {result.Warnings.Count}건"; if (showWarnings && result.Warnings.Count > 0) _dialog.Info("진단 경고", string.Join("\n", result.Warnings.Take(20)) + (result.Warnings.Count > 20 ? $"\n… 외 {result.Warnings.Count - 20}건" : string.Empty)); return result; } catch (Exception ex) { _dialog.Warn("관로 네트워크 진단", $"진단에 실패했습니다.\n{ex.Message}"); return null; } }
+    private PipeNetworkDiagnosisResult? RunDiagnosis(bool showWarnings = true) { if (Files.Count == 0) { _dialog.Warn("입력 확인", "하나 이상의 SHP, DXF 또는 DWG 파일을 추가하세요."); return null; } if (SnapToleranceMm <= 0) { _dialog.Warn("입력 확인", "스냅 허용오차는 0보다 커야 합니다."); return null; } try { var result = _analyze.Execute(new PipeNetworkDiagnosisRequest { Files = SourceFiles(), SnapToleranceMm = SnapToleranceMm, CurrentBendSettings = _settings }); Attention.Clear(); foreach (var report in result.Attention) Attention.Add(report); Summary = $"절점 {result.NodeCount} / 간선 {result.EdgeCount}\n{string.Join(", ", result.KindCounts.OrderBy(x => x.Key).Select(x => $"{x.Key} {x.Value}"))}\n곡관 판정 — 표준 {result.BendStandardCount}, 생략 {result.BendNoneCount}, 미해결 {result.BendUnresolvedCount}\n규격 미매칭 {SpecUnmatchedCount}건\n경고 {result.Warnings.Count}건"; if (showWarnings && result.Warnings.Count > 0) _dialog.Info("진단 경고", string.Join("\n", result.Warnings.Take(20)) + (result.Warnings.Count > 20 ? $"\n… 외 {result.Warnings.Count - 20}건" : string.Empty)); return result; } catch (Exception ex) { _dialog.Warn("관로 네트워크 진단", $"진단에 실패했습니다.\n{ex.Message}"); return null; } }
     private void RequestModeling()
     {
         if (Files.Count == 0) { _dialog.Warn("입력 확인", "하나 이상의 SHP, DXF 또는 DWG 파일을 추가하세요."); return; }
@@ -452,6 +501,7 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
     {
         var (settings, source) = _settingsProvider.Load();
         _settings = settings;
+        SyncBendConnectionOption();
         SettingsNotice = source switch
         {
             BendSettingsSource.Master => "이 프로젝트에 저장된 값이 없어 회사 표준(마스터) 규격을 불러왔습니다.",
@@ -459,11 +509,12 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
             _ => string.Empty
         };
         // 기본값은 핸드북 규격으로 교체됐지만, 그 전에 저장한 프로젝트에는 임시값이 그대로 남아 있어 안내가 필요하다.
-        if (_settings.Fittings.IsLegacyPlaceholder)
-            SettingsNotice = (SettingsNotice + " 저장된 곡관 치수가 핸드북 반영 이전의 임시값입니다 — 규격표에서 [기본값 복원] 후 저장하세요.").Trim();
+        if (_settings.Fittings.NeedsRestore)
+            SettingsNotice = (SettingsNotice + " 저장된 곡관 치수가 현행 규격표와 구조가 다릅니다(중복 행 또는 플랜지곡관 누락). [관·곡관 규격표] 창에서 [기본값 복원] 후 저장하세요.").Trim();
         UpdateBendParameterOptions();
     }
-    private void OpenPipeSpecs() { var vm = new PipeSpecTableViewModel(_settings, _save, _dialog); ShowDialog(new PipeSpecTableView(vm)); if (vm.Result is not null) { _settings = vm.Result; SettingsNotice = string.Empty; RefreshDiameterMappingPreviews(); } }
+    private void OpenPipeSpecs() { var vm = new PipeSpecTableViewModel(_settings, _save, _dialog); ShowDialog(new PipeSpecTableView(vm)); if (vm.Result is not null) { _settings = vm.Result; SyncBendConnectionOption(); SettingsNotice = string.Empty; RefreshDiameterMappingPreviews(); } }
+    private void SyncBendConnectionOption() => BendConnectionOption = BendConnectionOptions.First(x => x.Value == _settings.ActiveBendConnection);
     private void ShowDialog(System.Windows.Window dialog) { var owner = System.Windows.Application.Current.Windows.OfType<System.Windows.Window>().FirstOrDefault(x => x is PipeAlignmentModelingView); if (owner is not null) dialog.Owner = owner; dialog.ShowDialog(); if (owner is not null) owner.Activate(); }
     private static IReadOnlyList<string> Families(IEnumerable<string> values) => values.Select(x => x.Split(new[] { " : " }, 2, StringSplitOptions.None)[0]).Distinct().OrderBy(x => x).ToList();
     private IReadOnlyList<string> TypesFor(string? family) => string.IsNullOrWhiteSpace(family) ? Array.Empty<string>() : AdaptiveComponentTypeNames.Where(x => x.StartsWith(family + " : ", StringComparison.Ordinal)).Select(x => x[(family.Length + 3)..]).ToList();

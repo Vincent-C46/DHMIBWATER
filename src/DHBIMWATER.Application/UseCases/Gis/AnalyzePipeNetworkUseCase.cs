@@ -24,11 +24,14 @@ public sealed class AnalyzePipeNetworkUseCase
         var loaded = _loader.Load(request.Files);
         var warnings = loaded.Warnings.ToList();
 
-        var (settings, source) = _settings.Load();
+        var settingsResolution = request.CurrentBendSettings is null
+            ? _settings.Load()
+            : new BendSettingsResolution(request.CurrentBendSettings, BendSettingsSource.Project);
+        var (settings, source) = settingsResolution;
         if (source == BendSettingsSource.BuiltInDefault)
             warnings.Add("관로 규격 설정이 저장되지 않아 내장 기본값으로 판정했습니다.");
-        if (settings.Fittings.IsLegacyPlaceholder)
-            warnings.Add("저장된 곡관 치수가 핸드북 반영 이전의 임시값입니다. [관·곡관 규격표] 창에서 [기본값 복원] 후 저장해 실제 규격으로 갱신하세요.");
+        if (settings.Fittings.NeedsRestore)
+            warnings.Add("저장된 곡관 치수가 현행 규격표와 구조가 다릅니다(중복 행 또는 플랜지곡관 누락). [관·곡관 규격표] 창에서 [기본값 복원] 후 저장하세요.");
 
         var graph = PipeNetworkBuilder.Build(loaded.Alignments, request.SnapToleranceMm / 1000d);
         var nodes = PipeNetworkClassifier.Classify(graph);

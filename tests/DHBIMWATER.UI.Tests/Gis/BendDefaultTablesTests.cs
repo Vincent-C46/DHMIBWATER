@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using DHBIMWATER.Core.Gis;
 using Xunit;
 
@@ -100,8 +102,7 @@ public class BendDefaultTablesTests
                 Assert.True(kpA > kpB);
                 Assert.True(tytonA > tytonB);
             }
-        Assert.Equal(StraightPipeSpecTable.NominalDiameters.Count * JointDeflectionRule.StandardAngles.Count,
-            BendFittingCatalog.Default.Entries.Count);
+        Assert.Equal(108, BendFittingCatalog.Default.Entries.Count);
     }
 
     /// <summary>이형관 벽두께 e는 각도와 무관한 DN 단일값이며, 관종별 직관 두께와는 다른 계열이다.</summary>
@@ -121,11 +122,33 @@ public class BendDefaultTablesTests
         Assert.Equal(8.8, StraightPipeSpecTable.Default.Find(PipeKindCatalog.Water1, 300)!.ThicknessMm);
     }
 
-    /// <summary>핸드북 반영 이전의 임시값이 저장된 프로젝트만 [기본값 복원] 안내 대상이다.</summary>
     [Fact]
-    public void Legacy_placeholder_is_detected_only_for_the_old_temporary_table()
+    public void Flanged_default_matches_handbook_and_has_only_45_and_90_degrees()
     {
-        Assert.False(BendFittingCatalog.Default.IsLegacyPlaceholder);
+        var socket90 = BendFittingCatalog.Default.Find(80, 90, connection: BendConnection.Socket);
+        var flanged90 = BendFittingCatalog.Default.Find(80, 90, connection: BendConnection.Flanged);
+        var flanged45 = BendFittingCatalog.Default.Find(80, 45, connection: BendConnection.Flanged);
+
+        Assert.NotNull(socket90);
+        Assert.Equal(75, socket90!.CenterlineRadiusMm);
+        Assert.Equal(150, socket90.LayingLengthMm);
+        Assert.Equal(7.0, socket90.WallThicknessMm);
+        Assert.NotNull(flanged90);
+        Assert.Equal(122, flanged90!.CenterlineRadiusMm);
+        Assert.Equal(165, flanged90.LayingLengthMm);
+        Assert.Equal(7.0, flanged90.WallThicknessMm);
+        Assert.NotNull(flanged45);
+        Assert.Equal(210, flanged45!.CenterlineRadiusMm);
+        Assert.Equal(130, flanged45.LayingLengthMm);
+        Assert.Null(BendFittingCatalog.Default.Find(80, 11.25, connection: BendConnection.Flanged));
+        Assert.Equal(new[] { 45d, 90d }, BendFittingCatalog.AnglesFor(BendConnection.Flanged));
+    }
+
+    /// <summary>중복행 또는 플랜지곡관 누락이 있는 구 규격은 [기본값 복원] 안내 대상이다.</summary>
+    [Fact]
+    public void NeedsRestore_detects_legacy_duplicate_and_missing_flanged_tables()
+    {
+        Assert.False(BendFittingCatalog.Default.NeedsRestore);
 
         var legacy = new BendFittingCatalog((
             from dn in StraightPipeSpecTable.NominalDiameters
@@ -135,7 +158,29 @@ public class BendDefaultTablesTests
             select new BendFittingEntry(dn, angle, form.Form,
                 Math.Ceiling(BendResolver.TangentLength(radius, angle)) + 50d, radius,
                 StraightPipeSpecTable.Default.Find(PipeKindCatalog.Water1, dn)?.ThicknessMm ?? 0d)).ToList());
-        Assert.True(legacy.IsLegacyPlaceholder);
+        Assert.True(legacy.NeedsRestore);
+
+        var socketOnly = new BendFittingCatalog(BendFittingCatalog.Default.Entries
+            .Where(x => x.Connection == BendConnection.Socket).ToList());
+        Assert.True(socketOnly.NeedsRestore);
+
+        var duplicate = new BendFittingCatalog(BendFittingCatalog.Default.Entries
+            .Append(BendFittingCatalog.Default.Entries[0]).ToList());
+        Assert.True(duplicate.NeedsRestore);
+    }
+
+    [Fact]
+    public void Old_json_without_connection_defaults_to_socket()
+    {
+        const string json = """
+            {"DiameterMm":80,"AngleDeg":90,"Form":"BType","LayingLengthMm":150,"CenterlineRadiusMm":75,"WallThicknessMm":7}
+            """;
+        var options = new JsonSerializerOptions { Converters = { new JsonStringEnumConverter() } };
+
+        var entry = JsonSerializer.Deserialize<BendFittingEntry>(json, options);
+
+        Assert.NotNull(entry);
+        Assert.Equal(BendConnection.Socket, entry!.Connection);
     }
 
     [Fact]

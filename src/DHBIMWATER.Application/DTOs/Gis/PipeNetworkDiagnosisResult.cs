@@ -1,3 +1,5 @@
+using DHBIMWATER.Core.Gis;
+
 namespace DHBIMWATER.Application.DTOs.Gis;
 
 public sealed record PipeNetworkDiagnosisRequest
@@ -5,6 +7,8 @@ public sealed record PipeNetworkDiagnosisRequest
     public required IReadOnlyList<AlignmentSourceFile> Files { get; init; }
     /// <summary>밀리미터 단위 UI 입력값이다. 실행 시 GIS 좌표(m) 단위로 변환한다.</summary>
     public double SnapToleranceMm { get; init; } = 10;
+    /// <summary>모델링 창에서 아직 저장하지 않은 접합종류 선택까지 진단에 반영한다.</summary>
+    public BendSettings? CurrentBendSettings { get; init; }
 }
 
 /// <param name="X">원본 GIS 좌표(m). Revit 내부좌표 변환은 배치 단계에서 한다.</param>

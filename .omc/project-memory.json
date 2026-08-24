@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1787215521339,
+  "lastScanned": 1787529653061,
   "projectRoot": "F:\\02_Work\\04_Addin\\DHBIMWATER",
   "techStack": {
     "languages": [],
@@ -39,8 +39,8 @@
     "docs": {
       "path": "docs",
       "purpose": "Documentation",
-      "fileCount": 52,
-      "lastAccessed": 1787215520876,
+      "fileCount": 56,
+      "lastAccessed": 1787529652821,
       "keyFiles": [
         "02_컨트럴등록.md",
         "03_뷰모델구현.md",
@@ -53,7 +53,7 @@
       "path": "installer",
       "purpose": null,
       "fileCount": 6,
-      "lastAccessed": 1787215520877,
+      "lastAccessed": 1787529652823,
       "keyFiles": [
         "README.md",
         "DHBIMWATER_2025.nsi",
@@ -66,29 +66,29 @@
       "path": "sandbox",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1787215520878,
+      "lastAccessed": 1787529652825,
       "keyFiles": []
     },
     "src": {
       "path": "src",
       "purpose": "Source code",
       "fileCount": 0,
-      "lastAccessed": 1787215520880,
+      "lastAccessed": 1787529652829,
       "keyFiles": []
     },
     "tests": {
       "path": "tests",
       "purpose": "Test files",
       "fileCount": 0,
-      "lastAccessed": 1787215520919,
+      "lastAccessed": 1787529652833,
       "keyFiles": []
     }
   },
   "hotPaths": [
     {
       "path": "PROGRESS.md",
-      "accessCount": 23,
-      "lastAccessed": 1787294697246,
+      "accessCount": 25,
+      "lastAccessed": 1787528284483,
       "type": "file"
     },
     {
@@ -102,6 +102,12 @@
       "accessCount": 15,
       "lastAccessed": 1787288292433,
       "type": "file"
+    },
+    {
+      "path": "src",
+      "accessCount": 10,
+      "lastAccessed": 1787532239845,
+      "type": "directory"
     },
     {
       "path": "src\\DHBIMWATER.UI\\Views\\Modeling\\PipeAlignmentModelingView.xaml",
@@ -132,12 +138,6 @@
       "accessCount": 6,
       "lastAccessed": 1787286783067,
       "type": "file"
-    },
-    {
-      "path": "src",
-      "accessCount": 6,
-      "lastAccessed": 1787286807760,
-      "type": "directory"
     },
     {
       "path": "src\\DHBIMWATER.Application\\DTOs\\Gis\\PipeAlignmentModelingRequest.cs",

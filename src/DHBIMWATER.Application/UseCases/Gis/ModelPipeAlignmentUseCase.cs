@@ -38,7 +38,10 @@ public sealed class ModelPipeAlignmentUseCase
             ? _bendSettings.Load()
             : new BendSettingsResolution(request.CurrentBendSettings, BendSettingsSource.Project);
         var (settings, settingsSource) = settingsResolution;
-        var origin = new AlignmentPlacementOrigin(reference?.X ?? 0, reference?.Y ?? 0, request.ZDatum, settings.StraightPipes);
+        // DirectShape는 선형 자체를 그대로 형상화하므로 원본 Z를 유지한다(ZDatum 보정 없음).
+        // 가변 패밀리·파이프는 관 중심선을 배치해야 하므로 종전대로 보정한다.
+        var datum = request.OutputMode == PipeAlignmentOutputMode.DirectShape ? ZDatum.Centerline : request.ZDatum;
+        var origin = new AlignmentPlacementOrigin(reference?.X ?? 0, reference?.Y ?? 0, datum, settings.StraightPipes);
         var infoContext = new PipeInfoParameterContext(settings.ActiveJointType, settings.ApplicationMode, request.ZDatum);
         var elevationWarnings = GetElevationWarnings(loaded.Alignments, request, settings.StraightPipes);
         // 곡관 자리 계산은 Adaptive 모드에만 적용한다(사용자 결정 2026-08-07, 2026-08-18 명칭 변경).
@@ -107,7 +110,7 @@ public sealed class ModelPipeAlignmentUseCase
 
         var warnings = new List<string>();
         if (usesDefault) warnings.Add("저장된 관로 규격 설정이 없어 내장 기본값으로 판정했습니다.");
-        if (settings.Fittings.IsLegacyPlaceholder) warnings.Add("저장된 곡관 치수가 핸드북 반영 이전의 임시값입니다. [관·곡관 규격표] 창에서 [기본값 복원] 후 저장해야 실제 규격으로 배치됩니다.");
+        if (settings.Fittings.NeedsRestore) warnings.Add("저장된 곡관 치수가 현행 규격표와 구조가 다릅니다(중복 행 또는 플랜지곡관 누락). [관·곡관 규격표] 창에서 [기본값 복원] 후 저장하세요.");
 
         var snapTolerance = request.SnapToleranceMm / 1000d;
         var graph = PipeNetworkBuilder.Build(alignments, snapTolerance);

@@ -5,6 +5,9 @@ namespace DHBIMWATER.Core.Gis;
 /// <summary>적용 규격이 정의하는 이형관 형식 구분. Joint Type과는 별개다.</summary>
 public enum BendForm { AType, BType }
 
+/// <summary>이형관 접합 방식. 핸드북에서 소켓곡관과 플랜지곡관은 R·t가 다른 별도 표다(e·s는 같다).</summary>
+public enum BendConnection { Socket, Flanged }
+
 /// <param name="DiameterMm">호칭지름 DN. 조회는 Exact Match다.</param>
 /// <param name="Form">
 /// A형(양쪽 소켓)/B형(소켓+스피것). 핸드북상 e·R·t는 형식과 무관하게 같고 s(스피것 길이)·무게만 다르다
@@ -17,6 +20,7 @@ public enum BendForm { AType, BType }
 /// 이 규격이 속한 관종. DN·각도만으로는 관종이 구분되지 않아 조회 키에 필요하다.
 /// 기본값이 있으므로 관종 축 도입 이전에 저장된 JSON도 그대로 역직렬화된다.
 /// </param>
+/// <param name="Connection">소켓/플랜지. 기본값이 있어 이 축 도입 이전 JSON도 소켓으로 읽힌다.</param>
 public sealed record BendFittingEntry(
     double DiameterMm,
     double AngleDeg,
@@ -26,7 +30,8 @@ public sealed record BendFittingEntry(
     double WallThicknessMm = 0d,
     double WeightKpMechanicalKg = 0d,
     double WeightTytonKg = 0d,
-    PipeMaterial Material = PipeMaterial.DuctileIron)
+    PipeMaterial Material = PipeMaterial.DuctileIron,
+    BendConnection Connection = BendConnection.Socket)
 {
     /// <summary>s — B형(소켓+스피것)만 200mm 고정, A형(양쪽 소켓)은 0. 핸드북 고정값이라 사용자 입력 대상이 아니다.</summary>
     [JsonIgnore]
@@ -41,15 +46,18 @@ public sealed class BendFittingCatalog
     public IReadOnlyList<BendFittingEntry> Entries { get; }
 
     /// <summary>
-    /// 저장된 값이 핸드북 반영 이전의 임시 곡관표(<see cref="LegacyPlaceholder"/>)와 같은지.
-    /// 임시값이 이미 프로젝트·마스터에 저장된 상태에서 기본값만 실제 규격으로 교체됐으므로,
-    /// 그런 프로젝트에는 [기본값 복원]으로 갱신하라고 안내해야 한다.
+    /// 저장된 곡관표가 현행 규격 구조와 맞지 않아 [기본값 복원] 안내가 필요한 상태인지.
+    /// ① 08-18자 임시표(R = 계수 × DN) ② 08-19자 A형·B형 이중행 ③ 접합종류 축 이전(플랜지 행 없음).
     /// </summary>
-    public bool IsLegacyPlaceholder => Entries.SequenceEqual(LegacyPlaceholder.Entries);
+    public bool NeedsRestore => Entries.SequenceEqual(LegacyPlaceholder.Entries)
+        || Entries.GroupBy(x => (x.Material, x.Connection, x.DiameterMm, x.AngleDeg)).Any(x => x.Count() > 1)
+        || !Entries.Any(x => x.Connection == BendConnection.Flanged);
 
-    /// <summary>DN·각도로 조회한다. 형식(A/B)은 행 자체가 갖고 있으므로 조회 키가 아니다.</summary>
-    public BendFittingEntry? Find(double diameterMm, double angleDeg, PipeMaterial material = PipeMaterial.DuctileIron) => Entries.FirstOrDefault(x =>
+    /// <summary>DN·각도·접합종류로 조회한다. 형식(A/B)은 행 자체가 갖고 있으므로 조회 키가 아니다.</summary>
+    public BendFittingEntry? Find(double diameterMm, double angleDeg, PipeMaterial material = PipeMaterial.DuctileIron,
+        BendConnection connection = BendConnection.Socket) => Entries.FirstOrDefault(x =>
         x.Material == material
+        && x.Connection == connection
         && Math.Abs(x.DiameterMm - diameterMm) <= Epsilon
         && Math.Abs(x.AngleDeg - angleDeg) <= Epsilon);
 
@@ -115,6 +123,32 @@ public sealed class BendFittingCatalog
         (11.25, Bend1125), (22.5, Bend225), (45d, Bend45), (90d, Bend90)
     };
 
+    /// <summary>90° 플랜지곡관 — (DN, R, t). 출처 핸드북 p.105 (13. 90° FLANGED BEND).</summary>
+    private static readonly (double Dn, double RadiusMm, double LayingMm)[] Flanged90 =
+    {
+        (80, 122, 165), (100, 135, 180), (125, 152.5, 200), (150, 170, 220), (200, 205, 260), (250, 290, 350),
+        (300, 335, 400), (350, 380, 450), (400, 425, 500), (450, 470, 550), (500, 515, 600), (600, 605, 700),
+        (700, 695, 800), (800, 785, 900), (900, 875, 1000), (1000, 965, 1100), (1100, 1055, 1200), (1200, 1145, 1300)
+    };
+
+    /// <summary>45° 플랜지곡관 — (DN, R, t). 출처 핸드북 p.106 (14. 45° FLANGED BEND).</summary>
+    // TODO: 핸드북 원문 확인 필요 — DN250·300·350 R·t 비단조(인쇄 오류 의심). 원문 그대로 전사했다.
+    private static readonly (double Dn, double RadiusMm, double LayingMm)[] Flanged45 =
+    {
+        (80, 210, 130), (100, 230, 140), (125, 250, 150), (150, 265, 160), (200, 300, 180), (250, 700, 350),
+        (300, 809, 400), (350, 550, 300), (400, 600, 325), (450, 650, 350), (500, 700, 375), (600, 800, 425),
+        (700, 900, 480), (800, 1000, 530), (900, 1100, 580), (1000, 1200, 630), (1100, 1300, 695), (1200, 1400, 750)
+    };
+
+    private static readonly (double AngleDeg, (double Dn, double RadiusMm, double LayingMm)[] Rows)[] FlangedAngleTables =
+    {
+        (45d, Flanged45), (90d, Flanged90)
+    };
+
+    /// <summary>접합종류별 수록 각도. 플랜지곡관은 핸드북에 90°·45°만 있다(11¼·22½ 플랜지 표는 존재하지 않음).</summary>
+    public static IReadOnlyList<double> AnglesFor(BendConnection connection) =>
+        connection == BendConnection.Flanged ? new[] { 45d, 90d } : JointDeflectionRule.StandardAngles;
+
     /// <summary>11¼° 소켓곡관 무게 — (DN, KP메커니컬 A형, KP메커니컬 B형, 타이튼 A형, 타이튼 B형) kg.</summary>
     private static readonly (double Dn, double KpA, double KpB, double TytonA, double TytonB)[] Weight1125 =
     {
@@ -160,7 +194,7 @@ public sealed class BendFittingCatalog
         (11.25, Weight1125), (22.5, Weight225), (45d, Weight45), (90d, Weight90)
     };
 
-    /// <summary>핸드북 무게표에서 (DN, 각도, 형식)에 해당하는 조인트별 무게를 찾는다. 규격표 창에서 행의 형식을 바꿀 때도 이 값으로 다시 채운다.</summary>
+    /// <summary>핸드북 소켓곡관 무게표에서 (DN, 각도, 형식)에 해당하는 조인트별 무게를 찾는다. 규격표 창에서 행의 형식을 바꿀 때도 이 값으로 다시 채운다.</summary>
     public static bool TryGetHandbookWeight(double diameterMm, double angleDeg, BendForm form, out double kpMechanicalKg, out double tytonKg)
     {
         var table = WeightTables.FirstOrDefault(x => Math.Abs(x.AngleDeg - angleDeg) <= Epsilon).Rows;
@@ -189,7 +223,22 @@ public sealed class BendFittingCatalog
                     row.RadiusMm,
                     WallThickness.First(x => Math.Abs(x.Dn - dn) <= Epsilon).WallThicknessMm,
                     kpKg,
-                    tytonKg);
+                    tytonKg,
+                    Connection: BendConnection.Socket);
+            }
+
+        foreach (var dn in StraightPipeSpecTable.NominalDiameters)
+            foreach (var table in FlangedAngleTables)
+            {
+                var row = table.Rows.First(x => Math.Abs(x.Dn - dn) <= Epsilon);
+                yield return new BendFittingEntry(
+                    dn,
+                    table.AngleDeg,
+                    BendForm.BType,
+                    row.LayingMm,
+                    row.RadiusMm,
+                    WallThickness.First(x => Math.Abs(x.Dn - dn) <= Epsilon).WallThicknessMm,
+                    Connection: BendConnection.Flanged);
             }
     }
 
@@ -229,7 +278,9 @@ public sealed record BendSettings(
     JointDeflectionTable JointDeflections,
     BendFittingCatalog Fittings,
     string ActiveJointType,
-    JointApplicationMode ApplicationMode)
+    JointApplicationMode ApplicationMode,
+    /// <summary>배치에 쓸 곡관 접합 종류. 모델링 창에서 고르며 기본은 소켓이다.</summary>
+    BendConnection ActiveBendConnection = BendConnection.Socket)
 {
     public static BendSettings Default { get; } = new(
         StraightPipeSpecTable.Default,

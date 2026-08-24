@@ -48,10 +48,9 @@ public sealed class RevitBendSettingsRepo : IBendSettingsRepo
         var joints = Deserialize<JointDeflectionSpec>(entity.Get<string>(schema.GetField(JointDeflectionField)));
         var fittings = Deserialize<BendFittingEntry>(entity.Get<string>(schema.GetField(FittingField)));
         var activeJointType = entity.Get<string>(schema.GetField(ActiveJointTypeField));
-        var modeText = entity.Get<string>(schema.GetField(ApplicationModeField));
-        var mode = Enum.TryParse<JointApplicationMode>(modeText, out var parsed) ? parsed : JointApplicationMode.SingleJoint;
+        var (mode, connection) = ParseModes(entity.Get<string>(schema.GetField(ApplicationModeField)));
         return new BendSettings(new StraightPipeSpecTable(straight), new JointDeflectionTable(joints),
-            new BendFittingCatalog(fittings), string.IsNullOrWhiteSpace(activeJointType) ? JointTypeCatalog.KpMechanical : activeJointType, mode);
+            new BendFittingCatalog(fittings), string.IsNullOrWhiteSpace(activeJointType) ? JointTypeCatalog.KpMechanical : activeJointType, mode, connection);
     }
 
     public void Save(BendSettings settings)
@@ -65,12 +64,23 @@ public sealed class RevitBendSettingsRepo : IBendSettingsRepo
         entity.Set(schema.GetField(JointDeflectionField), JsonSerializer.Serialize(settings.JointDeflections.Entries, JsonOptions));
         entity.Set(schema.GetField(FittingField), JsonSerializer.Serialize(settings.Fittings.Entries, JsonOptions));
         entity.Set(schema.GetField(ActiveJointTypeField), settings.ActiveJointType);
-        entity.Set(schema.GetField(ApplicationModeField), settings.ApplicationMode.ToString());
+        // 기존 Schema에 필드를 추가할 수 없으므로 같은 문자열 필드에 함께 저장한다. 구 값("SingleJoint")도 ParseModes가 그대로 읽는다.
+        entity.Set(schema.GetField(ApplicationModeField), $"{settings.ApplicationMode}|{settings.ActiveBendConnection}");
         storage.SetEntity(entity);
     }
 
     private static List<T> Deserialize<T>(string? json)
         => string.IsNullOrWhiteSpace(json) ? new List<T>() : JsonSerializer.Deserialize<List<T>>(json, JsonOptions) ?? new List<T>();
+
+    private static (JointApplicationMode Mode, BendConnection Connection) ParseModes(string? text)
+    {
+        var parts = (text ?? string.Empty).Split('|');
+        var mode = Enum.TryParse<JointApplicationMode>(parts[0], out var parsedMode) ? parsedMode : JointApplicationMode.SingleJoint;
+        var connection = parts.Length > 1 && Enum.TryParse<BendConnection>(parts[1], out var parsedConnection)
+            ? parsedConnection
+            : BendConnection.Socket;
+        return (mode, connection);
+    }
 
     private static DataStorage? FindStorage(Document doc)
         => new FilteredElementCollector(doc)

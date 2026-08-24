@@ -82,6 +82,22 @@ public sealed class PipeSpecTableViewModelTests
         Assert.False(closed);
     }
 
+    [Fact]
+    public void FittingRows_AreSplitAndAddCommandTargetsActiveTab()
+    {
+        var vm = Create(new StubRepo(), new StubMaster());
+
+        Assert.Equal(72, vm.SocketFittingRows.Count);
+        Assert.Equal(36, vm.FlangedFittingRows.Count);
+
+        vm.SelectedFittingTabIndex = 1;
+        vm.AddFittingCommand.Execute(null);
+
+        Assert.Equal(72, vm.SocketFittingRows.Count);
+        Assert.Equal(37, vm.FlangedFittingRows.Count);
+        Assert.Equal(BendConnection.Flanged, vm.FlangedFittingRows[^1].Connection);
+    }
+
     private static PipeSpecTableViewModel Create(StubRepo repo, StubMaster master)
         => new(BendSettings.Default, new SaveBendSettingsUseCase(new StubTransaction(), repo, master), new StubDialog());
 

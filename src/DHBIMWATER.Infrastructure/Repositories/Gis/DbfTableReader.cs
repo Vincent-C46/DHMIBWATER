@@ -28,7 +28,13 @@ internal static class DbfTableReader
             var remainder = reader.ReadBytes(31);
             if (remainder.Length != 31) throw new EndOfStreamException("DBF 필드 디스크립터가 불완전합니다.");
             Buffer.BlockCopy(remainder, 0, descriptor, 1, 31);
-            var name = Encoding.ASCII.GetString(descriptor, 0, 11).TrimEnd('\0', ' ');
+            // 필드명도 레코드 값과 같은 코드페이지다. 국가 수치지도 DBF는 "구분"·"등고수치"처럼 한글 필드명을 쓴다.
+            // ASCII로 읽으면 비ASCII 바이트가 전부 '?'가 되어 필드 콤보·샘플 표시가 "????"로 깨지고,
+            // AlignmentAttributeParser의 한글 후보("구경"·"관종" 등)도 영영 매칭되지 않는다.
+            // NUL 뒤 잔여 바이트가 2바이트 문자로 오결합되지 않도록 NUL 앞까지만 디코딩한다.
+            var nameLength = Array.IndexOf(descriptor, (byte)0, 0, 11);
+            if (nameLength < 0) nameLength = 11;
+            var name = encoding.GetString(descriptor, 0, nameLength).TrimEnd(' ');
             fields.Add(new ShapefileFieldInfo(name, (char)descriptor[11], descriptor[16], descriptor[17]));
         }
         stream.Position = headerLength;

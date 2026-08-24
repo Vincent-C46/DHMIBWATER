@@ -17,14 +17,15 @@ public sealed class PipeSpecTableViewModel : ViewModelBase
     private readonly BendSettings _source;
     private readonly SaveBendSettingsUseCase _save;
     private readonly IDialogService _dialog;
+    private int _selectedFittingTabIndex;
     public PipeSpecTableViewModel(BendSettings source, SaveBendSettingsUseCase save, IDialogService dialog)
     {
         _source = source; _save = save; _dialog = dialog;
         Joint = new JointDeflectionSettingsViewModel(source);
         AddStraightCommand = new RelayCommand(_ => StraightRows.Add(new StraightPipeSpecRow()));
         RemoveStraightCommand = new RelayCommand(_ => { if (SelectedStraight is not null) StraightRows.Remove(SelectedStraight); });
-        AddFittingCommand = new RelayCommand(_ => FittingRows.Add(NewFittingRow()));
-        RemoveFittingCommand = new RelayCommand(_ => { if (SelectedFitting is not null) FittingRows.Remove(SelectedFitting); });
+        AddFittingCommand = new RelayCommand(_ => ActiveFittingRows().Add(NewFittingRow(ActiveConnection())));
+        RemoveFittingCommand = new RelayCommand(_ => RemoveSelectedFitting());
         RestoreCommand = new RelayCommand(_ => LoadDefaults());
         SaveCommand = new RelayCommand(_ => Confirm());
         SaveToMasterCommand = new RelayCommand(_ => SaveToMaster());
@@ -32,22 +33,35 @@ public sealed class PipeSpecTableViewModel : ViewModelBase
         Load(source.StraightPipes, source.Fittings);
     }
     public ObservableCollection<StraightPipeSpecRow> StraightRows { get; } = new();
-    public ObservableCollection<BendFittingRow> FittingRows { get; } = new();
+    public ObservableCollection<BendFittingRow> SocketFittingRows { get; } = new();
+    public ObservableCollection<BendFittingRow> FlangedFittingRows { get; } = new();
     /// <summary>허용굴곡 탭. 독립 창이던 시절의 ViewModel을 그대로 세 번째 탭으로 얹는다.</summary>
     public JointDeflectionSettingsViewModel Joint { get; }
     public StraightPipeSpecRow? SelectedStraight { get; set; }
-    public BendFittingRow? SelectedFitting { get; set; }
+    public BendFittingRow? SelectedSocketFitting { get; set; }
+    public BendFittingRow? SelectedFlangedFitting { get; set; }
+    public int SelectedFittingTabIndex { get => _selectedFittingTabIndex; set => SetProperty(ref _selectedFittingTabIndex, value); }
     public ICommand AddStraightCommand { get; } public ICommand RemoveStraightCommand { get; }
     public ICommand AddFittingCommand { get; } public ICommand RemoveFittingCommand { get; }
     public ICommand RestoreCommand { get; } public ICommand SaveCommand { get; } public ICommand SaveToMasterCommand { get; } public ICommand CancelCommand { get; }
     public Action? CloseAction { get; set; }
     public BendSettings? Result { get; private set; }
 
-    private static BendFittingRow NewFittingRow() => new();
+    private static BendFittingRow NewFittingRow(BendConnection connection) => new() { Connection = connection };
+    private BendConnection ActiveConnection() => SelectedFittingTabIndex == 1 ? BendConnection.Flanged : BendConnection.Socket;
+    private ObservableCollection<BendFittingRow> ActiveFittingRows() => SelectedFittingTabIndex == 1 ? FlangedFittingRows : SocketFittingRows;
+    private void RemoveSelectedFitting()
+    {
+        if (SelectedFittingTabIndex == 1)
+        {
+            if (SelectedFlangedFitting is not null) FlangedFittingRows.Remove(SelectedFlangedFitting);
+        }
+        else if (SelectedSocketFitting is not null) SocketFittingRows.Remove(SelectedSocketFitting);
+    }
     private void LoadDefaults() { Load(StraightPipeSpecTable.Default, BendFittingCatalog.Default); Joint.RestoreCommand.Execute(null); }
     private void Load(StraightPipeSpecTable straight, BendFittingCatalog fittings)
     {
-        StraightRows.Clear(); FittingRows.Clear();
+        StraightRows.Clear(); SocketFittingRows.Clear(); FlangedFittingRows.Clear();
         foreach (var group in straight.Entries.GroupBy(x => x.DiameterMm).OrderBy(x => x.Key))
         {
             var row = new StraightPipeSpecRow { DiameterMm = group.Key, OuterDiameterMm = group.First().OuterDiameterMm };
@@ -57,10 +71,10 @@ public sealed class PipeSpecTableViewModel : ViewModelBase
         // DN×각도 한 행 — A형/B형은 더 이상 별도 행이 아니다(2026-08-20, e·R·t는 형식 무관·s와 무게만 다름).
         foreach (var x in fittings.Entries)
         {
-            var row = NewFittingRow(); row.DiameterMm = x.DiameterMm; row.AngleDeg = x.AngleDeg; row.Form = x.Form;
+            var row = NewFittingRow(x.Connection); row.DiameterMm = x.DiameterMm; row.AngleDeg = x.AngleDeg; row.Form = x.Form;
             row.WallThicknessMm = x.WallThicknessMm; row.LayingLengthMm = x.LayingLengthMm; row.CenterlineRadiusMm = x.CenterlineRadiusMm;
             row.WeightKpMechanicalKg = x.WeightKpMechanicalKg; row.WeightTytonKg = x.WeightTytonKg;
-            FittingRows.Add(row);
+            (x.Connection == BendConnection.Flanged ? FlangedFittingRows : SocketFittingRows).Add(row);
         }
     }
     private void Confirm()
@@ -85,8 +99,9 @@ public sealed class PipeSpecTableViewModel : ViewModelBase
     private BendSettings BuildResult()
     {
         var straight = new StraightPipeSpecTable(StraightRows.Where(x => x.DiameterMm > 0 && x.OuterDiameterMm > 0).SelectMany(x => x.ToSpecs()).Where(x => x.ThicknessMm > 0).ToList());
-        var fittings = new BendFittingCatalog(FittingRows.Where(x => x.DiameterMm > 0 && x.AngleDeg > 0 && x.LayingLengthMm > 0 && x.CenterlineRadiusMm > 0)
-            .Select(x => new BendFittingEntry(x.DiameterMm, x.AngleDeg, x.Form, x.LayingLengthMm, x.CenterlineRadiusMm, x.WallThicknessMm, x.WeightKpMechanicalKg, x.WeightTytonKg))
+        var fittings = new BendFittingCatalog(SocketFittingRows.Concat(FlangedFittingRows)
+            .Where(x => x.DiameterMm > 0 && x.AngleDeg > 0 && x.LayingLengthMm > 0 && x.CenterlineRadiusMm > 0)
+            .Select(x => new BendFittingEntry(x.DiameterMm, x.AngleDeg, x.Form, x.LayingLengthMm, x.CenterlineRadiusMm, x.WallThicknessMm, x.WeightKpMechanicalKg, x.WeightTytonKg, Connection: x.Connection))
             .ToList());
         return Joint.BuildResult(_source with { StraightPipes = straight, Fittings = fittings });
     }
