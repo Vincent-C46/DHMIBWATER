@@ -7,8 +7,9 @@ namespace DHBIMWATER.Core.Gis;
 /// Revit 의존 없는 순수 계산이다.
 /// </summary>
 /// <remarks>
-/// rot_XY는 진행방향을 XY평면에 투영한 방향각(+X축 기준)이고, rot_XZ는 3D 진행방향과 그 XY 투영 사이의
-/// 경사각이다. 좌표 변환은 평행이동뿐이므로 GIS 방위각이 Revit 프로젝트 X축 기준 각과 같다(진북 회전은 반영하지 않는다).
+/// rot_XY는 진행방향을 XY평면에 투영한 방향각(+X축 기준)이다. rot_XZ는 패밀리 회전축 규약이 기하학적
+/// 종단경사각과 반대이므로 그 경사각의 음수를 쓴다. 좌표 변환은 평행이동뿐이므로 GIS 방위각이 Revit 프로젝트
+/// X축 기준 각과 같다(진북 회전은 반영하지 않는다).
 /// </remarks>
 public static class BendOrientation
 {
@@ -37,12 +38,12 @@ public static class BendOrientation
         return new[] { forwardA, forwardA, mid, forwardB, forwardB };
     }
 
-    /// <summary>접선 벡터 하나를 rot_XY/rot_XZ(도)로 환산한다.</summary>
+    /// <summary>접선 벡터 하나를 rot_XY와 패밀리 규약의 반대 부호 rot_XZ(도)로 환산한다.</summary>
     public static (double RotXYDeg, double RotXZDeg) Compute(Vector3D forward)
     {
         var horizontal = Math.Sqrt(forward.X * forward.X + forward.Y * forward.Y);
         var rotXy = Math.Atan2(forward.Y, forward.X) * 180d / Math.PI;
-        var rotXz = Math.Atan2(forward.Z, horizontal) * 180d / Math.PI;
+        var rotXz = -Math.Atan2(forward.Z, horizontal) * 180d / Math.PI;
         return (rotXy, rotXz);
     }
 

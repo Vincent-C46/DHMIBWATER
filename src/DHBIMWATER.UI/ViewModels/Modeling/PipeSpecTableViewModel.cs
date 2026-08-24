@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows.Input;
 using DHBIMWATER.Core.Gis;
 using DHBIMWATER.Application.Interfaces;
+using DHBIMWATER.Application.Interfaces.Gis;
 using DHBIMWATER.Application.UseCases.Gis;
 using DHBIMWATER.UI.Base;
 using DHBIMWATER.UI.Commands;
@@ -14,13 +15,16 @@ namespace DHBIMWATER.UI.ViewModels.Modeling;
 /// </summary>
 public sealed class PipeSpecTableViewModel : ViewModelBase
 {
-    private readonly BendSettings _source;
+    private BendSettings _baseSettings;
     private readonly SaveBendSettingsUseCase _save;
     private readonly IDialogService _dialog;
+    private readonly IFileDialogService _fileDialog;
+    private readonly IBendSettingsFileStore _fileStore;
     private int _selectedFittingTabIndex;
-    public PipeSpecTableViewModel(BendSettings source, SaveBendSettingsUseCase save, IDialogService dialog)
+    public PipeSpecTableViewModel(BendSettings source, SaveBendSettingsUseCase save, IDialogService dialog,
+        IFileDialogService fileDialog, IBendSettingsFileStore fileStore)
     {
-        _source = source; _save = save; _dialog = dialog;
+        _baseSettings = source; _save = save; _dialog = dialog; _fileDialog = fileDialog; _fileStore = fileStore;
         Joint = new JointDeflectionSettingsViewModel(source);
         AddStraightCommand = new RelayCommand(_ => StraightRows.Add(new StraightPipeSpecRow()));
         RemoveStraightCommand = new RelayCommand(_ => { if (SelectedStraight is not null) StraightRows.Remove(SelectedStraight); });
@@ -28,7 +32,8 @@ public sealed class PipeSpecTableViewModel : ViewModelBase
         RemoveFittingCommand = new RelayCommand(_ => RemoveSelectedFitting());
         RestoreCommand = new RelayCommand(_ => LoadDefaults());
         SaveCommand = new RelayCommand(_ => Confirm());
-        SaveToMasterCommand = new RelayCommand(_ => SaveToMaster());
+        ExportCommand = new RelayCommand(_ => Export());
+        ImportCommand = new RelayCommand(_ => Import());
         CancelCommand = new RelayCommand(_ => CloseAction?.Invoke());
         Load(source.StraightPipes, source.Fittings);
     }
@@ -43,7 +48,7 @@ public sealed class PipeSpecTableViewModel : ViewModelBase
     public int SelectedFittingTabIndex { get => _selectedFittingTabIndex; set => SetProperty(ref _selectedFittingTabIndex, value); }
     public ICommand AddStraightCommand { get; } public ICommand RemoveStraightCommand { get; }
     public ICommand AddFittingCommand { get; } public ICommand RemoveFittingCommand { get; }
-    public ICommand RestoreCommand { get; } public ICommand SaveCommand { get; } public ICommand SaveToMasterCommand { get; } public ICommand CancelCommand { get; }
+    public ICommand RestoreCommand { get; } public ICommand SaveCommand { get; } public ICommand ExportCommand { get; } public ICommand ImportCommand { get; } public ICommand CancelCommand { get; }
     public Action? CloseAction { get; set; }
     public BendSettings? Result { get; private set; }
 
@@ -81,20 +86,37 @@ public sealed class PipeSpecTableViewModel : ViewModelBase
     {
         Result = BuildResult();
         WarnOuterDiameterConflicts(Result);
-        try { _save.Execute(Result, BendSettingsScope.Project); }
+        try { _save.Execute(Result); }
         catch (Exception ex) { _dialog.Warn("관로 규격 설정", $"저장에 실패했습니다.\n{ex.Message}"); }
         CloseAction?.Invoke();
     }
-    private void SaveToMaster()
+    private void Export()
     {
+        var path = _fileDialog.SaveFile("관·곡관 설정 내보내기", "JSON 파일 (*.json)|*.json", "DHBIMWATER_PipeSettings.json");
+        if (string.IsNullOrWhiteSpace(path)) return;
         var settings = BuildResult();
         WarnOuterDiameterConflicts(settings);
         try
         {
-            _save.Execute(settings, BendSettingsScope.Master);
-            _dialog.Info("관로 규격 설정", "직관·곡관 규격과 허용굴곡 설정을 이 프로젝트와 마스터에 저장했습니다.");
+            _fileStore.Save(path, settings);
+            _dialog.Info("관로 규격 설정", $"설정 파일을 내보냈습니다.\n{path}");
         }
-        catch (Exception ex) { _dialog.Warn("관로 규격 설정", $"저장에 실패했습니다.\n{ex.Message}"); }
+        catch (Exception ex) { _dialog.Warn("관로 규격 설정", $"설정 파일을 내보내지 못했습니다.\n{ex.Message}"); }
+    }
+    private void Import()
+    {
+        var path = _fileDialog.OpenFile("관·곡관 설정 불러오기", "JSON 파일 (*.json)|*.json");
+        if (string.IsNullOrWhiteSpace(path)) return;
+        try
+        {
+            var settings = _fileStore.Load(path);
+            _baseSettings = settings;
+            Load(settings.StraightPipes, settings.Fittings);
+            Joint.LoadSettings(settings);
+            Result = null;
+            _dialog.Info("관로 규격 설정", "설정 파일을 불러왔습니다. 내용을 확인한 뒤 [확인]을 눌러 현재 프로젝트에 저장하세요.");
+        }
+        catch (Exception ex) { _dialog.Warn("관로 규격 설정", $"설정 파일을 불러오지 못했습니다.\n{ex.Message}"); }
     }
     private BendSettings BuildResult()
     {
@@ -103,7 +125,7 @@ public sealed class PipeSpecTableViewModel : ViewModelBase
             .Where(x => x.DiameterMm > 0 && x.AngleDeg > 0 && x.LayingLengthMm > 0 && x.CenterlineRadiusMm > 0)
             .Select(x => new BendFittingEntry(x.DiameterMm, x.AngleDeg, x.Form, x.LayingLengthMm, x.CenterlineRadiusMm, x.WallThicknessMm, x.WeightKpMechanicalKg, x.WeightTytonKg, Connection: x.Connection))
             .ToList());
-        return Joint.BuildResult(_source with { StraightPipes = straight, Fittings = fittings });
+        return Joint.BuildResult(_baseSettings with { StraightPipes = straight, Fittings = fittings });
     }
     private void WarnOuterDiameterConflicts(BendSettings settings)
     {

@@ -82,13 +82,13 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
 {
     private readonly IFileDialogService _fileDialog; private readonly IDialogService _dialog;
     private readonly IReadOnlyList<IAlignmentSourceReader> _readers; private readonly AnalyzePipeNetworkUseCase _analyze;
-    private readonly BendSettingsProvider _settingsProvider; private readonly SaveBendSettingsUseCase _save; private readonly IExcelAlignmentSourceReader _excelReader;
+    private readonly BendSettingsProvider _settingsProvider; private readonly SaveBendSettingsUseCase _save; private readonly IBendSettingsFileStore _settingsFileStore; private readonly IExcelAlignmentSourceReader _excelReader;
     private readonly IProjectLocationQueryRepo _projectLocationQuery; private readonly IElementTypeQueryRepo _typeRepo;
     private PipeAlignmentSourceFileItem? _selectedFile; private PipeAlignmentOutputMode _outputMode;
     private double _referenceX, _referenceY, _intervalM = 6, _snapToleranceMm = 10;
     private int _selectedTabIndex;
     private bool _applySharedCoordinates, _propagatingReversal; private ZDatum _zDatum = ZDatum.Invert;
-    private string? _straightFamilyName, _straightTypeName, _bendFamilyTypeName, _pipingSystemTypeName, _pipeTypeName, _levelName, _summary, _settingsNotice;
+    private string? _straightFamilyTypeName, _bendFamilyTypeName, _pipingSystemTypeName, _pipeTypeName, _levelName, _summary, _settingsNotice;
     private string? _straightDiameterParameterName, _straightOuterDiameterParameterName, _straightThicknessParameterName, _straightPointCountNotice, _bendPointCountNotice;
     private string? _bendDiameterParameterName, _bendWallThicknessParameterName, _bendOuterDiameterParameterName;
     private string _bulkMappingPipeKind = string.Empty;
@@ -97,11 +97,11 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
     private BendSettings _settings = BendSettings.Default;
 
     public PipeAlignmentModelingViewModel(IFileDialogService fileDialog, IDialogService dialog, IEnumerable<IAlignmentSourceReader> readers,
-        IElementTypeQueryRepo typeRepo, ILevelQueryRepo levelRepo, AnalyzePipeNetworkUseCase analyze, BendSettingsProvider settingsProvider, SaveBendSettingsUseCase save, IExcelAlignmentSourceReader excelReader, IProjectLocationQueryRepo projectLocationQuery)
+        IElementTypeQueryRepo typeRepo, ILevelQueryRepo levelRepo, AnalyzePipeNetworkUseCase analyze, BendSettingsProvider settingsProvider, SaveBendSettingsUseCase save, IBendSettingsFileStore settingsFileStore, IExcelAlignmentSourceReader excelReader, IProjectLocationQueryRepo projectLocationQuery)
     {
-        _fileDialog = fileDialog; _dialog = dialog; _readers = readers.ToList(); _analyze = analyze; _settingsProvider = settingsProvider; _save = save; _excelReader = excelReader; _projectLocationQuery = projectLocationQuery; _typeRepo = typeRepo;
-        AdaptiveComponentTypeNames = typeRepo.GetAdaptiveComponentTypeNames().ToList(); StraightFamilyNames = Families(AdaptiveComponentTypeNames); PipingSystemTypeNames = typeRepo.GetPipingSystemTypeNames().ToList(); PipeTypeNames = typeRepo.GetPipeTypeNames().ToList(); LevelNames = levelRepo.GetExistingLevelNames().ToList();
-        _straightFamilyName = StraightFamilyNames.FirstOrDefault(); _straightTypeName = TypesFor(_straightFamilyName).FirstOrDefault(); _bendFamilyTypeName = AdaptiveComponentTypeNames.FirstOrDefault(x => _typeRepo.GetAdaptiveBendPointCount(x) == 5) ?? AdaptiveComponentTypeNames.FirstOrDefault(); _pipingSystemTypeName = PipingSystemTypeNames.FirstOrDefault(); _pipeTypeName = PipeTypeNames.FirstOrDefault(); _levelName = LevelNames.FirstOrDefault();
+        _fileDialog = fileDialog; _dialog = dialog; _readers = readers.ToList(); _analyze = analyze; _settingsProvider = settingsProvider; _save = save; _settingsFileStore = settingsFileStore; _excelReader = excelReader; _projectLocationQuery = projectLocationQuery; _typeRepo = typeRepo;
+        AdaptiveComponentTypeNames = typeRepo.GetAdaptiveComponentTypeNames().ToList(); PipingSystemTypeNames = typeRepo.GetPipingSystemTypeNames().ToList(); PipeTypeNames = typeRepo.GetPipeTypeNames().ToList(); LevelNames = levelRepo.GetExistingLevelNames().ToList();
+        _straightFamilyTypeName = AdaptiveComponentTypeNames.FirstOrDefault(); _bendFamilyTypeName = AdaptiveComponentTypeNames.FirstOrDefault(x => _typeRepo.GetAdaptiveBendPointCount(x) == 5) ?? AdaptiveComponentTypeNames.FirstOrDefault(); _pipingSystemTypeName = PipingSystemTypeNames.FirstOrDefault(); _pipeTypeName = PipeTypeNames.FirstOrDefault(); _levelName = LevelNames.FirstOrDefault();
         UpdateStraightParameterOptions();
         AddCommand = new RelayCommand(AddFile); RemoveCommand = new RelayCommand(_ => RemoveFile()); RunCommand = new RelayCommand(_ => RunDiagnosis()); CreateCommand = new RelayCommand(_ => RequestModeling()); CancelCommand = new RelayCommand(_ => CloseAction?.Invoke());
         ApplyBulkMappingCommand = new RelayCommand(_ => ApplyBulkMapping());
@@ -140,8 +140,6 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
     private void NotifyFilesByKindChanged() { OnPropertyChanged(nameof(ShpFiles)); OnPropertyChanged(nameof(DwgFiles)); OnPropertyChanged(nameof(ExcelFiles)); OnPropertyChanged(nameof(HasShpFiles)); OnPropertyChanged(nameof(HasDwgFiles)); OnPropertyChanged(nameof(HasExcelFiles)); }
     public ObservableCollection<PipeNetworkNodeReport> Attention { get; } = new();
     public IReadOnlyList<string> AdaptiveComponentTypeNames { get; }
-    public IReadOnlyList<string> StraightFamilyNames { get; }
-    public IReadOnlyList<string> StraightTypeNames => TypesFor(StraightFamilyName);
     public IReadOnlyList<string> PipingSystemTypeNames { get; }
     public IReadOnlyList<string> PipeTypeNames { get; }
     public IReadOnlyList<string> LevelNames { get; }
@@ -161,8 +159,7 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
     public ZDatum ZDatum { get => _zDatum; set { if (SetProperty(ref _zDatum, value)) OnPropertyChanged(nameof(HasSpecUnmatched)); } }
     public Array ZDatums => Enum.GetValues(typeof(ZDatum));
     public double IntervalM { get => _intervalM; set => SetProperty(ref _intervalM, value); }
-    public string? StraightFamilyName { get => _straightFamilyName; set { if (SetProperty(ref _straightFamilyName, value)) { OnPropertyChanged(nameof(StraightTypeNames)); StraightTypeName = StraightTypeNames.FirstOrDefault(); } } }
-    public string? StraightTypeName { get => _straightTypeName; set { if (SetProperty(ref _straightTypeName, value)) UpdateStraightParameterOptions(); } }
+    public string? StraightFamilyTypeName { get => _straightFamilyTypeName; set { if (SetProperty(ref _straightFamilyTypeName, value)) UpdateStraightParameterOptions(); } }
     public string? BendFamilyTypeName { get => _bendFamilyTypeName; set { if (SetProperty(ref _bendFamilyTypeName, value)) UpdateBendParameterOptions(); } }
     public string? PipingSystemTypeName { get => _pipingSystemTypeName; set => SetProperty(ref _pipingSystemTypeName, value); }
     public string? PipeTypeName { get => _pipeTypeName; set => SetProperty(ref _pipeTypeName, value); }
@@ -263,8 +260,9 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
             {
                 var read = _excelReader.Read(path, mapping);
                 var item = new PipeAlignmentSourceFileItem { Path = path, SheetName = mapping.SheetName, ExcelMapping = mapping, ReadResult = read, MappingChanged = NotifyFileMappingChanged };
-                item.DiameterField = PipeAlignmentSourceFileItem.ManualFieldOption;
-                item.KindField = PipeAlignmentSourceFileItem.ManualFieldOption;
+                // 헤더행이 필드가 되므로 SHP·DWG와 같은 규칙으로 직경·관종 열을 추정한다. 못 찾으면 수동 옵션으로 시작한다.
+                item.DiameterField = AlignmentAttributeParser.GuessDiameterField(read.Fields.Select(x => x.Name)) ?? PipeAlignmentSourceFileItem.ManualFieldOption;
+                item.KindField = AlignmentAttributeParser.GuessKindField(read.Fields.Select(x => x.Name)) ?? PipeAlignmentSourceFileItem.ManualFieldOption;
                 Files.Add(item); SelectedFile = item;
                 if (read.Warnings.Count > 0) _dialog.Info("파일 확인", $"{item.FileName}\n\n{string.Join("\n", read.Warnings)}");
             }
@@ -279,10 +277,14 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
     /// <summary>직관 패밀리에서 조회한 파라미터명으로 호칭지름·관종 후보 매칭을 다시 시도하고, Adaptive Point가 2개인지 검증한다.</summary>
     private void UpdateStraightParameterOptions()
     {
-        var familyType = Combine(StraightFamilyName, StraightTypeName);
+        var familyType = StraightFamilyTypeName;
         _straightParameterNames = familyType is null ? Array.Empty<string>() : _typeRepo.GetAdaptiveInstanceParameterNames(familyType).ToList();
         OnPropertyChanged(nameof(StraightParameterOptions));
-        StraightDiameterParameterName = FamilyParameterMapper.GuessDiameterParameter(_straightParameterNames) ?? ManualParameterOption;
+        // 곡관(UpdateBendParameterOptions)과 같은 규칙 — 파라미터명 "DN"을 최우선으로 잡고,
+        // DN이 없는 패밀리만 기존 후보(직경/관경/Diameter …) 매칭으로 폴백한다.
+        StraightDiameterParameterName = _straightParameterNames.FirstOrDefault(name => string.Equals(name, "DN", StringComparison.OrdinalIgnoreCase))
+            ?? FamilyParameterMapper.GuessDiameterParameter(_straightParameterNames)
+            ?? ManualParameterOption;
         StraightOuterDiameterParameterName = FamilyParameterMapper.GuessOuterDiameterParameter(_straightParameterNames) ?? ManualParameterOption;
         StraightThicknessParameterName = FamilyParameterMapper.GuessThicknessParameter(_straightParameterNames) ?? ManualParameterOption;
         // 배치 시점에 Repo가 다시 검증해 예외를 던지지만, 선택 즉시 알려주는 편이 낫다. -1은 확인 불가(패밀리 편집 실패 등)라 경고하지 않는다.
@@ -294,7 +296,7 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
         var familyType = BendFamilyTypeName;
         _bendParameterNames = familyType is null ? Array.Empty<string>() : _typeRepo.GetAdaptiveInstanceParameterNames(familyType).ToList();
         OnPropertyChanged(nameof(BendParameterOptions));
-        BendDiameterParameterName = FamilyParameterMapper.GuessDiameterParameter(_bendParameterNames) ?? ManualParameterOption;
+        BendDiameterParameterName = _bendParameterNames.FirstOrDefault(name => string.Equals(name, "DN", StringComparison.OrdinalIgnoreCase)) ?? ManualParameterOption;
         BendWallThicknessParameterName = FamilyParameterMapper.GuessThicknessParameter(_bendParameterNames) ?? ManualParameterOption;
         BendOuterDiameterParameterName = FamilyParameterMapper.GuessOuterDiameterParameter(_bendParameterNames) ?? ManualParameterOption;
         // 직관과 같은 규칙 — -1(확인 불가: 패밀리 편집 실패 등)은 경고하지 않는다.
@@ -449,11 +451,13 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
         if (HasSpecUnmatched) warnings.Add($"규격 미매칭 {SpecUnmatchedCount}건");
         warnings.Add($"허용 초과 곡관 {diagnosis.BendUnresolvedCount}건");
         warnings.Add($"치수 모순 {diagnosis.SizeConflictCount}건");
-        var needsConfirmation = DiameterUnresolvedCount > 0 || HasSpecUnmatched || diagnosis.BendUnresolvedCount > 0
-            || diagnosis.SizeConflictCount > 0 || diagnosis.Warnings.Any(x => x.Contains("직관이 들어갈 자리가 없습니다"));
+        // DirectShape는 폴리선을 그대로 형상화해 곡관·규격 판정이 결과에 반영되지 않는다.
+        var needsConfirmation = OutputMode != PipeAlignmentOutputMode.DirectShape
+            && (DiameterUnresolvedCount > 0 || HasSpecUnmatched || diagnosis.BendUnresolvedCount > 0
+                || diagnosis.SizeConflictCount > 0 || diagnosis.Warnings.Any(x => x.Contains("직관이 들어갈 자리가 없습니다")));
         if (needsConfirmation && !_dialog.Confirm("사전 진단 경고", $"{string.Join(", ", warnings)}을 확인했습니다. 계속 모델링할까요?")) return;
         var reference = ResolveReference();
-        RequestedModeling = new PipeAlignmentModelingRequest { Files = SourceFiles(), ReferenceX = reference.X, ReferenceY = reference.Y, ApplySharedCoordinates = ApplySharedCoordinates, ZDatum = ZDatum, OutputMode = OutputMode, IntervalMm = IntervalM * 1000, StraightFamilyTypeName = Combine(StraightFamilyName, StraightTypeName), StraightDiameterParameterName = ResolvedParameter(StraightDiameterParameterName), StraightOuterDiameterParameterName = ResolvedParameter(StraightOuterDiameterParameterName), StraightThicknessParameterName = ResolvedParameter(StraightThicknessParameterName), BendFamilyTypeName = BendFamilyTypeName, BendDiameterParameterName = ResolvedParameter(BendDiameterParameterName), BendWallThicknessParameterName = ResolvedParameter(BendWallThicknessParameterName), BendOuterDiameterParameterName = ResolvedParameter(BendOuterDiameterParameterName), PipingSystemTypeName = PipingSystemTypeName, PipeTypeName = PipeTypeName, LevelName = LevelName, SnapToleranceMm = SnapToleranceMm, CurrentBendSettings = _settings };
+        RequestedModeling = new PipeAlignmentModelingRequest { Files = SourceFiles(), ReferenceX = reference.X, ReferenceY = reference.Y, ApplySharedCoordinates = ApplySharedCoordinates, ZDatum = ZDatum, OutputMode = OutputMode, IntervalMm = IntervalM * 1000, StraightFamilyTypeName = StraightFamilyTypeName, StraightDiameterParameterName = ResolvedParameter(StraightDiameterParameterName), StraightOuterDiameterParameterName = ResolvedParameter(StraightOuterDiameterParameterName), StraightThicknessParameterName = ResolvedParameter(StraightThicknessParameterName), BendFamilyTypeName = BendFamilyTypeName, BendDiameterParameterName = ResolvedParameter(BendDiameterParameterName), BendWallThicknessParameterName = ResolvedParameter(BendWallThicknessParameterName), BendOuterDiameterParameterName = ResolvedParameter(BendOuterDiameterParameterName), PipingSystemTypeName = PipingSystemTypeName, PipeTypeName = PipeTypeName, LevelName = LevelName, SnapToleranceMm = SnapToleranceMm, CurrentBendSettings = _settings };
         CloseAction?.Invoke();
     }
     /// <summary>
@@ -504,7 +508,6 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
         SyncBendConnectionOption();
         SettingsNotice = source switch
         {
-            BendSettingsSource.Master => "이 프로젝트에 저장된 값이 없어 회사 표준(마스터) 규격을 불러왔습니다.",
             BendSettingsSource.BuiltInDefault => "저장된 값이 없어 내장 기본값을 표시합니다.",
             _ => string.Empty
         };
@@ -513,10 +516,7 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
             SettingsNotice = (SettingsNotice + " 저장된 곡관 치수가 현행 규격표와 구조가 다릅니다(중복 행 또는 플랜지곡관 누락). [관·곡관 규격표] 창에서 [기본값 복원] 후 저장하세요.").Trim();
         UpdateBendParameterOptions();
     }
-    private void OpenPipeSpecs() { var vm = new PipeSpecTableViewModel(_settings, _save, _dialog); ShowDialog(new PipeSpecTableView(vm)); if (vm.Result is not null) { _settings = vm.Result; SyncBendConnectionOption(); SettingsNotice = string.Empty; RefreshDiameterMappingPreviews(); } }
+    private void OpenPipeSpecs() { var vm = new PipeSpecTableViewModel(_settings, _save, _dialog, _fileDialog, _settingsFileStore); ShowDialog(new PipeSpecTableView(vm)); if (vm.Result is not null) { _settings = vm.Result; SyncBendConnectionOption(); SettingsNotice = string.Empty; RefreshDiameterMappingPreviews(); } }
     private void SyncBendConnectionOption() => BendConnectionOption = BendConnectionOptions.First(x => x.Value == _settings.ActiveBendConnection);
     private void ShowDialog(System.Windows.Window dialog) { var owner = System.Windows.Application.Current.Windows.OfType<System.Windows.Window>().FirstOrDefault(x => x is PipeAlignmentModelingView); if (owner is not null) dialog.Owner = owner; dialog.ShowDialog(); if (owner is not null) owner.Activate(); }
-    private static IReadOnlyList<string> Families(IEnumerable<string> values) => values.Select(x => x.Split(new[] { " : " }, 2, StringSplitOptions.None)[0]).Distinct().OrderBy(x => x).ToList();
-    private IReadOnlyList<string> TypesFor(string? family) => string.IsNullOrWhiteSpace(family) ? Array.Empty<string>() : AdaptiveComponentTypeNames.Where(x => x.StartsWith(family + " : ", StringComparison.Ordinal)).Select(x => x[(family.Length + 3)..]).ToList();
-    private static string? Combine(string? family, string? type) => string.IsNullOrWhiteSpace(family) || string.IsNullOrWhiteSpace(type) ? null : $"{family} : {type}";
 }

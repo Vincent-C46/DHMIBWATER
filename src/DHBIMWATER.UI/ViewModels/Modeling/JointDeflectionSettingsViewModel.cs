@@ -53,6 +53,13 @@ public sealed class JointDeflectionSettingsViewModel : ViewModelBase
                 _otherRows.Add(x);
         }
     }
+    /// <summary>파일에서 불러온 허용굴곡표와 현재 판정 옵션을 편집 화면에 반영한다.</summary>
+    public void LoadSettings(BendSettings settings)
+    {
+        Load(settings.JointDeflections);
+        ActiveJointType = settings.ActiveJointType;
+        ApplicationMode = settings.ApplicationMode;
+    }
     /// <summary>이 탭의 편집값을 <paramref name="baseSettings"/> 위에 반영한다. 규격표 창에 3번째 탭으로 얹혀 있어(2026-08-20)
     /// 독립 창으로 열릴 때 쓰던 <see cref="Confirm"/>(SaveCommand)과 별개로, 바깥쪽 [확인] 한 번에 함께 저장하기 위한 진입점이다.</summary>
     public BendSettings BuildResult(BendSettings baseSettings) => baseSettings with

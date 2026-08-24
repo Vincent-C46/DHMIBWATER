@@ -9,9 +9,6 @@ public enum BendSettingsSource
     /// <summary>이 Revit 문서의 DataStorage에 저장된 값.</summary>
     Project,
 
-    /// <summary>앱 레벨 마스터 파일의 값(이 문서에는 아직 저장된 적 없음).</summary>
-    Master,
-
     /// <summary>어디에도 저장된 값이 없어 코드 내장 기본값을 쓴 경우.</summary>
     BuiltInDefault
 }
@@ -19,22 +16,18 @@ public enum BendSettingsSource
 public sealed record BendSettingsResolution(BendSettings Settings, BendSettingsSource Source);
 
 /// <summary>
-/// 프로젝트 → 마스터 → 내장 기본값 순으로 규격 설정을 해석한다.
-/// 마스터를 두는 이유: 핸드북 제원은 프로젝트 무관 데이터인데 DataStorage에만 두면
-/// 새 프로젝트마다 다시 입력해야 한다.
+/// 프로젝트 저장값이 있으면 사용하고, 없으면 코드 내장 기본값을 사용한다.
+/// 파일에서 불러온 값은 규격표 화면에서 사용자가 확인한 뒤 프로젝트에 명시적으로 저장한다.
 /// </summary>
 public sealed class BendSettingsProvider
 {
     private readonly IBendSettingsRepo _project;
-    private readonly IBendSettingsMasterStore _master;
 
-    public BendSettingsProvider(IBendSettingsRepo project, IBendSettingsMasterStore master)
-    { _project = project; _master = master; }
+    public BendSettingsProvider(IBendSettingsRepo project) => _project = project;
 
     public BendSettingsResolution Load()
     {
         if (_project.Load() is { } project) return new(project, BendSettingsSource.Project);
-        if (_master.Load() is { } master) return new(master, BendSettingsSource.Master);
         return new(BendSettings.Default, BendSettingsSource.BuiltInDefault);
     }
 }

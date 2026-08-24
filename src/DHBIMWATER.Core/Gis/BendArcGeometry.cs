@@ -7,7 +7,7 @@ namespace DHBIMWATER.Core.Gis;
 /// <param name="ArcMid">P3 — 호의 중간점. 5점 가변 패밀리의 세 번째 점이다.</param>
 /// <param name="ArcEnd">P4 — 호의 끝(접점 B). 절점에서 반대 방향으로 T 떨어진 지점.</param>
 /// <param name="End">P5 — 곡관의 끝(관 끝). 절점에서 반대 방향으로 t 떨어진 지점.</param>
-/// <param name="ExternalMm">E = R·(sec(θ/2) − 1). 절점에서 호 중점(P3)까지의 거리.</param>
+/// <param name="ExternalMm">절점에서 호 중점(P3)까지의 거리. 실제 편각과 표준 곡관각이 같으면 E = R·(sec(θ/2) − 1).</param>
 /// <param name="TangentMm">T = R·tan(θ/2). 절점에서 접점(P2/P4)까지의 거리.</param>
 public sealed record BendArcPoints(Point3D Start, Point3D ArcStart, Point3D ArcMid, Point3D ArcEnd, Point3D End, double ExternalMm, double TangentMm);
 
@@ -41,7 +41,7 @@ public static class BendArcGeometry
         double angleDeg,
         double radiusMm,
         double layingLengthMm)
-        => Compute(node, dirA, dirB, angleDeg, radiusMm, layingLengthMm, layingLengthMm, 0.001);
+        => ComputeCore(node, dirA, dirB, angleDeg, angleDeg, radiusMm, layingLengthMm, layingLengthMm, 0.001);
 
     /// <summary>
     /// 양쪽 관 끝 거리가 다른 곡관(B형 — 한쪽에 직관부 s가 더 붙는다)용.
@@ -61,16 +61,46 @@ public static class BendArcGeometry
         double layingLengthAMm,
         double layingLengthBMm,
         double mmToCoordinate = 0.001)
+        => ComputeCore(node, dirA, dirB, angleDeg, angleDeg, radiusMm, layingLengthAMm, layingLengthBMm, mmToCoordinate);
+
+    /// <summary>
+    /// 실제 선형 편각과 선정된 표준 곡관각이 다른 경우의 5점 배치점 계산.
+    /// P2/P4의 접선거리는 표준 곡관의 R·tan(θ/2)을 유지하고, P3는 실제 두 직선에 접하는 원호 위에 둔다.
+    /// </summary>
+    public static BendArcPoints ComputeForAlignment(
+        Point3D node,
+        Vector3D dirA,
+        Vector3D dirB,
+        double fittingAngleDeg,
+        double alignmentDeflectionDeg,
+        double radiusMm,
+        double layingLengthAMm,
+        double layingLengthBMm,
+        double mmToCoordinate = 0.001)
+        => ComputeCore(node, dirA, dirB, fittingAngleDeg, alignmentDeflectionDeg, radiusMm, layingLengthAMm, layingLengthBMm, mmToCoordinate);
+
+    private static BendArcPoints ComputeCore(
+        Point3D node,
+        Vector3D dirA,
+        Vector3D dirB,
+        double fittingAngleDeg,
+        double alignmentDeflectionDeg,
+        double radiusMm,
+        double layingLengthAMm,
+        double layingLengthBMm,
+        double mmToCoordinate)
     {
         // V에서 호 쪽을 향하는 내각 이등분선. 두 방향이 정반대(편각 0)면 정의되지 않는다.
         var sum = new Vector3D(dirA.X + dirB.X, dirA.Y + dirB.Y, dirA.Z + dirB.Z);
         if (sum.Length <= DegenerateEpsilon)
-            throw new ArgumentException("편각이 0이라 곡관 이등분선을 정의할 수 없다.", nameof(angleDeg));
+            throw new ArgumentException("편각이 0이라 곡관 이등분선을 정의할 수 없다.", nameof(alignmentDeflectionDeg));
         var bisector = sum.Normalize();
 
-        var externalMm = ExternalDistance(radiusMm, angleDeg);
+        var tangentMm = BendResolver.TangentLength(radiusMm, fittingAngleDeg);
+        // P2/P4가 절점에서 T만큼 떨어진 상태에서 실제 두 직선에 접하는 원의 IP→호중점 거리.
+        // 실제 편각과 표준각이 같으면 T·tan(θ/4) = R·(sec(θ/2)−1)로 기존 외거 E와 동일하다.
+        var externalMm = tangentMm * Math.Tan(alignmentDeflectionDeg * Math.PI / 720d);
         var e = externalMm * mmToCoordinate;
-        var tangentMm = BendResolver.TangentLength(radiusMm, angleDeg);
         var t = tangentMm * mmToCoordinate;
 
         return new BendArcPoints(

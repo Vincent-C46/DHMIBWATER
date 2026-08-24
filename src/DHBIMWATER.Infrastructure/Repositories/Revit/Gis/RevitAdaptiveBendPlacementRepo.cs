@@ -15,6 +15,8 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
 {
     private const string RotationXyParameterPrefix = "rot_XY_";
     private const string RotationXzParameterPrefix = "rot_XZ_";
+    /// <summary>곡관마다 문서 전체를 재생성하지 않고, 이 개수마다 형상 변경을 한 번씩 반영한다.</summary>
+    private const int RegenerateBatchSize = 50;
 
     private readonly Func<Document?> _doc;
     public RevitAdaptiveBendPlacementRepo(Func<Document?> doc) => _doc = doc;
@@ -25,20 +27,25 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
         var doc = _doc() ?? throw new InvalidOperationException("활성 Revit 문서가 없습니다.");
         var basePoint = AlignmentPlacementMapper.GetProjectBasePoint(doc);
         var symbols = new Dictionary<(string Family, string Type), FamilySymbol>();
+        // 비활성 Symbol 활성화 시 필요한 Regenerate가 곡관 생성 배치 중간에 끼지 않도록 유형별로 먼저 확정한다.
+        foreach (var key in plans.Select(x => (x.FamilyName, x.TypeName)).Distinct())
+            ResolveSymbol(doc, symbols, key.FamilyName, key.TypeName);
         // 패밀리별로 한 번만 경고하면 충분하다 — 절점마다 같은 파라미터 누락 메시지가 반복되면 오히려 안 읽힌다.
         var missingParameters = new HashSet<(string Family, string Type, string Parameter)>();
         var writer = new PipeParameterWriter();
         var overrideWarnings = new List<string>();
+        var exceededOverrides = new List<(ElementId ElementId, int NodeId)>();
         var shapeParameterSuccesses = 0;
         // OD를 못 구한 (관종, DN) 조합. 절점마다 반복 경고하지 않도록 조합 단위로 묶는다.
         var missingOuterDiameter = new HashSet<(string PipeKind, double DiameterMm)>();
         var overrideView = ResolveOverrideView(doc);
         var solidFillPatternId = FindSolidFillPatternId(doc);
         var count = 0;
+        var pendingRegeneration = 0;
 
         foreach (var plan in plans)
         {
-            var symbol = ResolveSymbol(doc, symbols, plan.FamilyName, plan.TypeName);
+            var symbol = symbols[(plan.FamilyName, plan.TypeName)];
             var instance = AdaptiveComponentInstanceUtils.CreateAdaptiveComponentInstance(doc, symbol);
             var pointIds = AdaptiveComponentInstanceUtils.GetInstancePlacementPointElementRefIds(instance);
             if (pointIds.Count != 5)
@@ -94,14 +101,22 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
                 SetRequiredAngleParameter(rotationParameters[i].Xy, plan, $"{RotationXyParameterPrefix}{i + 1}", plan.RotXYDeg[i]);
                 SetRequiredAngleParameter(rotationParameters[i].Xz, plan, $"{RotationXzParameterPrefix}{i + 1}", plan.RotXZDeg[i]);
             }
-            // 회전 파라미터가 형상 수식을 구동하므로 커밋까지 미루지 않고(또는 다른 절점과 묶지 않고) 여기서 형상을 갱신한다.
-            // 절점을 묶어서 Regenerate를 늦추면 아직 회전값이 반영되지 않은 상태로 다음 절점 계산에 영향을 줄 수 있다
-            // (2026-08-20 배치 처리 시도 후 곡관 좌표가 비정상적으로 커지는 회귀 발견 — 원복).
-            doc.Regenerate();
+            // 각 곡관의 좌표·형상·회전값은 서로 독립적이고 배치 계획도 Revit 진입 전에 확정된다.
+            // 2026-08-20 배치 처리 시 함께 발견된 좌표 확대는 Regenerate 타이밍이 아니라
+            // BendArcGeometry.Compute 선택 인자 오버로드 오바인딩이 원인이었으므로, 문서 재생성만 묶어 처리한다.
+            if (++pendingRegeneration >= RegenerateBatchSize)
+            {
+                doc.Regenerate();
+                pendingRegeneration = 0;
+            }
             if (!plan.IsAcceptable)
-                ApplyExceededOverride(overrideView, instance.Id, solidFillPatternId, plan.NodeId, overrideWarnings);
+                exceededOverrides.Add((instance.Id, plan.NodeId));
             count++;
         }
+        if (pendingRegeneration > 0) doc.Regenerate();
+        // 신규 인스턴스 형상이 재생성된 뒤 기존과 같은 허용 초과 적색 재지정을 적용한다.
+        foreach (var (elementId, nodeId) in exceededOverrides)
+            ApplyExceededOverride(overrideView, elementId, solidFillPatternId, nodeId, overrideWarnings);
 
         var warnings = missingParameters
             .GroupBy(x => (x.Family, x.Type))

@@ -24,7 +24,8 @@ public static class AlignmentAttributeParser
     // PT_PL_PDM / PIPE_KN_NM은 국가상수도정보시스템 납품 SHP의 실제 필드명이다(DBF 확인).
     // 해당 데이터의 관경 값은 "100"과 "300.00"이 한 필드에 섞여 들어온다 — 아래 패턴이 둘 다 받는다.
     private static readonly HashSet<string> DiameterFields = new(StringComparer.OrdinalIgnoreCase)
-        { "Diameter", "DIAMETER", "DIA", "PIP_DIA", "PIPE_DIA", "PT_PL_PDM", "구경", "관경", "호구경", "HOGU" };
+        // "직경"은 엑셀 좌표표 헤더에서 가장 흔한 표기다(docs/44). SHP·DWG에도 같은 이름이 있으면 동일하게 자동 선택된다.
+        { "Diameter", "DIAMETER", "DIA", "PIP_DIA", "PIPE_DIA", "PT_PL_PDM", "직경", "구경", "관경", "호구경", "HOGU" };
     private static readonly HashSet<string> KindFields = new(StringComparer.OrdinalIgnoreCase)
         { "KIND", "MTRL", "MATERIAL", "PIPE_KIND", "PIPE_KN_NM", "관종", "재질", "재료" };
 

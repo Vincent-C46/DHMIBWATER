@@ -86,39 +86,39 @@
   },
   "hotPaths": [
     {
-      "path": "PROGRESS.md",
-      "accessCount": 25,
-      "lastAccessed": 1787528284483,
+      "path": "src\\DHBIMWATER.UI\\ViewModels\\Modeling\\PipeAlignmentModelingViewModel.cs",
+      "accessCount": 31,
+      "lastAccessed": 1787557884668,
       "type": "file"
     },
     {
-      "path": "src\\DHBIMWATER.UI\\ViewModels\\Modeling\\PipeAlignmentModelingViewModel.cs",
-      "accessCount": 17,
-      "lastAccessed": 1787286487085,
+      "path": "PROGRESS.md",
+      "accessCount": 30,
+      "lastAccessed": 1787558031953,
       "type": "file"
     },
     {
       "path": "src\\DHBIMWATER.Infrastructure\\Repositories\\Revit\\Gis\\RevitAdaptiveBendPlacementRepo.cs",
-      "accessCount": 15,
-      "lastAccessed": 1787288292433,
+      "accessCount": 16,
+      "lastAccessed": 1787553285014,
       "type": "file"
     },
     {
       "path": "src",
-      "accessCount": 10,
-      "lastAccessed": 1787532239845,
+      "accessCount": 14,
+      "lastAccessed": 1787553452595,
       "type": "directory"
     },
     {
       "path": "src\\DHBIMWATER.UI\\Views\\Modeling\\PipeAlignmentModelingView.xaml",
-      "accessCount": 9,
-      "lastAccessed": 1787286525288,
+      "accessCount": 11,
+      "lastAccessed": 1787557892792,
       "type": "file"
     },
     {
       "path": "src\\DHBIMWATER.Application\\UseCases\\Gis\\ModelPipeAlignmentUseCase.cs",
-      "accessCount": 9,
-      "lastAccessed": 1787288323995,
+      "accessCount": 10,
+      "lastAccessed": 1787553851640,
       "type": "file"
     },
     {
@@ -146,15 +146,15 @@
       "type": "file"
     },
     {
-      "path": "src\\DHBIMWATER.UI\\Views\\Modeling\\PipeSpecTableView.xaml",
-      "accessCount": 5,
-      "lastAccessed": 1787191339260,
+      "path": "src\\DHBIMWATER.Core\\Gis\\BendTrimPlanner.cs",
+      "accessCount": 6,
+      "lastAccessed": 1787553449109,
       "type": "file"
     },
     {
-      "path": "src\\DHBIMWATER.Core\\Gis\\BendTrimPlanner.cs",
+      "path": "src\\DHBIMWATER.UI\\Views\\Modeling\\PipeSpecTableView.xaml",
       "accessCount": 5,
-      "lastAccessed": 1787214219485,
+      "lastAccessed": 1787191339260,
       "type": "file"
     },
     {
@@ -200,15 +200,15 @@
       "type": "file"
     },
     {
-      "path": "tests\\DHBIMWATER.UI.Tests\\Gis\\BendSettingsStorageTests.cs",
-      "accessCount": 3,
-      "lastAccessed": 1787191547191,
+      "path": "src\\DHBIMWATER.Application\\DTOs\\Gis\\AdaptiveBendPlacementPlan.cs",
+      "accessCount": 4,
+      "lastAccessed": 1787553285429,
       "type": "file"
     },
     {
-      "path": "src\\DHBIMWATER.Application\\DTOs\\Gis\\AdaptiveBendPlacementPlan.cs",
+      "path": "tests\\DHBIMWATER.UI.Tests\\Gis\\BendSettingsStorageTests.cs",
       "accessCount": 3,
-      "lastAccessed": 1787201431527,
+      "lastAccessed": 1787191547191,
       "type": "file"
     },
     {
@@ -237,8 +237,8 @@
     },
     {
       "path": "src\\DHBIMWATER.Core\\Gis\\AlignmentAttributeParser.cs",
-      "accessCount": 2,
-      "lastAccessed": 1787186819685,
+      "accessCount": 3,
+      "lastAccessed": 1787540741323,
       "type": "file"
     },
     {
@@ -263,6 +263,18 @@
       "path": "src\\DHBIMWATER.Infrastructure\\Converters\\RevitUnitConverter.cs",
       "accessCount": 2,
       "lastAccessed": 1787291892399,
+      "type": "file"
+    },
+    {
+      "path": "src\\DHBIMWATER.Infrastructure\\Repositories\\Revit\\Gis\\RevitAlignmentStraightPlacementRepo.cs",
+      "accessCount": 2,
+      "lastAccessed": 1787553295850,
+      "type": "file"
+    },
+    {
+      "path": "src\\DHBIMWATER.Core\\Gis\\PipeNetworkClassifier.cs",
+      "accessCount": 2,
+      "lastAccessed": 1787553524935,
       "type": "file"
     },
     {
@@ -326,12 +338,6 @@
       "type": "file"
     },
     {
-      "path": "src\\DHBIMWATER.Infrastructure\\Repositories\\Revit\\Gis\\RevitAlignmentStraightPlacementRepo.cs",
-      "accessCount": 1,
-      "lastAccessed": 1787199559140,
-      "type": "file"
-    },
-    {
       "path": "src\\DHBIMWATER.Infrastructure\\Converters",
       "accessCount": 1,
       "lastAccessed": 1787201419595,
@@ -371,12 +377,6 @@
       "path": "tests\\DHBIMWATER.UI.Tests\\Gis\\AlignmentPlacementSupportTests.cs",
       "accessCount": 1,
       "lastAccessed": 1787213982151,
-      "type": "file"
-    },
-    {
-      "path": "src\\DHBIMWATER.Core\\Gis\\PipeNetworkClassifier.cs",
-      "accessCount": 1,
-      "lastAccessed": 1787214002308,
       "type": "file"
     },
     {

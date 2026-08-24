@@ -53,39 +53,82 @@ public sealed class PipeSpecTableViewModelTests
     public void Confirm_SavesProjectAndCloses()
     {
         var repo = new StubRepo();
-        var master = new StubMaster();
-        var vm = Create(repo, master);
+        var vm = Create(repo);
         var closed = false;
         vm.CloseAction = () => closed = true;
 
         vm.SaveCommand.Execute(null);
 
         Assert.NotNull(repo.Saved);
-        Assert.Null(master.Saved);
         Assert.NotNull(vm.Result);
         Assert.True(closed);
     }
 
     [Fact]
-    public void SaveToMaster_SavesWithoutClosing()
+    public void Export_SavesCurrentScreenToSelectedFileWithoutSavingProjectOrClosing()
     {
         var repo = new StubRepo();
-        var master = new StubMaster();
-        var vm = Create(repo, master);
+        var dialogs = new StubFileDialog { SavePath = "export.json" };
+        var files = new StubFileStore();
+        var vm = Create(repo, dialogs, files);
         var closed = false;
         vm.CloseAction = () => closed = true;
+        vm.SocketFittingRows[0].WallThicknessMm = 123;
 
-        vm.SaveToMasterCommand.Execute(null);
+        vm.ExportCommand.Execute(null);
+
+        Assert.Null(repo.Saved);
+        Assert.Equal("export.json", files.SavedPath);
+        Assert.Equal(123, files.Saved!.Fittings.Entries[0].WallThicknessMm);
+        Assert.False(closed);
+    }
+
+    [Fact]
+    public void Import_LoadsScreenWithoutSavingProjectUntilConfirm()
+    {
+        var repo = new StubRepo();
+        var dialogs = new StubFileDialog { OpenPath = "import.json" };
+        var imported = new BendSettings(
+            new StraightPipeSpecTable(new[] { new StraightPipeSpec(PipeKindCatalog.Water2, 100, 118, 6.8) }),
+            new JointDeflectionTable(new[] { new JointDeflectionSpec(JointTypeCatalog.Tyton, 100, 3) }),
+            new BendFittingCatalog(new[] { new BendFittingEntry(100, 45, BendForm.BType, 120, 210, 8.8) }),
+            JointTypeCatalog.Tyton, JointApplicationMode.BothJoints, BendConnection.Flanged);
+        var vm = Create(repo, dialogs, new StubFileStore { LoadResult = imported });
+
+        vm.ImportCommand.Execute(null);
+
+        Assert.Null(repo.Saved);
+        Assert.Null(vm.Result);
+        Assert.Single(vm.SocketFittingRows);
+        Assert.Equal(8.8, vm.SocketFittingRows[0].WallThicknessMm);
+        Assert.Equal(JointTypeCatalog.Tyton, vm.Joint.ActiveJointType);
+        Assert.Equal(JointApplicationMode.BothJoints, vm.Joint.ApplicationMode);
+
+        vm.SaveCommand.Execute(null);
 
         Assert.NotNull(repo.Saved);
-        Assert.NotNull(master.Saved);
-        Assert.False(closed);
+        Assert.Equal(BendConnection.Flanged, repo.Saved!.ActiveBendConnection);
+        Assert.Equal(8.8, repo.Saved.Fittings.Find(100, 45)!.WallThicknessMm);
+    }
+
+    [Fact]
+    public void ImportFailure_KeepsCurrentRowsAndWarns()
+    {
+        var dialog = new StubDialog();
+        var vm = Create(new StubRepo(), new StubFileDialog { OpenPath = "bad.json" },
+            new StubFileStore { LoadException = new InvalidDataException("bad") }, dialog);
+        var originalCount = vm.SocketFittingRows.Count;
+
+        vm.ImportCommand.Execute(null);
+
+        Assert.Equal(originalCount, vm.SocketFittingRows.Count);
+        Assert.Contains("불러오지 못했습니다", dialog.Warning);
     }
 
     [Fact]
     public void FittingRows_AreSplitAndAddCommandTargetsActiveTab()
     {
-        var vm = Create(new StubRepo(), new StubMaster());
+        var vm = Create(new StubRepo());
 
         Assert.Equal(72, vm.SocketFittingRows.Count);
         Assert.Equal(36, vm.FlangedFittingRows.Count);
@@ -98,8 +141,10 @@ public sealed class PipeSpecTableViewModelTests
         Assert.Equal(BendConnection.Flanged, vm.FlangedFittingRows[^1].Connection);
     }
 
-    private static PipeSpecTableViewModel Create(StubRepo repo, StubMaster master)
-        => new(BendSettings.Default, new SaveBendSettingsUseCase(new StubTransaction(), repo, master), new StubDialog());
+    private static PipeSpecTableViewModel Create(StubRepo repo, StubFileDialog? fileDialog = null,
+        StubFileStore? fileStore = null, StubDialog? dialog = null)
+        => new(BendSettings.Default, new SaveBendSettingsUseCase(new StubTransaction(), repo), dialog ?? new StubDialog(),
+            fileDialog ?? new StubFileDialog(), fileStore ?? new StubFileStore());
 
     private sealed class StubTransaction : ITransactionContext
     {
@@ -116,17 +161,29 @@ public sealed class PipeSpecTableViewModelTests
         public void Save(BendSettings settings) => Saved = settings;
     }
 
-    private sealed class StubMaster : IBendSettingsMasterStore
+    private sealed class StubFileDialog : IFileDialogService
     {
+        public string? OpenPath { get; init; }
+        public string? SavePath { get; init; }
+        public string? OpenFile(string title, string filter) => OpenPath;
+        public string? SaveFile(string title, string filter, string defaultFileName = "") => SavePath;
+    }
+
+    private sealed class StubFileStore : IBendSettingsFileStore
+    {
+        public BendSettings? LoadResult { get; init; }
+        public Exception? LoadException { get; init; }
+        public string? SavedPath { get; private set; }
         public BendSettings? Saved { get; private set; }
-        public BendSettings? Load() => Saved;
-        public void Save(BendSettings settings) => Saved = settings;
+        public BendSettings Load(string path) => LoadException is not null ? throw LoadException : LoadResult ?? BendSettings.Default;
+        public void Save(string path, BendSettings settings) { SavedPath = path; Saved = settings; }
     }
 
     private sealed class StubDialog : IDialogService
     {
+        public string? Warning { get; private set; }
         public void Info(string title, string message) { }
-        public void Warn(string title, string message) { }
+        public void Warn(string title, string message) => Warning = message;
         public bool Confirm(string title, string message) => true;
     }
 }

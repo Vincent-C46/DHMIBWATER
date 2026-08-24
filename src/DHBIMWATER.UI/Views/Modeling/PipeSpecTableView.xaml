@@ -118,7 +118,8 @@
         </Border>
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="20,0,20,16">
             <Button Content="기본값 복원" Style="{StaticResource CancelButtonStyle}" Command="{Binding RestoreCommand}" Margin="0,0,18,0"/>
-            <Button Content="마스터로도 저장" Style="{StaticResource PrimaryButtonStyle}" Command="{Binding SaveToMasterCommand}" Margin="0,0,18,0"/>
+            <Button Content="설정 불러오기" Style="{StaticResource CancelButtonStyle}" Command="{Binding ImportCommand}" Margin="0,0,8,0"/>
+            <Button Content="설정 내보내기" Style="{StaticResource PrimaryButtonStyle}" Command="{Binding ExportCommand}" Margin="0,0,18,0"/>
             <Button Content="취소" Style="{StaticResource CancelButtonStyle}" Command="{Binding CancelCommand}" Margin="0,0,8,0"/>
             <Button Content="확인" Style="{StaticResource PrimaryButtonStyle}" Command="{Binding SaveCommand}"/>
         </StackPanel>

@@ -151,6 +151,77 @@ public class BendResolverTests
     }
 
     [Fact]
+    public void Arc_uses_actual_alignment_deflection_to_stay_tangent_when_fitting_angle_differs()
+    {
+        const double actualAngleDeg = 40d;
+        const double fittingAngleDeg = 45d;
+        const double radiusMm = 210d;
+        var actualAngleRad = actualAngleDeg * Math.PI / 180d;
+        var dirA = new Vector3D(-1, 0, 0);
+        var dirB = new Vector3D(Math.Cos(actualAngleRad), Math.Sin(actualAngleRad), 0);
+        var origin = new Point3D(0, 0, 0);
+
+        var arc = BendArcGeometry.ComputeForAlignment(
+            origin, dirA, dirB, fittingAngleDeg, actualAngleDeg, radiusMm, 130, 130);
+
+        var tangentMm = BendResolver.TangentLength(radiusMm, fittingAngleDeg);
+        var expectedExternalMm = tangentMm * Math.Tan(actualAngleDeg * Math.PI / 720d);
+        Assert.Equal(tangentMm / 1000d, arc.ArcStart.DistanceTo(origin), 12);
+        Assert.Equal(tangentMm / 1000d, arc.ArcEnd.DistanceTo(origin), 12);
+        Assert.Equal(expectedExternalMm, arc.ExternalMm, 10);
+        Assert.True(arc.ExternalMm < BendArcGeometry.ExternalDistance(radiusMm, fittingAngleDeg));
+
+        var bisector = new Vector3D(dirA.X + dirB.X, dirA.Y + dirB.Y, dirA.Z + dirB.Z).Normalize();
+        var centerDistance = tangentMm / Math.Sin(actualAngleRad / 2d) / 1000d;
+        var center = new Point3D(
+            bisector.X * centerDistance,
+            bisector.Y * centerDistance,
+            bisector.Z * centerDistance);
+        var effectiveRadius = center.DistanceTo(arc.ArcStart);
+
+        Assert.Equal(effectiveRadius, center.DistanceTo(arc.ArcMid), 12);
+        Assert.Equal(effectiveRadius, center.DistanceTo(arc.ArcEnd), 12);
+
+        var radiusAtStart = new Vector3D(arc.ArcStart.X - center.X, arc.ArcStart.Y - center.Y, arc.ArcStart.Z - center.Z);
+        var radiusAtEnd = new Vector3D(arc.ArcEnd.X - center.X, arc.ArcEnd.Y - center.Y, arc.ArcEnd.Z - center.Z);
+        var forwardA = new Vector3D(-dirA.X, -dirA.Y, -dirA.Z);
+        Assert.Equal(0d, Dot(radiusAtStart, forwardA), 12);
+        Assert.Equal(0d, Dot(radiusAtEnd, dirB), 12);
+    }
+
+    [Fact]
+    public void Trim_planner_passes_actual_deflection_to_arc_and_midpoint_orientation()
+    {
+        const double actualAngleDeg = 40d;
+        const double fittingAngleDeg = 45d;
+        const double radiusMm = 210d;
+        var actualAngleRad = actualAngleDeg * Math.PI / 180d;
+        var vertices = new[]
+        {
+            new Point3D(0, 0, 0),
+            new Point3D(10, 0, 0),
+            new Point3D(10 + 10 * Math.Cos(actualAngleRad), 10 * Math.Sin(actualAngleRad), 0)
+        };
+        var alignments = new[]
+        {
+            new PipeAlignment(vertices, PipeKindCatalog.Water1, 100, "test.shp", "1", new Dictionary<string, string>())
+        };
+        const double snapTolerance = 0.001;
+        var graph = PipeNetworkBuilder.Build(alignments, snapTolerance);
+        var nodes = PipeNetworkClassifier.Classify(graph);
+        var resolutions = BendResolver.ResolveAll(
+            nodes,
+            Settings(10, fittings: new BendFittingEntry(100, fittingAngleDeg, BendForm.AType, 130, radiusMm)));
+
+        var placement = Assert.Single(BendTrimPlanner.Plan(alignments, graph, resolutions, snapTolerance).Placements);
+
+        var tangentMm = BendResolver.TangentLength(radiusMm, fittingAngleDeg);
+        Assert.Equal(actualAngleDeg, placement.DeflectionDeg, 8);
+        Assert.Equal(tangentMm * Math.Tan(actualAngleDeg * Math.PI / 720d), placement.Points.ExternalMm, 8);
+        Assert.Equal(actualAngleDeg / 2d, placement.RotXYDeg[2], 8);
+    }
+
+    [Fact]
     public void Bend_orientation_follows_each_horizontal_control_point()
     {
         var tangents = BendOrientation.Tangents(
@@ -174,9 +245,21 @@ public class BendResolverTests
             90);
         var rotations = tangents.Select(BendOrientation.Compute).ToList();
 
-        Assert.Equal(45d, rotations[0].RotXZDeg, 8);
-        Assert.Equal(45d, rotations[1].RotXZDeg, 8);
-        Assert.Equal(45d, rotations[3].RotXZDeg, 8);
-        Assert.Equal(45d, rotations[4].RotXZDeg, 8);
+        Assert.Equal(-45d, rotations[0].RotXZDeg, 8);
+        Assert.Equal(-45d, rotations[1].RotXZDeg, 8);
+        Assert.Equal(-45d, rotations[3].RotXZDeg, 8);
+        Assert.Equal(-45d, rotations[4].RotXZDeg, 8);
     }
+
+    [Fact]
+    public void Rot_xz_uses_family_sign_convention_for_uphill_and_downhill_vectors()
+    {
+        var rise = Math.Sqrt(0.5);
+
+        Assert.Equal(-45d, BendOrientation.Compute(new Vector3D(rise, 0, rise)).RotXZDeg, 8);
+        Assert.Equal(45d, BendOrientation.Compute(new Vector3D(rise, 0, -rise)).RotXZDeg, 8);
+    }
+
+    private static double Dot(Vector3D a, Vector3D b)
+        => a.X * b.X + a.Y * b.Y + a.Z * b.Z;
 }

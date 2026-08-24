@@ -100,9 +100,10 @@ public static class BendTrimPlanner
                 BendArcPoints points;
                 try
                 {
-                    points = BendArcGeometry.Compute(
+                    points = BendArcGeometry.ComputeForAlignment(
                         vertices[v], upstream, downstream,
-                        bend.StandardAngleDeg, bend.CenterlineRadiusMm, shortLeg, longLeg);
+                        bend.StandardAngleDeg, bend.DeflectionDeg,
+                        bend.CenterlineRadiusMm, shortLeg, longLeg);
                 }
                 catch (ArgumentException)
                 {
@@ -115,7 +116,7 @@ public static class BendTrimPlanner
                 trims[v] = new VertexTrim(shortLeg * MmToCoordinate, longLeg * MmToCoordinate);
 
                 // P1~P5 각 점의 접선 방향에서 rot_XY_n/rot_XZ_n(도)을 구한다. P1·P2/P4·P5는 직선 구간이라 같은 값이다.
-                var tangents = BendOrientation.Tangents(upstream, downstream, bend.StandardAngleDeg);
+                var tangents = BendOrientation.Tangents(upstream, downstream, bend.DeflectionDeg);
                 var rotXy = new double[tangents.Count];
                 var rotXz = new double[tangents.Count];
                 for (var i = 0; i < tangents.Count; i++) (rotXy[i], rotXz[i]) = BendOrientation.Compute(tangents[i]);

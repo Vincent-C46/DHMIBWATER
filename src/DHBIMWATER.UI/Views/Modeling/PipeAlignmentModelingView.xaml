@@ -194,16 +194,14 @@
                                     <TextBlock Canvas.Left="92" Canvas.Top="89" FontSize="10" Text="외부 맨 아래"/>
                                 </Canvas>
                             </StackPanel>
-                            <TextBlock Text="직관 패밀리 (2점 가변)"/>
-                            <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" ItemsSource="{Binding StraightFamilyNames, Mode=OneWay}" SelectedItem="{Binding StraightFamilyName, Mode=TwoWay}"/>
-                            <TextBlock Text="유형" Margin="0,8,0,3"/>
-                            <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" ItemsSource="{Binding StraightTypeNames, Mode=OneWay}" SelectedItem="{Binding StraightTypeName, Mode=TwoWay}" ToolTip="직관은 Adaptive Point가 2개인 유형이어야 합니다."/>
+                            <TextBlock Text="직관 패밀리 : 유형 (2점 가변)"/>
+                            <ComboBox Style="{StaticResource PrimaryComboBoxStyle}" ItemsSource="{Binding AdaptiveComponentTypeNames, Mode=OneWay}" SelectedItem="{Binding StraightFamilyTypeName, Mode=TwoWay}" ToolTip="직관은 Adaptive Point가 2개인 유형이어야 합니다."/>
                             <TextBlock Foreground="#B26B00" TextWrapping="Wrap" Margin="0,4,0,0" Text="{Binding StraightPointCountNotice}" Visibility="{Binding HasStraightPointCountNotice, Converter={StaticResource BoolToVisibility}}"/>
                             <Grid Margin="0,12,0,0">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="18"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                 <StackPanel>
                                     <TextBlock Text="직관 파라미터 매핑" FontWeight="SemiBold"/>
-                                    <TextBlock Text="호칭지름" Margin="0,8,0,3"/><ComboBox Style="{StaticResource PrimaryComboBoxStyle}" ItemsSource="{Binding StraightParameterOptions, Mode=OneWay}" SelectedItem="{Binding StraightDiameterParameterName, Mode=TwoWay}"/>
+                                    <TextBlock Text="호칭지름 DN" Margin="0,8,0,3"/><ComboBox Style="{StaticResource PrimaryComboBoxStyle}" ItemsSource="{Binding StraightParameterOptions, Mode=OneWay}" SelectedItem="{Binding StraightDiameterParameterName, Mode=TwoWay}"/>
                                     <TextBlock Text="외경 OD" Margin="0,8,0,3"/><ComboBox Style="{StaticResource PrimaryComboBoxStyle}" ItemsSource="{Binding StraightParameterOptions, Mode=OneWay}" SelectedItem="{Binding StraightOuterDiameterParameterName, Mode=TwoWay}"/>
                                     <TextBlock Text="두께" Margin="0,8,0,3"/><ComboBox Style="{StaticResource PrimaryComboBoxStyle}" ItemsSource="{Binding StraightParameterOptions, Mode=OneWay}" SelectedItem="{Binding StraightThicknessParameterName, Mode=TwoWay}"/>
                                 </StackPanel>
