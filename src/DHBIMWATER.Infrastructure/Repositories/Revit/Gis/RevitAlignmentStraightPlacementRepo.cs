@@ -2,6 +2,7 @@ using Autodesk.Revit.DB;
 using System.IO;
 using DHBIMWATER.Application.DTOs.Gis;
 using DHBIMWATER.Application.Interfaces.Gis;
+using DHBIMWATER.Core.Geometry;
 using DHBIMWATER.Core.Gis;
 using DHBIMWATER.Infrastructure.Helpers;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
@@ -64,12 +65,27 @@ internal sealed class RevitAlignmentStraightPlacementRepo : IAlignmentStraightPl
         // 패밀리별로 한 번만 경고하면 충분하다 — 세그먼트마다 같은 누락 메시지가 반복되면 오히려 안 읽힌다.
         var missingParameters = new HashSet<string>();
         var writer = new PipeParameterWriter();
+        PipeAlignment? previousAlignment = null;
+        Point3D? previousEnd = null;
+        Vector3D? previousOwnDirection = null;
         foreach (var (instance, alignment, spec, segment) in placed)
         {
+            if (!ReferenceEquals(alignment, previousAlignment))
+            {
+                previousEnd = null;
+                previousOwnDirection = null;
+            }
+            var (startDirection, ownDirection) = StraightSegmentOrientation.Resolve(
+                segment.Start, segment.End, previousEnd, previousOwnDirection);
+
             if (diameterParameterName is not null) SetParameter(instance, diameterParameterName, alignment.DiameterMm, missingParameters);
             if (spec is not null && outerDiameterParameterName is not null) SetParameter(instance, outerDiameterParameterName, spec.OuterDiameterMm, missingParameters);
             if (spec is not null && thicknessParameterName is not null) SetParameter(instance, thicknessParameterName, spec.ThicknessMm, missingParameters);
-            if (!TrySetRotations(instance, segment)) missingParameters.Add("rot_XY_n/rot_XZ_n");
+            if (!TrySetRotations(instance, startDirection, ownDirection)) missingParameters.Add("rot_XY_n/rot_XZ_n");
+            previousAlignment = alignment;
+            previousEnd = segment.End;
+            previousOwnDirection = ownDirection;
+
             if (info is not { Enabled: true }) continue;
 
             var lengthM = segment.Start.DistanceTo(segment.End);
@@ -135,16 +151,14 @@ internal sealed class RevitAlignmentStraightPlacementRepo : IAlignmentStraightPl
         if (!AdaptiveParameterWriter.TryWrite(instance, name, valueMm.ToString("0.##"), UC.MmToFt(valueMm), (int)Math.Round(valueMm))) missingParameters.Add(name);
     }
 
-    private static bool TrySetRotations(FamilyInstance instance, AlignmentSampleSegment segment)
+    private static bool TrySetRotations(FamilyInstance instance, Vector3D startDirection, Vector3D endDirection)
     {
-        var direction = new DHBIMWATER.Core.Geometry.Vector3D(
-            segment.End.X - segment.Start.X,
-            segment.End.Y - segment.Start.Y,
-            segment.End.Z - segment.Start.Z);
-        var (rotXy, rotXz) = BendOrientation.Compute(direction);
-        var numbered = TrySetAngle(instance, "rot_XY_1", rotXy) && TrySetAngle(instance, "rot_XY_2", rotXy)
-            && TrySetAngle(instance, "rot_XZ_1", rotXz) && TrySetAngle(instance, "rot_XZ_2", rotXz);
-        return numbered || (TrySetAngle(instance, "rot_XY", rotXy) && TrySetAngle(instance, "rot_XZ", rotXz));
+        var (startXy, startXz) = BendOrientation.Compute(startDirection);
+        var (endXy, endXz) = BendOrientation.Compute(endDirection);
+        var numbered = TrySetAngle(instance, "rot_XY_1", startXy) && TrySetAngle(instance, "rot_XY_2", endXy)
+            && TrySetAngle(instance, "rot_XZ_1", startXz) && TrySetAngle(instance, "rot_XZ_2", endXz);
+        // rot_XY_1/2 구분이 없는 옛 패밀리는 점별 분리를 표현할 수 없어 자기 고유 방향(끝쪽)만 쓴다.
+        return numbered || (TrySetAngle(instance, "rot_XY", endXy) && TrySetAngle(instance, "rot_XZ", endXz));
     }
 
     private static bool TrySetAngle(FamilyInstance instance, string name, double degrees)
@@ -155,7 +169,7 @@ internal sealed class RevitAlignmentStraightPlacementRepo : IAlignmentStraightPl
             && parameter.Set(UC.DegToRad(degrees));
     }
 
-    private static XYZ ToXyz(DHBIMWATER.Core.Geometry.Point3D point, double zOffsetM, AlignmentPlacementOrigin origin, XYZ basePoint)
+    private static XYZ ToXyz(Point3D point, double zOffsetM, AlignmentPlacementOrigin origin, XYZ basePoint)
         => AlignmentPlacementMapper.ToXyz(point, zOffsetM, origin.X, origin.Y, basePoint);
 
     private static string AlignmentIdOf(PipeAlignment alignment) => $"{Path.GetFileNameWithoutExtension(alignment.SourceFile)}#{alignment.RecordNumber}";
