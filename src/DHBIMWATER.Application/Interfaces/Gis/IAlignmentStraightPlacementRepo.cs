@@ -17,5 +17,5 @@ public interface IAlignmentStraightPlacementRepo
     AlignmentStraightPlacementResult PlaceAlong(IReadOnlyList<PipeAlignment> alignments, string straightFamilyTypeName, double intervalM, AlignmentPlacementOrigin origin,
         StraightPipeSpecTable specs, IReadOnlyList<IReadOnlyList<VertexTrim>>? trims = null,
         string? diameterParameterName = null, string? outerDiameterParameterName = null, string? thicknessParameterName = null,
-        PipeInfoParameterContext? info = null);
+        PipeInfoParameterContext? info = null, IProgress<PipeAlignmentProgress>? progress = null);
 }

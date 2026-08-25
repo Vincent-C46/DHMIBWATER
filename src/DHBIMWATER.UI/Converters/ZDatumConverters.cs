@@ -22,8 +22,8 @@ public sealed class ZDatumDisplayNameConverter : IValueConverter
 
 public sealed class EnumEqualsToBrushConverter : IValueConverter
 {
-    private static readonly Brush SelectedBrush = new SolidColorBrush(Color.FromRgb(229, 57, 53));
-    private static readonly Brush UnselectedBrush = new SolidColorBrush(Color.FromRgb(96, 105, 112));
+    private static readonly Brush SelectedBrush = CreateFrozenBrush(Color.FromRgb(229, 57, 53));
+    private static readonly Brush UnselectedBrush = CreateFrozenBrush(Color.FromRgb(96, 105, 112));
 
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         => string.Equals(value?.ToString(), parameter?.ToString(), StringComparison.OrdinalIgnoreCase)
@@ -31,4 +31,11 @@ public sealed class EnumEqualsToBrushConverter : IValueConverter
             : UnselectedBrush;
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => Binding.DoNothing;
+
+    private static Brush CreateFrozenBrush(Color color)
+    {
+        var brush = new SolidColorBrush(color);
+        brush.Freeze();
+        return brush;
+    }
 }

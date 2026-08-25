@@ -84,6 +84,7 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
     private readonly IReadOnlyList<IAlignmentSourceReader> _readers; private readonly AnalyzePipeNetworkUseCase _analyze;
     private readonly BendSettingsProvider _settingsProvider; private readonly SaveBendSettingsUseCase _save; private readonly IBendSettingsFileStore _settingsFileStore; private readonly IExcelAlignmentSourceReader _excelReader;
     private readonly IProjectLocationQueryRepo _projectLocationQuery; private readonly IElementTypeQueryRepo _typeRepo;
+    private readonly IRevitDispatcher _revit;
     private PipeAlignmentSourceFileItem? _selectedFile; private PipeAlignmentOutputMode _outputMode;
     private double _referenceX, _referenceY, _intervalM = 6, _snapToleranceMm = 10;
     private int _selectedTabIndex;
@@ -95,15 +96,18 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
     private BendConnectionOption? _bendConnectionOption;
     private IReadOnlyList<string> _straightParameterNames = Array.Empty<string>(), _bendParameterNames = Array.Empty<string>();
     private BendSettings _settings = BendSettings.Default;
+    private bool _isBusy, _hasResult;
+    private double _progressPercent;
+    private string _phaseText = string.Empty, _progressDetail = string.Empty, _resultSummary = string.Empty;
 
     public PipeAlignmentModelingViewModel(IFileDialogService fileDialog, IDialogService dialog, IEnumerable<IAlignmentSourceReader> readers,
-        IElementTypeQueryRepo typeRepo, ILevelQueryRepo levelRepo, AnalyzePipeNetworkUseCase analyze, BendSettingsProvider settingsProvider, SaveBendSettingsUseCase save, IBendSettingsFileStore settingsFileStore, IExcelAlignmentSourceReader excelReader, IProjectLocationQueryRepo projectLocationQuery)
+        IElementTypeQueryRepo typeRepo, ILevelQueryRepo levelRepo, AnalyzePipeNetworkUseCase analyze, BendSettingsProvider settingsProvider, SaveBendSettingsUseCase save, IBendSettingsFileStore settingsFileStore, IExcelAlignmentSourceReader excelReader, IProjectLocationQueryRepo projectLocationQuery, IRevitDispatcher revit)
     {
-        _fileDialog = fileDialog; _dialog = dialog; _readers = readers.ToList(); _analyze = analyze; _settingsProvider = settingsProvider; _save = save; _settingsFileStore = settingsFileStore; _excelReader = excelReader; _projectLocationQuery = projectLocationQuery; _typeRepo = typeRepo;
+        _fileDialog = fileDialog; _dialog = dialog; _readers = readers.ToList(); _analyze = analyze; _settingsProvider = settingsProvider; _save = save; _settingsFileStore = settingsFileStore; _excelReader = excelReader; _projectLocationQuery = projectLocationQuery; _typeRepo = typeRepo; _revit = revit;
         AdaptiveComponentTypeNames = typeRepo.GetAdaptiveComponentTypeNames().ToList(); PipingSystemTypeNames = typeRepo.GetPipingSystemTypeNames().ToList(); PipeTypeNames = typeRepo.GetPipeTypeNames().ToList(); LevelNames = levelRepo.GetExistingLevelNames().ToList();
         _straightFamilyTypeName = AdaptiveComponentTypeNames.FirstOrDefault(); _bendFamilyTypeName = AdaptiveComponentTypeNames.FirstOrDefault(x => _typeRepo.GetAdaptiveBendPointCount(x) == 5) ?? AdaptiveComponentTypeNames.FirstOrDefault(); _pipingSystemTypeName = PipingSystemTypeNames.FirstOrDefault(); _pipeTypeName = PipeTypeNames.FirstOrDefault(); _levelName = LevelNames.FirstOrDefault();
         UpdateStraightParameterOptions();
-        AddCommand = new RelayCommand(AddFile); RemoveCommand = new RelayCommand(_ => RemoveFile()); RunCommand = new RelayCommand(_ => RunDiagnosis()); CreateCommand = new RelayCommand(_ => RequestModeling()); CancelCommand = new RelayCommand(_ => CloseAction?.Invoke());
+        AddCommand = new RelayCommand(AddFile); RemoveCommand = new RelayCommand(_ => RemoveFile()); RunCommand = new RelayCommand(_ => RunDiagnosis()); CreateCommand = new RelayCommand(_ => RequestModeling(), _ => !IsBusy); CancelCommand = new RelayCommand(_ => CloseAction?.Invoke());
         ApplyBulkMappingCommand = new RelayCommand(_ => ApplyBulkMapping());
         OpenPipeSpecsCommand = new RelayCommand(_ => OpenPipeSpecs()); LoadSettings();
         Files.CollectionChanged += (_, _) => NotifyFilesByKindChanged();
@@ -197,6 +201,14 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
     public bool HasSpecUnmatched => SpecUnmatchedCount > 0
         && OutputMode != PipeAlignmentOutputMode.DirectShape
         && (PipeElevationDatum.NeedsSpec(ZDatum) || OutputMode == PipeAlignmentOutputMode.Adaptive);
+    public bool IsBusy { get => _isBusy; private set { if (SetProperty(ref _isBusy, value)) { OnPropertyChanged(nameof(IsInputEnabled)); System.Windows.Input.CommandManager.InvalidateRequerySuggested(); } } }
+    public bool IsInputEnabled => !IsBusy;
+    public double ProgressPercent { get => _progressPercent; private set => SetProperty(ref _progressPercent, value); }
+    public string PhaseText { get => _phaseText; private set => SetProperty(ref _phaseText, value); }
+    public string ProgressDetail { get => _progressDetail; private set => SetProperty(ref _progressDetail, value); }
+    public string ResultSummary { get => _resultSummary; private set => SetProperty(ref _resultSummary, value); }
+    public ObservableCollection<string> ResultWarnings { get; } = new();
+    public bool HasResult { get => _hasResult; private set => SetProperty(ref _hasResult, value); }
     public ICommand AddCommand { get; }
     public ICommand RemoveCommand { get; }
     public ICommand RunCommand { get; }
@@ -205,6 +217,8 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
     public ICommand OpenPipeSpecsCommand { get; }
     public ICommand ApplyBulkMappingCommand { get; }
     public Action? CloseAction { get; set; }
+    public Action<PipeAlignmentModelingRequest>? CreateModelAction { get; set; }
+    public System.Windows.Window? OwnerWindow { get; set; }
     public PipeAlignmentModelingRequest? RequestedModeling { get; private set; }
 
     /// <summary>
@@ -248,7 +262,7 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
         try { mappingVm = new ExcelAlignmentMappingViewModel(_excelReader, _dialog, path); }
         catch (Exception ex) { _dialog.Warn("엑셀 읽기 실패", ex.Message); return; }
         var dlg = new ExcelAlignmentMappingView(mappingVm);
-        var owner = System.Windows.Application.Current.Windows.OfType<System.Windows.Window>().FirstOrDefault(x => x is PipeAlignmentModelingView);
+        var owner = OwnerWindow;
         if (owner is not null) dlg.Owner = owner;
         dlg.ShowDialog();
         if (owner is not null) owner.Activate();
@@ -278,7 +292,10 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
     private void UpdateStraightParameterOptions()
     {
         var familyType = StraightFamilyTypeName;
-        _straightParameterNames = familyType is null ? Array.Empty<string>() : _typeRepo.GetAdaptiveInstanceParameterNames(familyType).ToList();
+        var (parameterNames, pointCount) = _revit.Run(() => (
+            familyType is null ? Array.Empty<string>() : _typeRepo.GetAdaptiveInstanceParameterNames(familyType).ToArray(),
+            familyType is null ? -1 : _typeRepo.GetAdaptiveBendPointCount(familyType)));
+        _straightParameterNames = parameterNames;
         OnPropertyChanged(nameof(StraightParameterOptions));
         // 곡관(UpdateBendParameterOptions)과 같은 규칙 — 파라미터명 "DN"을 최우선으로 잡고,
         // DN이 없는 패밀리만 기존 후보(직경/관경/Diameter …) 매칭으로 폴백한다.
@@ -288,19 +305,20 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
         StraightOuterDiameterParameterName = FamilyParameterMapper.GuessOuterDiameterParameter(_straightParameterNames) ?? ManualParameterOption;
         StraightThicknessParameterName = FamilyParameterMapper.GuessThicknessParameter(_straightParameterNames) ?? ManualParameterOption;
         // 배치 시점에 Repo가 다시 검증해 예외를 던지지만, 선택 즉시 알려주는 편이 낫다. -1은 확인 불가(패밀리 편집 실패 등)라 경고하지 않는다.
-        var pointCount = familyType is null ? -1 : _typeRepo.GetAdaptiveBendPointCount(familyType);
         StraightPointCountNotice = pointCount == 2 || pointCount < 0 ? string.Empty : $"선택한 패밀리의 Adaptive Point가 {pointCount}개입니다. 직관은 2점 가변 패밀리여야 합니다.";
     }
     private void UpdateBendParameterOptions()
     {
         var familyType = BendFamilyTypeName;
-        _bendParameterNames = familyType is null ? Array.Empty<string>() : _typeRepo.GetAdaptiveInstanceParameterNames(familyType).ToList();
+        var (parameterNames, pointCount) = _revit.Run(() => (
+            familyType is null ? Array.Empty<string>() : _typeRepo.GetAdaptiveInstanceParameterNames(familyType).ToArray(),
+            familyType is null ? -1 : _typeRepo.GetAdaptiveBendPointCount(familyType)));
+        _bendParameterNames = parameterNames;
         OnPropertyChanged(nameof(BendParameterOptions));
         BendDiameterParameterName = _bendParameterNames.FirstOrDefault(name => string.Equals(name, "DN", StringComparison.OrdinalIgnoreCase)) ?? ManualParameterOption;
         BendWallThicknessParameterName = FamilyParameterMapper.GuessThicknessParameter(_bendParameterNames) ?? ManualParameterOption;
         BendOuterDiameterParameterName = FamilyParameterMapper.GuessOuterDiameterParameter(_bendParameterNames) ?? ManualParameterOption;
         // 직관과 같은 규칙 — -1(확인 불가: 패밀리 편집 실패 등)은 경고하지 않는다.
-        var pointCount = familyType is null ? -1 : _typeRepo.GetAdaptiveBendPointCount(familyType);
         BendPointCountNotice = pointCount == 5 || pointCount < 0 ? string.Empty : $"선택한 패밀리의 Adaptive Point가 {pointCount}개입니다. 곡관은 5점 가변 패밀리여야 합니다.";
     }
     private IReadOnlyList<AlignmentSourceFile> SourceFiles() => Files.Select(x => new AlignmentSourceFile(
@@ -440,7 +458,7 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
         }
         OnPropertyChanged(nameof(ReversedCount));
     }
-    private PipeNetworkDiagnosisResult? RunDiagnosis(bool showWarnings = true) { if (Files.Count == 0) { _dialog.Warn("입력 확인", "하나 이상의 SHP, DXF 또는 DWG 파일을 추가하세요."); return null; } if (SnapToleranceMm <= 0) { _dialog.Warn("입력 확인", "스냅 허용오차는 0보다 커야 합니다."); return null; } try { var result = _analyze.Execute(new PipeNetworkDiagnosisRequest { Files = SourceFiles(), SnapToleranceMm = SnapToleranceMm, CurrentBendSettings = _settings }); Attention.Clear(); foreach (var report in result.Attention) Attention.Add(report); Summary = $"절점 {result.NodeCount} / 간선 {result.EdgeCount}\n{string.Join(", ", result.KindCounts.OrderBy(x => x.Key).Select(x => $"{x.Key} {x.Value}"))}\n곡관 판정 — 표준 {result.BendStandardCount}, 생략 {result.BendNoneCount}, 미해결 {result.BendUnresolvedCount}\n규격 미매칭 {SpecUnmatchedCount}건\n경고 {result.Warnings.Count}건"; if (showWarnings && result.Warnings.Count > 0) _dialog.Info("진단 경고", string.Join("\n", result.Warnings.Take(20)) + (result.Warnings.Count > 20 ? $"\n… 외 {result.Warnings.Count - 20}건" : string.Empty)); return result; } catch (Exception ex) { _dialog.Warn("관로 네트워크 진단", $"진단에 실패했습니다.\n{ex.Message}"); return null; } }
+    private PipeNetworkDiagnosisResult? RunDiagnosis(bool showWarnings = true) { if (Files.Count == 0) { _dialog.Warn("입력 확인", "하나 이상의 SHP, DXF 또는 DWG 파일을 추가하세요."); return null; } if (SnapToleranceMm <= 0) { _dialog.Warn("입력 확인", "스냅 허용오차는 0보다 커야 합니다."); return null; } try { var request = new PipeNetworkDiagnosisRequest { Files = SourceFiles(), SnapToleranceMm = SnapToleranceMm, CurrentBendSettings = _settings }; var result = _revit.Run(() => _analyze.Execute(request)); Attention.Clear(); foreach (var report in result.Attention) Attention.Add(report); Summary = $"절점 {result.NodeCount} / 간선 {result.EdgeCount}\n{string.Join(", ", result.KindCounts.OrderBy(x => x.Key).Select(x => $"{x.Key} {x.Value}"))}\n곡관 판정 — 표준 {result.BendStandardCount}, 생략 {result.BendNoneCount}, 미해결 {result.BendUnresolvedCount}\n규격 미매칭 {SpecUnmatchedCount}건\n경고 {result.Warnings.Count}건"; if (showWarnings && result.Warnings.Count > 0) _dialog.Info("진단 경고", string.Join("\n", result.Warnings.Take(20)) + (result.Warnings.Count > 20 ? $"\n… 외 {result.Warnings.Count - 20}건" : string.Empty)); return result; } catch (Exception ex) { _dialog.Warn("관로 네트워크 진단", $"진단에 실패했습니다.\n{ex.Message}"); return null; } }
     private void RequestModeling()
     {
         if (Files.Count == 0) { _dialog.Warn("입력 확인", "하나 이상의 SHP, DXF 또는 DWG 파일을 추가하세요."); return; }
@@ -458,7 +476,14 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
         if (needsConfirmation && !_dialog.Confirm("사전 진단 경고", $"{string.Join(", ", warnings)}을 확인했습니다. 계속 모델링할까요?")) return;
         var reference = ResolveReference();
         RequestedModeling = new PipeAlignmentModelingRequest { Files = SourceFiles(), ReferenceX = reference.X, ReferenceY = reference.Y, ApplySharedCoordinates = ApplySharedCoordinates, ZDatum = ZDatum, OutputMode = OutputMode, IntervalMm = IntervalM * 1000, StraightFamilyTypeName = StraightFamilyTypeName, StraightDiameterParameterName = ResolvedParameter(StraightDiameterParameterName), StraightOuterDiameterParameterName = ResolvedParameter(StraightOuterDiameterParameterName), StraightThicknessParameterName = ResolvedParameter(StraightThicknessParameterName), BendFamilyTypeName = BendFamilyTypeName, BendDiameterParameterName = ResolvedParameter(BendDiameterParameterName), BendWallThicknessParameterName = ResolvedParameter(BendWallThicknessParameterName), BendOuterDiameterParameterName = ResolvedParameter(BendOuterDiameterParameterName), PipingSystemTypeName = PipingSystemTypeName, PipeTypeName = PipeTypeName, LevelName = LevelName, SnapToleranceMm = SnapToleranceMm, CurrentBendSettings = _settings };
-        CloseAction?.Invoke();
+        ResultWarnings.Clear(); HasResult = false; ResultSummary = string.Empty;
+        ProgressPercent = 0; PhaseText = "모델링 준비 중"; ProgressDetail = string.Empty; IsBusy = true;
+        try
+        {
+            if (CreateModelAction is null) throw new InvalidOperationException("모델 생성 요청이 연결되지 않았습니다.");
+            CreateModelAction(RequestedModeling);
+        }
+        catch (Exception ex) { ApplyFailure(ex.Message); }
     }
     /// <summary>
     /// 실제로 배치에 쓸 평면 기준점을 확정한다. 형상은 항상 (정점 - 기준점)만큼 프로젝트 기준점(PBP)에서 떨어져 놓이므로,
@@ -470,7 +495,7 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
         if (ApplySharedCoordinates) return (ReferenceX, ReferenceY);
         try
         {
-            var (eastWest, northSouth) = _projectLocationQuery.GetProjectBasePointSharedPosition();
+            var (eastWest, northSouth) = _revit.Run(() => _projectLocationQuery.GetProjectBasePointSharedPosition());
             if (Math.Abs(eastWest) >= 1e-4 || Math.Abs(northSouth) >= 1e-4)
                 return AlignToExistingSharedCoordinates(eastWest, northSouth);
 
@@ -503,7 +528,7 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
     /// <summary>프로젝트 → 마스터 → 내장 기본값 순으로 읽고, 어느 것을 썼는지 안내한다.</summary>
     private void LoadSettings()
     {
-        var (settings, source) = _settingsProvider.Load();
+        var (settings, source) = _revit.Run(() => _settingsProvider.Load());
         _settings = settings;
         SyncBendConnectionOption();
         SettingsNotice = source switch
@@ -516,7 +541,50 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
             SettingsNotice = (SettingsNotice + " 저장된 곡관 치수가 현행 규격표와 구조가 다릅니다(중복 행 또는 플랜지곡관 누락). [관·곡관 규격표] 창에서 [기본값 복원] 후 저장하세요.").Trim();
         UpdateBendParameterOptions();
     }
-    private void OpenPipeSpecs() { var vm = new PipeSpecTableViewModel(_settings, _save, _dialog, _fileDialog, _settingsFileStore); ShowDialog(new PipeSpecTableView(vm)); if (vm.Result is not null) { _settings = vm.Result; SyncBendConnectionOption(); SettingsNotice = string.Empty; RefreshDiameterMappingPreviews(); } }
+    private void OpenPipeSpecs() { var vm = new PipeSpecTableViewModel(_settings, _save, _dialog, _fileDialog, _settingsFileStore, _revit); ShowDialog(new PipeSpecTableView(vm)); if (vm.Result is not null) { _settings = vm.Result; SyncBendConnectionOption(); SettingsNotice = string.Empty; RefreshDiameterMappingPreviews(); } }
     private void SyncBendConnectionOption() => BendConnectionOption = BendConnectionOptions.First(x => x.Value == _settings.ActiveBendConnection);
-    private void ShowDialog(System.Windows.Window dialog) { var owner = System.Windows.Application.Current.Windows.OfType<System.Windows.Window>().FirstOrDefault(x => x is PipeAlignmentModelingView); if (owner is not null) dialog.Owner = owner; dialog.ShowDialog(); if (owner is not null) owner.Activate(); }
+    private void ShowDialog(System.Windows.Window dialog) { if (OwnerWindow is { } owner) dialog.Owner = owner; dialog.ShowDialog(); OwnerWindow?.Activate(); }
+
+    public void ApplyProgress(PipeAlignmentProgress progress)
+    {
+        ProgressPercent = progress.Percent;
+        PhaseText = progress.Phase switch
+        {
+            PipeAlignmentPhase.Loading => "파일 로드 중",
+            PipeAlignmentPhase.PlanningBends => "곡관 계획 중",
+            PipeAlignmentPhase.PlacingStraights => "직관 배치 중",
+            PipeAlignmentPhase.PlacingBends => "곡관 배치 중",
+            PipeAlignmentPhase.Committing => "모델 저장 중",
+            _ => "모델링 중"
+        };
+        ProgressDetail = progress.Total > 0 ? $"{progress.Completed:N0} / {progress.Total:N0}개" : string.Empty;
+    }
+
+    public void ApplyResult(PipeAlignmentModelingResult result)
+    {
+        ProgressPercent = 100;
+        PhaseText = "완료";
+        ProgressDetail = string.Empty;
+        ResultSummary = result.OutputMode switch
+        {
+            PipeAlignmentOutputMode.DirectShape => $"선형 {result.CreatedCount:N0}개 / 스킵된 0길이 구간 {result.SkippedSegments:N0}개 / 경고 {result.Warnings.Count:N0}건",
+            PipeAlignmentOutputMode.Adaptive => $"직관 {result.CreatedCount:N0}개 / 곡관 {result.BendCount:N0}개 / 경고 {result.Warnings.Count:N0}건",
+            _ => $"배치 {result.CreatedCount:N0}개 / 경고 {result.Warnings.Count:N0}건"
+        };
+        ResultWarnings.Clear();
+        foreach (var warning in result.Warnings) ResultWarnings.Add(warning);
+        HasResult = true;
+        IsBusy = false;
+    }
+
+    public void ApplyFailure(string error)
+    {
+        PhaseText = "실패";
+        ProgressDetail = string.Empty;
+        ResultSummary = "모델 생성에 실패했습니다.";
+        ResultWarnings.Clear();
+        ResultWarnings.Add(error);
+        HasResult = true;
+        IsBusy = false;
+    }
 }

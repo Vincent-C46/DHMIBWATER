@@ -39,7 +39,10 @@ namespace DHBIMWATER.Infrastructure.Repositories.Mock
         public IEnumerable<string> GetLevelNames() => new[] { "Level 1" };
         public IEnumerable<string> GetPipeAccessoryTypeNames() => new[]
         {
-            "Mock 밸브 : DN100", "Mock 밸브 : DN200", "Mock 플랜지 : DN100",
+            "Mock 밸브 : DN100", "Mock 밸브 : DN200", "Mock 플랜지 : DN100"
+        };
+        public IEnumerable<string> GetPipeFittingTypeNames() => new[]
+        {
             "Mock 직관 : DN100", "Mock 단관 : DN100", "Mock 곡관90 : DN100", "Mock 곡관45 : DN100", "Mock T형 : DN100"
         };
         public IEnumerable<string> GetPipeAccessoryInstanceParameterNames(string familyTypeName) => new[] { "길이", "DN", "주석", "설명" };

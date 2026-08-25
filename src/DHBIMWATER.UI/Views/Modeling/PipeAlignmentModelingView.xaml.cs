@@ -6,7 +6,7 @@ using DHBIMWATER.UI.ViewModels.Modeling;
 namespace DHBIMWATER.UI.Views.Modeling;
 public partial class PipeAlignmentModelingView : Window
 {
-    public PipeAlignmentModelingView(PipeAlignmentModelingViewModel viewModel) { InitializeComponent(); DataContext = viewModel; viewModel.CloseAction = Close; }
+    public PipeAlignmentModelingView(PipeAlignmentModelingViewModel viewModel) { InitializeComponent(); DataContext = viewModel; viewModel.CloseAction = Close; viewModel.OwnerWindow = this; }
 
     /// <summary>[파일 추가 ▾] 드롭다운. WPF는 좌클릭으로 ContextMenu를 여는 기능이 없어 코드로 연다.</summary>
     private void AddKindDropdownButton_Click(object sender, RoutedEventArgs e)

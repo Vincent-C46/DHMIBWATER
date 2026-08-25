@@ -87,6 +87,7 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddMockInfrastructureServices(this IServiceCollection services)
     {
+        services.AddSingleton<IRevitDispatcher, DirectRevitDispatcher>();
         // Mock 구현 등록 (Revit 없이 동작)
         services.AddSingleton<IGenericModelRepository, MockGenericModelRepository>();
         services.AddTransient<ITransactionContext, MockTransactionContext>();
@@ -96,6 +97,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ILevelCommandRepo, MockLevelCommandRepo>();
         services.AddTransient<IElementTypeQueryRepo, MockElementTypeQueryRepo>();
         services.AddTransient<IElementTypeCommandRepo, MockElementTypeCommandRepo>();
+        services.AddTransient<IProjectLocationQueryRepo, MockProjectLocationQueryRepo>();
         services.AddTransient<IWallCommandRepo, MockWallCommandRepo>();
         services.AddTransient<IGenericModelCommandRepo, MockGenericModelCommandRepo>();
         services.AddTransient<IBeamCommandRepo, MockBeamCommandRepo>();

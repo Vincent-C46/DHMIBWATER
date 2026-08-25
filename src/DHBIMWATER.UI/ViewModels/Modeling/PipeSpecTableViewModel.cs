@@ -20,11 +20,12 @@ public sealed class PipeSpecTableViewModel : ViewModelBase
     private readonly IDialogService _dialog;
     private readonly IFileDialogService _fileDialog;
     private readonly IBendSettingsFileStore _fileStore;
+    private readonly IRevitDispatcher _revit;
     private int _selectedFittingTabIndex;
     public PipeSpecTableViewModel(BendSettings source, SaveBendSettingsUseCase save, IDialogService dialog,
-        IFileDialogService fileDialog, IBendSettingsFileStore fileStore)
+        IFileDialogService fileDialog, IBendSettingsFileStore fileStore, IRevitDispatcher revit)
     {
-        _baseSettings = source; _save = save; _dialog = dialog; _fileDialog = fileDialog; _fileStore = fileStore;
+        _baseSettings = source; _save = save; _dialog = dialog; _fileDialog = fileDialog; _fileStore = fileStore; _revit = revit;
         Joint = new JointDeflectionSettingsViewModel(source);
         AddStraightCommand = new RelayCommand(_ => StraightRows.Add(new StraightPipeSpecRow()));
         RemoveStraightCommand = new RelayCommand(_ => { if (SelectedStraight is not null) StraightRows.Remove(SelectedStraight); });
@@ -86,7 +87,7 @@ public sealed class PipeSpecTableViewModel : ViewModelBase
     {
         Result = BuildResult();
         WarnOuterDiameterConflicts(Result);
-        try { _save.Execute(Result); }
+        try { _revit.Run(() => _save.Execute(Result)); }
         catch (Exception ex) { _dialog.Warn("관로 규격 설정", $"저장에 실패했습니다.\n{ex.Message}"); }
         CloseAction?.Invoke();
     }

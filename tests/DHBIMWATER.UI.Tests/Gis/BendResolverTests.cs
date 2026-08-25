@@ -189,6 +189,76 @@ public class BendResolverTests
         Assert.Equal(0d, Dot(radiusAtEnd, dirB), 12);
     }
 
+    [Theory]
+    [InlineData(11.25, 185d, 65d)]   // DN200 11¼° — |P4-P5| ≈ 246.8mm
+    [InlineData(22.5, 155d, 80d)]    // DN150 22½°
+    [InlineData(45d, 300d, 175d)]    // DN300 45°
+    [InlineData(90d, 390d, 470d)]    // DN400 90°
+    public void B_type_long_leg_exceeds_short_leg_by_exactly_the_spigot_length(
+        double angleDeg, double radiusMm, double layingMm)
+    {
+        const double spigotMm = 200d;
+        var angleRad = angleDeg * Math.PI / 180d;
+        var dirA = new Vector3D(-1, 0, 0);
+        var dirB = new Vector3D(Math.Cos(angleRad), Math.Sin(angleRad), 0);
+        var origin = new Point3D(0, 0, 0);
+
+        var arc = BendArcGeometry.ComputeForAlignment(
+            origin, dirA, dirB, angleDeg, angleDeg, radiusMm, layingMm, layingMm + spigotMm);
+
+        // P2/P4는 관 끝(t)이 아니라 호의 접점(T)이다 — 사용자 확정 2026-08-25.
+        var tangentMm = BendResolver.TangentLength(radiusMm, angleDeg);
+        Assert.Equal(tangentMm / 1000d, arc.ArcStart.DistanceTo(origin), 12);
+        Assert.Equal(tangentMm / 1000d, arc.ArcEnd.DistanceTo(origin), 12);
+
+        // s는 두 점 사이 거리가 아니라 짧은 다리 대비 긴 다리의 증분이다. T가 상쇄된다.
+        var shortLegM = arc.Start.DistanceTo(arc.ArcStart);
+        var longLegM = arc.End.DistanceTo(arc.ArcEnd);
+        Assert.Equal((layingMm - tangentMm) / 1000d, shortLegM, 12);
+        Assert.Equal(spigotMm / 1000d, longLegM - shortLegM, 12);
+    }
+
+    [Theory]
+    [InlineData(BendForm.BType, 200d)]
+    [InlineData(BendForm.AType, 0d)]
+    public void Placement_carries_the_spigot_increment_from_catalog_to_arc_points(
+        BendForm form, double expectedSpigotMm)
+    {
+        const double angleDeg = 45d;
+        const double radiusMm = 300d;
+        const double layingMm = 175d;
+        var angleRad = angleDeg * Math.PI / 180d;
+        var vertices = new[]
+        {
+            new Point3D(0, 0, 0),
+            new Point3D(10, 0, 0),
+            new Point3D(10 + 10 * Math.Cos(angleRad), 10 * Math.Sin(angleRad), 0)
+        };
+        var alignments = new[]
+        {
+            new PipeAlignment(vertices, PipeKindCatalog.Water1, 100, "test.shp", "1", new Dictionary<string, string>())
+        };
+        const double snapTolerance = 0.001;
+        var graph = PipeNetworkBuilder.Build(alignments, snapTolerance);
+        var nodes = PipeNetworkClassifier.Classify(graph);
+        var resolutions = BendResolver.ResolveAll(
+            nodes,
+            Settings(10, fittings: new BendFittingEntry(100, angleDeg, form, layingMm, radiusMm)));
+
+        var resolution = Assert.Single(resolutions);
+        Assert.Equal(layingMm, resolution.LayingLengthMm, 8);
+        Assert.Equal(layingMm + expectedSpigotMm, resolution.LongLegLengthMm, 8);
+
+        var placement = Assert.Single(BendTrimPlanner.Plan(alignments, graph, resolutions, snapTolerance).Placements);
+        Assert.Equal(layingMm, placement.UpstreamLegMm, 8);
+        Assert.Equal(layingMm + expectedSpigotMm, placement.DownstreamLegMm, 8);
+
+        // 좌표까지 반영됐는지 — 긴 다리(하류)가 짧은 다리보다 정확히 s만큼 길다.
+        var shortLegM = placement.Points.Start.DistanceTo(placement.Points.ArcStart);
+        var longLegM = placement.Points.End.DistanceTo(placement.Points.ArcEnd);
+        Assert.Equal(expectedSpigotMm / 1000d, longLegM - shortLegM, 12);
+    }
+
     [Fact]
     public void Trim_planner_passes_actual_deflection_to_arc_and_midpoint_orientation()
     {

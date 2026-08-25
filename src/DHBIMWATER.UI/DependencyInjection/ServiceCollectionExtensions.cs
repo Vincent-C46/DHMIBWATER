@@ -4,6 +4,7 @@ using DHBIMWATER.UI.ViewModels.Utilities;
 using DHBIMWATER.UI.Views.GuideLine;
 using DHBIMWATER.UI.Views.Modeling;
 using DHBIMWATER.UI.Views.Utilities;
+using DHBIMWATER.Infrastructure.Services.Wpf;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DHBIMWATER.UI.DependencyInjection;
@@ -38,7 +39,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<PumpingStationViewModel>();
         services.AddTransient<ValveRoomViewModel>();
         services.AddTransient<PipeLayoutViewModel>();
-        services.AddTransient<PipeAlignmentModelingViewModel>();
+        // 이 모델리스 ViewModel만 전용 STA 스레드에서 안전한 WPF 다이얼로그를 사용한다.
+        services.AddTransient(sp => ActivatorUtilities.CreateInstance<PipeAlignmentModelingViewModel>(sp, new WpfDialogService()));
 
         // Utilities
         services.AddTransient<ExParamsViewModel>();

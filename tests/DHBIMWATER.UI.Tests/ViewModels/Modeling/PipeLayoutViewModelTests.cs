@@ -138,7 +138,7 @@ public sealed class PipeLayoutViewModelTests
     }
 
     [Fact]
-    public void Segment_family_selection_is_auto_guessed_from_the_accessory_list()
+    public void Segment_family_selection_is_auto_guessed_from_the_fitting_list()
     {
         var vm = CreateViewModel();
 
@@ -148,6 +148,22 @@ public sealed class PipeLayoutViewModelTests
         Assert.Equal("곡관45 : DN100", vm.Bend45FamilyTypeName);
         Assert.Equal("T형 : DN100", vm.TeeFamilyTypeName);
         Assert.Equal("길이", vm.ShortLengthParameterName);
+    }
+
+    [Fact]
+    public void Accessory_and_segment_family_lists_are_separated()
+    {
+        var vm = CreateViewModel();
+
+        Assert.Equal(["밸브 : DN100"], vm.FamilyTypeNames);
+        Assert.Equal(
+            ["직관 : DN100", "단관 : DN100", "곡관90 : DN100", "곡관45 : DN100", "T형 : DN100"],
+            vm.SegmentFamilyTypeNames);
+        Assert.Contains(vm.StraightFamilyTypeName, vm.SegmentFamilyTypeNames);
+        Assert.Contains(vm.ShortFamilyTypeName, vm.SegmentFamilyTypeNames);
+        Assert.Contains(vm.Bend90FamilyTypeName, vm.SegmentFamilyTypeNames);
+        Assert.Contains(vm.Bend45FamilyTypeName, vm.SegmentFamilyTypeNames);
+        Assert.Contains(vm.TeeFamilyTypeName, vm.SegmentFamilyTypeNames);
     }
 
     [Fact]
@@ -185,8 +201,9 @@ public sealed class PipeLayoutViewModelTests
         public IEnumerable<string> GetPipingSystemTypeNames() => ["급수"];
         public IEnumerable<string> GetPipeTypeNames() => ["배관"];
         public IEnumerable<string> GetLevelNames() => ["1층"];
-        public IEnumerable<string> GetPipeAccessoryTypeNames() =>
-            ["밸브 : DN100", "직관 : DN100", "단관 : DN100", "곡관90 : DN100", "곡관45 : DN100", "T형 : DN100"];
+        public IEnumerable<string> GetPipeAccessoryTypeNames() => ["밸브 : DN100"];
+        public IEnumerable<string> GetPipeFittingTypeNames() =>
+            ["직관 : DN100", "단관 : DN100", "곡관90 : DN100", "곡관45 : DN100", "T형 : DN100"];
         public IEnumerable<string> GetPipeAccessoryInstanceParameterNames(string familyTypeName) => ["길이", "DN"];
         public IEnumerable<string> GetGenericModelTypeNames() => [];
         public IEnumerable<string> GetFoundationTypeNames() => [];

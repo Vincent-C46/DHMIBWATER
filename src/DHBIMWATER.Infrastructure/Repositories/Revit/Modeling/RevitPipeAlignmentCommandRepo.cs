@@ -12,13 +12,15 @@ public sealed class RevitPipeAlignmentCommandRepo : IPipeAlignmentCommandRepo
     private readonly Func<Document?> _doc;
     public RevitPipeAlignmentCommandRepo(Func<Document?> doc) => _doc = doc;
 
-    public PipeAlignmentCreateResult Create(PipeAlignmentCreateDefinition definition)
+    public PipeAlignmentCreateResult Create(PipeAlignmentCreateDefinition definition, IProgress<PipeAlignmentProgress>? progress = null)
     {
         var doc = _doc() ?? throw new InvalidOperationException("활성 Revit 문서를 찾을 수 없습니다.");
         var basePoint = AlignmentPlacementMapper.GetProjectBasePoint(doc);
         var created = 0; var skipped = 0; var warnings = new List<string>();
-        foreach (var alignment in definition.Alignments)
+        progress?.Report(new PipeAlignmentProgress(PipeAlignmentPhase.PlacingStraights, 0, definition.Alignments.Count));
+        for (var alignmentIndex = 0; alignmentIndex < definition.Alignments.Count; alignmentIndex++)
         {
+            var alignment = definition.Alignments[alignmentIndex];
             var zOffsetM = definition.Origin.GetZOffsetM(alignment);
             if (alignment.Vertices.Count < 2) { warnings.Add($"{alignment.SourceFile} 레코드 {alignment.RecordNumber}: 정점이 2개 미만이라 건너뛰었습니다."); continue; }
             var lines = new List<GeometryObject>();
@@ -43,7 +45,10 @@ public sealed class RevitPipeAlignmentCommandRepo : IPipeAlignmentCommandRepo
             SetText(shape, "DH_원본파일", alignment.SourceFile);
             SetText(shape, "DH_레코드번호", alignment.RecordNumber);
             created++;
+            if ((alignmentIndex + 1) % 200 == 0)
+                progress?.Report(new PipeAlignmentProgress(PipeAlignmentPhase.PlacingStraights, alignmentIndex + 1, definition.Alignments.Count));
         }
+        progress?.Report(new PipeAlignmentProgress(PipeAlignmentPhase.PlacingStraights, definition.Alignments.Count, definition.Alignments.Count));
         return new PipeAlignmentCreateResult(created, skipped, warnings);
     }
 

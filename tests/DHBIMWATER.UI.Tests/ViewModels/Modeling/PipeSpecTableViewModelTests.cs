@@ -2,6 +2,7 @@ using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Application.Interfaces.Gis;
 using DHBIMWATER.Application.UseCases.Gis;
 using DHBIMWATER.Core.Gis;
+using DHBIMWATER.Infrastructure.Services.Mock;
 using DHBIMWATER.UI.ViewModels.Modeling;
 using Xunit;
 
@@ -144,7 +145,7 @@ public sealed class PipeSpecTableViewModelTests
     private static PipeSpecTableViewModel Create(StubRepo repo, StubFileDialog? fileDialog = null,
         StubFileStore? fileStore = null, StubDialog? dialog = null)
         => new(BendSettings.Default, new SaveBendSettingsUseCase(new StubTransaction(), repo), dialog ?? new StubDialog(),
-            fileDialog ?? new StubFileDialog(), fileStore ?? new StubFileStore());
+            fileDialog ?? new StubFileDialog(), fileStore ?? new StubFileStore(), new DirectRevitDispatcher());
 
     private sealed class StubTransaction : ITransactionContext
     {

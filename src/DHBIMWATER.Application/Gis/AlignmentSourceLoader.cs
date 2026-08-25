@@ -12,7 +12,7 @@ public sealed class AlignmentSourceLoader
     public AlignmentSourceLoader(IEnumerable<IAlignmentSourceReader> readers) => _readers = readers.ToList();
 
     /// <summary>파일을 읽고 필드 매핑을 적용해 PipeAlignment 목록을 만든다. 트랜잭션·Revit 의존 없음.</summary>
-    public AlignmentLoadResult Load(IReadOnlyList<AlignmentSourceFile> files)
+    public AlignmentLoadResult Load(IReadOnlyList<AlignmentSourceFile> files, bool warnOnUnknownPipeKinds = true)
     {
         var alignments = new List<PipeAlignment>();
         var warnings = new List<string>();
@@ -68,7 +68,7 @@ public sealed class AlignmentSourceLoader
                 var value = string.IsNullOrWhiteSpace(example) ? "값 없음" : example;
                 warnings.Add($"{Path.GetFileName(file.FilePath)}: 직경 필드 '{field}' 값을 해석하지 못한 레코드 {failed}건 (예: '{value}'). 곡관 판정과 관저·관정 보정이 부정확합니다.");
             }
-            if (unknownKinds.Count > 0)
+            if (warnOnUnknownPipeKinds && unknownKinds.Count > 0)
                 warnings.Add($"{Path.GetFileName(file.FilePath)}: 고정 관종 목록에 없는 값({string.Join(", ", unknownKinds)}). 입력 파일 탭에서 관종을 선택하세요.");
         }
         return new AlignmentLoadResult(alignments, unresolved, warnings);

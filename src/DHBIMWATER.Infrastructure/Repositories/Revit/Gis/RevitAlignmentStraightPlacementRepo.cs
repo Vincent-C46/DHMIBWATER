@@ -5,6 +5,7 @@ using DHBIMWATER.Application.Interfaces.Gis;
 using DHBIMWATER.Core.Geometry;
 using DHBIMWATER.Core.Gis;
 using DHBIMWATER.Infrastructure.Helpers;
+using DHBIMWATER.Shared.Diagnostics;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Revit.Gis;
@@ -24,7 +25,8 @@ internal sealed class RevitAlignmentStraightPlacementRepo : IAlignmentStraightPl
 
     public AlignmentStraightPlacementResult PlaceAlong(IReadOnlyList<PipeAlignment> alignments, string straightFamilyTypeName, double intervalM, AlignmentPlacementOrigin origin,
         StraightPipeSpecTable specs, IReadOnlyList<IReadOnlyList<VertexTrim>>? trims = null, string? diameterParameterName = null,
-        string? outerDiameterParameterName = null, string? thicknessParameterName = null, PipeInfoParameterContext? info = null)
+        string? outerDiameterParameterName = null, string? thicknessParameterName = null, PipeInfoParameterContext? info = null,
+        IProgress<PipeAlignmentProgress>? progress = null)
     {
         var doc = _doc() ?? throw new InvalidOperationException("활성 Revit 문서가 없습니다.");
         var symbol = ResolveSymbol(doc, straightFamilyTypeName);
@@ -34,6 +36,9 @@ internal sealed class RevitAlignmentStraightPlacementRepo : IAlignmentStraightPl
         // 파라미터는 형상이 확정된 뒤(최종 Regenerate 이후) 한꺼번에 설정한다.
         var placed = new List<(FamilyInstance Instance, PipeAlignment Alignment, StraightPipeSpec? Spec, AlignmentSampleSegment Segment)>();
         var pending = 0;
+        var total = alignments.Select((alignment, index) => AlignmentIntervalSampler.SampleSegments(
+            alignment.Vertices, intervalM, trims is not null && index < trims.Count ? trims[index] : null).Count).Sum();
+        progress?.Report(new PipeAlignmentProgress(PipeAlignmentPhase.PlacingStraights, 0, total));
 
         // SampleSegments로 intervalM(6m)마다 끊어 시작/끝점을 잇는다.
         // 곡관이 들어가는 정점에서는 그 몸통 자리(t, B형은 하류쪽 t+s)만큼 직관을 만들지 않는다.
@@ -49,22 +54,41 @@ internal sealed class RevitAlignmentStraightPlacementRepo : IAlignmentStraightPl
                 var end = ToXyz(segment.End, zOffsetM, origin, basePoint);
                 if (start.DistanceTo(end) < minLengthFt) continue;
 
-                var instance = AdaptiveComponentInstanceUtils.CreateAdaptiveComponentInstance(doc, symbol);
-                var pointIds = AdaptiveComponentInstanceUtils.GetInstancePlacementPointElementRefIds(instance);
+                FamilyInstance instance;
+                IList<ElementId> pointIds;
+                // 06a는 세 호출로 쪼개 계측한다. GetInstancePlacementPointElementRefIds가 암묵적 문서 재생성을
+                // 강제하는지(= 명시적 Regenerate 배치가 무력화되는지) 확인하기 위한 것이다.
+                using (PlacementProfiler.Step("06a1 직관 Create"))
+                using (PlacementProfiler.StepBucketed("06a1 직관 Create", placed.Count))
+                    instance = AdaptiveComponentInstanceUtils.CreateAdaptiveComponentInstance(doc, symbol);
+                using (PlacementProfiler.Step("06a2 직관 GetPointIds"))
+                using (PlacementProfiler.StepBucketed("06a2 직관 GetPointIds", placed.Count))
+                    pointIds = AdaptiveComponentInstanceUtils.GetInstancePlacementPointElementRefIds(instance);
                 if (pointIds.Count != 2)
                     throw new InvalidOperationException($"직관 패밀리 '{straightFamilyTypeName}'의 Adaptive Point가 2개가 아닙니다({pointIds.Count}개).");
-
-                ((ReferencePoint)doc.GetElement(pointIds[0])).Position = start;
-                ((ReferencePoint)doc.GetElement(pointIds[1])).Position = end;
+                using (PlacementProfiler.Step("06a3 직관 좌표 설정"))
+                using (PlacementProfiler.StepBucketed("06a3 직관 좌표 설정", placed.Count))
+                {
+                    ((ReferencePoint)doc.GetElement(pointIds[0])).Position = start;
+                    ((ReferencePoint)doc.GetElement(pointIds[1])).Position = end;
+                }
                 placed.Add((instance, alignment, spec, segment));
-                if (++pending >= RegenerateBatchSize) { doc.Regenerate(); pending = 0; }
+                if (++pending >= RegenerateBatchSize)
+                {
+                    using (PlacementProfiler.Step("06b 직관 Regenerate")) doc.Regenerate();
+                    progress?.Report(new PipeAlignmentProgress(PipeAlignmentPhase.PlacingStraights, placed.Count, total));
+                    pending = 0;
+                }
             }
         }
-        if (pending > 0) doc.Regenerate();
+        if (pending > 0) { using (PlacementProfiler.Step("06b 직관 Regenerate")) doc.Regenerate(); }
+        progress?.Report(new PipeAlignmentProgress(PipeAlignmentPhase.PlacingStraights, total, total));
+        PlacementProfiler.Count("직관 인스턴스", placed.Count);
 
         // 패밀리별로 한 번만 경고하면 충분하다 — 세그먼트마다 같은 누락 메시지가 반복되면 오히려 안 읽힌다.
         var missingParameters = new HashSet<string>();
         var writer = new PipeParameterWriter();
+        var parameterScope = PlacementProfiler.Step("06c 직관 파라미터 기록");
         PipeAlignment? previousAlignment = null;
         Point3D? previousEnd = null;
         Vector3D? previousOwnDirection = null;
@@ -109,6 +133,8 @@ internal sealed class RevitAlignmentStraightPlacementRepo : IAlignmentStraightPl
             writer.Number(instance, PipeAlignmentParameters.Slope, runM > 1e-9 ? riseM / runM * 100d : 0d);
         }
 
+        parameterScope.Dispose();
+
         var warnings = new List<string>();
         var missingRotation = missingParameters.Remove("rot_XY_n/rot_XZ_n");
         if (missingParameters.Count > 0)
@@ -117,7 +143,7 @@ internal sealed class RevitAlignmentStraightPlacementRepo : IAlignmentStraightPl
             warnings.Add($"직관 패밀리 '{straightFamilyTypeName}'에 rot_XY_n/rot_XZ_n 각도 파라미터가 없어 진행방향 회전을 적용하지 못했습니다.");
         if (writer.Missing.Count > 0)
             warnings.Add($"프로젝트 매개변수 {string.Join(", ", writer.Missing.OrderBy(x => x))}를 직관 인스턴스에 기록하지 못했습니다(바인딩 실패 또는 읽기전용).");
-        if (placed.Count > 0) doc.Regenerate();
+        if (placed.Count > 0) { using (PlacementProfiler.Step("06d 직관 최종 Regenerate")) doc.Regenerate(); }
         var outerDiameters = placed
             .Where(x => x.Spec is not null)
             .GroupBy(x => (x.Alignment.PipeKind, x.Alignment.DiameterMm))

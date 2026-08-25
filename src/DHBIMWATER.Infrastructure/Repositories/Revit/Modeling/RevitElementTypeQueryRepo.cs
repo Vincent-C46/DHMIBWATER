@@ -204,6 +204,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             catch { return Enumerable.Empty<string>(); }
         }
         public IEnumerable<string> GetPipeAccessoryTypeNames() => GetFamilySymbolNames(BuiltInCategory.OST_PipeAccessory);
+        public IEnumerable<string> GetPipeFittingTypeNames() => GetFamilySymbolNames(BuiltInCategory.OST_PipeFitting);
 
         /// <summary>조회 로직은 카테고리와 무관하므로 Adaptive용 구현을 그대로 쓴다.
         /// 호출부 의도를 드러내려고 이름만 분리해 둔다(중복 구현하지 않는다).</summary>

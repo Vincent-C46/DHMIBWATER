@@ -4,6 +4,7 @@ using DHBIMWATER.Application.DTOs.Gis;
 using DHBIMWATER.Application.Interfaces.Gis;
 using DHBIMWATER.Core.Gis;
 using DHBIMWATER.Infrastructure.Helpers;
+using DHBIMWATER.Shared.Diagnostics;
 using UC = DHBIMWATER.Infrastructure.Converters.RevitUnitConverter;
 
 namespace DHBIMWATER.Infrastructure.Repositories.Revit.Gis;
@@ -21,15 +22,17 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
     private readonly Func<Document?> _doc;
     public RevitAdaptiveBendPlacementRepo(Func<Document?> doc) => _doc = doc;
 
-    public AdaptiveBendPlacementResult Place(IReadOnlyList<AdaptiveBendPlacementPlan> plans, AlignmentPlacementOrigin origin, PipeInfoParameterContext? info = null)
+    public AdaptiveBendPlacementResult Place(IReadOnlyList<AdaptiveBendPlacementPlan> plans, AlignmentPlacementOrigin origin, PipeInfoParameterContext? info = null, IProgress<PipeAlignmentProgress>? progress = null)
     {
         if (plans.Count == 0) return new AdaptiveBendPlacementResult(0, Array.Empty<string>());
+        progress?.Report(new PipeAlignmentProgress(PipeAlignmentPhase.PlacingBends, 0, plans.Count));
         var doc = _doc() ?? throw new InvalidOperationException("활성 Revit 문서가 없습니다.");
         var basePoint = AlignmentPlacementMapper.GetProjectBasePoint(doc);
         var symbols = new Dictionary<(string Family, string Type), FamilySymbol>();
         // 비활성 Symbol 활성화 시 필요한 Regenerate가 곡관 생성 배치 중간에 끼지 않도록 유형별로 먼저 확정한다.
-        foreach (var key in plans.Select(x => (x.FamilyName, x.TypeName)).Distinct())
-            ResolveSymbol(doc, symbols, key.FamilyName, key.TypeName);
+        using (PlacementProfiler.Step("07a 곡관 Symbol 확정"))
+            foreach (var key in plans.Select(x => (x.FamilyName, x.TypeName)).Distinct())
+                ResolveSymbol(doc, symbols, key.FamilyName, key.TypeName);
         // 패밀리별로 한 번만 경고하면 충분하다 — 절점마다 같은 파라미터 누락 메시지가 반복되면 오히려 안 읽힌다.
         var missingParameters = new HashSet<(string Family, string Type, string Parameter)>();
         var writer = new PipeParameterWriter();
@@ -46,22 +49,34 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
         foreach (var plan in plans)
         {
             var symbol = symbols[(plan.FamilyName, plan.TypeName)];
-            var instance = AdaptiveComponentInstanceUtils.CreateAdaptiveComponentInstance(doc, symbol);
-            var pointIds = AdaptiveComponentInstanceUtils.GetInstancePlacementPointElementRefIds(instance);
+            FamilyInstance instance;
+            IList<ElementId> pointIds;
+            // 07b를 Create와 GetPointIds로 분리한다. 후자가 암묵적 문서 재생성을 강제하는지 확인하기 위한 것.
+            using (PlacementProfiler.Step("07b1 곡관 Create"))
+            using (PlacementProfiler.StepBucketed("07b1 곡관 Create", count))
+                instance = AdaptiveComponentInstanceUtils.CreateAdaptiveComponentInstance(doc, symbol);
+            using (PlacementProfiler.Step("07b2 곡관 GetPointIds"))
+            using (PlacementProfiler.StepBucketed("07b2 곡관 GetPointIds", count))
+                pointIds = AdaptiveComponentInstanceUtils.GetInstancePlacementPointElementRefIds(instance);
             if (pointIds.Count != 5)
                 throw new InvalidOperationException($"곡관 패밀리 '{plan.FamilyName}:{plan.TypeName}'의 Adaptive Point가 5개가 아닙니다({pointIds.Count}개).");
             if (plan.RotXYDeg.Count != 5 || plan.RotXZDeg.Count != 5)
                 throw new InvalidOperationException($"절점 {plan.NodeId}의 회전값은 XY/XZ 각각 5개여야 합니다.");
-            var rotationParameters = ResolveRotationParameters(instance, plan);
+            (Parameter Xy, Parameter Xz)[] rotationParameters;
+            using (PlacementProfiler.Step("07c 곡관 회전 파라미터 조회"))
+                rotationParameters = ResolveRotationParameters(instance, plan);
 
             var points = new[] { plan.Points.Start, plan.Points.ArcStart, plan.Points.ArcMid, plan.Points.ArcEnd, plan.Points.End };
-            for (var i = 0; i < 5; i++)
-            {
-                var refPoint = (ReferencePoint)doc.GetElement(pointIds[i]);
-                refPoint.Position = AlignmentPlacementMapper.ToXyz(points[i], plan.ZOffsetM, origin.X, origin.Y, basePoint);
-            }
+            using (PlacementProfiler.Step("07d 곡관 P1~P5 좌표 설정"))
+            using (PlacementProfiler.StepBucketed("07d 곡관 P1~P5 좌표 설정", count))
+                for (var i = 0; i < 5; i++)
+                {
+                    var refPoint = (ReferencePoint)doc.GetElement(pointIds[i]);
+                    refPoint.Position = AlignmentPlacementMapper.ToXyz(points[i], plan.ZOffsetM, origin.X, origin.Y, basePoint);
+                }
             if (info is { Enabled: true })
             {
+                using var infoScope = PlacementProfiler.Step("07e 곡관 DH_ 파라미터 기록");
                 writer.Text(instance, PipeAlignmentParameters.Addin, PipeAlignmentParameters.AddinValue);
                 writer.Text(instance, PipeAlignmentParameters.Part, PipeAlignmentParameters.BendPartValue);
                 writer.Text(instance, PipeAlignmentParameters.AlignmentId, $"{Path.GetFileNameWithoutExtension(plan.SourceFile)}#{plan.RecordNumber}");
@@ -87,6 +102,8 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
                 writer.Number(instance, PipeAlignmentParameters.Weight, plan.WeightKg);
             }
 
+            using (PlacementProfiler.Step("07f 곡관 형상/회전 파라미터 기록"))
+            {
             if (plan.DiameterParameterName is not null)
                 SetShapeParameter(instance, plan, plan.DiameterParameterName, plan.DiameterMm, missingParameters, ref shapeParameterSuccesses);
             if (plan.WallThicknessParameterName is not null)
@@ -101,22 +118,27 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
                 SetRequiredAngleParameter(rotationParameters[i].Xy, plan, $"{RotationXyParameterPrefix}{i + 1}", plan.RotXYDeg[i]);
                 SetRequiredAngleParameter(rotationParameters[i].Xz, plan, $"{RotationXzParameterPrefix}{i + 1}", plan.RotXZDeg[i]);
             }
+            }
             // 각 곡관의 좌표·형상·회전값은 서로 독립적이고 배치 계획도 Revit 진입 전에 확정된다.
             // 2026-08-20 배치 처리 시 함께 발견된 좌표 확대는 Regenerate 타이밍이 아니라
             // BendArcGeometry.Compute 선택 인자 오버로드 오바인딩이 원인이었으므로, 문서 재생성만 묶어 처리한다.
             if (++pendingRegeneration >= RegenerateBatchSize)
             {
-                doc.Regenerate();
+                using (PlacementProfiler.Step("07g 곡관 Regenerate")) doc.Regenerate();
+                progress?.Report(new PipeAlignmentProgress(PipeAlignmentPhase.PlacingBends, count + 1, plans.Count));
                 pendingRegeneration = 0;
             }
             if (!plan.IsAcceptable)
                 exceededOverrides.Add((instance.Id, plan.NodeId));
             count++;
         }
-        if (pendingRegeneration > 0) doc.Regenerate();
+        if (pendingRegeneration > 0) { using (PlacementProfiler.Step("07g 곡관 Regenerate")) doc.Regenerate(); }
+        progress?.Report(new PipeAlignmentProgress(PipeAlignmentPhase.PlacingBends, plans.Count, plans.Count));
+        PlacementProfiler.Count("곡관 인스턴스", count);
         // 신규 인스턴스 형상이 재생성된 뒤 기존과 같은 허용 초과 적색 재지정을 적용한다.
-        foreach (var (elementId, nodeId) in exceededOverrides)
-            ApplyExceededOverride(overrideView, elementId, solidFillPatternId, nodeId, overrideWarnings);
+        using (PlacementProfiler.Step("07h 허용초과 적색 표시"))
+            foreach (var (elementId, nodeId) in exceededOverrides)
+                ApplyExceededOverride(overrideView, elementId, solidFillPatternId, nodeId, overrideWarnings);
 
         var warnings = missingParameters
             .GroupBy(x => (x.Family, x.Type))

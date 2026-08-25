@@ -60,6 +60,29 @@ public sealed class AlignmentSourceLoaderMappingTests
         Assert.Equal(PipeKindCatalog.Water3, result.Alignments[0].PipeKind);
     }
 
+    [Fact]
+    public void Load_WhenUnknownKindWarningDisabled_PreservesRawKindWithoutWarning()
+    {
+        var reader = new StubReader(Feature(new Dictionary<string, string> { ["KIND"] = "상수" }));
+        var file = new AlignmentSourceFile("sample.shp", string.Empty, null, "KIND");
+
+        var result = new AlignmentSourceLoader(new[] { reader }).Load(new[] { file }, warnOnUnknownPipeKinds: false);
+
+        Assert.Equal("상수", result.Alignments[0].PipeKind);
+        Assert.DoesNotContain(result.Warnings, warning => warning.Contains("고정 관종 목록"));
+    }
+
+    [Fact]
+    public void Load_WhenUnknownKindWarningEnabled_PreservesExistingWarning()
+    {
+        var reader = new StubReader(Feature(new Dictionary<string, string> { ["KIND"] = "상수" }));
+        var file = new AlignmentSourceFile("sample.shp", string.Empty, null, "KIND");
+
+        var result = new AlignmentSourceLoader(new[] { reader }).Load(new[] { file });
+
+        Assert.Contains(result.Warnings, warning => warning.Contains("고정 관종 목록에 없는 값(상수)"));
+    }
+
     private static PipeAlignment Feature(IReadOnlyDictionary<string, string> attributes) => new(
         new[] { new Point3D(0, 0, 0), new Point3D(1, 0, 0) }, string.Empty, 0, "sample.shp", "1", attributes);
 

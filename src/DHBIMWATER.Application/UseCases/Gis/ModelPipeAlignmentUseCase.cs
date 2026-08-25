@@ -4,6 +4,7 @@ using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Application.Interfaces.Gis;
 using DHBIMWATER.Core.Gis;
 using DHBIMWATER.Core.Parameters;
+using DHBIMWATER.Shared.Diagnostics;
 
 namespace DHBIMWATER.Application.UseCases.Gis;
 
@@ -24,11 +25,26 @@ public sealed class ModelPipeAlignmentUseCase
         ISharedParameterRepository sharedParameterRepo, BendSettingsProvider bendSettings, IAdaptiveBendPlacementRepo adaptiveBendRepo)
     { _transaction = transaction; _loader = loader; _alignmentRepo = alignmentRepo; _straightRepo = straightRepo; _pipeRepo = pipeRepo; _projectLocationRepo = projectLocationRepo; _sharedParameterRepo = sharedParameterRepo; _bendSettings = bendSettings; _adaptiveBendRepo = adaptiveBendRepo; }
 
-    public PipeAlignmentModelingResult Execute(PipeAlignmentModelingRequest request)
+    public PipeAlignmentModelingResult Execute(PipeAlignmentModelingRequest request, IProgress<PipeAlignmentProgress>? progress = null)
     {
         if (request.OutputMode is PipeAlignmentOutputMode.Adaptive or PipeAlignmentOutputMode.PipingSystem && request.IntervalMm <= 0)
             throw new ArgumentOutOfRangeException(nameof(request.IntervalMm));
-        var loaded = _loader.Load(request.Files);
+        // 장거리 배치 성능 병목 비중 확정용 단계별 계측 (2026-08-24).
+        // 결과 보고서: %LOCALAPPDATA%\DHBIMWATER\Logs\placement-profile.log
+        // TODO: 병목이 확정되면 계측 배선을 걷어낼지 결정할 것.
+        PlacementProfiler.Begin($"{request.OutputMode} / 간격 {request.IntervalMm:0}mm / 소스 {request.Files.Count}개");
+        try { return ExecuteCore(request, progress); }
+        finally { PlacementProfiler.End(); }
+    }
+
+    private PipeAlignmentModelingResult ExecuteCore(PipeAlignmentModelingRequest request, IProgress<PipeAlignmentProgress>? progress)
+    {
+        AlignmentLoadResult loaded;
+        progress?.Report(new PipeAlignmentProgress(PipeAlignmentPhase.Loading, 0, 0));
+        // DirectShape 형상은 관종 규격을 소비하지 않는다. 원본 관종값은 요소 정보에 그대로 기록하되,
+        // 고정 목록 선택을 요구하는 경고만 출력하지 않는다.
+        using (PlacementProfiler.Step("01 파일 로드"))
+            loaded = _loader.Load(request.Files, warnOnUnknownPipeKinds: request.OutputMode != PipeAlignmentOutputMode.DirectShape);
         // 기준점을 명시하지 않은 호출부에만 자동 산출을 적용한다.
         // (0, 0)을 자동 산출로 대체하면 "원본 좌표 그대로 배치"를 요청할 수 없어 파일마다 오프셋이 달라진다.
         var reference = request.ReferenceX is { } referenceX && request.ReferenceY is { } referenceY
@@ -47,14 +63,19 @@ public sealed class ModelPipeAlignmentUseCase
         // 곡관 자리 계산은 Adaptive 모드에만 적용한다(사용자 결정 2026-08-07, 2026-08-18 명칭 변경).
         // PipingSystem은 Revit이 NewElbowFitting으로 부속을 자동 생성해 이중이 되고,
         // DirectShape는 폴리선 원형을 그대로 형상화하는 경로다.
-        var (bendPlan, bendWarnings) = request.OutputMode == PipeAlignmentOutputMode.Adaptive
-            ? PlanBends(loaded.Alignments, request, settings, settingsSource == BendSettingsSource.BuiltInDefault)
-            : (null, Array.Empty<string>());
+        BendTrimPlan? bendPlan;
+        IReadOnlyList<string> bendWarnings;
+        progress?.Report(new PipeAlignmentProgress(PipeAlignmentPhase.PlanningBends, 0, 0));
+        using (PlacementProfiler.Step("02 곡관 계획(PlanBends)"))
+            (bendPlan, bendWarnings) = request.OutputMode == PipeAlignmentOutputMode.Adaptive
+                ? PlanBends(loaded.Alignments, request, settings, settingsSource == BendSettingsSource.BuiltInDefault)
+                : (null, Array.Empty<string>());
 
         // 트랜잭션을 열기 전에 카탈로그가 가리키는 곡관 패밀리가 실제로 이 문서에 로드돼 있는지 확인한다.
         // 그렇지 않으면 직관 배치까지 다 끝낸 뒤 곡관 배치 단계에서야 실패해 전체가 롤백된다.
         if (bendPlan is not null)
         {
+            using var bendFamilyScope = PlacementProfiler.Step("03 곡관 패밀리 로드 확인");
             EnsureBendConfiguration(bendPlan, request.BendFamilyTypeName);
             EnsureBendFamilyLoaded(bendPlan, request.BendFamilyTypeName);
         }
@@ -64,21 +85,35 @@ public sealed class ModelPipeAlignmentUseCase
             try
             {
                 _transaction.Begin(request.OutputMode == PipeAlignmentOutputMode.DirectShape ? "Import Pipe Alignment" : "선형 패밀리 배치");
-                if (request.OutputMode == PipeAlignmentOutputMode.DirectShape) _sharedParameterRepo.EnsureParameters(GetAlignmentParameterDefinitions());
-                else if (request.OutputMode == PipeAlignmentOutputMode.Adaptive) _sharedParameterRepo.EnsureParameters(PipeAlignmentParameters.Definitions);
-                if (request.ApplySharedCoordinates) _projectLocationRepo.SetInternalOriginSharedPosition(origin.X, origin.Y, 0);
-                AlignmentStraightPlacementResult? straightResult = null;
-                var (count, skipped, repoWarnings) = request.OutputMode switch
+                using (PlacementProfiler.Step("04 공유 매개변수 확보"))
                 {
-                    PipeAlignmentOutputMode.DirectShape => ToDirectShape(loaded.Alignments, origin),
-                    PipeAlignmentOutputMode.Adaptive => ToStraight(straightResult = _straightRepo.PlaceAlong(loaded.Alignments, Require(request.StraightFamilyTypeName, "직관 패밀리"), request.IntervalMm / 1000d, origin, settings.StraightPipes, bendPlan?.Plans.Select(x => x.Trims).ToList(), request.StraightDiameterParameterName, request.StraightOuterDiameterParameterName, request.StraightThicknessParameterName, infoContext), bendWarnings),
+                    if (request.OutputMode == PipeAlignmentOutputMode.DirectShape) _sharedParameterRepo.EnsureParameters(GetAlignmentParameterDefinitions());
+                    else if (request.OutputMode == PipeAlignmentOutputMode.Adaptive) _sharedParameterRepo.EnsureParameters(PipeAlignmentParameters.Definitions);
+                }
+                if (request.ApplySharedCoordinates)
+                {
+                    using var sharedCoordinateScope = PlacementProfiler.Step("05 공유좌표 설정");
+                    _projectLocationRepo.SetInternalOriginSharedPosition(origin.X, origin.Y, 0);
+                }
+                AlignmentStraightPlacementResult? straightResult = null;
+                int count;
+                int skipped;
+                IReadOnlyList<string> repoWarnings;
+                using (PlacementProfiler.Step("06 직관/파이프 배치 전체"))
+                    (count, skipped, repoWarnings) = request.OutputMode switch
+                {
+                    PipeAlignmentOutputMode.DirectShape => ToDirectShape(loaded.Alignments, origin, progress),
+                    PipeAlignmentOutputMode.Adaptive => ToStraight(straightResult = _straightRepo.PlaceAlong(loaded.Alignments, Require(request.StraightFamilyTypeName, "직관 패밀리"), request.IntervalMm / 1000d, origin, settings.StraightPipes, bendPlan?.Plans.Select(x => x.Trims).ToList(), request.StraightDiameterParameterName, request.StraightOuterDiameterParameterName, request.StraightThicknessParameterName, infoContext, progress), bendWarnings),
                     PipeAlignmentOutputMode.PipingSystem => (_pipeRepo.PlaceAlong(loaded.Alignments, Require(request.PipingSystemTypeName, "파이프 시스템 유형"), Require(request.PipeTypeName, "PipeType"), request.LevelName, request.IntervalMm / 1000d, origin), 0, (IReadOnlyList<string>)Array.Empty<string>()),
                     _ => throw new ArgumentOutOfRangeException(nameof(request.OutputMode))
                 };
-                var bendResult = request.OutputMode == PipeAlignmentOutputMode.Adaptive && bendPlan is not null
-                    ? PlaceBendFittings(bendPlan, loaded.Alignments, origin, request, infoContext)
-                    : new AdaptiveBendPlacementResult(0, Array.Empty<string>());
-                _transaction.Commit();
+                AdaptiveBendPlacementResult bendResult;
+                using (PlacementProfiler.Step("07 곡관 배치 전체"))
+                    bendResult = request.OutputMode == PipeAlignmentOutputMode.Adaptive && bendPlan is not null
+                        ? PlaceBendFittings(bendPlan, loaded.Alignments, origin, request, infoContext, progress)
+                        : new AdaptiveBendPlacementResult(0, Array.Empty<string>());
+                progress?.Report(new PipeAlignmentProgress(PipeAlignmentPhase.Committing, 0, 0));
+                using (PlacementProfiler.Step("09 트랜잭션 Commit")) _transaction.Commit();
                 return new PipeAlignmentModelingResult(request.OutputMode, count, skipped, loaded.Warnings.Concat(elevationWarnings).Concat(repoWarnings).Concat(bendResult.Warnings).Concat(FindOuterDiameterMismatches(straightResult, bendResult)).ToList(), bendResult.Count);
             }
             catch { _transaction.Rollback(); throw; }
@@ -131,7 +166,7 @@ public sealed class ModelPipeAlignmentUseCase
     }
 
     /// <summary>선택한 단일 패밀리·타입으로 모든 5점 가변 곡관을 배치한다.</summary>
-    private AdaptiveBendPlacementResult PlaceBendFittings(BendTrimPlan plan, IReadOnlyList<PipeAlignment> alignments, AlignmentPlacementOrigin origin, PipeAlignmentModelingRequest request, PipeInfoParameterContext infoContext)
+    private AdaptiveBendPlacementResult PlaceBendFittings(BendTrimPlan plan, IReadOnlyList<PipeAlignment> alignments, AlignmentPlacementOrigin origin, PipeAlignmentModelingRequest request, PipeInfoParameterContext infoContext, IProgress<PipeAlignmentProgress>? progress)
     {
         if (plan.Placements.Count == 0) return new AdaptiveBendPlacementResult(0, Array.Empty<string>());
         var (familyName, typeName) = ParseFamilyType(request.BendFamilyTypeName);
@@ -155,7 +190,7 @@ public sealed class ModelPipeAlignmentUseCase
                 x.DeflectionDeg, x.AngleDeg, x.EffectiveAllowableDeg, x.ResidualDeg, x.CenterlineRadiusMm, x.LayingLengthMm,
                 x.Form, x.WeightKg);
         }).ToList();
-        var result = _adaptiveBendRepo.Place(bendPlans, origin, infoContext);
+        var result = _adaptiveBendRepo.Place(bendPlans, origin, infoContext, progress);
         if (outerDiameterFallbacks.Count == 0) return result;
         // 다른 관종 값을 대신 쓴 것이므로 조용히 넘어가지 않고 어떤 관종에서 가져왔는지 알린다.
         var fallbackNotice = $"직관 제원표에 없는 관종/DN {outerDiameterFallbacks.Count}건은 같은 DN의 다른 관종 외경으로 곡관을 배치했습니다(외경은 관종과 무관합니다): "
@@ -175,8 +210,8 @@ public sealed class ModelPipeAlignmentUseCase
         return (familyTypeName[..separator], familyTypeName[(separator + 3)..]);
     }
 
-    private (int Count, int Skipped, IReadOnlyList<string> Warnings) ToDirectShape(IReadOnlyList<PipeAlignment> alignments, AlignmentPlacementOrigin origin)
-    { var result = _alignmentRepo.Create(new PipeAlignmentCreateDefinition(alignments, origin)); return (result.CreatedCount, result.SkippedSegments, result.Warnings); }
+    private (int Count, int Skipped, IReadOnlyList<string> Warnings) ToDirectShape(IReadOnlyList<PipeAlignment> alignments, AlignmentPlacementOrigin origin, IProgress<PipeAlignmentProgress>? progress)
+    { var result = _alignmentRepo.Create(new PipeAlignmentCreateDefinition(alignments, origin), progress); return (result.CreatedCount, result.SkippedSegments, result.Warnings); }
     private static IReadOnlyList<string> GetElevationWarnings(IReadOnlyList<PipeAlignment> alignments, PipeAlignmentModelingRequest request, StraightPipeSpecTable specs)
     {
         var missing = alignments

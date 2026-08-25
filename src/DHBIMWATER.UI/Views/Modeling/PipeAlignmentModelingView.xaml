@@ -27,7 +27,7 @@
         </Grid.RowDefinitions>
         <controls:TitleBar/>
         <Border Grid.Row="1" Background="White" CornerRadius="15" Margin="20,12" Padding="18">
-            <TabControl Style="{StaticResource PrimaryTabControlStyle}" SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
+            <TabControl Style="{StaticResource PrimaryTabControlStyle}" SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}" IsEnabled="{Binding IsInputEnabled, Mode=OneWay}">
                 <TabItem Header="입력·기준점">
                     <Grid Margin="8">
                         <Grid.RowDefinitions>
@@ -279,6 +279,7 @@
                         </Grid.RowDefinitions>
                         <TextBlock TextWrapping="Wrap" Margin="0,0,0,10" Text="선형(레코드)마다 진행 방향을 지정합니다. [반전]을 체크하면 정점 순서가 뒤집혀 시작점과 끝점이 서로 바뀝니다(좌표값 자체는 변하지 않습니다). Ctrl·Shift로 여러 행을 선택한 뒤 그중 한 행의 [반전]을 클릭하면 선택한 행 전체가 같은 값이 됩니다. 진단과 모델링 모두 여기서 지정한 방향을 사용합니다."/>
                         <DataGrid Grid.Row="1" ItemsSource="{Binding DirectionRows, Mode=OneWay}" SelectionMode="Extended" AutoGenerateColumns="False" CanUserAddRows="False"
+                                  MaxHeight="400" VerticalAlignment="Top" VerticalScrollBarVisibility="Auto"
                                   PreviewMouseLeftButtonDown="DirectionGrid_OnPreviewMouseLeftButtonDown">
                             <DataGrid.RowStyle>
                                 <Style TargetType="DataGridRow">
@@ -339,9 +340,41 @@
                 </TabItem>
             </TabControl>
         </Border>
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="20,0,20,16">
-            <Button Content="취소" Style="{StaticResource CancelButtonStyle}" Command="{Binding CancelCommand}" Margin="0,0,8,0"/>
-            <Button Content="모델 생성" Style="{StaticResource PrimaryButtonStyle}" Command="{Binding CreateCommand}"/>
-        </StackPanel>
+        <Grid Grid.Row="2" Margin="20,0,20,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Margin="0,0,20,0">
+                <StackPanel Visibility="{Binding IsBusy, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                    <Grid Margin="0,0,0,5">
+                        <TextBlock Text="{Binding PhaseText, Mode=OneWay}" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding ProgressDetail, Mode=OneWay}" HorizontalAlignment="Right" Foreground="#52606A"/>
+                    </Grid>
+                    <ProgressBar Style="{StaticResource PrimaryProgressBarStyle}" Minimum="0" Maximum="100"
+                                 Value="{Binding ProgressPercent, Mode=OneWay}"/>
+                </StackPanel>
+                <Border Margin="0,8,0,0" Padding="10" Background="#FFF8E8" CornerRadius="6"
+                        Visibility="{Binding HasResult, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding ResultSummary, Mode=OneWay}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                        <ScrollViewer MaxHeight="110" Margin="0,6,0,0" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding ResultWarnings, Mode=OneWay}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Mode=OneWay}" Foreground="#B26B00" TextWrapping="Wrap" Margin="0,2"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom">
+                <Button Content="닫기" Style="{StaticResource CancelButtonStyle}" Command="{Binding CancelCommand}" Margin="0,0,8,0"/>
+                <Button Content="모델 생성" Style="{StaticResource PrimaryButtonStyle}" Command="{Binding CreateCommand}"
+                        IsEnabled="{Binding IsInputEnabled, Mode=OneWay}"/>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Window>

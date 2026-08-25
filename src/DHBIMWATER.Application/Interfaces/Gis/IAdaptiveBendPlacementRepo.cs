@@ -9,7 +9,7 @@ public interface IAdaptiveBendPlacementRepo
     /// (곡관은 Beam 모드 전용이라 인접 요소에 MEP Connector가 없다 — 사용자 결정 2026-08-11).
     /// Transaction은 호출부(UseCase)가 관리한다.
     /// </summary>
-    AdaptiveBendPlacementResult Place(IReadOnlyList<AdaptiveBendPlacementPlan> plans, AlignmentPlacementOrigin origin, PipeInfoParameterContext? info = null);
+    AdaptiveBendPlacementResult Place(IReadOnlyList<AdaptiveBendPlacementPlan> plans, AlignmentPlacementOrigin origin, PipeInfoParameterContext? info = null, IProgress<PipeAlignmentProgress>? progress = null);
 
     /// <summary>
     /// 카탈로그가 가리키는 (Family, Type) 중 현재 문서에 로드돼 있지 않은 것만 골라 돌려준다. 읽기 전용이라

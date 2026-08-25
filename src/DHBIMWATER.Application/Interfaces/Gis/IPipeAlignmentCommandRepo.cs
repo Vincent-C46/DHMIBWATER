@@ -4,5 +4,5 @@ namespace DHBIMWATER.Application.Interfaces.Gis;
 
 public interface IPipeAlignmentCommandRepo
 {
-    PipeAlignmentCreateResult Create(PipeAlignmentCreateDefinition definition);
+    PipeAlignmentCreateResult Create(PipeAlignmentCreateDefinition definition, IProgress<PipeAlignmentProgress>? progress = null);
 }

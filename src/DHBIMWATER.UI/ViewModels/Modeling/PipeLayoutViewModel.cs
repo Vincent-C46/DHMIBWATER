@@ -81,8 +81,7 @@ public sealed class PipeLayoutViewModel : ViewModelBase
     public ObservableCollection<InlineFittingItem> InlineFittings { get; }
     /// <summary>선택된 카테고리(배관 밸브류/일반모델)에 로드된 패밀리 목록. "패밀리명 : 타입명" 형식.</summary>
     public ObservableCollection<string> FamilyTypeNames { get; }
-    /// <summary>직관·단관·곡관·T형 콤보의 공용 소스. <see cref="FamilyTypeNames"/>와 같은 배관 밸브류 목록이지만,
-    /// 인라인 밸브 선택(클릭-배치 모드 진입)과 섞이지 않도록 별도 컬렉션으로 둔다.</summary>
+    /// <summary>직관·단관·곡관·T형 콤보의 공용 배관 부속류 목록.</summary>
     public ObservableCollection<string> SegmentFamilyTypeNames { get; }
     /// <summary>선택된 단관 패밀리의 인스턴스 파라미터 후보.</summary>
     public ObservableCollection<string> ShortLengthParameterNames { get; }
@@ -545,21 +544,23 @@ public sealed class PipeLayoutViewModel : ViewModelBase
         Status = "선택한 배관을 삭제했습니다.";
     }
 
-    /// <summary>배관부속(Pipe Accessory) 패밀리를 전부 보여준다. 인라인 밸브 목록과 직관·단관·절점부속 콤보가 같은 소스를 쓴다.</summary>
+    /// <summary>인라인 밸브는 배관 밸브류, 직관·단관·절점부속은 배관 부속류 패밀리를 보여준다.</summary>
     private void RefreshFamilyTypeNames()
     {
-        var names = _typeRepo.GetPipeAccessoryTypeNames().ToList();
+        var accessoryNames = _typeRepo.GetPipeAccessoryTypeNames().ToList();   // 인라인 밸브류
+        var fittingNames = _typeRepo.GetPipeFittingTypeNames().ToList();       // 직관·단관·곡관·T형
         FamilyTypeNames.Clear();
         SegmentFamilyTypeNames.Clear();
-        foreach (var name in names) { FamilyTypeNames.Add(name); SegmentFamilyTypeNames.Add(name); }
+        foreach (var name in accessoryNames) FamilyTypeNames.Add(name);
+        foreach (var name in fittingNames) SegmentFamilyTypeNames.Add(name);
         SelectedFamilyTypeName = null;
 
         // 이름으로 기본값을 추정한다. 못 찾으면 비워 두고 검증에서 선택을 요구한다.
-        _straightFamilyTypeName ??= GuessFamily(names, "직관");
-        _shortFamilyTypeName ??= GuessFamily(names, "단관");
-        _bend90FamilyTypeName ??= GuessFamily(names, "90");
-        _bend45FamilyTypeName ??= GuessFamily(names, "45");
-        _teeFamilyTypeName ??= GuessFamily(names, "T형", "티", "TEE");
+        _straightFamilyTypeName ??= GuessFamily(fittingNames, "직관");
+        _shortFamilyTypeName ??= GuessFamily(fittingNames, "단관");
+        _bend90FamilyTypeName ??= GuessFamily(fittingNames, "90");
+        _bend45FamilyTypeName ??= GuessFamily(fittingNames, "45");
+        _teeFamilyTypeName ??= GuessFamily(fittingNames, "T형", "티", "TEE");
         OnPropertyChanged(nameof(StraightFamilyTypeName));
         OnPropertyChanged(nameof(ShortFamilyTypeName));
         OnPropertyChanged(nameof(Bend90FamilyTypeName));

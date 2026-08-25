@@ -23,8 +23,11 @@ namespace DHBIMWATER.Application.Interfaces
         IEnumerable<string> GetLevelNames();
         /// <summary>프로젝트에 로드된 배관부속(Pipe Accessory) 패밀리의 타입명 목록. "패밀리명 : 타입명" 형식으로 반환한다.</summary>
         IEnumerable<string> GetPipeAccessoryTypeNames();
+        /// <summary>프로젝트에 로드된 배관 부속류(Pipe Fitting) 패밀리의 타입명 목록. "패밀리명 : 타입명" 형식으로 반환한다.
+        /// PipeLayout의 직관·단관·곡관·T형 콤보 소스로 쓴다.</summary>
+        IEnumerable<string> GetPipeFittingTypeNames();
         /// <summary>배관부속 familyTypeName("패밀리명 : 타입명") 인스턴스에 값을 쓸 수 있는 파라미터명 목록.
-        /// PipeLayout의 단관 길이 파라미터 후보로 쓴다.</summary>
+        /// PipeLayout의 단관 길이 파라미터 후보로 쓰며 카테고리와 무관하게 동작한다.</summary>
         IEnumerable<string> GetPipeAccessoryInstanceParameterNames(string familyTypeName);
         /// <summary>프로젝트에 로드된 일반모델(Generic Model) 패밀리의 타입명 목록. "패밀리명 : 타입명" 형식으로 반환한다.</summary>
         IEnumerable<string> GetGenericModelTypeNames();

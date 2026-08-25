@@ -1,7 +1,9 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using DHBIMWATER.Application.DependencyInjection;
+using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Infrastructure.DependencyInjection;
+using DHBIMWATER.Revit.Commands;
 using DHBIMWATER.UI.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -24,6 +26,7 @@ namespace DHBIMWATER.Revit.DependencyInjection
 
             // 사용자 피킹(Selection)이 필요한 Repository용 — Document와 동일하게 람다로 지연 해석한다.
             services.AddSingleton<Func<UIDocument?>>(() => uiApp.ActiveUIDocument);
+            services.AddSingleton<IRevitDispatcher, RevitDispatcher>();
 
             // Revit 관련 서비스 등록
             services.AddUIServices();                   // UI View/ViewModel
