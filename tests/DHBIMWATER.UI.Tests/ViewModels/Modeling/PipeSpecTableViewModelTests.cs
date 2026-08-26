@@ -149,9 +149,10 @@ public sealed class PipeSpecTableViewModelTests
 
     private sealed class StubTransaction : ITransactionContext
     {
-        public void Begin(string name) { }
+        public void Begin(string name, bool suppressWarnings = false) { }
         public void Commit() { }
         public void Rollback() { }
+        public IReadOnlyList<string> SuppressedWarnings => Array.Empty<string>();
         public void Dispose() { }
     }
 

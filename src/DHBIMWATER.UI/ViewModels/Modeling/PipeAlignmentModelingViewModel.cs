@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Windows.Input;
 using DHBIMWATER.Application.DTOs.Gis;
 using DHBIMWATER.Application.Gis;
@@ -99,6 +100,10 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
     private bool _isBusy, _hasResult;
     private double _progressPercent;
     private string _phaseText = string.Empty, _progressDetail = string.Empty, _resultSummary = string.Empty;
+    private readonly Stopwatch _phaseStopwatch = new();
+    private PipeAlignmentPhase? _phaseTrackedPhase;
+    private int _phaseStartCompleted;
+    private const int MinEtaSampleCount = 5;
 
     public PipeAlignmentModelingViewModel(IFileDialogService fileDialog, IDialogService dialog, IEnumerable<IAlignmentSourceReader> readers,
         IElementTypeQueryRepo typeRepo, ILevelQueryRepo levelRepo, AnalyzePipeNetworkUseCase analyze, BendSettingsProvider settingsProvider, SaveBendSettingsUseCase save, IBendSettingsFileStore settingsFileStore, IExcelAlignmentSourceReader excelReader, IProjectLocationQueryRepo projectLocationQuery, IRevitDispatcher revit)
@@ -557,7 +562,36 @@ public sealed class PipeAlignmentModelingViewModel : ViewModelBase
             PipeAlignmentPhase.Committing => "모델 저장 중",
             _ => "모델링 중"
         };
-        ProgressDetail = progress.Total > 0 ? $"{progress.Completed:N0} / {progress.Total:N0}개" : string.Empty;
+        if (_phaseTrackedPhase != progress.Phase)
+        {
+            _phaseTrackedPhase = progress.Phase;
+            _phaseStartCompleted = progress.Completed;
+            _phaseStopwatch.Restart();
+        }
+        ProgressDetail = progress.Total > 0 ? $"{progress.Completed:N0} / {progress.Total:N0}개{EstimateRemainingText(progress)}" : string.Empty;
+    }
+
+    /// <summary>
+    /// 같은 페이즈 안에서 지금까지의 처리율(경과시간 / 처리개수)로 남은 개수의 소요시간을 추정한다.
+    /// 페이즈가 바뀌면(직관→곡관 등) ApplyProgress에서 스톱워치를 리셋하므로, 페이즈별 처리속도 차이(직관 ~150ms/개, 곡관 ~2,200ms/개)가
+    /// 서로 섞여 왜곡되지 않는다. 표본이 너무 적을 때(페이즈 진입 직후)는 노이즈가 커서 "계산 중"으로 표시한다.
+    /// </summary>
+    private string EstimateRemainingText(PipeAlignmentProgress progress)
+    {
+        var done = progress.Completed - _phaseStartCompleted;
+        if (done < MinEtaSampleCount) return " · 계산 중…";
+        var remainingCount = progress.Total - progress.Completed;
+        if (remainingCount <= 0) return string.Empty;
+        var secondsPerItem = _phaseStopwatch.Elapsed.TotalSeconds / done;
+        var remaining = TimeSpan.FromSeconds(secondsPerItem * remainingCount);
+        return $" · 약 {FormatRemaining(remaining)} 남음";
+    }
+
+    private static string FormatRemaining(TimeSpan remaining)
+    {
+        if (remaining.TotalMinutes < 1) return $"{Math.Max(1, (int)remaining.TotalSeconds)}초";
+        if (remaining.TotalHours < 1) return $"{(int)remaining.TotalMinutes}분 {remaining.Seconds}초";
+        return $"{(int)remaining.TotalHours}시간 {remaining.Minutes}분";
     }
 
     public void ApplyResult(PipeAlignmentModelingResult result)

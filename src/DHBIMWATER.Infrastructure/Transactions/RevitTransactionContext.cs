@@ -1,6 +1,7 @@
 ﻿using Autodesk.Revit.DB;
 using DHBIMWATER.Application.Interfaces;
 using System;
+using System.Collections.Generic;
 
 namespace DHBIMWATER.Infrastructure.Transactions
 
@@ -10,6 +11,7 @@ namespace DHBIMWATER.Infrastructure.Transactions
         #region Fields
         private readonly Func<Document?> _doc;
         private Transaction? _tx;
+        private SuppressWarningFailuresPreprocessor? _warningPreprocessor;
         #endregion
 
         #region Properties
@@ -23,7 +25,7 @@ namespace DHBIMWATER.Infrastructure.Transactions
         #endregion
 
         #region Properties
-        public void Begin(string name)
+        public void Begin(string name, bool suppressWarnings = false)
         {
             var doc = _doc();
             if (doc == null)
@@ -32,8 +34,17 @@ namespace DHBIMWATER.Infrastructure.Transactions
             if(_tx != null) throw new InvalidOperationException("이미 트랜잭션이 시작되었습니다.");
 
             _tx = new Transaction(doc, name);
+            if (suppressWarnings)
+            {
+                _warningPreprocessor = new SuppressWarningFailuresPreprocessor();
+                var options = _tx.GetFailureHandlingOptions();
+                options.SetFailuresPreprocessor(_warningPreprocessor);
+                _tx.SetFailureHandlingOptions(options);
+            }
             _tx.Start();
         }
+
+        public IReadOnlyList<string> SuppressedWarnings => _warningPreprocessor is null ? Array.Empty<string>() : _warningPreprocessor.Messages;
 
         public void Commit()
         {

@@ -22,10 +22,12 @@ namespace DHBIMWATER.Infrastructure.Transactions
         #endregion
 
         #region Methods
-        public void Begin(string name)
+        public void Begin(string name, bool suppressWarnings = false)
         {
             MessageBox.Show($"트랜잭션 시작: {name}", "MockTransactionContext");
         }
+
+        public IReadOnlyList<string> SuppressedWarnings => Array.Empty<string>();
 
         public void Commit()
         {

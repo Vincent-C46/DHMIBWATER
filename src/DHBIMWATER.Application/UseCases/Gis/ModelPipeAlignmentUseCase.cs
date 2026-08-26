@@ -84,7 +84,7 @@ public sealed class ModelPipeAlignmentUseCase
         {
             try
             {
-                _transaction.Begin(request.OutputMode == PipeAlignmentOutputMode.DirectShape ? "Import Pipe Alignment" : "선형 패밀리 배치");
+                _transaction.Begin(request.OutputMode == PipeAlignmentOutputMode.DirectShape ? "Import Pipe Alignment" : "선형 패밀리 배치", suppressWarnings: true);
                 using (PlacementProfiler.Step("04 공유 매개변수 확보"))
                 {
                     if (request.OutputMode == PipeAlignmentOutputMode.DirectShape) _sharedParameterRepo.EnsureParameters(GetAlignmentParameterDefinitions());
@@ -114,7 +114,11 @@ public sealed class ModelPipeAlignmentUseCase
                         : new AdaptiveBendPlacementResult(0, Array.Empty<string>());
                 progress?.Report(new PipeAlignmentProgress(PipeAlignmentPhase.Committing, 0, 0));
                 using (PlacementProfiler.Step("09 트랜잭션 Commit")) _transaction.Commit();
-                return new PipeAlignmentModelingResult(request.OutputMode, count, skipped, loaded.Warnings.Concat(elevationWarnings).Concat(repoWarnings).Concat(bendResult.Warnings).Concat(FindOuterDiameterMismatches(straightResult, bendResult)).ToList(), bendResult.Count);
+                var suppressedWarningSummary = SummarizeSuppressedWarnings(_transaction.SuppressedWarnings);
+                return new PipeAlignmentModelingResult(request.OutputMode, count, skipped,
+                    loaded.Warnings.Concat(elevationWarnings).Concat(repoWarnings).Concat(bendResult.Warnings)
+                        .Concat(FindOuterDiameterMismatches(straightResult, bendResult)).Concat(suppressedWarningSummary).ToList(),
+                    bendResult.Count);
             }
             catch { _transaction.Rollback(); throw; }
         }
@@ -239,6 +243,14 @@ public sealed class ModelPipeAlignmentUseCase
             .Select(x => $"{x.Key.PipeKind}/DN{x.Key.DiameterMm:0.##}: 직관 {straight.OuterDiametersMm[x.Key]:0.##}mm, 곡관 {x.Value:0.##}mm")
             .ToList();
         return mismatches.Count == 0 ? Array.Empty<string>() : new[] { $"직관과 곡관에 기록한 OD가 다른 관종/DN {mismatches.Count}건: {string.Join(", ", mismatches)}" };
+    }
+    /// <summary>같은 경고 문구가 요소마다 반복되므로(예: "짧은 곡선 요소") 문구별 건수로 묶어 한 줄씩만 보여준다.</summary>
+    private static IReadOnlyList<string> SummarizeSuppressedWarnings(IReadOnlyList<string> messages)
+    {
+        if (messages.Count == 0) return Array.Empty<string>();
+        var grouped = messages.GroupBy(x => x).OrderByDescending(x => x.Count());
+        return new[] { $"Revit 경고 {messages.Count}건을 자동으로 무시하고 배치를 계속했습니다: "
+            + string.Join(", ", grouped.Select(x => $"{x.Key} {x.Count()}건")) };
     }
     private static string Require(string? value, string name) => !string.IsNullOrWhiteSpace(value) ? value : throw new InvalidOperationException($"{name}을 선택하세요.");
     private static IReadOnlyList<SharedParameterDefinition> GetAlignmentParameterDefinitions() => new List<SharedParameterDefinition>
