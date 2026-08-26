@@ -22,7 +22,9 @@ public sealed record PipeSegmentFamilySelection(
     string BendFamilyTypeName,
     string TeeFamilyTypeName,
     /// <summary>직관 1본의 정척 길이(mm). 패밀리 수식의 직관/단관 분기 기준과 같아야 한다.</summary>
-    double StraightLengthMm = PipeSegmentPlan.StraightLengthMm);
+    double StraightLengthMm = PipeSegmentPlan.StraightLengthMm,
+    /// <summary>관 인스턴스에 직경(mm)을 기록할 파라미터명. 비어 있으면 직경을 구동하지 않는다.</summary>
+    string DiameterParameterName = "");
 
 public sealed record PipeNetworkDefinition(
     IReadOnlyList<PipeNodeDefinition> Nodes,

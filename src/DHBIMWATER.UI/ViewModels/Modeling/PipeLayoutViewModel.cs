@@ -32,11 +32,12 @@ public sealed class PipeLayoutViewModel : ViewModelBase
     private double _referenceX, _referenceY;
     private double _diameterMm = 100;
     private string? _selectedLevelName;
-    private string? _segmentFamilyTypeName, _lengthParameterName;
+    private string? _segmentFamilyTypeName, _lengthParameterName, _diameterParameterName;
     private double _straightLengthMm = PipeSegmentPlan.StraightLengthMm;
     private string? _bendFamilyTypeName, _teeFamilyTypeName;
     /// <summary>관 길이 파라미터를 사용자가 직접 골랐는지. true면 관 패밀리를 바꿔도 자동 추정으로 덮어쓰지 않는다.</summary>
     private bool _lengthParameterPinned;
+    private bool _diameterParameterPinned;
     private bool _isCreating;
     private int _inputValidationErrorCount;
     private bool _useAngleSnap = true, _isPreviewVisible, _snapReferencePoint = true, _snapEndpoint = true, _snapMidpoint, _snapQuadrant, _snapIntersection = true, _snapNearest = true, _isSnapMarkerVisible, _isCursorVisible;
@@ -142,7 +143,7 @@ public sealed class PipeLayoutViewModel : ViewModelBase
         set
         {
             if (!SetProperty(ref _segmentFamilyTypeName, value)) return;
-            RefreshLengthParameterNames();
+            RefreshSegmentParameterNames();
             NotifyValidationChanged();
         }
     }
@@ -153,6 +154,17 @@ public sealed class PipeLayoutViewModel : ViewModelBase
         {
             if (!SetProperty(ref _lengthParameterName, value)) return;
             _lengthParameterPinned = !string.IsNullOrWhiteSpace(value);
+            NotifyValidationChanged();
+        }
+    }
+    /// <summary>관 인스턴스에 직경(mm)을 기록할 파라미터명. 비워 두면 직경을 구동하지 않는다.</summary>
+    public string? DiameterParameterName
+    {
+        get => _diameterParameterName;
+        set
+        {
+            if (!SetProperty(ref _diameterParameterName, value)) return;
+            _diameterParameterPinned = !string.IsNullOrWhiteSpace(value);
             NotifyValidationChanged();
         }
     }
@@ -225,7 +237,9 @@ public sealed class PipeLayoutViewModel : ViewModelBase
         {
             if (_mode == value) return;
             if (value != PipeLayoutMode.Drawing && IsDrawing) CancelDrawing();
+            if (value != PipeLayoutMode.Selection) { SelectedEdge = null; SelectedFitting = null; }
             _mode = value;
+            RefreshGraph();
             OnPropertyChanged(nameof(Mode));
             OnPropertyChanged(nameof(IsSelectionMode));
             OnPropertyChanged(nameof(IsDrawMode));
@@ -740,6 +754,7 @@ public sealed class PipeLayoutViewModel : ViewModelBase
     }
     public void SelectEdge(Guid edgeId)
     {
+        if (!IsSelectionMode) return;
         SelectedEdge = Edges.FirstOrDefault(x => x.Id == edgeId);
         SelectedFitting = null;
         RefreshGraph();
@@ -800,14 +815,14 @@ public sealed class PipeLayoutViewModel : ViewModelBase
         OnPropertyChanged(nameof(SegmentFamilyTypeName));
         OnPropertyChanged(nameof(BendFamilyTypeName));
         OnPropertyChanged(nameof(TeeFamilyTypeName));
-        RefreshLengthParameterNames();
+        RefreshSegmentParameterNames();
     }
 
     private static string? GuessFamily(IReadOnlyList<string> names, params string[] keywords)
         => names.FirstOrDefault(name => keywords.Any(k => name.Contains(k, StringComparison.OrdinalIgnoreCase)));
 
-    /// <summary>선택된 관 패밀리의 인스턴스 파라미터를 다시 읽고, 사용자가 직접 고르지 않았다면 길이형 이름을 자동 추정한다.</summary>
-    private void RefreshLengthParameterNames()
+    /// <summary>선택된 관 패밀리의 인스턴스 파라미터를 다시 읽고, 사용자가 직접 고르지 않은 길이·직경 이름을 자동 추정한다.</summary>
+    private void RefreshSegmentParameterNames()
     {
         LengthParameterNames.Clear();
         // TODO: 실제로는 카테고리 공통 조회이므로 인터페이스 메서드명을 별도 작업에서 일반화한다.
@@ -817,13 +832,25 @@ public sealed class PipeLayoutViewModel : ViewModelBase
         foreach (var name in names) LengthParameterNames.Add(name);
 
         // 사용자가 고른 값이 새 패밀리에도 있으면 그대로 둔다.
-        if (_lengthParameterPinned && _lengthParameterName is not null && names.Contains(_lengthParameterName)) return;
+        if (!(_lengthParameterPinned && _lengthParameterName is not null && names.Contains(_lengthParameterName)))
+        {
+            _lengthParameterName = names.FirstOrDefault(x => x.Contains("길이", StringComparison.Ordinal))
+                ?? names.FirstOrDefault(x => x.Contains("Length", StringComparison.OrdinalIgnoreCase))
+                ?? names.FirstOrDefault(x => string.Equals(x, "L", StringComparison.OrdinalIgnoreCase));
+            _lengthParameterPinned = false;
+            OnPropertyChanged(nameof(LengthParameterName));
+        }
 
-        _lengthParameterName = names.FirstOrDefault(x => x.Contains("길이", StringComparison.Ordinal))
-            ?? names.FirstOrDefault(x => x.Contains("Length", StringComparison.OrdinalIgnoreCase))
-            ?? names.FirstOrDefault(x => string.Equals(x, "L", StringComparison.OrdinalIgnoreCase));
-        _lengthParameterPinned = false;
-        OnPropertyChanged(nameof(LengthParameterName));
+        if (!(_diameterParameterPinned && _diameterParameterName is not null && names.Contains(_diameterParameterName)))
+        {
+            _diameterParameterName = names.FirstOrDefault(x => x.Contains("직경", StringComparison.Ordinal))
+                ?? names.FirstOrDefault(x => x.Contains("지름", StringComparison.Ordinal))
+                ?? names.FirstOrDefault(x => x.Contains("호칭", StringComparison.Ordinal))
+                ?? names.FirstOrDefault(x => x.Contains("Diameter", StringComparison.OrdinalIgnoreCase))
+                ?? names.FirstOrDefault(x => string.Equals(x, "DN", StringComparison.OrdinalIgnoreCase));
+            _diameterParameterPinned = false;
+            OnPropertyChanged(nameof(DiameterParameterName));
+        }
     }
 
     private void RemoveFitting(InlineFittingItem? fitting)
@@ -953,7 +980,7 @@ public sealed class PipeLayoutViewModel : ViewModelBase
                 new PipeSegmentFamilySelection(
                     SegmentFamilyTypeName!, LengthParameterName!,
                     BendFamilyTypeName ?? "", TeeFamilyTypeName ?? "",
-                    StraightLengthMm)));
+                    StraightLengthMm, DiameterParameterName ?? "")));
             Status = "Revit에서 직관·단관을 배치하고 있습니다…";
         }
         catch (Exception ex)

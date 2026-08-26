@@ -73,7 +73,11 @@ internal sealed class RevitPipeSegmentCommandRepo : IPipeCommandRepo
                 // 직관·단관이 같은 패밀리이므로 길이 구동과 검증 경로도 하나다.
                 // 직관/단관 구분은 패밀리 내부 수식이 정척 길이로 판정하며, 여기서는 집계에만 쓴다.
                 var role = placement.Kind == PipeSegmentKind.Straight ? "직관" : "단관";
-                SetLengthMm(instance, families.LengthParameterName, placement.LengthMm);
+                // 직경을 먼저 구동한다. 직경이 형상을 바꾸는 패밀리에서, 뒤따르는 길이 구동·커넥터 실측(RecenterOnConnectors,
+                // ValidateCenteredSpan)이 최종 형상 기준으로 이뤄져야 하기 때문이다.
+                if (!string.IsNullOrWhiteSpace(families.DiameterParameterName))
+                    SetDoubleParameterMm(instance, families.DiameterParameterName, network.DiameterMm, "관 직경");
+                SetDoubleParameterMm(instance, families.LengthParameterName, placement.LengthMm, "관 길이");
                 document.Regenerate();
                 // 길이 파라미터가 한쪽 끝 기준으로 성장하는 패밀리는 커넥터 중앙이 원점에서 벗어난다.
                 // 원점 규칙을 패밀리에 요구하는 대신, 실측한 중앙을 요청 중앙에 맞춰 통째로 옮긴다.
@@ -301,14 +305,14 @@ internal sealed class RevitPipeSegmentCommandRepo : IPipeCommandRepo
         return instance;
     }
 
-    private static void SetLengthMm(FamilyInstance instance, string parameterName, double lengthMm)
+    private static void SetDoubleParameterMm(FamilyInstance instance, string parameterName, double valueMm, string label)
     {
         var parameter = instance.LookupParameter(parameterName);
         if (parameter is null || parameter.IsReadOnly || parameter.StorageType != StorageType.Double)
             throw new InvalidOperationException(
-                $"관 길이 파라미터 '{parameterName}'에 값을 쓸 수 없습니다. 쓰기 가능한 길이형 인스턴스 파라미터인지 확인하세요.");
-        if (!parameter.Set(UC.MmToFt(lengthMm)))
-            throw new InvalidOperationException($"관 길이 파라미터 '{parameterName}' 설정에 실패했습니다.");
+                $"{label} 파라미터 '{parameterName}'에 값을 쓸 수 없습니다. 쓰기 가능한 길이형 인스턴스 파라미터인지 확인하세요.");
+        if (!parameter.Set(UC.MmToFt(valueMm)))
+            throw new InvalidOperationException($"{label} 파라미터 '{parameterName}' 설정에 실패했습니다.");
     }
 
     /// <summary>길이 구동 뒤 실제 커넥터 중앙이 요청 중앙에 오도록 인스턴스를 평행이동한다.

@@ -90,6 +90,33 @@ public sealed class PipeLayoutViewModelTests
     }
 
     [Fact]
+    public void SelectEdge_InDrawingMode_DoesNotSelectEdge()
+    {
+        var vm = CreateDrawingViewModel();
+        Draw(vm, new Point2D(0, 0), new Point2D(1000, 0));
+        var edgeId = Assert.Single(vm.Edges).Id;
+
+        vm.SelectEdge(edgeId);
+
+        Assert.Null(vm.SelectedEdge);
+    }
+
+    [Fact]
+    public void SwitchingToDrawingMode_ClearsSelectedEdge()
+    {
+        var vm = CreateDrawingViewModel();
+        Draw(vm, new Point2D(0, 0), new Point2D(1000, 0));
+        var edgeId = Assert.Single(vm.Edges).Id;
+        vm.Mode = PipeLayoutMode.Selection;
+        vm.SelectEdge(edgeId);
+        Assert.NotNull(vm.SelectedEdge);
+
+        vm.Mode = PipeLayoutMode.Drawing;
+
+        Assert.Null(vm.SelectedEdge);
+    }
+
+    [Fact]
     public void HandleCanvasClick_InSelectionMode_DoesNotStartDrawing()
     {
         var vm = CreateDrawingViewModel();
@@ -383,6 +410,42 @@ public sealed class PipeLayoutViewModelTests
         Assert.Equal("곡관90 : DN100", vm.BendFamilyTypeName);
         Assert.Equal("T형 : DN100", vm.TeeFamilyTypeName);
         Assert.Equal("길이", vm.LengthParameterName);
+        Assert.Equal("DN", vm.DiameterParameterName);
+    }
+
+    [Fact]
+    public void DiameterParameterName_IsNull_WhenNoDiameterLikeParameterExists()
+    {
+        var vm = new PipeLayoutViewModel(new StubElementTypeQueryRepo(["길이"]));
+
+        Assert.Null(vm.DiameterParameterName);
+    }
+
+    [Fact]
+    public void CreateModelCommand_PassesSelectedDiameterParameter()
+    {
+        var vm = CreateDrawingViewModel();
+        Draw(vm, new Point2D(0, 0), new Point2D(1000, 0));
+        vm.DiameterParameterName = "DN";
+        PipeNetworkDefinition? request = null;
+        vm.CreateModelAction = value => request = value;
+
+        vm.CreateModelCommand.Execute(null);
+
+        Assert.Equal("DN", request!.SegmentFamilies!.DiameterParameterName);
+    }
+
+    [Fact]
+    public void MissingDiameterParameter_DoesNotBlockModelCreation()
+    {
+        var vm = CreateDrawingViewModel();
+        Draw(vm, new Point2D(0, 0), new Point2D(1000, 0));
+        vm.CreateModelAction = _ => { };
+
+        vm.DiameterParameterName = null;
+
+        Assert.True(vm.CreateModelCommand.CanExecute(null));
+        Assert.DoesNotContain("직경 파라미터", vm.ValidationSummary);
     }
 
     [Fact]
@@ -534,6 +597,11 @@ public sealed class PipeLayoutViewModelTests
 
     private sealed class StubElementTypeQueryRepo : IElementTypeQueryRepo
     {
+        private readonly IReadOnlyList<string> _segmentParameterNames;
+
+        public StubElementTypeQueryRepo(IEnumerable<string>? segmentParameterNames = null)
+            => _segmentParameterNames = segmentParameterNames?.ToList() ?? ["길이", "DN"];
+
         public IEnumerable<string> GetSlabTypeNames() => [];
         public IEnumerable<string> GetWallTypeNames() => [];
         public IEnumerable<string> GetColumnTypeNames() => [];
@@ -547,7 +615,7 @@ public sealed class PipeLayoutViewModelTests
         public IEnumerable<string> GetPipeAccessoryTypeNames() => ["밸브 : DN100"];
         public IEnumerable<string> GetPipeFittingTypeNames() =>
             ["직관 : DN100", "단관 : DN100", "곡관90 : DN100", "곡관45 : DN100", "T형 : DN100"];
-        public IEnumerable<string> GetPipeAccessoryInstanceParameterNames(string familyTypeName) => ["길이", "DN"];
+        public IEnumerable<string> GetPipeAccessoryInstanceParameterNames(string familyTypeName) => _segmentParameterNames;
         public IEnumerable<string> GetGenericModelTypeNames() => [];
         public IEnumerable<string> GetFoundationTypeNames() => [];
         public IEnumerable<string> GetBeamInstanceParameterNames(string beamTypeName) => [];

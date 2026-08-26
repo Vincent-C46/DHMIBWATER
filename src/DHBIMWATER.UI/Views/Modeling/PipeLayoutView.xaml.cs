@@ -55,9 +55,13 @@ public partial class PipeLayoutView : Window
     }
     private void OnEdgeMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        var position = e.GetPosition(LayoutCanvas);
-        if (_viewModel.IsDrawing || _viewModel.IsPlacingFitting) _viewModel.HandleCanvasClick(position);
-        else if (((FrameworkElement)sender).DataContext is PipeEdgeItem edge) _viewModel.SelectEdge(edge.Id);
+        // 선택 여부는 "지금 그리는 중인가"가 아니라 모드로 판정한다.
+        // 그리기 모드의 선 클릭은 T 접점 생성을 위해 캔버스 클릭으로 그대로 넘긴다.
+        if (_viewModel.IsSelectionMode)
+        {
+            if (((FrameworkElement)sender).DataContext is PipeEdgeItem edge) _viewModel.SelectEdge(edge.Id);
+        }
+        else _viewModel.HandleCanvasClick(e.GetPosition(LayoutCanvas));
         LayoutCanvas.Focus();
         e.Handled = true;
     }
