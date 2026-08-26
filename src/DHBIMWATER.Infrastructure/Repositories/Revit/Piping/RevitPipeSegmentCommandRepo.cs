@@ -31,7 +31,7 @@ internal sealed class RevitPipeSegmentCommandRepo : IPipeCommandRepo
             throw new InvalidOperationException("직관 정척 길이는 0보다 큰 숫자여야 합니다.");
 
         // 직관·단관은 같은 패밀리를 길이 파라미터로 구동한다. 커넥터 간 거리는 배치 시점에 결정되므로
-        // 여기서는 길이로 검증하지 않고, "2포트인가 / 원점이 커넥터 중앙인가 / 길이를 쓸 수 있는가"만 확인한다.
+        // 여기서는 길이로 검증하지 않고, "2포트인가 / 길이를 쓸 수 있는가"만 확인한다.
         ValidateSegmentSymbol(document, segment, families.LengthParameterName);
 
         var placedInstances = new List<FamilyInstance>();
@@ -75,6 +75,9 @@ internal sealed class RevitPipeSegmentCommandRepo : IPipeCommandRepo
                 var role = placement.Kind == PipeSegmentKind.Straight ? "직관" : "단관";
                 SetLengthMm(instance, families.LengthParameterName, placement.LengthMm);
                 document.Regenerate();
+                // 길이 파라미터가 한쪽 끝 기준으로 성장하는 패밀리는 커넥터 중앙이 원점에서 벗어난다.
+                // 원점 규칙을 패밀리에 요구하는 대신, 실측한 중앙을 요청 중앙에 맞춰 통째로 옮긴다.
+                RecenterOnConnectors(document, instance, center);
                 ValidateCenteredSpan(instance, center, placement.LengthMm, role);
                 if (placement.Kind == PipeSegmentKind.Straight) straightCount++; else shortCount++;
             }
@@ -140,12 +143,7 @@ internal sealed class RevitPipeSegmentCommandRepo : IPipeCommandRepo
             switch (node.NodeKind)
             {
                 case NodeKind.Elbow when legs.Count == 2:
-                    var deflection = PipeNodeAngle.Deflection(node, network.Edges);
-                    var name = PipeNodeAngle.IsRightAngle(deflection) ? families.Bend90FamilyTypeName
-                        : PipeNodeAngle.IsHalfRightAngle(deflection) ? families.Bend45FamilyTypeName
-                        : throw new InvalidOperationException(
-                            FormattableString.Invariant($"절점 꺾임각 {deflection:N1}°에 맞는 곡관 유형이 없습니다. 90° 또는 45°로 그리세요."));
-                    symbol = ResolveSymbol(document, name, "곡관");
+                    symbol = ResolveSymbol(document, families.BendFamilyTypeName, "곡관");
                     // 곡관은 두 레그의 이등분 방향을 기준으로 놓는다. 실제 각 레그 정렬은 커넥터 매칭으로 확인한다.
                     targetRotation = Bisector(legs[0], legs[1]);
                     expectedConnectors = 2;
@@ -161,7 +159,7 @@ internal sealed class RevitPipeSegmentCommandRepo : IPipeCommandRepo
                     break;
 
                 default:
-                    continue;   // Cap·Inline은 부속이 없고, Cross는 생성 전 검증에서 걸러진다.
+                    continue;   // EndPoint·Inline은 부속이 없고, Cross는 생성 전 검증에서 걸러진다.
             }
 
             var instance = PlaceAt(document, symbol, origin, 0);
@@ -274,7 +272,7 @@ internal sealed class RevitPipeSegmentCommandRepo : IPipeCommandRepo
                 throw new InvalidOperationException(
                     $"관 '{symbol.Family.Name} : {symbol.Name}'의 물리 배관 커넥터는 {connectors.Count}개입니다. " +
                     "인라인 배치에는 양쪽 끝 커넥터가 있는 2포트 패밀리가 필요합니다.");
-            ValidateConnectorMidpoint(symbol, connectors, XYZ.Zero, "관");
+            // 관 원점이 커넥터 중앙일 필요는 없다 — 길이 구동 후 RecenterOnConnectors가 실측으로 맞춘다.
 
             // 길이 파라미터를 실제로 쓸 수 있는지 배치 전에 확인한다(전체 롤백보다 이른 실패가 낫다).
             var parameter = probe.LookupParameter(lengthParameterName);
@@ -313,6 +311,18 @@ internal sealed class RevitPipeSegmentCommandRepo : IPipeCommandRepo
             throw new InvalidOperationException($"관 길이 파라미터 '{parameterName}' 설정에 실패했습니다.");
     }
 
+    /// <summary>길이 구동 뒤 실제 커넥터 중앙이 요청 중앙에 오도록 인스턴스를 평행이동한다.
+    /// 길이 치수가 중심 대칭이 아닌 패밀리(한쪽 끝 기준 성장)를 그대로 수용하기 위한 보정이다.</summary>
+    private static void RecenterOnConnectors(Document document, FamilyInstance instance, XYZ expectedCenter)
+    {
+        var connectors = GetMepConnectors(instance);
+        if (connectors.Count != 2) return;  // 커넥터 개수 오류는 ValidateCenteredSpan이 보고한다.
+        var offset = expectedCenter - (connectors[0].Origin + connectors[1].Origin) / 2;
+        if (offset.GetLength() <= UC.MmToFt(ConnectionToleranceMm) / 10) return;
+        ElementTransformUtils.MoveElement(document, instance.Id, offset);
+        document.Regenerate();
+    }
+
     private static void ValidateCenteredSpan(FamilyInstance instance, XYZ expectedCenter, double expectedLengthMm, string role)
     {
         var connectors = GetMepConnectors(instance);
@@ -341,12 +351,12 @@ internal sealed class RevitPipeSegmentCommandRepo : IPipeCommandRepo
         => UC.FtToMm(connectors[0].Origin.DistanceTo(connectors[1].Origin));
 
     /// <summary>서로 다른 패밀리의 물리 배관 커넥터가 같은 접점에 하나씩 있으면 실제 Revit 연결을 만든다.
-    /// Cap 이외의 열린 커넥터나 한 점에 3개 이상 모인 모호한 연결은 관망 단절이므로 전체 생성을 중단한다.</summary>
+    /// 관 끝점(EndPoint) 이외의 열린 커넥터나 한 점에 3개 이상 모인 모호한 연결은 관망 단절이므로 전체 생성을 중단한다.</summary>
     private static void ConnectCoincidentConnectors(
         Document document, IReadOnlyCollection<FamilyInstance> instances, PipeNetworkDefinition network)
     {
         var tolerance = UC.MmToFt(ConnectionToleranceMm);
-        var capPoints = network.Nodes.Where(x => x.NodeKind == NodeKind.Cap)
+        var endPoints = network.Nodes.Where(x => x.NodeKind == NodeKind.EndPoint)
             .Select(x => ToXyz(x.Position, network.Elevation, network.ReferencePoint)).ToList();
         var connectors = instances.SelectMany(GetMepConnectors).ToList();
         var handled = new HashSet<Connector>();
@@ -383,7 +393,7 @@ internal sealed class RevitPipeSegmentCommandRepo : IPipeCommandRepo
                     $"접점 {FormatPoint(connector.Origin)}에 연결 가능한 배관 커넥터가 {candidates.Count + 1}개 겹쳐 있습니다. " +
                     "1포트 분기 부속은 인라인 부속으로 직접 연결할 수 없습니다.");
 
-            if (capPoints.Any(x => x.DistanceTo(connector.Origin) <= tolerance))
+            if (endPoints.Any(x => x.DistanceTo(connector.Origin) <= tolerance))
             {
                 handled.Add(connector);
                 continue;

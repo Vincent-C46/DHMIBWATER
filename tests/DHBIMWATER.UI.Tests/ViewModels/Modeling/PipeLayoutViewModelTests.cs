@@ -80,6 +80,212 @@ public sealed class PipeLayoutViewModelTests
     }
 
     [Fact]
+    public void Mode_DefaultsToDrawing()
+    {
+        var vm = CreateViewModel();
+
+        Assert.Equal(PipeLayoutMode.Drawing, vm.Mode);
+        Assert.True(vm.IsDrawMode);
+        Assert.False(vm.IsSelectionMode);
+    }
+
+    [Fact]
+    public void HandleCanvasClick_InSelectionMode_DoesNotStartDrawing()
+    {
+        var vm = CreateDrawingViewModel();
+        vm.Mode = PipeLayoutMode.Selection;
+
+        vm.HandleCanvasClick(vm.Transform.ToScreen(new Point2D(1000, 1000)));
+
+        Assert.False(vm.IsDrawing);
+        Assert.Empty(vm.Edges);
+    }
+
+    [Fact]
+    public void SwitchingToSelectionMode_WhileDrawing_CancelsDrawing()
+    {
+        var vm = CreateDrawingViewModel();
+        vm.HandleCanvasClick(vm.Transform.ToScreen(new Point2D(1000, 1000)));
+        Assert.True(vm.IsDrawing);
+
+        vm.Mode = PipeLayoutMode.Selection;
+
+        Assert.False(vm.IsDrawing);
+        Assert.False(vm.IsPreviewVisible);
+        Assert.True(vm.IsSelectionMode);
+    }
+
+    [Fact]
+    public void IsPlacingFitting_IsFalseInSelectionMode_WhenFamilyRemainsSelected()
+    {
+        var vm = CreateViewModel();
+        vm.SelectedFamilyTypeName = "밸브 : DN100";
+        Assert.True(vm.IsPlacingFitting);
+
+        vm.Mode = PipeLayoutMode.Selection;
+
+        Assert.False(vm.IsPlacingFitting);
+        Assert.Equal("밸브 : DN100", vm.SelectedFamilyTypeName);
+    }
+
+    [Fact]
+    public void SelectFitting_ThenDeleteSelectedFittingCommand_RemovesIt()
+    {
+        var vm = CreateDrawingViewModel();
+        Draw(vm, new Point2D(0, 0), new Point2D(1000, 0));
+        vm.SelectedFamilyTypeName = "밸브 : DN100";
+        vm.HandleCanvasMove(vm.Transform.ToScreen(new Point2D(500, 0)));
+        vm.HandleCanvasClick(vm.Transform.ToScreen(new Point2D(500, 0)));
+        var fittingId = Assert.Single(vm.InlineFittings).Id;
+        vm.Mode = PipeLayoutMode.Selection;
+
+        vm.SelectFitting(fittingId);
+
+        Assert.Equal(fittingId, vm.SelectedFitting?.Id);
+        Assert.True(Assert.Single(vm.InlineFittings).IsSelected);
+        Assert.True(vm.DeleteSelectedFittingCommand.CanExecute(null));
+
+        vm.DeleteSelectedFittingCommand.Execute(null);
+
+        Assert.Empty(vm.InlineFittings);
+        Assert.Null(vm.SelectedFitting);
+        Assert.Equal("선택한 부속을 삭제했습니다.", vm.Status);
+    }
+
+    [Fact]
+    public void DrawingLengthLimit_WithinLimit_CreatesEdgeAtClickedPoint()
+    {
+        var vm = CreateDrawingViewModel();
+        DisableOsnap(vm);
+
+        Draw(vm, new(1000, 1000), new(4000, 1000));
+
+        var edge = Assert.Single(vm.Edges);
+        Assert.Equal(3000, edge.LengthMm, 6);
+        AssertPoint(new(4000, 1000), EdgeEnd(vm, edge));
+    }
+
+    [Fact]
+    public void DrawingLengthLimit_OverLimitWithAngleSnap_ClampsLengthAndPreservesDirection()
+    {
+        var vm = CreateDrawingViewModel();
+        DisableOsnap(vm);
+        var start = new Point2D(1000, 1000);
+        var raw = new Point2D(9000, 9000);
+        vm.HandleCanvasClick(vm.Transform.ToScreen(start));
+
+        vm.HandleCanvasMove(vm.Transform.ToScreen(raw));
+
+        Assert.Equal("정척 길이 6,000mm를 넘을 수 없어 끝점을 제한했습니다.", vm.Status);
+        Assert.Equal("6.000 m", vm.PreviewLength);
+
+        vm.HandleCanvasMove(vm.Transform.ToScreen(new Point2D(2000, 2000)));
+        Assert.Equal("끝점을 클릭하면 배관이 확정됩니다.", vm.Status);
+
+        vm.HandleCanvasClick(vm.Transform.ToScreen(raw));
+
+        var edge = Assert.Single(vm.Edges);
+        var end = EdgeEnd(vm, edge);
+        Assert.Equal(vm.StraightLengthMm, edge.LengthMm, 6);
+        Assert.Equal(end.X - start.X, end.Y - start.Y, 6);
+    }
+
+    [Fact]
+    public void DrawingLengthLimit_OverLimitWithoutAngleSnap_ClampsLengthAndPreservesDirection()
+    {
+        var vm = CreateDrawingViewModel();
+        DisableOsnap(vm);
+        vm.UseAngleSnap = false;
+        var start = new Point2D(1000, 1000);
+        var raw = new Point2D(8000, 5000);
+
+        Draw(vm, start, raw);
+
+        var edge = Assert.Single(vm.Edges);
+        var end = EdgeEnd(vm, edge);
+        Assert.Equal(vm.StraightLengthMm, edge.LengthMm, 6);
+        Assert.Equal(0, (end.X - start.X) * (raw.Y - start.Y) - (end.Y - start.Y) * (raw.X - start.X), 6);
+    }
+
+    [Fact]
+    public void DrawingLengthLimit_OverLimitExistingEndpoint_IsFilteredAndClamped()
+    {
+        var vm = CreateDrawingViewModel();
+        vm.StraightLengthMm = 20000;
+        Draw(vm, new(10000, 0), new(11000, 0));
+        vm.StraightLengthMm = 6000;
+        vm.SnapNearest = false;
+        vm.HandleCanvasClick(vm.Transform.ToScreen(new Point2D(0, 0)));
+
+        vm.HandleCanvasMove(vm.Transform.ToScreen(new Point2D(10050, 0)));
+
+        Assert.False(vm.IsSnapMarkerVisible);
+
+        vm.HandleCanvasClick(vm.Transform.ToScreen(new Point2D(10050, 0)));
+
+        var edge = Assert.Single(vm.Edges.Where(x => x.LengthMm > 5000));
+        Assert.Equal(6000, edge.LengthMm, 6);
+        AssertPoint(new(6000, 0), EdgeEnd(vm, edge));
+    }
+
+    [Fact]
+    public void DrawingLengthLimit_WithinLimitExistingEndpoint_SnapsExactly()
+    {
+        var vm = CreateDrawingViewModel();
+        Draw(vm, new(3000, 0), new(4000, 0));
+        vm.SnapNearest = false;
+
+        Draw(vm, new(0, 0), new(3050, 0));
+
+        var edge = Assert.Single(vm.Edges.Where(x => x.LengthMm > 2000));
+        Assert.Equal(3000, edge.LengthMm, 6);
+        AssertPoint(new(3000, 0), EdgeEnd(vm, edge));
+    }
+
+    [Fact]
+    public void DrawingLengthLimit_CustomStraightLength_UsesUpdatedLimit()
+    {
+        var vm = CreateDrawingViewModel();
+        DisableOsnap(vm);
+        vm.StraightLengthMm = 3000;
+
+        Draw(vm, new(1000, 1000), new(6000, 1000));
+
+        Assert.Equal(3000, Assert.Single(vm.Edges).LengthMm, 6);
+    }
+
+    [Fact]
+    public void DrawingLengthLimit_PreviewAndConfirmedEndpoint_AreIdentical()
+    {
+        var vm = CreateDrawingViewModel();
+        DisableOsnap(vm);
+        var start = new Point2D(1000, 1000);
+        var raw = new Point2D(9000, 9000);
+        vm.HandleCanvasClick(vm.Transform.ToScreen(start));
+        vm.HandleCanvasMove(vm.Transform.ToScreen(raw));
+        var previewEnd = vm.Transform.ToModel(new Point(vm.PreviewX2, vm.PreviewY2));
+
+        vm.HandleCanvasClick(vm.Transform.ToScreen(raw));
+
+        AssertPoint(previewEnd, EdgeEnd(vm, Assert.Single(vm.Edges)));
+    }
+
+    [Fact]
+    public void DrawingLengthLimit_FirstClick_IsNotLimited()
+    {
+        var vm = CreateDrawingViewModel();
+        DisableOsnap(vm);
+        vm.StraightLengthMm = 3000;
+        var start = new Point2D(20000, 20000);
+
+        vm.HandleCanvasClick(vm.Transform.ToScreen(start));
+
+        Assert.True(vm.IsDrawing);
+        AssertPoint(start, vm.Transform.ToModel(new Point(vm.PreviewX1, vm.PreviewY1)));
+        Assert.Empty(vm.Edges);
+    }
+
+    [Fact]
     public void RemoveFittingCommand_RemovesFittingWithoutSelectedEdge()
     {
         var vm = CreateViewModel();
@@ -151,13 +357,30 @@ public sealed class PipeLayoutViewModelTests
     }
 
     [Fact]
+    public void CreateModelCommand_UsesSingleBendFamily_ForNonStandardElbowAngle()
+    {
+        var vm = CreateDrawingViewModel();
+        DisableOsnap(vm);
+        vm.UseAngleSnap = false;
+        Draw(vm, new(0, 0), new(1000, 0));
+        Draw(vm, new(1000, 0), new(1866, 500));
+        PipeNetworkDefinition? request = null;
+        vm.CreateModelAction = value => request = value;
+
+        vm.CreateModelCommand.Execute(null);
+
+        Assert.NotNull(request);
+        Assert.DoesNotContain("90°·45°가 아닌", vm.ValidationSummary);
+        Assert.Equal("곡관90 : DN100", request!.SegmentFamilies!.BendFamilyTypeName);
+    }
+
+    [Fact]
     public void Segment_family_selection_is_auto_guessed_from_the_fitting_list()
     {
         var vm = CreateViewModel();
 
         Assert.Equal("직관 : DN100", vm.SegmentFamilyTypeName);
-        Assert.Equal("곡관90 : DN100", vm.Bend90FamilyTypeName);
-        Assert.Equal("곡관45 : DN100", vm.Bend45FamilyTypeName);
+        Assert.Equal("곡관90 : DN100", vm.BendFamilyTypeName);
         Assert.Equal("T형 : DN100", vm.TeeFamilyTypeName);
         Assert.Equal("길이", vm.LengthParameterName);
     }
@@ -172,8 +395,7 @@ public sealed class PipeLayoutViewModelTests
             ["직관 : DN100", "단관 : DN100", "곡관90 : DN100", "곡관45 : DN100", "T형 : DN100"],
             vm.SegmentFamilyTypeNames);
         Assert.Contains(vm.SegmentFamilyTypeName, vm.SegmentFamilyTypeNames);
-        Assert.Contains(vm.Bend90FamilyTypeName, vm.SegmentFamilyTypeNames);
-        Assert.Contains(vm.Bend45FamilyTypeName, vm.SegmentFamilyTypeNames);
+        Assert.Contains(vm.BendFamilyTypeName, vm.SegmentFamilyTypeNames);
         Assert.Contains(vm.TeeFamilyTypeName, vm.SegmentFamilyTypeNames);
     }
 
@@ -225,6 +447,87 @@ public sealed class PipeLayoutViewModelTests
     {
         vm.HandleCanvasClick(vm.Transform.ToScreen(start));
         vm.HandleCanvasClick(vm.Transform.ToScreen(end));
+    }
+
+    private static PipeLayoutViewModel CreateDrawingViewModel()
+    {
+        var vm = CreateViewModel();
+        vm.HandleCanvasSizeChanged(1000, 1000);
+        return vm;
+    }
+
+    private static void DisableOsnap(PipeLayoutViewModel vm)
+    {
+        vm.SnapReferencePoint = false;
+        vm.SnapEndpoint = false;
+        vm.SnapMidpoint = false;
+        vm.SnapQuadrant = false;
+        vm.SnapIntersection = false;
+        vm.SnapNearest = false;
+        vm.SnapOutline = false;
+    }
+
+    private static Point2D EdgeEnd(PipeLayoutViewModel vm, PipeEdgeItem edge) =>
+        vm.Transform.ToModel(new Point(edge.X2, edge.Y2));
+
+    private static void AssertPoint(Point2D expected, Point2D actual)
+    {
+        Assert.Equal(expected.X, actual.X, 6);
+        Assert.Equal(expected.Y, actual.Y, 6);
+    }
+
+    [Fact]
+    public void ApplyOutline_SetsArrowOffsetsToHalfOfInnerHeight()
+    {
+        var vm = CreateDrawingViewModel();
+
+        vm.ApplyOutline(CreateOutline(4000, 3000));
+
+        Assert.Equal(1500, vm.InOffsetMm, 6);
+        Assert.Equal(1500, vm.OutOffsetMm, 6);
+    }
+
+    [Fact]
+    public void ApplyOutline_KeepsUserEditedOffset_AndStillUpdatesTheOther()
+    {
+        var vm = CreateDrawingViewModel();
+        vm.InOffsetMm = 300;
+
+        vm.ApplyOutline(CreateOutline(4000, 3000));
+
+        Assert.Equal(300, vm.InOffsetMm, 6);
+        Assert.Equal(1500, vm.OutOffsetMm, 6);
+    }
+
+    [Fact]
+    public void ClearOutline_ResetsUserEditedFlag_SoNextPickAppliesAutoOffset()
+    {
+        var vm = CreateDrawingViewModel();
+        vm.InOffsetMm = 300;
+        vm.ApplyOutline(CreateOutline(4000, 3000));
+
+        vm.ClearOutlineCommand.Execute(null);
+        vm.ApplyOutline(CreateOutline(4000, 3000));
+
+        Assert.Equal(1500, vm.InOffsetMm, 6);
+    }
+
+    /// <summary>원점에서 시작하는 직사각형 밸브실 외곽(내측면 기준).</summary>
+    private static ValveRoomOutline CreateOutline(double widthMm, double heightMm)
+    {
+        const double thickness = 200;
+        OutlineWall Wall(long id, Point2D a, Point2D b, Point2D oa, Point2D ob) => new(id, a, b, oa, ob, thickness);
+        var bl = new Point2D(0, 0);
+        var br = new Point2D(widthMm, 0);
+        var tr = new Point2D(widthMm, heightMm);
+        var tl = new Point2D(0, heightMm);
+        return new ValveRoomOutline(
+        [
+            Wall(1, bl, br, new Point2D(0, -thickness), new Point2D(widthMm, -thickness)),
+            Wall(2, br, tr, new Point2D(widthMm + thickness, 0), new Point2D(widthMm + thickness, heightMm)),
+            Wall(3, tr, tl, new Point2D(widthMm, heightMm + thickness), new Point2D(0, heightMm + thickness)),
+            Wall(4, tl, bl, new Point2D(-thickness, heightMm), new Point2D(-thickness, 0)),
+        ]);
     }
 
     private static PipeLayoutViewModel CreateViewModel() => new(new StubElementTypeQueryRepo());

@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1787622539835,
+  "lastScanned": 1787709524800,
   "projectRoot": "F:\\02_Work\\04_Addin\\DHBIMWATER",
   "techStack": {
     "languages": [],
@@ -39,8 +39,8 @@
     "docs": {
       "path": "docs",
       "purpose": "Documentation",
-      "fileCount": 64,
-      "lastAccessed": 1787622539045,
+      "fileCount": 71,
+      "lastAccessed": 1787709524308,
       "keyFiles": [
         "02_컨트럴등록.md",
         "03_뷰모델구현.md",
@@ -53,7 +53,7 @@
       "path": "installer",
       "purpose": null,
       "fileCount": 6,
-      "lastAccessed": 1787622539055,
+      "lastAccessed": 1787709524312,
       "keyFiles": [
         "README.md",
         "DHBIMWATER_2025.nsi",
@@ -66,29 +66,29 @@
       "path": "sandbox",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1787622539067,
+      "lastAccessed": 1787709524317,
       "keyFiles": []
     },
     "src": {
       "path": "src",
       "purpose": "Source code",
       "fileCount": 0,
-      "lastAccessed": 1787622539084,
+      "lastAccessed": 1787709524320,
       "keyFiles": []
     },
     "tests": {
       "path": "tests",
       "purpose": "Test files",
       "fileCount": 0,
-      "lastAccessed": 1787622539095,
+      "lastAccessed": 1787709524322,
       "keyFiles": []
     }
   },
   "hotPaths": [
     {
       "path": "PROGRESS.md",
-      "accessCount": 47,
-      "lastAccessed": 1787644521170,
+      "accessCount": 55,
+      "lastAccessed": 1787724436705,
       "type": "file"
     },
     {
@@ -99,8 +99,8 @@
     },
     {
       "path": "src",
-      "accessCount": 21,
-      "lastAccessed": 1787644433004,
+      "accessCount": 28,
+      "lastAccessed": 1787723379673,
       "type": "directory"
     },
     {
@@ -110,15 +110,15 @@
       "type": "file"
     },
     {
-      "path": "src\\DHBIMWATER.UI\\Views\\Modeling\\PipeAlignmentModelingView.xaml",
-      "accessCount": 11,
-      "lastAccessed": 1787557892792,
+      "path": "src\\DHBIMWATER.Application\\UseCases\\Gis\\ModelPipeAlignmentUseCase.cs",
+      "accessCount": 13,
+      "lastAccessed": 1787723248365,
       "type": "file"
     },
     {
-      "path": "src\\DHBIMWATER.Application\\UseCases\\Gis\\ModelPipeAlignmentUseCase.cs",
-      "accessCount": 11,
-      "lastAccessed": 1787623071082,
+      "path": "src\\DHBIMWATER.UI\\Views\\Modeling\\PipeAlignmentModelingView.xaml",
+      "accessCount": 12,
+      "lastAccessed": 1787723819828,
       "type": "file"
     },
     {

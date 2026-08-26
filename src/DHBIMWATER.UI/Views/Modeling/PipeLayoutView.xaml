@@ -14,7 +14,10 @@
         <controls:TitleBar Grid.Row="0"/>
         <Grid Grid.Row="1" Margin="20,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="260"/></Grid.ColumnDefinitions>
             <Border Background="White" CornerRadius="12" Padding="8" Margin="0,0,12,0"><Grid>
-                <Canvas x:Name="LayoutCanvas" Background="#FCFDFE" Focusable="True" MouseLeftButtonDown="OnCanvasMouseLeftButtonDown" MouseMove="OnCanvasMouseMove" SizeChanged="OnLayoutCanvasSizeChanged">
+                <Canvas x:Name="LayoutCanvas" Background="#FCFDFE" Focusable="True" Cursor="None"
+                        MouseLeftButtonDown="OnCanvasMouseLeftButtonDown" MouseMove="OnCanvasMouseMove" MouseLeave="OnCanvasMouseLeave"
+                        MouseWheel="OnCanvasMouseWheel" MouseDown="OnCanvasMouseDown" MouseUp="OnCanvasMouseUp"
+                        SizeChanged="OnLayoutCanvasSizeChanged">
                     <Line X1="{Binding ReferenceScreenX}" Y1="0" X2="{Binding ReferenceScreenX}" Y2="{Binding ActualHeight, ElementName=LayoutCanvas}" Stroke="#9ACD32" StrokeThickness="1.5" StrokeDashArray="4,3" IsHitTestVisible="False"/>
                     <Line X1="0" Y1="{Binding ReferenceScreenY}" X2="{Binding ActualWidth, ElementName=LayoutCanvas}" Y2="{Binding ReferenceScreenY}" Stroke="#9ACD32" StrokeThickness="1.5" StrokeDashArray="4,3" IsHitTestVisible="False"/>
                     <!-- 외곽 레이아웃: 내측면(진한 실선)이 기준면, 외측면(연한 선)은 벽 두께 표현 -->
@@ -36,11 +39,45 @@
                         <TextBlock Canvas.Left="{Binding LabelX}" Canvas.Top="{Binding LabelY}" Margin="2,-16,0,0" Text="{Binding Label}" FontSize="10" FontWeight="SemiBold" Foreground="#6C3483" Background="#FBF6FE"/>
                     </Canvas></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
                     <!-- 표식기: TextBlock에 고정 Width/Height를 주면 글리프가 잘리므로, 클리핑하지 않는 Grid로 감싸고 안에서 중앙정렬한다. -->
-                    <Grid Canvas.Left="{Binding SnapMarkerX}" Canvas.Top="{Binding SnapMarkerY}" Margin="-12,-12,0,0" Width="24" Height="24" IsHitTestVisible="False" Visibility="{Binding IsSnapMarkerVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <TextBlock Text="{Binding SnapMarkerSymbol}" FontSize="18" FontWeight="Bold" Foreground="#00A651" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+                    <!-- 스냅 표식은 노드·엣지 위에서 잡히므로, 선언 순서(z-order)로는 뒤에 오는 Edges/InlineFittings/Nodes에 가려진다.
+                         Canvas의 다른 자식은 모두 기본 ZIndex(0)이므로 여기만 올려서 항상 최상단에 그린다. -->
+                    <Grid Panel.ZIndex="1000" Canvas.Left="{Binding SnapMarkerX}" Canvas.Top="{Binding SnapMarkerY}" Margin="-16,-16,0,0" Width="32" Height="32" IsHitTestVisible="False" Visibility="{Binding IsSnapMarkerVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <TextBlock Text="{Binding SnapMarkerSymbol}" FontWeight="Bold" Foreground="#00A651" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center">
+                            <TextBlock.Style>
+                                <!-- FontSize는 로컬 속성으로 두면 DataTrigger보다 우선순위가 높아 트리거가 먹지 않는다. 반드시 Setter로 둘 것. -->
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="FontSize" Value="18"/>
+                                    <Style.Triggers>
+                                        <!-- 끝점(□)은 가장 자주 쓰는 스냅이라 한 눈에 구분되도록 키운다. -->
+                                        <DataTrigger Binding="{Binding SnapMarkerSymbol}" Value="□">
+                                            <Setter Property="FontSize" Value="26"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                    <TextBlock Panel.ZIndex="1000" Canvas.Left="{Binding SnapMarkerX, Mode=OneWay}" Canvas.Top="{Binding SnapMarkerY, Mode=OneWay}"
+                               Margin="14,4,0,0" Text="{Binding SnapMarkerLabel, Mode=OneWay}" FontSize="10" FontWeight="SemiBold"
+                               Foreground="#00733B" Background="#F2FBF6" IsHitTestVisible="False"
+                               Visibility="{Binding IsSnapMarkerVisible, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    <!-- CAD식 십자선 커서: 시스템 커서(Cursor="None") 대신 직접 그린다.
+                         스냅이 잡히면 CursorX/Y에 스냅 좌표가 들어오므로 십자선이 그 점에 달라붙는다(자석).
+                         십자선 40px와 픽박스 12px는 화면 고정 크기이며 스냅 허용오차(모델 100mm)와는 무관하다. -->
+                    <Grid Panel.ZIndex="900" Canvas.Left="{Binding CursorX, Mode=OneWay}" Canvas.Top="{Binding CursorY, Mode=OneWay}"
+                          Margin="-20,-20,0,0" Width="40" Height="40" IsHitTestVisible="False"
+                          Visibility="{Binding IsCursorVisible, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <Line X1="20" Y1="0" X2="20" Y2="40" Stroke="#7F8C8D" StrokeThickness="1"/>
+                        <Line X1="0" Y1="20" X2="40" Y2="20" Stroke="#7F8C8D" StrokeThickness="1"/>
+                        <Rectangle Width="12" Height="12" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Stroke="#34495E" StrokeThickness="1" Fill="Transparent"
+                                   Visibility="{Binding IsSelectionMode, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                     </Grid>
                     <Line X1="{Binding PreviewX1}" Y1="{Binding PreviewY1}" X2="{Binding PreviewX2}" Y2="{Binding PreviewY2}" Stroke="#E67E22" StrokeThickness="3" StrokeDashArray="6,3" IsHitTestVisible="False" Visibility="{Binding IsPreviewVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                     <TextBlock Canvas.Left="{Binding PreviewLengthX}" Canvas.Top="{Binding PreviewLengthY}" Margin="4,-20,0,0" Text="{Binding PreviewLength}" FontSize="11" FontWeight="SemiBold" Foreground="#D35400" Background="#FFFCF8" IsHitTestVisible="False" Visibility="{Binding IsPreviewVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    <TextBlock Canvas.Left="{Binding PreviewLengthX, Mode=OneWay}" Canvas.Top="{Binding PreviewLengthY, Mode=OneWay}" Margin="4,-6,0,0"
+                               Text="{Binding PreviewAngle, Mode=OneWay}" FontSize="11" FontWeight="SemiBold" Foreground="#D35400" Background="#FFFCF8"
+                               IsHitTestVisible="False" Visibility="{Binding IsPreviewVisible, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                     <!-- 부속 배치 미리보기: 리스트에서 패밀리를 고르면 커서가 붙는 선 위 지점에 도형 + 시작점부터의 임시치수를 보여준다 -->
                     <Line X1="{Binding FittingDimX1}" Y1="{Binding FittingDimY1}" X2="{Binding FittingDimX2}" Y2="{Binding FittingDimY2}" Stroke="#F39C12" StrokeThickness="1" StrokeDashArray="3,2" IsHitTestVisible="False" Visibility="{Binding IsFittingPreviewVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                     <TextBlock Canvas.Left="{Binding FittingPreviewX}" Canvas.Top="{Binding FittingPreviewY}" Margin="8,-18,0,0" Text="{Binding FittingDimLabel}" FontSize="10" FontWeight="SemiBold" Foreground="#B9770E" Background="#FEF9E7" IsHitTestVisible="False" Visibility="{Binding IsFittingPreviewVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
@@ -51,14 +88,24 @@
                     <!-- 배치된 배관 밸브류는 P&ID 관습적 다이아몬드로 표시한다. -->
                     <!-- ItemsControl은 각 항목을 ContentPresenter로 감싸므로 DataTemplate 루트의 Canvas.Left/Top은 무시된다
                          (전 항목이 (0,0)에 겹친다). 위 Edges 템플릿과 같이 루트를 Canvas로 감싸 절대 위치를 살린다. -->
-                    <ItemsControl ItemsSource="{Binding InlineFittings}" IsHitTestVisible="False"><ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas/></ItemsPanelTemplate></ItemsControl.ItemsPanel><ItemsControl.ItemTemplate><DataTemplate><Canvas>
-                        <Grid Canvas.Left="{Binding X}" Canvas.Top="{Binding Y}" Width="14" Height="14" Margin="-7,-7,0,0" ToolTip="{Binding FamilyTypeName}">
-                            <Polygon Points="7,0 14,7 7,14 0,7" Fill="#F39C12" Stroke="White" StrokeThickness="1"/>
+                    <ItemsControl ItemsSource="{Binding InlineFittings}" IsHitTestVisible="{Binding IsSelectionMode}"><ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas/></ItemsPanelTemplate></ItemsControl.ItemsPanel><ItemsControl.ItemTemplate><DataTemplate><Canvas>
+                        <Grid Canvas.Left="{Binding X}" Canvas.Top="{Binding Y}" Width="14" Height="14" Margin="-7,-7,0,0" ToolTip="{Binding FamilyTypeName}" MouseLeftButtonDown="OnFittingMouseLeftButtonDown">
+                            <Polygon Points="7,0 14,7 7,14 0,7" Fill="{Binding Fill}" Stroke="White" StrokeThickness="1"/>
                         </Grid>
+                        <TextBlock Canvas.Left="{Binding X}" Canvas.Top="{Binding Y}" Margin="8,-6,0,0" Text="{Binding FamilyTypeName}" FontSize="10" Foreground="#34495E" Background="#F8FBFD" IsHitTestVisible="False"/>
                     </Canvas></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
-                    <ItemsControl ItemsSource="{Binding Nodes}" IsHitTestVisible="False"><ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas/></ItemsPanelTemplate></ItemsControl.ItemsPanel><ItemsControl.ItemTemplate><DataTemplate><Canvas><StackPanel Canvas.Left="{Binding X}" Canvas.Top="{Binding Y}" Margin="-7,-7,0,0"><Ellipse Width="14" Height="14" Fill="{Binding Color}" Stroke="White" StrokeThickness="2"/><TextBlock Text="{Binding Label}" FontSize="10" Foreground="#34495E"/></StackPanel></Canvas></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+                    <ItemsControl ItemsSource="{Binding Nodes}" IsHitTestVisible="False"><ItemsControl.ItemsPanel><ItemsPanelTemplate><Canvas/></ItemsPanelTemplate></ItemsControl.ItemsPanel><ItemsControl.ItemTemplate><DataTemplate><Canvas>
+                        <!-- 폭을 라벨이 정하면 Stretch+고정 Width인 Ellipse가 가운데로 밀려(WPF 정렬 규칙) 절점에서 어긋난다.
+                             고정 폭 120 + Margin -60으로 패널 중심선을 X에 고정하고, 자식은 모두 중앙정렬한다. -->
+                        <StackPanel Canvas.Left="{Binding X}" Canvas.Top="{Binding Y}" Width="120" Margin="-60,-7,0,0">
+                            <Ellipse Width="14" Height="14" HorizontalAlignment="Center"
+                                     Fill="{Binding Color}" Stroke="White" StrokeThickness="2"/>
+                            <TextBlock Text="{Binding Label}" FontSize="10" Foreground="#34495E"
+                                       HorizontalAlignment="Center" TextAlignment="Center"/>
+                        </StackPanel>
+                    </Canvas></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
                 </Canvas>
-                <Border VerticalAlignment="Top" HorizontalAlignment="Left" Background="#EAF2F8" CornerRadius="5" Padding="8"><TextBlock Text="연두색 십자선은 배관 X/Y 기준선이며, 근처점 선택 시 100mm 이내에서 스냅됩니다. 교차점은 원점(0,0)입니다. 노드: 회색 Cap · 파랑 Inline · 주황 Elbow · 보라 Tee · 빨강 Cross" FontSize="11"/></Border>
+                <Border VerticalAlignment="Top" HorizontalAlignment="Left" Background="#EAF2F8" CornerRadius="5" Padding="8"><TextBlock Text="연두색 십자선은 배관 X/Y 기준선이며, 근처점 선택 시 100mm 이내에서 스냅됩니다. 교차점은 원점(0,0)입니다. 노드: 회색 EndPoint(관 끝) · 파랑 Inline · 주황 Elbow · 보라 Tee · 빨강 Cross" FontSize="11"/></Border>
                 <Border VerticalAlignment="Top" HorizontalAlignment="Right" Background="#FFF4D6" BorderBrush="#F0C36D" BorderThickness="1" CornerRadius="5" Padding="8" Margin="0,42,4,0"><StackPanel Orientation="Horizontal"><TextBlock Text="현재: " FontWeight="SemiBold"/><TextBlock Text="{Binding InteractionModeText, Mode=OneWay}" FontWeight="Bold" Foreground="#9A5B00"/><TextBlock Text="  ·  "/><TextBlock Text="{Binding NetworkSummary, Mode=OneWay}"/></StackPanel></Border>
             </Grid></Border>
             <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="16"><ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel>
@@ -97,13 +144,13 @@
                 <!-- 하나의 관 패밀리를 길이 파라미터로 구동해 직관·단관을 만든다(docs/39, docs/52). PipeLayout은 MEP Pipe를 생성하지 않는다. -->
                 <TextBlock Text="관 설정" FontWeight="Bold" Foreground="#4A6FA5" Margin="0,2,0,4"/>
                 <TextBlock Foreground="#7F8C8D" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,6">
-                    <Run Text="배관을 앞에서부터 "/><Run Text="{Binding StraightLengthMm, Mode=OneWay, StringFormat={}{0:N0}mm}" FontWeight="SemiBold"/><Run Text=" 직관으로 채우고, 마지막 나머지를 단관으로 놓습니다. 직관·단관은 같은 패밀리를 길이 파라미터로 구동하므로, 정척 길이는 패밀리 수식의 직관 판정 기준과 같아야 합니다. 절점에는 곡관·T형이 자동 배치됩니다."/>
+                    <Run Text="배관을 앞에서부터 "/><Run Text="{Binding StraightLengthMm, Mode=OneWay, StringFormat={}{0:N0}mm}" FontWeight="SemiBold"/><Run Text=" 직관으로 채우고, 마지막 나머지를 단관으로 놓습니다. 직관·단관은 같은 패밀리를 길이 파라미터로 구동하므로, 정척 길이는 패밀리 수식의 직관 판정 기준과 같아야 합니다. 절점에는 곡관·T형이 자동 배치됩니다. 한 번에 그릴 수 있는 배관 길이는 정척 길이까지로 제한됩니다."/>
                 </TextBlock>
                 <TextBlock Text="관 패밀리 (배관 부속류)" FontWeight="SemiBold"/><ComboBox ItemsSource="{Binding SegmentFamilyTypeNames, Mode=OneWay}" SelectedItem="{Binding SegmentFamilyTypeName, Mode=TwoWay}" Style="{StaticResource PrimaryComboBoxStyle}" Margin="0,4,0,8"/>
                 <TextBlock Text="관 길이 파라미터" FontWeight="SemiBold"/><ComboBox ItemsSource="{Binding LengthParameterNames, Mode=OneWay}" SelectedItem="{Binding LengthParameterName, Mode=TwoWay}" Style="{StaticResource PrimaryComboBoxStyle}" Margin="0,4,0,8"/>
                 <Grid Margin="0,0,0,8"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="75"/><ColumnDefinition Width="24"/></Grid.ColumnDefinitions><TextBlock Text="정척 길이" VerticalAlignment="Center"/><TextBox Grid.Column="1" Style="{StaticResource PrimaryTextBoxStyle}" Text="{Binding StraightLengthMm, Mode=TwoWay, UpdateSourceTrigger=LostFocus, ValidatesOnExceptions=True, NotifyOnValidationError=True}"/><TextBlock Grid.Column="2" Text="mm" Margin="4,0"/></Grid>
-                <TextBlock Text="곡관 패밀리 (90°·배관 부속류)" FontWeight="SemiBold"/><ComboBox ItemsSource="{Binding SegmentFamilyTypeNames, Mode=OneWay}" SelectedItem="{Binding Bend90FamilyTypeName, Mode=TwoWay}" Style="{StaticResource PrimaryComboBoxStyle}" Margin="0,4,0,8"/>
-                <TextBlock Text="곡관 패밀리 (45°·배관 부속류)" FontWeight="SemiBold"/><ComboBox ItemsSource="{Binding SegmentFamilyTypeNames, Mode=OneWay}" SelectedItem="{Binding Bend45FamilyTypeName, Mode=TwoWay}" Style="{StaticResource PrimaryComboBoxStyle}" Margin="0,4,0,8"/>
+                <TextBlock Text="곡관 패밀리 (배관 부속류)" FontWeight="SemiBold"/><ComboBox ItemsSource="{Binding SegmentFamilyTypeNames, Mode=OneWay}" SelectedItem="{Binding BendFamilyTypeName, Mode=TwoWay}" Style="{StaticResource PrimaryComboBoxStyle}" Margin="0,4,0,4"/>
+                <TextBlock Text="각도 구분 없이 모든 절점에 이 패밀리 하나를 씁니다. 배관망에 여러 꺾임각이 섞여 있으면 이 패밀리의 실제 형상과 다른 각도에서 커넥터가 어긋날 수 있습니다." Foreground="#7F8C8D" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"/>
                 <TextBlock Text="T형 패밀리 (배관 부속류)" FontWeight="SemiBold"/><ComboBox ItemsSource="{Binding SegmentFamilyTypeNames, Mode=OneWay}" SelectedItem="{Binding TeeFamilyTypeName, Mode=TwoWay}" Style="{StaticResource PrimaryComboBoxStyle}" Margin="0,4,0,10"/>
                 <TextBlock Text="배치 기준" FontWeight="Bold" Foreground="#4A6FA5" Margin="0,2,0,4"/>
                 <TextBlock Text="레벨" FontWeight="SemiBold"/><ComboBox ItemsSource="{Binding LevelNames, Mode=OneWay}" SelectedItem="{Binding SelectedLevelName, Mode=TwoWay}" Style="{StaticResource PrimaryComboBoxStyle}" Margin="0,4,0,8"/>
@@ -117,11 +164,36 @@
                 <!-- 직관·단관·곡관·T형은 배관 부속류(OST_PipeFitting), 인라인 부속은 배관 밸브류(OST_PipeAccessory)를 쓴다. -->
                 <TextBlock Text="부속 카테고리 : 배관 밸브류" FontWeight="SemiBold" Margin="0,0,0,8"/>
                 <TextBlock Text="배치할 패밀리 (선택 후 선 위 클릭)" FontWeight="SemiBold"/>
-                <ListBox Style="{StaticResource PrimaryListBoxStyle}" ItemsSource="{Binding FamilyTypeNames, Mode=OneWay}" SelectedItem="{Binding SelectedFamilyTypeName, Mode=TwoWay}" Height="90" Margin="0,4,0,12"/>
+                <ListBox Style="{StaticResource PrimaryListBoxStyle}" ItemsSource="{Binding FamilyTypeNames, Mode=OneWay}" SelectedItem="{Binding SelectedFamilyTypeName, Mode=TwoWay}" IsEnabled="{Binding IsDrawMode}" Height="90" Margin="0,4,0,12"/>
                 <TextBlock Text="배치된 부속품" FontWeight="Bold" Foreground="#4A6FA5" FontSize="16" Margin="0,0,0,4"/>
                 <ListBox Style="{StaticResource PrimaryListBoxStyle}" ItemsSource="{Binding InlineFittings, Mode=OneWay}" Height="220"><ListBox.ItemTemplate><DataTemplate><DockPanel Margin="3"><Button Content="삭제" Style="{StaticResource CancelButtonStyle}" DockPanel.Dock="Right" Command="{Binding DataContext.RemoveFittingCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/><TextBlock Text="{Binding DisplayOrder, Mode=OneWay}" Width="24"/><TextBlock Text="{Binding FamilyTypeName, Mode=OneWay}" ToolTip="{Binding TypeKey, Mode=OneWay}" TextTrimming="CharacterEllipsis"/></DockPanel></DataTemplate></ListBox.ItemTemplate></ListBox>
             </StackPanel></ScrollViewer></Border>
         </Grid>
-        <Grid Grid.Row="2" Margin="20,0,20,16"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel VerticalAlignment="Center"><TextBlock Text="{Binding Status, Mode=OneWay}" Foreground="#34495E"/><TextBlock Text="{Binding ValidationSummary, Mode=OneWay}" Foreground="#B03A2E" FontSize="11" TextWrapping="Wrap"/></StackPanel><StackPanel Grid.Column="1" Orientation="Horizontal"><Button Style="{StaticResource CancelButtonStyle}" Command="{Binding UndoCommand}" ToolTip="뒤로가기 (Ctrl+Z)" AutomationProperties.Name="뒤로가기"><TextBlock Text="&#xE7A7;" FontFamily="Segoe MDL2 Assets" FontSize="16"/></Button><Button Style="{StaticResource CancelButtonStyle}" Command="{Binding DeleteSelectedEdgeCommand}" ToolTip="선택한 배관 삭제 (Delete)" AutomationProperties.Name="선택한 배관 삭제" Margin="8,0"><TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="16"/></Button><Button Content="그리기 취소" Style="{StaticResource CancelButtonStyle}" Command="{Binding CancelDrawingCommand}" Margin="0,0,8,0"/><Button Content="초기화" Style="{StaticResource CancelButtonStyle}" Command="{Binding ClearCommand}" Margin="0,0,8,0"/><Button Content="모델 생성" Command="{Binding CreateModelCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/><Button Content="닫기" Style="{StaticResource CancelButtonStyle}" Command="{Binding CloseCommand}"/></StackPanel></Grid>
+        <Grid Grid.Row="2" Margin="20,0,20,16"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel VerticalAlignment="Center"><TextBlock Text="{Binding Status, Mode=OneWay}" Foreground="#34495E"/><TextBlock Text="{Binding ValidationSummary, Mode=OneWay}" Foreground="#B03A2E" FontSize="11" TextWrapping="Wrap"/></StackPanel><StackPanel Grid.Column="1" Orientation="Horizontal">
+            <Button Content="선택" Command="{Binding SelectModeCommand}" Margin="0,0,4,0">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource CancelButtonStyle}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsSelectionMode}" Value="True">
+                                <Setter Property="Background" Value="#2878B8"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+            <Button Content="그리기" Command="{Binding DrawModeCommand}" Margin="0,0,12,0">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource CancelButtonStyle}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsDrawMode}" Value="True">
+                                <Setter Property="Background" Value="#2878B8"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+            <Button Style="{StaticResource CancelButtonStyle}" Command="{Binding UndoCommand}" ToolTip="뒤로가기 (Ctrl+Z)" AutomationProperties.Name="뒤로가기"><TextBlock Text="&#xE7A7;" FontFamily="Segoe MDL2 Assets" FontSize="16"/></Button><Button Style="{StaticResource CancelButtonStyle}" Command="{Binding DeleteSelectedEdgeCommand}" ToolTip="선택한 배관 삭제 (Delete)" AutomationProperties.Name="선택한 배관 삭제" Margin="8,0"><TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="16"/></Button><Button Content="그리기 취소" Style="{StaticResource CancelButtonStyle}" Command="{Binding CancelDrawingCommand}" Margin="0,0,8,0"/><Button Content="초기화" Style="{StaticResource CancelButtonStyle}" Command="{Binding ClearCommand}" Margin="0,0,8,0"/><Button Content="모델 생성" Command="{Binding CreateModelCommand}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,0,8,0"/><Button Content="닫기" Style="{StaticResource CancelButtonStyle}" Command="{Binding CloseCommand}"/></StackPanel></Grid>
     </Grid>
 </Window>

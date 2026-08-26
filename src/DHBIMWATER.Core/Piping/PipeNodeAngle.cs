@@ -6,8 +6,7 @@ namespace DHBIMWATER.Core.Piping;
 public readonly record struct PipeNodeLeg(PipeEdgeDefinition Edge, double DirectionX, double DirectionY);
 
 /// <summary>
-/// 절점의 꺾임각을 구하고 곡관 유형(90°/45°)을 판정한다(docs/39 §4.1).
-/// UI의 생성 전 검증과 Revit 배치가 같은 판정을 쓰도록 Core에 둔다.
+/// 절점의 꺾임각과 레그 방향을 계산한다(docs/39 §4.1).
 /// </summary>
 public static class PipeNodeAngle
 {
@@ -39,9 +38,6 @@ public static class PipeNodeAngle
         var dot = Math.Clamp(legs[0].DirectionX * legs[1].DirectionX + legs[0].DirectionY * legs[1].DirectionY, -1, 1);
         return 180 - Math.Acos(dot) * 180 / Math.PI;
     }
-
-    public static bool IsRightAngle(double? deflectionDeg) => Within(deflectionDeg, 90);
-    public static bool IsHalfRightAngle(double? deflectionDeg) => Within(deflectionDeg, 45);
 
     private static bool Within(double? value, double target)
         => value is not null && Math.Abs(value.Value - target) <= AngleToleranceDeg;

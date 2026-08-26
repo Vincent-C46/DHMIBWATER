@@ -2,7 +2,7 @@ namespace DHBIMWATER.Core.Piping;
 
 public enum NodeKind
 {
-    Cap,
+    EndPoint,
     Inline,
     Elbow,
     Tee,

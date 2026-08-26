@@ -18,8 +18,8 @@ public sealed record PipeSegmentFamilySelection(
     string SegmentFamilyTypeName,
     /// <summary>관 인스턴스에 실제 길이(mm)를 기록할 파라미터명.</summary>
     string LengthParameterName,
-    string Bend90FamilyTypeName,
-    string Bend45FamilyTypeName,
+    /// <summary>각도 구분 없이 모든 곡관 절점에 배치하는 단일 곡관 패밀리.</summary>
+    string BendFamilyTypeName,
     string TeeFamilyTypeName,
     /// <summary>직관 1본의 정척 길이(mm). 패밀리 수식의 직관/단관 분기 기준과 같아야 한다.</summary>
     double StraightLengthMm = PipeSegmentPlan.StraightLengthMm);

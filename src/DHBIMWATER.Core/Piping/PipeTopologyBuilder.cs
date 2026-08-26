@@ -5,6 +5,11 @@ namespace DHBIMWATER.Core.Piping;
 [Flags]
 public enum PipeSnapMode { None = 0, Endpoint = 1, Midpoint = 2, Quadrant = 4, Nearest = 8, Intersection = 16 }
 
+/// <summary>스냅된 점 하나의 종류. 우선순위 비교와 표식·툴팁 표시에 함께 쓴다.</summary>
+public enum PipeSnapKind { Intersection, Endpoint, Midpoint, Quadrant, Nearest }
+
+public readonly record struct PipeSnapResult(Point2D Point, PipeSnapKind Kind, double Distance);
+
 public sealed class PipeTopologyBuilder
 {
     public const double SnapTolerance = 100.0;
@@ -14,33 +19,49 @@ public sealed class PipeTopologyBuilder
 
     public PipeTopologyBuilder(PipeNetwork network) => _network = network;
 
-    public Point2D? FindSnapPoint(Point2D point, PipeSnapMode modes)
+    public PipeSnapResult? FindSnapPoint(Point2D point, PipeSnapMode modes)
     {
-        var candidates = new List<(Point2D Point, double Distance)>();
+        var candidates = new List<PipeSnapResult>();
         if (modes.HasFlag(PipeSnapMode.Endpoint))
-            candidates.AddRange(_network.Nodes.Select(x => (x.Position, x.Position.DistanceTo(point))));
+            candidates.AddRange(_network.Nodes.Select(x => new PipeSnapResult(x.Position, NodeKindOf(x), x.Position.DistanceTo(point))));
         if (modes.HasFlag(PipeSnapMode.Intersection))
-            candidates.AddRange(_network.Nodes.Where(x => x.Degree >= 3).Select(x => (x.Position, x.Position.DistanceTo(point))));
+            candidates.AddRange(_network.Nodes.Where(x => x.Degree >= 3).Select(x => new PipeSnapResult(x.Position, PipeSnapKind.Intersection, x.Position.DistanceTo(point))));
         foreach (var edge in _network.Edges)
         {
             var start = _network.FindNode(edge.StartNodeId)!.Position;
             var end = _network.FindNode(edge.EndNodeId)!.Position;
-            if (modes.HasFlag(PipeSnapMode.Midpoint)) AddCandidate(candidates, point, start, end, 0.5);
-            if (modes.HasFlag(PipeSnapMode.Quadrant)) { AddCandidate(candidates, point, start, end, 0.25); AddCandidate(candidates, point, start, end, 0.75); }
+            if (modes.HasFlag(PipeSnapMode.Midpoint)) AddCandidate(candidates, point, start, end, 0.5, PipeSnapKind.Midpoint);
+            if (modes.HasFlag(PipeSnapMode.Quadrant)) { AddCandidate(candidates, point, start, end, 0.25, PipeSnapKind.Quadrant); AddCandidate(candidates, point, start, end, 0.75, PipeSnapKind.Quadrant); }
             if (modes.HasFlag(PipeSnapMode.Nearest))
             {
                 var t = Math.Clamp(Segment2D.ParameterOnSegment(point, start, end), 0, 1);
-                AddCandidate(candidates, point, start, end, t);
+                AddCandidate(candidates, point, start, end, t, PipeSnapKind.Nearest);
             }
         }
-        var candidate = candidates.OrderBy(x => x.Distance).FirstOrDefault();
-        return candidate.Distance <= SnapTolerance ? candidate.Point : null;
+        return candidates
+            .Where(x => x.Distance <= SnapTolerance)
+            .OrderBy(x => Rank(x.Kind))
+            .ThenBy(x => x.Distance)
+            .Cast<PipeSnapResult?>()
+            .FirstOrDefault();
     }
 
-    private static void AddCandidate(List<(Point2D Point, double Distance)> candidates, Point2D target, Point2D start, Point2D end, double t)
+    public static int Rank(PipeSnapKind kind) => kind switch
+    {
+        PipeSnapKind.Intersection => 0,
+        PipeSnapKind.Endpoint => 1,
+        PipeSnapKind.Midpoint => 2,
+        PipeSnapKind.Quadrant => 3,
+        _ => 4,
+    };
+
+    private static PipeSnapKind NodeKindOf(PipeNode node)
+        => node.Degree >= 3 ? PipeSnapKind.Intersection : PipeSnapKind.Endpoint;
+
+    private static void AddCandidate(List<PipeSnapResult> candidates, Point2D target, Point2D start, Point2D end, double t, PipeSnapKind kind)
     {
         var candidate = new Point2D(start.X + (end.X - start.X) * t, start.Y + (end.Y - start.Y) * t);
-        candidates.Add((candidate, candidate.DistanceTo(target)));
+        candidates.Add(new PipeSnapResult(candidate, kind, candidate.DistanceTo(target)));
     }
     public void AddSegment(Point2D start, Point2D end)
     {
@@ -155,7 +176,7 @@ public sealed class PipeTopologyBuilder
             node.Degree = connected.Count;
             node.NodeKind = node.Degree switch
             {
-                1 => NodeKind.Cap,
+                1 => NodeKind.EndPoint,
                 2 => IsStraight(node, connected) ? NodeKind.Inline : NodeKind.Elbow,
                 3 => NodeKind.Tee,
                 >= 4 => NodeKind.Cross,

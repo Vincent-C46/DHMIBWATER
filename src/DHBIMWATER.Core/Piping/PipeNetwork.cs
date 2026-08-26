@@ -15,7 +15,7 @@ public sealed class PipeNetwork
     public IReadOnlyList<PipeNode> Nodes => _nodes;
     public IReadOnlyList<PipeEdge> Edges => _edges;
 
-    public Point2D? FindSnapPoint(Point2D point, PipeSnapMode modes) => new PipeTopologyBuilder(this).FindSnapPoint(point, modes);
+    public PipeSnapResult? FindSnapPoint(Point2D point, PipeSnapMode modes) => new PipeTopologyBuilder(this).FindSnapPoint(point, modes);
     public void AddSegment(Point2D start, Point2D end) => new PipeTopologyBuilder(this).AddSegment(start, end);
     public void RemoveSegment(Guid edgeId) => new PipeTopologyBuilder(this).RemoveSegment(edgeId);
     public void AddInlineFitting(Guid edgeId, string typeKey, string familyTypeName, double desiredT) => new PipeTopologyBuilder(this).AddInlineFitting(edgeId, typeKey, familyTypeName, desiredT);

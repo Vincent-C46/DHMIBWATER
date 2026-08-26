@@ -7,15 +7,63 @@ namespace DHBIMWATER.UI.Views.Modeling;
 public partial class PipeLayoutView : Window
 {
     private readonly PipeLayoutViewModel _viewModel;
+    private bool _isPanning;
+    private Point _lastPanPosition;
     public PipeLayoutView(PipeLayoutViewModel viewModel) { InitializeComponent(); _viewModel = viewModel; DataContext = viewModel; viewModel.CloseAction = Close; }
     private void OnLayoutCanvasSizeChanged(object sender, SizeChangedEventArgs e) => _viewModel.HandleCanvasSizeChanged(e.NewSize.Width, e.NewSize.Height);
     private void OnCanvasMouseLeftButtonDown(object sender, MouseButtonEventArgs e) { LayoutCanvas.Focus(); _viewModel.HandleCanvasClick(e.GetPosition(LayoutCanvas)); }
-    private void OnCanvasMouseMove(object sender, MouseEventArgs e) => _viewModel.HandleCanvasMove(e.GetPosition(LayoutCanvas));
+    private void OnCanvasMouseMove(object sender, MouseEventArgs e)
+    {
+        var position = e.GetPosition(LayoutCanvas);
+        if (_isPanning)
+        {
+            if (e.MiddleButton != MouseButtonState.Pressed)
+            {
+                EndPan();
+                return;
+            }
+            _viewModel.HandleCanvasPan(position.X - _lastPanPosition.X, position.Y - _lastPanPosition.Y);
+            _lastPanPosition = position;
+            return;
+        }
+        _viewModel.HandleCanvasMove(position);
+    }
+    private void OnCanvasMouseLeave(object sender, MouseEventArgs e) => _viewModel.HandleCanvasLeave();
+    private void OnCanvasMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        _viewModel.HandleCanvasZoom(e.GetPosition(LayoutCanvas), e.Delta);
+        e.Handled = true;
+    }
+    private void OnCanvasMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton != MouseButton.Middle) return;
+        _isPanning = true;
+        _lastPanPosition = e.GetPosition(LayoutCanvas);
+        Mouse.Capture(LayoutCanvas);
+        e.Handled = true;
+    }
+    private void OnCanvasMouseUp(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton != MouseButton.Middle) return;
+        EndPan();
+        e.Handled = true;
+    }
+    private void EndPan()
+    {
+        _isPanning = false;
+        if (Mouse.Captured == LayoutCanvas) Mouse.Capture(null);
+    }
     private void OnEdgeMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         var position = e.GetPosition(LayoutCanvas);
         if (_viewModel.IsDrawing || _viewModel.IsPlacingFitting) _viewModel.HandleCanvasClick(position);
         else if (((FrameworkElement)sender).DataContext is PipeEdgeItem edge) _viewModel.SelectEdge(edge.Id);
+        LayoutCanvas.Focus();
+        e.Handled = true;
+    }
+    private void OnFittingMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (((FrameworkElement)sender).DataContext is InlineFittingItem fitting) _viewModel.SelectFitting(fitting.Id);
         LayoutCanvas.Focus();
         e.Handled = true;
     }
@@ -28,7 +76,12 @@ public partial class PipeLayoutView : Window
             e.Handled = true;
         }
         else if (e.Key == Key.Escape) { _viewModel.HandleEscape(); e.Handled = true; }
-        else if (e.Key == Key.Delete) { _viewModel.DeleteSelectedEdge(); e.Handled = true; }
+        else if (e.Key == Key.Delete)
+        {
+            if (_viewModel.DeleteSelectedFittingCommand.CanExecute(null)) _viewModel.DeleteSelectedFittingCommand.Execute(null);
+            else _viewModel.DeleteSelectedEdge();
+            e.Handled = true;
+        }
     }
 
     private void OnValidationError(object sender, System.Windows.Controls.ValidationErrorEventArgs e)
