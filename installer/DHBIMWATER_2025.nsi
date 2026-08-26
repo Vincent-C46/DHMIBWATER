@@ -56,6 +56,8 @@ Section "Install" SecInstall
     ; Copy main DLL to ProgramData
     SetOutPath "$INSTDIR"
     File "C:\BuildOutput\DHBIMWATER\DHBIMWATER.Revit.dll"
+    File "C:\BuildOutput\DHBIMWATER\DidasUsage.dll"
+    File "C:\BuildOutput\DHBIMWATER\DidasReader.dll"
 
     ; Copy .addin file to ProgramData
     SetOutPath "${REVIT_ADDINS_PATH}"
@@ -81,6 +83,8 @@ SectionEnd
 Section "Uninstall"
     ; Remove files
     Delete "$INSTDIR\DHBIMWATER.Revit.dll"
+    Delete "$INSTDIR\DidasUsage.dll"
+    Delete "$INSTDIR\DidasReader.dll"
     Delete "$INSTDIR\Uninstall.exe"
 
     ; Remove .addin file

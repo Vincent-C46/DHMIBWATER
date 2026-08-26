@@ -56,6 +56,8 @@ Section "Install" SecInstall
     ; Revit 2025
     SetOutPath "${REVIT_2025_INSTALL_DIR}"
     File "${BUILD_OUTPUT_DIR}\DHBIMWATER.Revit.dll"
+    File "${BUILD_OUTPUT_DIR}\DidasUsage.dll"
+    File "${BUILD_OUTPUT_DIR}\DidasReader.dll"
 
     SetOutPath "${REVIT_2025_ADDINS_PATH}"
     Delete "${REVIT_2025_ADDINS_PATH}\DHBIMWATER.addin"
@@ -65,6 +67,8 @@ Section "Install" SecInstall
     ; Revit 2026
     SetOutPath "${REVIT_2026_INSTALL_DIR}"
     File "${BUILD_OUTPUT_DIR}\DHBIMWATER.Revit.dll"
+    File "${BUILD_OUTPUT_DIR}\DidasUsage.dll"
+    File "${BUILD_OUTPUT_DIR}\DidasReader.dll"
 
     SetOutPath "${REVIT_2026_ADDINS_PATH}"
     Delete "${REVIT_2026_ADDINS_PATH}\DHBIMWATER.addin"
@@ -91,12 +95,16 @@ SectionEnd
 Section "Uninstall"
     ; Revit 2025
     Delete "${REVIT_2025_INSTALL_DIR}\DHBIMWATER.Revit.dll"
+    Delete "${REVIT_2025_INSTALL_DIR}\DidasUsage.dll"
+    Delete "${REVIT_2025_INSTALL_DIR}\DidasReader.dll"
     Delete "${REVIT_2025_ADDINS_PATH}\DHBIMWATER.addin"
     Delete "${REVIT_2025_ADDINS_PATH}\02_DHBIMWATER.addin"
     RMDir "${REVIT_2025_INSTALL_DIR}"
 
     ; Revit 2026
     Delete "${REVIT_2026_INSTALL_DIR}\DHBIMWATER.Revit.dll"
+    Delete "${REVIT_2026_INSTALL_DIR}\DidasUsage.dll"
+    Delete "${REVIT_2026_INSTALL_DIR}\DidasReader.dll"
     Delete "${REVIT_2026_ADDINS_PATH}\DHBIMWATER.addin"
     Delete "${REVIT_2026_ADDINS_PATH}\02_DHBIMWATER.addin"
     RMDir "${REVIT_2026_INSTALL_DIR}"

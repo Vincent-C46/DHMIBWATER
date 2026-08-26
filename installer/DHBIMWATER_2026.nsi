@@ -16,7 +16,7 @@ InstallDir "C:\ProgramData\Autodesk\Revit\Addins\2026\DHBIMWATER"
 
 ; Define common variables
 !define REVIT_ADDINS_PATH "C:\ProgramData\Autodesk\Revit\Addins\2026"
-!define COLLAB_ADDIN_SOURCE_DIR "D:\03.¾÷¹«\05.°³¹ß\01.»óÇÏ¼öµµºÎ\@@°³¹ß¼º°ú\02.¹Ú´ë¸®\00.¼³Ä¡ÆÄÀÏ"
+!define COLLAB_ADDIN_SOURCE_DIR "D:\03.ï¿½ï¿½ï¿½ï¿½\05.ï¿½ï¿½ï¿½ï¿½\01.ï¿½ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½ï¿½ï¿½\@@ï¿½ï¿½ï¿½ß¼ï¿½ï¿½ï¿½\02.ï¿½Ú´ë¸®\00.ï¿½ï¿½Ä¡ï¿½ï¿½ï¿½ï¿½"
 
 ; Request application privileges
 RequestExecutionLevel user
@@ -62,6 +62,8 @@ Section "Install" SecInstall
     ; 2) DHBIMWATER
     SetOutPath "$INSTDIR"
     File "C:\BuildOutput\DHBIMWATER\DHBIMWATER.Revit.dll"
+    File "C:\BuildOutput\DHBIMWATER\DidasUsage.dll"
+    File "C:\BuildOutput\DHBIMWATER\DidasReader.dll"
 
     ; 3) DHBIMWATER.addin
     SetOutPath "${REVIT_ADDINS_PATH}"
@@ -86,6 +88,8 @@ SectionEnd
 
     Section "Uninstall"
     Delete "$INSTDIR\DHBIMWATER.Revit.dll"
+    Delete "$INSTDIR\DidasUsage.dll"
+    Delete "$INSTDIR\DidasReader.dll"
     Delete "$INSTDIR\Uninstall.exe"
 
     ; Delete my Addon

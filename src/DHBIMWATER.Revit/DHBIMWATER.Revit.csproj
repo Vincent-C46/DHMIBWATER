@@ -76,6 +76,10 @@
     <MakeDir Directories="$(APPDATA)\Autodesk\Revit\Addins\2026\DHBIMWATER" Condition="Exists('$(APPDATA)\Autodesk\Revit\Addins\2026')" />
     <Copy SourceFiles="@(_AddinFiles)" DestinationFolder="$(APPDATA)\Autodesk\Revit\Addins\2026" Condition="Exists('$(APPDATA)\Autodesk\Revit\Addins\2026')" SkipUnchangedFiles="false" />
     <Copy SourceFiles="@(_MainDll);@(_DidasDlls)" DestinationFolder="$(APPDATA)\Autodesk\Revit\Addins\2026\DHBIMWATER" Condition="Exists('$(APPDATA)\Autodesk\Revit\Addins\2026')" SkipUnchangedFiles="false" ContinueOnError="WarnAndContinue" />
+
+    <!-- 설치 프로그램(installer/*.nsi)이 패키징할 소스: C:\BuildOutput\DHBIMWATER -->
+    <MakeDir Directories="C:\BuildOutput\DHBIMWATER" />
+    <Copy SourceFiles="@(_AddinFiles);@(_MainDll);@(_DidasDlls)" DestinationFolder="C:\BuildOutput\DHBIMWATER" SkipUnchangedFiles="false" ContinueOnError="WarnAndContinue" />
   </Target>
 
 </Project>
