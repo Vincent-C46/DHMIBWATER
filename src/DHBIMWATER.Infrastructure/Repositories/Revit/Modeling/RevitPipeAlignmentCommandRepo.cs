@@ -45,8 +45,7 @@ public sealed class RevitPipeAlignmentCommandRepo : IPipeAlignmentCommandRepo
             SetText(shape, "DH_원본파일", alignment.SourceFile);
             SetText(shape, "DH_레코드번호", alignment.RecordNumber);
             created++;
-            if ((alignmentIndex + 1) % 200 == 0)
-                progress?.Report(new PipeAlignmentProgress(PipeAlignmentPhase.PlacingStraights, alignmentIndex + 1, definition.Alignments.Count));
+            progress?.Report(new PipeAlignmentProgress(PipeAlignmentPhase.PlacingStraights, alignmentIndex + 1, definition.Alignments.Count));
         }
         progress?.Report(new PipeAlignmentProgress(PipeAlignmentPhase.PlacingStraights, definition.Alignments.Count, definition.Alignments.Count));
         return new PipeAlignmentCreateResult(created, skipped, warnings);

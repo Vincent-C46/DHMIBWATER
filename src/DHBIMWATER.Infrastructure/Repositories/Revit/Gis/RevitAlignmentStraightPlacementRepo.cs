@@ -73,10 +73,12 @@ internal sealed class RevitAlignmentStraightPlacementRepo : IAlignmentStraightPl
                     ((ReferencePoint)doc.GetElement(pointIds[1])).Position = end;
                 }
                 placed.Add((instance, alignment, spec, segment));
+                // 진행률은 Regenerate 주기와 무관하게 세그먼트 1개마다 보고한다.
+                // (UI는 전용 STA 스레드라 Revit 스레드를 막지 않고, 생성 1건이 100ms 이상이라 보고 빈도도 낮다)
+                progress?.Report(new PipeAlignmentProgress(PipeAlignmentPhase.PlacingStraights, placed.Count, total));
                 if (++pending >= RegenerateBatchSize)
                 {
                     using (PlacementProfiler.Step("06b 직관 Regenerate")) doc.Regenerate();
-                    progress?.Report(new PipeAlignmentProgress(PipeAlignmentPhase.PlacingStraights, placed.Count, total));
                     pending = 0;
                 }
             }

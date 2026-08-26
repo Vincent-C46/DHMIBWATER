@@ -125,12 +125,13 @@ internal sealed class RevitAdaptiveBendPlacementRepo : IAdaptiveBendPlacementRep
             if (++pendingRegeneration >= RegenerateBatchSize)
             {
                 using (PlacementProfiler.Step("07g 곡관 Regenerate")) doc.Regenerate();
-                progress?.Report(new PipeAlignmentProgress(PipeAlignmentPhase.PlacingBends, count + 1, plans.Count));
                 pendingRegeneration = 0;
             }
             if (!plan.IsAcceptable)
                 exceededOverrides.Add((instance.Id, plan.NodeId));
             count++;
+            // 진행률은 Regenerate 주기와 분리해 곡관 1개마다 보고한다.
+            progress?.Report(new PipeAlignmentProgress(PipeAlignmentPhase.PlacingBends, count, plans.Count));
         }
         if (pendingRegeneration > 0) { using (PlacementProfiler.Step("07g 곡관 Regenerate")) doc.Regenerate(); }
         progress?.Report(new PipeAlignmentProgress(PipeAlignmentPhase.PlacingBends, plans.Count, plans.Count));
