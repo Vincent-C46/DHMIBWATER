@@ -28,10 +28,11 @@ public sealed class PipeLayoutViewModel : ViewModelBase
     private double _referenceX, _referenceY;
     private double _diameterMm = 100;
     private string? _selectedLevelName;
-    private string? _straightFamilyTypeName, _shortFamilyTypeName, _shortLengthParameterName;
+    private string? _segmentFamilyTypeName, _lengthParameterName;
+    private double _straightLengthMm = PipeSegmentPlan.StraightLengthMm;
     private string? _bend90FamilyTypeName, _bend45FamilyTypeName, _teeFamilyTypeName;
-    /// <summary>단관 길이 파라미터를 사용자가 직접 골랐는지. true면 단관 패밀리를 바꿔도 자동 추정으로 덮어쓰지 않는다.</summary>
-    private bool _shortLengthParameterPinned;
+    /// <summary>관 길이 파라미터를 사용자가 직접 골랐는지. true면 관 패밀리를 바꿔도 자동 추정으로 덮어쓰지 않는다.</summary>
+    private bool _lengthParameterPinned;
     private bool _isCreating;
     private int _inputValidationErrorCount;
     private bool _useAngleSnap = true, _isPreviewVisible, _snapReferencePoint = true, _snapEndpoint = true, _snapMidpoint, _snapQuadrant, _snapIntersection = true, _snapNearest = true, _isSnapMarkerVisible;
@@ -54,7 +55,7 @@ public sealed class PipeLayoutViewModel : ViewModelBase
         _typeRepo = typeRepo;
         FamilyTypeNames = [];
         SegmentFamilyTypeNames = [];
-        ShortLengthParameterNames = [];
+        LengthParameterNames = [];
         Edges = [];
         Nodes = [];
         InlineFittings = [];
@@ -81,10 +82,10 @@ public sealed class PipeLayoutViewModel : ViewModelBase
     public ObservableCollection<InlineFittingItem> InlineFittings { get; }
     /// <summary>선택된 카테고리(배관 밸브류/일반모델)에 로드된 패밀리 목록. "패밀리명 : 타입명" 형식.</summary>
     public ObservableCollection<string> FamilyTypeNames { get; }
-    /// <summary>직관·단관·곡관·T형 콤보의 공용 배관 부속류 목록.</summary>
+    /// <summary>관·곡관·T형 콤보의 공용 배관 부속류 목록.</summary>
     public ObservableCollection<string> SegmentFamilyTypeNames { get; }
-    /// <summary>선택된 단관 패밀리의 인스턴스 파라미터 후보.</summary>
-    public ObservableCollection<string> ShortLengthParameterNames { get; }
+    /// <summary>선택된 관 패밀리의 인스턴스 파라미터 후보.</summary>
+    public ObservableCollection<string> LengthParameterNames { get; }
     public ObservableCollection<OutlineWallItem> OutlineWalls { get; }
     public ObservableCollection<OutlineArrowItem> OutlineArrows { get; }
     public ObservableCollection<TempDimensionItem> TempDimensions { get; }
@@ -119,34 +120,41 @@ public sealed class PipeLayoutViewModel : ViewModelBase
     public double ReferenceScreenY => Transform.PanOrigin.Y;
     public double DiameterMm { get => _diameterMm; set { if (!double.IsFinite(value) || value <= 0) throw new ArgumentOutOfRangeException(nameof(value), "관경은 0보다 큰 숫자여야 합니다."); if (SetProperty(ref _diameterMm, value)) NotifyValidationChanged(); } }
     public string? SelectedLevelName { get => _selectedLevelName; set { if (SetProperty(ref _selectedLevelName, value)) NotifyValidationChanged(); } }
-    /// <summary>규격 길이 직관 패밀리. 길이 조정 없이 그대로 배치한다(확정: 직관은 고정 6m).</summary>
-    public string? StraightFamilyTypeName { get => _straightFamilyTypeName; set { if (SetProperty(ref _straightFamilyTypeName, value)) NotifyValidationChanged(); } }
-    /// <summary>나머지 길이를 채우는 단관 패밀리. <see cref="ShortLengthParameterName"/>으로 길이를 구동한다.</summary>
-    public string? ShortFamilyTypeName
+    /// <summary>직관·단관을 모두 만드는 단일 관 패밀리. 길이는 <see cref="LengthParameterName"/>으로 구동한다.</summary>
+    public string? SegmentFamilyTypeName
     {
-        get => _shortFamilyTypeName;
+        get => _segmentFamilyTypeName;
         set
         {
-            if (!SetProperty(ref _shortFamilyTypeName, value)) return;
-            RefreshShortLengthParameterNames();
+            if (!SetProperty(ref _segmentFamilyTypeName, value)) return;
+            RefreshLengthParameterNames();
             NotifyValidationChanged();
         }
     }
-    public string? ShortLengthParameterName
+    public string? LengthParameterName
     {
-        get => _shortLengthParameterName;
+        get => _lengthParameterName;
         set
         {
-            if (!SetProperty(ref _shortLengthParameterName, value)) return;
-            _shortLengthParameterPinned = !string.IsNullOrWhiteSpace(value);
+            if (!SetProperty(ref _lengthParameterName, value)) return;
+            _lengthParameterPinned = !string.IsNullOrWhiteSpace(value);
             NotifyValidationChanged();
         }
     }
     public string? Bend90FamilyTypeName { get => _bend90FamilyTypeName; set { if (SetProperty(ref _bend90FamilyTypeName, value)) NotifyValidationChanged(); } }
     public string? Bend45FamilyTypeName { get => _bend45FamilyTypeName; set { if (SetProperty(ref _bend45FamilyTypeName, value)) NotifyValidationChanged(); } }
     public string? TeeFamilyTypeName { get => _teeFamilyTypeName; set { if (SetProperty(ref _teeFamilyTypeName, value)) NotifyValidationChanged(); } }
-    /// <summary>직관 1본의 규격 길이(mm). 화면에는 읽기전용 안내로만 쓴다.</summary>
-    public double StraightLengthMm => PipeSegmentPlan.StraightLengthMm;
+    /// <summary>직관 1본의 정척 길이(mm). 관 패밀리 수식의 직관/단관 분기 기준과 같아야 한다.</summary>
+    public double StraightLengthMm
+    {
+        get => _straightLengthMm;
+        set
+        {
+            if (!double.IsFinite(value) || value <= 0)
+                throw new ArgumentOutOfRangeException(nameof(value), "정척 길이는 0보다 큰 숫자여야 합니다.");
+            if (SetProperty(ref _straightLengthMm, value)) NotifyValidationChanged();
+        }
+    }
 
     public bool IsCreating { get => _isCreating; private set { if (SetProperty(ref _isCreating, value)) NotifyValidationChanged(); } }
     public bool CanUndo => _undoHistory.Count > 0;
@@ -544,11 +552,11 @@ public sealed class PipeLayoutViewModel : ViewModelBase
         Status = "선택한 배관을 삭제했습니다.";
     }
 
-    /// <summary>인라인 밸브는 배관 밸브류, 직관·단관·절점부속은 배관 부속류 패밀리를 보여준다.</summary>
+    /// <summary>인라인 밸브는 배관 밸브류, 관·절점부속은 배관 부속류 패밀리를 보여준다.</summary>
     private void RefreshFamilyTypeNames()
     {
         var accessoryNames = _typeRepo.GetPipeAccessoryTypeNames().ToList();   // 인라인 밸브류
-        var fittingNames = _typeRepo.GetPipeFittingTypeNames().ToList();       // 직관·단관·곡관·T형
+        var fittingNames = _typeRepo.GetPipeFittingTypeNames().ToList();       // 관·곡관·T형
         FamilyTypeNames.Clear();
         SegmentFamilyTypeNames.Clear();
         foreach (var name in accessoryNames) FamilyTypeNames.Add(name);
@@ -556,39 +564,38 @@ public sealed class PipeLayoutViewModel : ViewModelBase
         SelectedFamilyTypeName = null;
 
         // 이름으로 기본값을 추정한다. 못 찾으면 비워 두고 검증에서 선택을 요구한다.
-        _straightFamilyTypeName ??= GuessFamily(fittingNames, "직관");
-        _shortFamilyTypeName ??= GuessFamily(fittingNames, "단관");
+        _segmentFamilyTypeName ??= GuessFamily(fittingNames, "직관", "단관");
         _bend90FamilyTypeName ??= GuessFamily(fittingNames, "90");
         _bend45FamilyTypeName ??= GuessFamily(fittingNames, "45");
         _teeFamilyTypeName ??= GuessFamily(fittingNames, "T형", "티", "TEE");
-        OnPropertyChanged(nameof(StraightFamilyTypeName));
-        OnPropertyChanged(nameof(ShortFamilyTypeName));
+        OnPropertyChanged(nameof(SegmentFamilyTypeName));
         OnPropertyChanged(nameof(Bend90FamilyTypeName));
         OnPropertyChanged(nameof(Bend45FamilyTypeName));
         OnPropertyChanged(nameof(TeeFamilyTypeName));
-        RefreshShortLengthParameterNames();
+        RefreshLengthParameterNames();
     }
 
     private static string? GuessFamily(IReadOnlyList<string> names, params string[] keywords)
         => names.FirstOrDefault(name => keywords.Any(k => name.Contains(k, StringComparison.OrdinalIgnoreCase)));
 
-    /// <summary>선택된 단관 패밀리의 인스턴스 파라미터를 다시 읽고, 사용자가 직접 고르지 않았다면 길이형 이름을 자동 추정한다.</summary>
-    private void RefreshShortLengthParameterNames()
+    /// <summary>선택된 관 패밀리의 인스턴스 파라미터를 다시 읽고, 사용자가 직접 고르지 않았다면 길이형 이름을 자동 추정한다.</summary>
+    private void RefreshLengthParameterNames()
     {
-        ShortLengthParameterNames.Clear();
-        var names = string.IsNullOrWhiteSpace(ShortFamilyTypeName)
+        LengthParameterNames.Clear();
+        // TODO: 실제로는 카테고리 공통 조회이므로 인터페이스 메서드명을 별도 작업에서 일반화한다.
+        var names = string.IsNullOrWhiteSpace(SegmentFamilyTypeName)
             ? []
-            : _typeRepo.GetPipeAccessoryInstanceParameterNames(ShortFamilyTypeName).ToList();
-        foreach (var name in names) ShortLengthParameterNames.Add(name);
+            : _typeRepo.GetPipeAccessoryInstanceParameterNames(SegmentFamilyTypeName).ToList();
+        foreach (var name in names) LengthParameterNames.Add(name);
 
         // 사용자가 고른 값이 새 패밀리에도 있으면 그대로 둔다.
-        if (_shortLengthParameterPinned && _shortLengthParameterName is not null && names.Contains(_shortLengthParameterName)) return;
+        if (_lengthParameterPinned && _lengthParameterName is not null && names.Contains(_lengthParameterName)) return;
 
-        _shortLengthParameterName = names.FirstOrDefault(x => x.Contains("길이", StringComparison.Ordinal))
+        _lengthParameterName = names.FirstOrDefault(x => x.Contains("길이", StringComparison.Ordinal))
             ?? names.FirstOrDefault(x => x.Contains("Length", StringComparison.OrdinalIgnoreCase))
             ?? names.FirstOrDefault(x => string.Equals(x, "L", StringComparison.OrdinalIgnoreCase));
-        _shortLengthParameterPinned = false;
-        OnPropertyChanged(nameof(ShortLengthParameterName));
+        _lengthParameterPinned = false;
+        OnPropertyChanged(nameof(LengthParameterName));
     }
 
     private void RemoveFitting(InlineFittingItem? fitting)
@@ -671,9 +678,9 @@ public sealed class PipeLayoutViewModel : ViewModelBase
         if (_network.Edges.Count == 0) errors.Add("배관을 한 개 이상 그려야 합니다.");
         // MEP Pipe를 만들지 않으므로 시스템 타입·PipeType은 필수가 아니다(콤보는 향후 병행을 위해 남겨 둔다).
         if (string.IsNullOrWhiteSpace(SelectedLevelName)) errors.Add("레벨을 선택하세요.");
-        if (string.IsNullOrWhiteSpace(StraightFamilyTypeName)) errors.Add("직관 패밀리를 선택하세요.");
-        if (string.IsNullOrWhiteSpace(ShortFamilyTypeName)) errors.Add("단관 패밀리를 선택하세요.");
-        if (string.IsNullOrWhiteSpace(ShortLengthParameterName)) errors.Add("단관 길이 파라미터를 선택하세요.");
+        if (string.IsNullOrWhiteSpace(SegmentFamilyTypeName)) errors.Add("관 패밀리를 선택하세요.");
+        if (string.IsNullOrWhiteSpace(LengthParameterName)) errors.Add("관 길이 파라미터를 선택하세요.");
+        if (!double.IsFinite(StraightLengthMm) || StraightLengthMm <= 0) errors.Add("정척 길이는 0보다 커야 합니다.");
         if (!double.IsFinite(DiameterMm) || DiameterMm <= 0) errors.Add("관경은 0보다 커야 합니다.");
         if (!double.IsFinite(Elevation) || !double.IsFinite(ReferenceX) || !double.IsFinite(ReferenceY)) errors.Add("좌표와 표고는 유효한 숫자여야 합니다.");
         if (InOffsetMm < 0 || OutOffsetMm < 0) errors.Add("IN/OUT 이격은 0 이상이어야 합니다.");
@@ -718,14 +725,15 @@ public sealed class PipeLayoutViewModel : ViewModelBase
             CreateModelAction?.Invoke(_network.ToDefinition(DiameterMm, PipeOutputMode.PipeAccessorySegment, new(ReferenceX, ReferenceY),
                 "", "", SelectedLevelName!,
                 new PipeSegmentFamilySelection(
-                    StraightFamilyTypeName!, ShortFamilyTypeName!, ShortLengthParameterName!,
-                    Bend90FamilyTypeName ?? "", Bend45FamilyTypeName ?? "", TeeFamilyTypeName ?? "")));
+                    SegmentFamilyTypeName!, LengthParameterName!,
+                    Bend90FamilyTypeName ?? "", Bend45FamilyTypeName ?? "", TeeFamilyTypeName ?? "",
+                    StraightLengthMm)));
             Status = "Revit에서 직관·단관을 배치하고 있습니다…";
         }
         catch (Exception ex)
         {
             IsCreating = false;
-            Status = $"MEP 배관 생성 요청 실패: {ex.Message}";
+            Status = $"관 생성 요청 실패: {ex.Message}";
         }
     }
 

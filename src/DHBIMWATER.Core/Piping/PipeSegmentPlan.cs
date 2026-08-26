@@ -29,7 +29,7 @@ public static class PipeSegmentPlan
 {
     /// <summary>직관 1본의 규격 길이(mm). 주철관 표준 정척.</summary>
     public const double StraightLengthMm = 6000;
-    /// <summary>이보다 짧은 나머지는 단관으로 만들지 않고 경고만 남긴다.</summary>
+    /// <summary>이보다 짧은 나머지는 단관으로 만들지 않고 오류로 보고한다.</summary>
     public const double MinSegmentMm = 10;
     private const double Tolerance = 1e-6;
 

@@ -11,16 +11,17 @@ public enum PipeOutputMode
 }
 public sealed record PipeNodeDefinition(Guid Id, Point2D Position, NodeKind NodeKind);
 
-/// <summary>직관·단관 배치(<see cref="PipeOutputMode.PipeAccessorySegment"/>)에 필요한 패밀리·파라미터 지정 묶음.
+/// <summary>관·절점부속 배치(<see cref="PipeOutputMode.PipeAccessorySegment"/>)에 필요한 패밀리·파라미터 지정 묶음.
 /// 이름은 모두 "패밀리명 : 타입명" 형식이다.</summary>
 public sealed record PipeSegmentFamilySelection(
-    string StraightFamilyTypeName,
-    string ShortFamilyTypeName,
-    /// <summary>단관 인스턴스에 실제 길이(mm)를 기록할 파라미터명.</summary>
-    string ShortLengthParameterName,
+    /// <summary>직관·단관을 모두 만드는 단일 관 패밀리. 길이는 <see cref="LengthParameterName"/>으로 구동한다.</summary>
+    string SegmentFamilyTypeName,
+    /// <summary>관 인스턴스에 실제 길이(mm)를 기록할 파라미터명.</summary>
+    string LengthParameterName,
     string Bend90FamilyTypeName,
     string Bend45FamilyTypeName,
     string TeeFamilyTypeName,
+    /// <summary>직관 1본의 정척 길이(mm). 패밀리 수식의 직관/단관 분기 기준과 같아야 한다.</summary>
     double StraightLengthMm = PipeSegmentPlan.StraightLengthMm);
 
 public sealed record PipeNetworkDefinition(

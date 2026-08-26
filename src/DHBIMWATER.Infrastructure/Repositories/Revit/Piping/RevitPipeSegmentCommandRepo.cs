@@ -24,17 +24,15 @@ internal sealed class RevitPipeSegmentCommandRepo : IPipeCommandRepo
         var families = network.SegmentFamilies
             ?? throw new InvalidOperationException("직관·단관 패밀리 지정이 없습니다. 모델링 창에서 패밀리를 선택하세요.");
 
-        var straight = ResolveSymbol(document, families.StraightFamilyTypeName, "직관");
-        var shortPipe = ResolveSymbol(document, families.ShortFamilyTypeName, "단관");
-        if (string.IsNullOrWhiteSpace(families.ShortLengthParameterName))
-            throw new InvalidOperationException("단관 길이 파라미터가 지정되지 않았습니다.");
+        var segment = ResolveSymbol(document, families.SegmentFamilyTypeName, "관");
+        if (string.IsNullOrWhiteSpace(families.LengthParameterName))
+            throw new InvalidOperationException("관 길이 파라미터가 지정되지 않았습니다.");
+        if (!double.IsFinite(families.StraightLengthMm) || families.StraightLengthMm <= 0)
+            throw new InvalidOperationException("직관 정척 길이는 0보다 큰 숫자여야 합니다.");
 
-        var straightSpanMm = SymbolConnectorSpanMm(document, straight, "직관");
-        if (Math.Abs(straightSpanMm - families.StraightLengthMm) > ConnectionToleranceMm)
-            throw new InvalidOperationException(
-                $"직관 '{families.StraightFamilyTypeName}'의 배관 커넥터 간 거리는 {straightSpanMm:N0}mm입니다. " +
-                $"고정 직관 길이 {families.StraightLengthMm:N0}mm와 일치하는 패밀리를 선택하세요.");
-        _ = SymbolConnectorSpanMm(document, shortPipe, "단관");
+        // 직관·단관은 같은 패밀리를 길이 파라미터로 구동한다. 커넥터 간 거리는 배치 시점에 결정되므로
+        // 여기서는 길이로 검증하지 않고, "2포트인가 / 원점이 커넥터 중앙인가 / 길이를 쓸 수 있는가"만 확인한다.
+        ValidateSegmentSymbol(document, segment, families.LengthParameterName);
 
         var placedInstances = new List<FamilyInstance>();
 
@@ -66,24 +64,19 @@ internal sealed class RevitPipeSegmentCommandRepo : IPipeCommandRepo
 
             var direction = (endXyz - startXyz).Normalize();
             var rotation = Math.Atan2(direction.Y, direction.X);
-            foreach (var segment in plan.Segments)
+            foreach (var placement in plan.Segments)
             {
-                var center = startXyz + direction * UC.MmToFt(segment.CenterMm);
-                var symbol = segment.Kind == PipeSegmentKind.Straight ? straight : shortPipe;
-                var instance = PlaceAt(document, symbol, center, rotation);
+                var center = startXyz + direction * UC.MmToFt(placement.CenterMm);
+                var instance = PlaceAt(document, segment, center, rotation);
                 placedInstances.Add(instance);
-                if (segment.Kind == PipeSegmentKind.Straight)
-                {
-                    ValidateCenteredSpan(instance, center, segment.LengthMm, "직관");
-                    straightCount++;
-                }
-                else
-                {
-                    SetLengthMm(instance, families.ShortLengthParameterName, segment.LengthMm);
-                    document.Regenerate();
-                    ValidateCenteredSpan(instance, center, segment.LengthMm, "단관");
-                    shortCount++;
-                }
+
+                // 직관·단관이 같은 패밀리이므로 길이 구동과 검증 경로도 하나다.
+                // 직관/단관 구분은 패밀리 내부 수식이 정척 길이로 판정하며, 여기서는 집계에만 쓴다.
+                var role = placement.Kind == PipeSegmentKind.Straight ? "직관" : "단관";
+                SetLengthMm(instance, families.LengthParameterName, placement.LengthMm);
+                document.Regenerate();
+                ValidateCenteredSpan(instance, center, placement.LengthMm, role);
+                if (placement.Kind == PipeSegmentKind.Straight) straightCount++; else shortCount++;
             }
         }
 
@@ -269,8 +262,9 @@ internal sealed class RevitPipeSegmentCommandRepo : IPipeCommandRepo
         }
     }
 
-    /// <summary>패밀리 유형의 커넥터 2개 사이 거리(mm). 임시 인스턴스를 만들어 재고 지운다.</summary>
-    private static double SymbolConnectorSpanMm(Document document, FamilySymbol symbol, string role)
+    /// <summary>관 패밀리가 인라인 배치 조건을 만족하는지 임시 인스턴스로 확인한다.
+    /// 길이는 배치 시점에 파라미터로 구동하므로 여기서 길이를 검증하지 않는다.</summary>
+    private static void ValidateSegmentSymbol(Document document, FamilySymbol symbol, string lengthParameterName)
     {
         var probe = PlaceAt(document, symbol, XYZ.Zero, 0);
         try
@@ -278,10 +272,16 @@ internal sealed class RevitPipeSegmentCommandRepo : IPipeCommandRepo
             var connectors = GetMepConnectors(probe);
             if (connectors.Count != 2)
                 throw new InvalidOperationException(
-                    $"{role} '{symbol.Family.Name} : {symbol.Name}'의 물리 배관 커넥터는 {connectors.Count}개입니다. " +
+                    $"관 '{symbol.Family.Name} : {symbol.Name}'의 물리 배관 커넥터는 {connectors.Count}개입니다. " +
                     "인라인 배치에는 양쪽 끝 커넥터가 있는 2포트 패밀리가 필요합니다.");
-            ValidateConnectorMidpoint(symbol, connectors, XYZ.Zero, role);
-            return ConnectorSpanMm(connectors);
+            ValidateConnectorMidpoint(symbol, connectors, XYZ.Zero, "관");
+
+            // 길이 파라미터를 실제로 쓸 수 있는지 배치 전에 확인한다(전체 롤백보다 이른 실패가 낫다).
+            var parameter = probe.LookupParameter(lengthParameterName);
+            if (parameter is null || parameter.IsReadOnly || parameter.StorageType != StorageType.Double)
+                throw new InvalidOperationException(
+                    $"관 길이 파라미터 '{lengthParameterName}'에 값을 쓸 수 없습니다. " +
+                    "쓰기 가능한 길이형 인스턴스 파라미터인지 확인하세요.");
         }
         finally
         {
@@ -308,9 +308,9 @@ internal sealed class RevitPipeSegmentCommandRepo : IPipeCommandRepo
         var parameter = instance.LookupParameter(parameterName);
         if (parameter is null || parameter.IsReadOnly || parameter.StorageType != StorageType.Double)
             throw new InvalidOperationException(
-                $"단관 길이 파라미터 '{parameterName}'에 값을 쓸 수 없습니다. 쓰기 가능한 길이형 인스턴스 파라미터인지 확인하세요.");
+                $"관 길이 파라미터 '{parameterName}'에 값을 쓸 수 없습니다. 쓰기 가능한 길이형 인스턴스 파라미터인지 확인하세요.");
         if (!parameter.Set(UC.MmToFt(lengthMm)))
-            throw new InvalidOperationException($"단관 길이 파라미터 '{parameterName}' 설정에 실패했습니다.");
+            throw new InvalidOperationException($"관 길이 파라미터 '{parameterName}' 설정에 실패했습니다.");
     }
 
     private static void ValidateCenteredSpan(FamilyInstance instance, XYZ expectedCenter, double expectedLengthMm, string role)

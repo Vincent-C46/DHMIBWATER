@@ -44,6 +44,20 @@ public class PipeSegmentPlanTests
     }
 
     [Fact]
+    public void Build_SplitsByCustomStraightLength()
+    {
+        var result = PipeSegmentPlan.Build(1750, [], straightLengthMm: 500);
+
+        Assert.Empty(result.Errors);
+        Assert.Equal(4, result.Segments.Count);
+        Assert.Equal(3, result.Segments.Count(x => x.Kind == PipeSegmentKind.Straight));
+        Assert.All(result.Segments.Take(3), x => Assert.Equal(500, x.LengthMm));
+        var shortPipe = result.Segments[3];
+        Assert.Equal(PipeSegmentKind.Short, shortPipe.Kind);
+        Assert.Equal(250, shortPipe.LengthMm);
+    }
+
+    [Fact]
     public void Node_fitting_trims_are_excluded_from_both_ends()
     {
         // 양 끝 절점의 곡관 몸통 300mm씩을 뺀 6600mm 가용 구간 → 직관 1본 + 단관 600mm

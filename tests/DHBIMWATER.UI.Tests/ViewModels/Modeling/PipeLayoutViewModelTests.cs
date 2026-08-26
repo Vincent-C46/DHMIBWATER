@@ -66,6 +66,20 @@ public sealed class PipeLayoutViewModelTests
     }
 
     [Fact]
+    public void StraightLengthMm_RejectsNonPositiveValue_AndAcceptsCustomValue()
+    {
+        var vm = CreateViewModel();
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => vm.StraightLengthMm = 0);
+        Assert.Throws<ArgumentOutOfRangeException>(() => vm.StraightLengthMm = -1);
+        Assert.Throws<ArgumentOutOfRangeException>(() => vm.StraightLengthMm = double.NaN);
+
+        vm.StraightLengthMm = 500;
+
+        Assert.Equal(500, vm.StraightLengthMm);
+    }
+
+    [Fact]
     public void RemoveFittingCommand_RemovesFittingWithoutSelectedEdge()
     {
         var vm = CreateViewModel();
@@ -125,9 +139,8 @@ public sealed class PipeLayoutViewModelTests
 
         // 패밀리·파라미터는 스텁 목록 이름에서 자동 추정된다.
         Assert.NotNull(request.SegmentFamilies);
-        Assert.Equal("직관 : DN100", request.SegmentFamilies!.StraightFamilyTypeName);
-        Assert.Equal("단관 : DN100", request.SegmentFamilies.ShortFamilyTypeName);
-        Assert.Equal("길이", request.SegmentFamilies.ShortLengthParameterName);
+        Assert.Equal("직관 : DN100", request.SegmentFamilies!.SegmentFamilyTypeName);
+        Assert.Equal("길이", request.SegmentFamilies.LengthParameterName);
 
         Assert.True(vm.IsCreating);
         Assert.False(vm.CreateModelCommand.CanExecute(null));
@@ -142,12 +155,11 @@ public sealed class PipeLayoutViewModelTests
     {
         var vm = CreateViewModel();
 
-        Assert.Equal("직관 : DN100", vm.StraightFamilyTypeName);
-        Assert.Equal("단관 : DN100", vm.ShortFamilyTypeName);
+        Assert.Equal("직관 : DN100", vm.SegmentFamilyTypeName);
         Assert.Equal("곡관90 : DN100", vm.Bend90FamilyTypeName);
         Assert.Equal("곡관45 : DN100", vm.Bend45FamilyTypeName);
         Assert.Equal("T형 : DN100", vm.TeeFamilyTypeName);
-        Assert.Equal("길이", vm.ShortLengthParameterName);
+        Assert.Equal("길이", vm.LengthParameterName);
     }
 
     [Fact]
@@ -159,15 +171,14 @@ public sealed class PipeLayoutViewModelTests
         Assert.Equal(
             ["직관 : DN100", "단관 : DN100", "곡관90 : DN100", "곡관45 : DN100", "T형 : DN100"],
             vm.SegmentFamilyTypeNames);
-        Assert.Contains(vm.StraightFamilyTypeName, vm.SegmentFamilyTypeNames);
-        Assert.Contains(vm.ShortFamilyTypeName, vm.SegmentFamilyTypeNames);
+        Assert.Contains(vm.SegmentFamilyTypeName, vm.SegmentFamilyTypeNames);
         Assert.Contains(vm.Bend90FamilyTypeName, vm.SegmentFamilyTypeNames);
         Assert.Contains(vm.Bend45FamilyTypeName, vm.SegmentFamilyTypeNames);
         Assert.Contains(vm.TeeFamilyTypeName, vm.SegmentFamilyTypeNames);
     }
 
     [Fact]
-    public void Missing_short_length_parameter_blocks_model_creation()
+    public void Missing_length_parameter_blocks_model_creation()
     {
         var vm = CreateViewModel();
         vm.HandleCanvasSizeChanged(1000, 1000);
@@ -175,10 +186,39 @@ public sealed class PipeLayoutViewModelTests
         vm.CreateModelAction = _ => { };
         Assert.True(vm.CreateModelCommand.CanExecute(null));
 
-        vm.ShortLengthParameterName = null;
+        vm.LengthParameterName = null;
 
         Assert.False(vm.CreateModelCommand.CanExecute(null));
-        Assert.Contains("단관 길이 파라미터", vm.ValidationSummary);
+        Assert.Contains("관 길이 파라미터", vm.ValidationSummary);
+    }
+
+    [Fact]
+    public void CreateModelCommand_PassesCustomStraightLength()
+    {
+        var vm = CreateViewModel();
+        vm.HandleCanvasSizeChanged(1000, 1000);
+        Draw(vm, new(0, 0), new(1000, 0));
+        vm.StraightLengthMm = 500;
+        PipeNetworkDefinition? request = null;
+        vm.CreateModelAction = value => request = value;
+
+        vm.CreateModelCommand.Execute(null);
+
+        Assert.NotNull(request);
+        Assert.Equal(500, request!.SegmentFamilies!.StraightLengthMm);
+    }
+
+    [Fact]
+    public void ValidationSummary_RequiresSegmentFamilyAndLengthParameter()
+    {
+        var vm = CreateViewModel();
+
+        vm.SegmentFamilyTypeName = null;
+        Assert.Contains("관 패밀리를 선택하세요.", vm.ValidationSummary);
+
+        vm.SegmentFamilyTypeName = "직관 : DN100";
+        vm.LengthParameterName = null;
+        Assert.Contains("관 길이 파라미터를 선택하세요.", vm.ValidationSummary);
     }
 
     private static void Draw(PipeLayoutViewModel vm, Point2D start, Point2D end)
