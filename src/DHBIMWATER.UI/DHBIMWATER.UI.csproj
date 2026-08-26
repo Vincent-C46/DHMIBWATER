@@ -20,12 +20,17 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <None Remove="Resources\Icons\box.png" />
 	  <None Remove="Resources\Icons\Export.png" />
+	  <None Remove="Resources\Icons\link.png" />
+	  <None Remove="Resources\Icons\pipe.png" />
+	  <None Remove="Resources\Icons\pipe_2.png" />
 	  <None Remove="Resources\Icons\pump.png" />
 	  <None Remove="Resources\Icons\Quantity.png" />
 	  <None Remove="Resources\Icons\revit.png" />
 	  <None Remove="Resources\Icons\Sheet.png" />
 	  <None Remove="Resources\Icons\Trash.png" />
+	  <None Remove="Resources\Icons\valve.png" />
 	  <None Remove="Resources\Icons\ViewDirection0.png" />
 	  <None Remove="Resources\Icons\ViewDirection1.png" />
 	  <None Remove="Resources\Icons\ViewDirection2.png" />
@@ -75,6 +80,21 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Resource Include="Resources\Icons\box.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Resource>
+	  <Resource Include="Resources\Icons\link.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Resource>
+	  <Resource Include="Resources\Icons\pipe.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Resource>
+	  <Resource Include="Resources\Icons\pipe_2.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Resource>
+	  <Resource Include="Resources\Icons\valve.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Resource>
 	  <Resource Include="Resources\PumpStationImages\TYPE-1_종단개요.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Resource>
@@ -111,27 +131,35 @@
 	  </Resource>
 	  <Resource Include="Resources\Icons\Sheet.png">
 	    <Generator>새 버전이면 복사</Generator>
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Resource>
 	  <Resource Include="Resources\Icons\Trash.png">
 	    <Generator>새 버전이면 복사</Generator>
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Resource>
 	  <Resource Include="Resources\Icons\ViewDirection0.png">
 	    <Generator>새 버전이면 복사</Generator>
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Resource>
 	  <Resource Include="Resources\Icons\ViewDirection1.png">
 	    <Generator>새 버전이면 복사</Generator>
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Resource>
 	  <Resource Include="Resources\Icons\ViewDirection2.png">
 	    <Generator>새 버전이면 복사</Generator>
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Resource>
 	  <Resource Include="Resources\Icons\ViewDirection3.png">
 	    <Generator>새 버전이면 복사</Generator>
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Resource>
 	  <Resource Include="Resources\Icons\ViewDirection4.png">
 	    <Generator>새 버전이면 복사</Generator>
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Resource>
 	  <Resource Include="Resources\Icons\ViewPlus.png">
 	    <Generator>새 버전이면 복사</Generator>
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Resource>
 	  <Resource Include="Resources\PumpStationImages\1-1.종단제원.png">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

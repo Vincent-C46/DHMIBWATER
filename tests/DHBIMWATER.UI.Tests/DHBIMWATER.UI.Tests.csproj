@@ -20,6 +20,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\DHBIMWATER.Application\DHBIMWATER.Application.csproj" />
     <ProjectReference Include="..\..\src\DHBIMWATER.UI\DHBIMWATER.UI.csproj" />
+    <!-- ExcelAlignmentReader의 헤더 필드 파싱을 실제 xlsx로 검증하기 위해 추가. Revit 타입은 로드하지 않는다. -->
+    <ProjectReference Include="..\..\src\DHBIMWATER.Infrastructure\DHBIMWATER.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

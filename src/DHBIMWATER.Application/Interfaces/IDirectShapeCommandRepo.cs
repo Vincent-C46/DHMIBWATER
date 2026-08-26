@@ -10,6 +10,6 @@ namespace DHBIMWATER.Application.Interfaces
     public interface IDirectShapeCommandRepo
     {
         int CreateDirectShape(SolidExtrusionDefinition solidExtrusionDef);
-        IReadOnlyList<int> CreateDirectShapes(IReadOnlyList<SolidExtrusionDefinition> solidExtrusionDefs);
+        IReadOnlyList<int> CreateDirectShapes(IReadOnlyList<SolidExtrusionDefinition> solidExtrusionDefs, DHBIMWATER.Core.Structures.ConcreteSpec? concrete = null);
     }
 }

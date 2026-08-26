@@ -18,16 +18,12 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             _dialog = dialog;
         }
 
-        public int PlaceInstance(GenericModelPlacementDefinition def)
+        public int PlaceInstance(GenericModelPlacementDefinition def, long levelId, int symbolId)
         {
             Document? doc = _doc();
             if (doc == null) return 0;
 
-            FamilySymbol? symbol = new FilteredElementCollector(doc)
-                .OfClass(typeof(FamilySymbol))
-                .OfCategory(BuiltInCategory.OST_GenericModel)
-                .Cast<FamilySymbol>()
-                .FirstOrDefault(s => s.Name.Contains(def.SymbolName));
+            FamilySymbol? symbol = doc.GetElement(new ElementId((long)symbolId)) as FamilySymbol;
 
             if (symbol == null)
             {
@@ -35,10 +31,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
                 return 0;
             }
 
-            Level? level = new FilteredElementCollector(doc)
-                .OfClass(typeof(Level))
-                .Cast<Level>()
-                .FirstOrDefault(l => l.Name == def.LevelName);
+            Level? level = doc.GetElement(new ElementId(levelId)) as Level;
 
             if (level == null)
             {
@@ -66,6 +59,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             instance.LookupParameter("DH_Addin")?.Set("DHBIMWATER");
             instance.LookupParameter("DH_Category")?.Set(def.Category);
             instance.LookupParameter("DH_ElementCode")?.Set(def.ElementCode);
+            if (!string.IsNullOrEmpty(def.Class))
+                instance.LookupParameter("DH_Class")?.Set(def.Class);
             instance.LookupParameter("DH_Part")?.Set(def.Part);
             instance.LookupParameter("DH_Zone")?.Set(def.Zone);
 
@@ -76,9 +71,10 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
 
                 switch (value)
                 {
-                    case string s: param.Set(s); break;
-                    case double d: param.Set(UC.MmToFt(d)); break;
-                    case int i:    param.Set(i); break;
+                    case string s:       param.Set(s); break;
+                    case Dimensionless n: param.Set(n.Value); break;
+                    case double d:       param.Set(UC.MmToFt(d)); break;
+                    case int i:          param.Set(i); break;
                     default: break;
                 }
             }
@@ -86,3 +82,4 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
         }
     }
 }
+

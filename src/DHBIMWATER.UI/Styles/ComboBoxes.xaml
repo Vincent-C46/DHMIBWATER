@@ -67,4 +67,52 @@
         </Setter>
     </Style>
 
+    <!-- IsEditable="True" 전용 스타일.
+         WPF ComboBox는 편집 모드일 때 템플릿에서 "PART_EditableTextBox"라는 이름의 TextBox를 찾아
+         입력과 표시를 모두 그 컨트롤에 위임한다. PrimaryComboBoxStyle에는 이 파트가 없어서
+         IsEditable을 켜도 타이핑이 되지 않고 선택한 항목도 표시되지 않는다(표시 경로가 파트로 넘어가므로).
+         PrimaryComboBoxStyle은 여러 뷰가 공유하므로 수정하지 않고 편집용을 별도로 둔다. -->
+    <Style x:Key="EditableComboBoxStyle" TargetType="ComboBox">
+        <Setter Property="Padding" Value="10,5"/>
+        <Setter Property="MinHeight" Value="15"/>
+        <Setter Property="IsEditable" Value="True"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBox">
+                    <Grid>
+                        <ToggleButton Style="{StaticResource ComboBoxToggleButton}"
+                                      ClickMode="Press" Focusable="False"
+                                      IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                        <!-- 오른쪽 30px는 화살표 영역이라 텍스트가 겹치지 않도록 여백을 준다 -->
+                        <TextBox x:Name="PART_EditableTextBox"
+                                 Margin="10,0,32,0"
+                                 Padding="0"
+                                 MinHeight="{TemplateBinding MinHeight}"
+                                 Background="Transparent" BorderThickness="0"
+                                 Foreground="{StaticResource MainTextBrush}"
+                                 IsReadOnly="{TemplateBinding IsReadOnly}"
+                                 VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                 HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+                        <Popup x:Name="PART_Popup"
+                               AllowsTransparency="true"
+                               IsOpen="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}}"
+                               Placement="Bottom">
+                            <Border x:Name="dropDownBorder"
+                                    Background="White" BorderBrush="{StaticResource BorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="0,0,8,8"
+                                    MinWidth="{TemplateBinding ActualWidth}"
+                                    MaxHeight="200">
+                                <ScrollViewer Margin="4" SnapsToDevicePixels="True">
+                                    <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                </ScrollViewer>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
 </ResourceDictionary>

@@ -8,7 +8,7 @@
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance vm:PumpingStationViewModel, IsDesignTimeCreatable=False}"
         
-        Title="DHBIM WATER - PumpingStation Builder"
+        Title="DHBIMWATER - PumpingStation Builder"
         SizeToContent="Height" Width="1300" MinWidth="900" MaxWidth="1900" MinHeight="300"
         MaxHeight="1000"
         WindowStartupLocation="CenterScreen"
@@ -138,6 +138,18 @@
                                                          Width="100" Margin="10,0" VerticalAlignment="Center" Height="25"/>
                                         <TextBlock Text="m" Style="{StaticResource LabelTextBlockStyle}" VerticalAlignment="Center"/>
                                     </StackPanel>
+                                    <Separator Margin="0,0,0,10"/>
+                                    <TextBlock Text="부재별 콘크리트 재료" FontWeight="SemiBold" Foreground="#4A6FA5" Margin="0,0,0,6"/>
+                                    <DataGrid ItemsSource="{Binding ConcreteMaterials}" AutoGenerateColumns="False" CanUserAddRows="False"
+                                              HeadersVisibility="Column" Width="570" MinHeight="165" Margin="0,0,0,10">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="부재" Binding="{Binding MemberName, Mode=OneWay}" IsReadOnly="True" Width="80"/>
+                                            <DataGridTextColumn Header="최대골재 (mm)" Binding="{Binding MaxAggregateSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="110"/>
+                                            <DataGridTextColumn Header="강도 (MPa)" Binding="{Binding CompressiveStrength, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="100"/>
+                                            <DataGridTextColumn Header="슬럼프 (mm)" Binding="{Binding Slump, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="105"/>
+                                            <DataGridTextColumn Header="재료명" Binding="{Binding MaterialName, Mode=OneWay}" IsReadOnly="True" Width="*"/>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
                                 </StackPanel>
                             </ScrollViewer>
                             <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="20,0,0,0">

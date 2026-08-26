@@ -9,18 +9,13 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
     public class RevitSlabCommandRepo : ISlabCommandRepo
     {
         private readonly Func<Document?> _doc;
-        private readonly IElementTypeCommandRepo _elementTypeCmdRepo;
 
-        // TODO: 설정값에서 가져오도록 변경 — 굵은골재최대치수-압축강도-슬럼프
-        private static readonly ConcreteSpec _concrete = new ConcreteSpec(25, 30, 150);
-
-        public RevitSlabCommandRepo(Func<Document?> doc, IElementTypeCommandRepo elementTypeRepo)
+        public RevitSlabCommandRepo(Func<Document?> doc)
         {
             _doc = doc;
-            _elementTypeCmdRepo = elementTypeRepo;
         }
 
-        public int CreateSlab(SlabDefinition slabDef)
+        public int CreateSlab(SlabDefinition slabDef, long levelId, int slabTypeId)
         {
             var doc = _doc();
             if (doc == null) return 0;
@@ -66,19 +61,10 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
                     curveLoopList.Add(subCurveLoop);
             }
 
-            var floorSpec = new FloorTypeSpec(slabDef.Thickness, $"일반 - {slabDef.Thickness}mm", _concrete);
-            var floorTypeId = new ElementId((long)_elementTypeCmdRepo.FindOrCreateSlabType(floorSpec));
+            var level = doc.GetElement(new ElementId(levelId)) as Level;
+            if (level == null) throw new Exception($"Level id '{levelId}' not found.");
 
-            var level = new FilteredElementCollector(doc)
-                .OfClass(typeof(Level))
-                .Cast<Level>()
-                .FirstOrDefault(e => e.Name.Equals(slabDef.LevelName));
-            if (level == null)
-            {
-                throw new Exception($"Level '{slabDef.LevelName}' not found.");
-            }
-
-            var floor = Floor.Create(doc, curveLoopList, floorTypeId, level.Id);
+            var floor = Floor.Create(doc, curveLoopList, new ElementId((long)slabTypeId), level.Id);
             // Z값 조정
             floor.get_Parameter(BuiltInParameter.FLOOR_HEIGHTABOVELEVEL_PARAM)?.Set(UC.MmToFt(slabDef.ElevationZ) - level.Elevation); ;
             //floor.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS).Set(slabDef.ElementCode);

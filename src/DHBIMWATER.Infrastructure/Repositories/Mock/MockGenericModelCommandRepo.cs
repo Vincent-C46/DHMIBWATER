@@ -6,7 +6,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Mock
 {
     internal class MockGenericModelCommandRepo : IGenericModelCommandRepo
     {
-        public int PlaceInstance(GenericModelPlacementDefinition def)
+        public int PlaceInstance(GenericModelPlacementDefinition def, long levelId, int symbolId)
         {
             var mockDialogService = new MockDialogService();
             mockDialogService.Info("GenericModel Placement", $"{def.SymbolName} ({def.ElementCode}) 배치완료");

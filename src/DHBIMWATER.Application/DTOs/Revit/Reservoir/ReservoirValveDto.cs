@@ -22,6 +22,9 @@ namespace DHBIMWATER.Application.DTOs.Revit.Reservoir
         double Hp,     // 파이프 공간 높이 (m)
         double WpThk,  // 파이프 슬래브 두께 (m)
         double SpThk,  // 밸브실 바닥 스트럿 두께 (m)
-        double SLp     // 밸브실 배관레벨 (m)
+        double SLp,    // PIT 사면비 (무차원)
+        double SLv     // 단차부 사면비 (무차원)
     );
 }
+
+

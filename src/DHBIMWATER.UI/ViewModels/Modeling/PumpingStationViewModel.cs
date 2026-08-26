@@ -3,6 +3,7 @@ using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Application.UseCases.AutoGenerator;
 using DHBIMWATER.UI.Base;
 using DHBIMWATER.UI.Commands;
+using DHBIMWATER.Core.Structures;
 using DocumentFormat.OpenXml.Spreadsheet;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -137,6 +138,10 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
         public IReadOnlyList<string> EntranceTypes => _selectedPumpingStationType == "Type1"
             ? new List<string> { "좌안부", "우안부", "측면부" }
             : new List<string> { "측면부" };
+        public ObservableCollection<ConcreteMaterialRowViewModel> ConcreteMaterials { get; } = new()
+        {
+            new("벽체"), new("슬래브"), new("기초"), new("버림콘크리트", 18), new("거더"), new("계단")
+        };
         public string SelectedEntranceType
         {
             get => _selectedEntranceType;
@@ -1029,7 +1034,12 @@ namespace DHBIMWATER.UI.ViewModels.Modeling
             profileSpecDto = new PumpProfileSpecDto(B1, B3, B4, B6, B7, H1, H5, H6, SelectedTheta, L1, L2, L3, L4, H3, H4, H7, OB1, OH1, HB1, HH1, NS, HS, NS1, HS1, T1, T2, T3, T4, T5Prime, GB1, GH1, B2, IsRectangularOpening, B5);
             planSpecDto = new PumpPlanSpecDto(B8, B9, L5, B10, T5, T6);
             //typeSelectionDto = new PumpTypeSelectionDto(T1, T2, T3, T4, T5, T6, GB1, GH1);
-            creationRequestDto = new PumpCreationRequestDto(designConditionDto, planSpecDto, profileSpecDto, _selectedValveBase);
+            // ConcreteMaterials 순서: 벽체, 슬래브, 기초, 버림콘크리트, 거더, 계단
+            var materials = new PumpMaterialSpecDto(
+                ConcreteMaterials[0].ToConcreteSpec(), ConcreteMaterials[1].ToConcreteSpec(),
+                ConcreteMaterials[2].ToConcreteSpec(), ConcreteMaterials[4].ToConcreteSpec(),
+                ConcreteMaterials[5].ToConcreteSpec(), ConcreteMaterials[3].ToConcreteSpec());
+            creationRequestDto = new PumpCreationRequestDto(designConditionDto, planSpecDto, profileSpecDto, _selectedValveBase, materials);
 
             _ = _usageLogger.LogAsync();
             _createPumpingStationUseCase.Execute(creationRequestDto);

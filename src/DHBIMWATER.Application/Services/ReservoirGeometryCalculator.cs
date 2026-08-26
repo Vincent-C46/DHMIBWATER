@@ -174,9 +174,9 @@ namespace DHBIMWATER.Application.Services
             // ──────── B4/L4: 배관실 외측 기초
             double vCenterX = innerWallCX;
             double b4StartX = vCenterX - lv / 2 - wveThk - lvt;
-            double b4StartY = -(wveThk + wteThk + wv + lvt);
+            double b4StartY = -(2 * wveThk + wv + lvt);
             double b4W = 2 * lvt + lv + 2 * wveThk;
-            double b4L = wveThk + wteThk + wv + lvt;
+            double b4L = 2 * wveThk + wv + lvt;
 
             slabs.Add(new SlabDefinition
             {
@@ -339,7 +339,7 @@ namespace DHBIMWATER.Application.Services
                     walls.Add(Wall("W6", wtiThk, TankFoundLevelName, tankWallH,
                         new Point3D(wxCenter, lh, 0), new Point3D(wxCenter, l, 0), "수조부", "내벽"));
                     walls.Add(Wall("W6", wtiThk, TankFoundLevelName, tankWallH,
-                        new Point3D(wxCenter, 0, 0), new Point3D(wxCenter, -lh, 0), "수조부", "내벽"));
+                        new Point3D(wxCenter, 0, 0), new Point3D(wxCenter, lh, 0), "수조부", "내벽"));
                 }
                 else
                 {
@@ -444,6 +444,7 @@ namespace DHBIMWATER.Application.Services
             double lh = t.Lh;  // mm
             double wh = t.Wh;  // mm
             double wtiThk = th.WtiThk;
+            double stuThk = th.StuThk;
 
             var (tfE, tuE, _, _) = LevelElevations(dto);
             double beamZ = tuE;
@@ -510,7 +511,7 @@ namespace DHBIMWATER.Application.Services
                     beams.Add(Beam("H2", beamType, TankFoundLevelName, fndPts[i], fndPts[i + 1], "수조부", "HAUNCH"));
 
                 // H1: 상부 헌치
-                var upperPts = BuildUpperHaunchPoints(xOff, w, l, m1, m2, m3, m4, rowOff, colOff, rowNum, colNum, beamZ);
+                var upperPts = BuildUpperHaunchPoints(xOff, w, l, m1, m2, m3, m4, rowOff, colOff, rowNum, colNum, beamZ - stuThk);
                 for (int i = 0; i < upperPts.Count - 1; i++)
                     beams.Add(Beam("H1", beamType, TankUpperLevelName, upperPts[i], upperPts[i + 1], "수조부", "HAUNCH"));
             }
@@ -518,6 +519,93 @@ namespace DHBIMWATER.Application.Services
             return beams;
         }
 
+        public static IReadOnlyList<GenericModelPlacementDefinition> CalculateGenericModels(ReservoirCreationRequestDto dto)
+        {
+            var t = dto.TankDto;
+            var v = dto.ValveDto;
+            var th = dto.ThicknessDto;
+
+            double w = t.W;
+            double wh = t.Wh;
+            double lh = t.Lh;
+            double hh = t.Hh;
+            double lv = v.Lv;
+            double wv = v.Wv;
+            double wp = v.Wp;
+
+            double stbThk = th.StbThk;
+            double svbThk = th.SvbThk;
+            double wteThk = th.WteThk;
+            double wtiThk = th.WtiThk;
+            double whThk = th.WhThk;
+            double wveThk = th.WveThk;
+            double lcThk = th.LcThk;
+
+            var (tfE, _, vfE, _) = LevelElevations(dto);
+
+            double innerWallCX = w + wtiThk / 2;
+            double vCenterX = innerWallCX;
+            double vmStartX = vCenterX - lv / 2;
+            double vmStartY = -(wteThk + wv);
+            double b2StartY = whThk - wteThk;
+            double faultingHeight = hh + svbThk - stbThk;
+
+            return new List<GenericModelPlacementDefinition>
+            {
+                new GenericModelPlacementDefinition
+                {
+                    SymbolName = "DH_단차버림콘크리트",
+                    Origin = new Point3D(innerWallCX, b2StartY, -(stbThk + lcThk)),
+                    LevelName = TankFoundLevelName,
+                    Rotation = 0,
+                    Category = "슬래브",
+                    ElementCode = "L3",
+                    Class = "Body",
+                    Zone = "배관실",
+                    Part = "단차_버림콘크리트",
+                    Parameters = new Dictionary<string, object>
+                    {
+                        { "L1", (lv + 2 * wveThk - (wtiThk + 2 * wh + 2 * whThk)) / 2 },
+                        { "L2", lh + whThk },
+                        { "L3", wtiThk + 2 * wh + 2 * whThk },
+                        { "W1", lcThk + faultingHeight * v.SLv },
+                        { "W2", lcThk },
+                        { "H", faultingHeight },
+                        { "단차구간", lv + 2 * wveThk },
+                        { "사면깊이", faultingHeight },
+                        { "Hopper길이", lh },
+                        { "Hopper벽체두께", whThk },
+                        { "Hopper폭", wh },
+                        { "버림Con'c두께", lcThk },
+                        { "수조부내벽두께", wtiThk },
+                        { "수조부외벽두께", wteThk },
+                        { "사면비", new Dimensionless(v.SLv) },
+                    },
+                },
+                new GenericModelPlacementDefinition
+                {
+                    SymbolName = "DH_배수지피트",
+                    Origin = new Point3D(vmStartX + wp / 2, vmStartY + wp / 2, 0),
+                    LevelName = ValveFoundLevelName,
+                    Rotation = 0,
+                    Category = "PIT",
+                    ElementCode = "P1",
+                    Class = "Body",
+                    Zone = "배관실",
+                    Part = "PIT",
+                    Parameters = new Dictionary<string, object>
+                    {
+                        { "드레인피트_내부_가로폭", v.Wp },
+                        { "드레인피트_내부_세로폭", v.Wp },
+                        { "드레인피트_내부_깊이", v.Hp },
+                        { "드레인피트_벽체두께", v.WpThk },
+                        { "드레인피트_바닥두께", v.SpThk },
+                        { "드레인피트_버림콘크리트_두께", th.LcThk },
+                        { "밸브실_바닥슬라브두께", th.SvbThk },
+                    },
+                },
+            };
+        }
         // ─────────────────────────────────────────────── Private Helpers
 
         /// <summary>레벨 절대 표고 계산 (mm). LWL·He는 m 단위 DTO이므로 *1000 변환.</summary>
@@ -664,3 +752,4 @@ namespace DHBIMWATER.Application.Services
     }
 }
  
+

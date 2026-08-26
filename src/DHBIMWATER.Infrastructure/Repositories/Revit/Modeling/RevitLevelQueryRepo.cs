@@ -30,6 +30,19 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
             return levelNames;
         }
 
+        public IReadOnlyDictionary<string, long> GetLevelIds(IEnumerable<string> levelNames)
+        {
+            var doc = _doc();
+            if (doc == null) return new Dictionary<string, long>();
+
+            var names = levelNames.ToHashSet(StringComparer.Ordinal);
+            return new FilteredElementCollector(doc)
+                .OfClass(typeof(Level))
+                .Cast<Level>()
+                .Where(level => names.Contains(level.Name))
+                .ToDictionary(level => level.Name, level => level.Id.Value, StringComparer.Ordinal);
+        }
+
         public IEnumerable<string> GetExistingPlanNames()
         {
             var doc = _doc();

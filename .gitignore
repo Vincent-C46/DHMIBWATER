@@ -63,13 +63,16 @@ Desktop.ini
 
 # Claude 문서 (개인)
 AGENTS.md
-Claude.md
+CLAUDE.md
 PROGRESS.md
 docs/ai/
 docs/05_수량산출로직.md
 .claude/
 .understand-anything/
 .omc/
+.agents/skills/unlazy/
 /DHBIMWATER.zip
 /docs/부재별탭_ElementCode_정렬_계획.md
 *.md
+*.html
+*.pdf

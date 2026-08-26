@@ -17,6 +17,7 @@ namespace DHBIMWATER.Core.Structures
         public double BaseOffset { get; set; } // mm, 하부 레벨 기준 오프셋 (TODO: RevitStairCommandRepo에서 미반영 - 확인 필요)
         public double TopOffset { get; set; }  // mm, 상부 레벨 기준 오프셋 (TODO: RevitStairCommandRepo에서 미반영 - 확인 필요)
         public string TypeName { get; set; } = string.Empty; // 기존 StairsType 이름 (자동 생성 안 함, 없으면 실패)
+        public ConcreteSpec? Concrete { get; set; }
 
         public List<StairsRunDefinition> Runs { get; set; } = new List<StairsRunDefinition>();
         public List<StairsLandingDefinition> Landings { get; set; } = new List<StairsLandingDefinition>();

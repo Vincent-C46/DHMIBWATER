@@ -9,7 +9,7 @@
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance vm:Modeling1ViewModel, IsDesignTimeCreatable=False}"
         
-        Title="DHBIM WATER - UI Kit" 
+        Title="DHBIMWATER - UI Kit" 
         Height="700" Width="1100"
         WindowStartupLocation="CenterScreen"
         Background="#F4F7F9" 

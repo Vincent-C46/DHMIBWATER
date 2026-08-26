@@ -14,14 +14,14 @@ namespace DHBIMWATER.Infrastructure.Repositories.Mock
 {
     internal class MockWallCommandRepo : IWallCommandRepo
     {
-        public int CreateLinearWall(LinearWallDefinition linearWallDefinition)
+        public int CreateLinearWall(LinearWallDefinition linearWallDefinition, long levelId, int wallTypeId)
         {
             var mockDialogService = new MockDialogService();
             mockDialogService.Info("LinearWall Creation", $"{linearWallDefinition.ElementCode} 작성완료");
             return 0;
         }
 
-        public int CreateProfileWall(ProfileWallDefinition profileWallDefinition)
+        public int CreateProfileWall(ProfileWallDefinition profileWallDefinition, long levelId, int wallTypeId)
         {
             var mockDialogService = new MockDialogService();
             mockDialogService.Info("ProfileWall Creation", $"{profileWallDefinition.ElementCode} 작성완료");

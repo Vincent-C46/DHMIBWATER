@@ -17,11 +17,45 @@
                         <Border Background="{TemplateBinding Background}" 
                             CornerRadius="4"/>
 
+                        <!-- ProgressBar 내부 코드가 이 트랙의 실제 폭으로 인디케이터 폭을 계산한다. -->
+                        <Rectangle x:Name="PART_Track"/>
+
                         <Border x:Name="PART_Indicator" 
                             Background="{TemplateBinding Foreground}" 
                             CornerRadius="4" 
                             HorizontalAlignment="Left"/>
+
+                        <Border x:Name="IndeterminateGlow" CornerRadius="4" Visibility="Collapsed">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0.5" EndPoint="1,0.5">
+                                    <LinearGradientBrush.RelativeTransform>
+                                        <TranslateTransform x:Name="GlowTransform" X="-1"/>
+                                    </LinearGradientBrush.RelativeTransform>
+                                    <GradientStop Offset="0.0" Color="Transparent"/>
+                                    <GradientStop Offset="0.5" Color="{StaticResource Color.Primary}"/>
+                                    <GradientStop Offset="1.0" Color="Transparent"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
                     </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsIndeterminate" Value="True">
+                            <Setter TargetName="PART_Indicator" Property="Opacity" Value="0"/>
+                            <Setter TargetName="IndeterminateGlow" Property="Visibility" Value="Visible"/>
+                            <Trigger.EnterActions>
+                                <BeginStoryboard Name="GlowStory">
+                                    <Storyboard RepeatBehavior="Forever">
+                                        <DoubleAnimation Storyboard.TargetName="GlowTransform"
+                                                         Storyboard.TargetProperty="X"
+                                                         From="-1" To="1.5" Duration="0:0:1.2"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="GlowStory"/>
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

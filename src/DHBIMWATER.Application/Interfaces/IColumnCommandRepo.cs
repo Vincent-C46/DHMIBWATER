@@ -9,6 +9,6 @@ namespace DHBIMWATER.Application.Interfaces
 {
     public interface IColumnCommandRepo
     {
-        int CreateColumn(ColumnDefinition def);
+        int CreateColumn(ColumnDefinition def, long baseLevelId, long topLevelId, int columnTypeId);
     }
 }

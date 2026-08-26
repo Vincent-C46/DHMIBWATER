@@ -19,6 +19,8 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
         private readonly IWallCommandRepo _wallCmdRepo;
         private readonly IBeamCommandRepo _beamCmdRepo;
         private readonly IColumnCommandRepo _columnCmdRepo;
+        private readonly IGenericModelCommandRepo _genericModelCmdRepo;
+        private readonly IElementTypeCommandRepo _elementTypeCmdRepo;
         private readonly ISharedParameterRepository _sharedParameterRepo;
         private readonly ClassifyExteriorWallsUseCase _classifyWallsUseCase;
         #endregion
@@ -33,6 +35,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
             IWallCommandRepo wallCmdRepo,
             IBeamCommandRepo beamCmdRepo,
             IColumnCommandRepo columnCmdRepo,
+            IGenericModelCommandRepo genericModelCmdRepo, IElementTypeCommandRepo elementTypeCmdRepo,
             ISharedParameterRepository sharedParameterRepo,
             ClassifyExteriorWallsUseCase classifyWallsUseCase)
         {
@@ -44,6 +47,8 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
             _wallCmdRepo = wallCmdRepo;
             _beamCmdRepo = beamCmdRepo;
             _columnCmdRepo = columnCmdRepo;
+            _genericModelCmdRepo = genericModelCmdRepo;
+            _elementTypeCmdRepo = elementTypeCmdRepo;
             _sharedParameterRepo = sharedParameterRepo;
             _classifyWallsUseCase = classifyWallsUseCase;
         }
@@ -84,24 +89,50 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                     #endregion
 
                     #region 2. 슬래브 생성
-                    foreach (var slabDef in ReservoirGeometryCalculator.CalculateSlabs(dto))
-                        _slabCmdRepo.CreateSlab(slabDef);
+                    var slabDefs = ReservoirGeometryCalculator.CalculateSlabs(dto).ToList();
+                    var slabLevels = _levelQueryRepo.GetLevelIds(slabDefs.Select(s => s.LevelName));
+                    var slabConcrete = new Core.Structures.ConcreteSpec(25, 30, 150);
+                    var slabMaterial = _elementTypeCmdRepo.FindOrCreateConcreteMaterial(slabConcrete);
+                    var slabTypes = slabDefs.Select(s => s.Thickness).Distinct().ToDictionary(t => t, t => _elementTypeCmdRepo.FindOrCreateSlabType(new Core.Structures.FloorTypeSpec(t, $"일반 - {t}mm", slabConcrete), slabMaterial));
+                    foreach (var slabDef in slabDefs)
+                        _slabCmdRepo.CreateSlab(slabDef, slabLevels[slabDef.LevelName], slabTypes[slabDef.Thickness]);
                     #endregion
 
                     #region 3. 벽체 생성
-                    foreach (var wallDef in ReservoirGeometryCalculator.CalculateLinearWalls(dto))
-                        _wallCmdRepo.CreateLinearWall(wallDef);
+                    var wallDefs = ReservoirGeometryCalculator.CalculateLinearWalls(dto).ToList();
+                    var levelIds = _levelQueryRepo.GetLevelIds(wallDefs.Select(w => w.LevelName));
+                    var concrete = new Core.Structures.ConcreteSpec(25, 27, 120);
+                    var materialId = _elementTypeCmdRepo.FindOrCreateConcreteMaterial(concrete);
+                    var wallTypeIds = wallDefs.Select(w => w.Thickness).Distinct().ToDictionary(
+                        thickness => thickness,
+                        thickness => _elementTypeCmdRepo.FindOrCreateWallType(new Core.Structures.WallTypeSpec(thickness, $"일반 - {thickness}mm", concrete), materialId));
+                    foreach (var wallDef in wallDefs)
+                        _wallCmdRepo.CreateLinearWall(wallDef, levelIds[wallDef.LevelName], wallTypeIds[wallDef.Thickness]);
                     _classifyWallsUseCase.Execute();
                     #endregion
 
                     #region 4. 기둥 생성
-                    foreach (var colDef in ReservoirGeometryCalculator.CalculateColumns(dto))
-                        _columnCmdRepo.CreateColumn(colDef);
+                    var columnDefs = ReservoirGeometryCalculator.CalculateColumns(dto).ToList();
+                    var columnLevels = _levelQueryRepo.GetLevelIds(columnDefs.SelectMany(c => new[] { c.BaseLevelName, c.TopLevelName }));
+                    var columnTypes = columnDefs.Select(c => c.TypeName).Distinct().ToDictionary(name => name, _elementTypeCmdRepo.FindColumnSymbol);
+                    foreach (var colDef in columnDefs)
+                        _columnCmdRepo.CreateColumn(colDef, columnLevels[colDef.BaseLevelName], columnLevels[colDef.TopLevelName], columnTypes[colDef.TypeName]);
                     #endregion
 
                     #region 5. 보 생성
-                    foreach (var beamDef in ReservoirGeometryCalculator.CalculateBeams(dto))
-                        _beamCmdRepo.CreateBeam(beamDef);
+                    var beamDefs = ReservoirGeometryCalculator.CalculateBeams(dto).ToList();
+                    var beamLevels = _levelQueryRepo.GetLevelIds(beamDefs.Select(b => b.LevelName));
+                    var beamTypes = beamDefs.GroupBy(b => b.Part == "HAUNCH" ? "HAUNCH" : b.TypeName ?? $"{b.Width} x {b.Height}").ToDictionary(g => g.Key, g => g.Key == "HAUNCH" ? _elementTypeCmdRepo.FindHaunchBeamSymbol() : !string.IsNullOrEmpty(g.First().TypeName) ? _elementTypeCmdRepo.FindBeamSymbol(g.First().TypeName) : _elementTypeCmdRepo.FindOrCreateBeamType(new Core.Structures.BeamTypeSpec(g.First().Width, g.First().Height, g.Key)));
+                    foreach (var beamDef in beamDefs)
+                        _beamCmdRepo.CreateBeam(beamDef, beamLevels[beamDef.LevelName], beamTypes[beamDef.Part == "HAUNCH" ? "HAUNCH" : beamDef.TypeName ?? $"{beamDef.Width} x {beamDef.Height}"]);
+                    #endregion
+
+                    #region 6. 일반 패밀리 배치 (단차버림 Con'c, PIT)
+                    var genericDefs = ReservoirGeometryCalculator.CalculateGenericModels(dto).ToList();
+                    var genericLevels = _levelQueryRepo.GetLevelIds(genericDefs.Select(g => g.LevelName));
+                    var genericSymbols = genericDefs.Select(g => g.SymbolName).Distinct().ToDictionary(name => name, _elementTypeCmdRepo.FindGenericModelSymbol);
+                    foreach (var def in genericDefs)
+                        _genericModelCmdRepo.PlaceInstance(def, genericLevels[def.LevelName], genericSymbols[def.SymbolName]);
                     #endregion
 
                     // TODO: 오프닝 배치 (파이프 관통 슬리브 등) — ReservoirGeometryCalculator.CalculateOpenings() 추가 후 구현
@@ -152,3 +183,4 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
         #endregion
     }
 }
+

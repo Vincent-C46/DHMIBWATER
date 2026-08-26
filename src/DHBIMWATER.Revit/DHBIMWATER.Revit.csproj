@@ -23,6 +23,9 @@
 		<Reference Include="DidasUsage">
 			<HintPath>libs\DidasUsage\DidasUsage.dll</HintPath>
 		</Reference>
+		<Reference Include="DHBoost.Revit">
+			<HintPath>libs\DHBoost\DHBoost.Revit.dll</HintPath>
+		</Reference>
 		<Reference Include="RevitAPI">
 			<HintPath>C:\Program Files\Autodesk\Revit 2026\RevitAPI.dll</HintPath>
 			<Private>False</Private>

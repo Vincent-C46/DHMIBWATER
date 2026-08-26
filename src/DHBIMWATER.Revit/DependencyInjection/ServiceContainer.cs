@@ -1,7 +1,9 @@
 ﻿using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using DHBIMWATER.Application.DependencyInjection;
+using DHBIMWATER.Application.Interfaces;
 using DHBIMWATER.Infrastructure.DependencyInjection;
+using DHBIMWATER.Revit.Commands;
 using DHBIMWATER.UI.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -21,6 +23,10 @@ namespace DHBIMWATER.Revit.DependencyInjection
 
             // 현재 활성 문서를 가져오는 람다 메서드를 서비스로 등록 - 다른 서비스에서 주입하여 호출할 때 현재 문서를 반환
             services.AddSingleton<Func<Document?>>(() => uiApp.ActiveUIDocument?.Document);
+
+            // 사용자 피킹(Selection)이 필요한 Repository용 — Document와 동일하게 람다로 지연 해석한다.
+            services.AddSingleton<Func<UIDocument?>>(() => uiApp.ActiveUIDocument);
+            services.AddSingleton<IRevitDispatcher, RevitDispatcher>();
 
             // Revit 관련 서비스 등록
             services.AddUIServices();                   // UI View/ViewModel

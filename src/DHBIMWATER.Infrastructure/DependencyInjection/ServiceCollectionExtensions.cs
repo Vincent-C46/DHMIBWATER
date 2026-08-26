@@ -1,27 +1,22 @@
 using DHBIMWATER.Application.Interfaces;
-using DHBIMWATER.Application.Interfaces.Geometry;
-using DHBIMWATER.Application.Interfaces.Quantity;
-using DHBIMWATER.Application.Interfaces.Settings;
 using DHBIMWATER.Application.Services;
-using DHBIMWATER.Application.Interfaces.Storage;
 using DHBIMWATER.Core.Parameters;
 using DHBIMWATER.Infrastructure.Repositories.DB;
-using DHBIMWATER.Infrastructure.Repositories.FileSystem;
+using DHBIMWATER.Infrastructure.Repositories.Gis;
 using DHBIMWATER.Infrastructure.Repositories.Mock;
-using DHBIMWATER.Infrastructure.Repositories.Mock.Quantity;
-using DHBIMWATER.Infrastructure.Repositories.Revit.Storage;
+using DHBIMWATER.Infrastructure.Repositories.Revit.Gis;
 using DHBIMWATER.Infrastructure.Repositories.Revit.Modeling;
-using DHBIMWATER.Infrastructure.Repositories.Revit.Geometry;
-using DHBIMWATER.Infrastructure.Repositories.Revit.Quantity;
+using DHBIMWATER.Infrastructure.Repositories.Revit.Piping;
 using DHBIMWATER.Infrastructure.Repositories.Revit;
+using DHBIMWATER.Application.Interfaces.Gis;
 using DHBIMWATER.Infrastructure.Services.Common;
 using DHBIMWATER.Infrastructure.Services.Didas;
-using DHBIMWATER.Infrastructure.Services.Excel;
 using DHBIMWATER.Infrastructure.Services.Mock;
 using DHBIMWATER.Infrastructure.Services.Revit;
 using DHBIMWATER.Infrastructure.Services.Revit.Parameter;
 using DHBIMWATER.Infrastructure.Transactions;
 using Microsoft.Extensions.DependencyInjection;
+using DHBIMWATER.Infrastructure.Repositories.Local;
 
 namespace DHBIMWATER.Infrastructure.DependencyInjection;
 
@@ -42,45 +37,42 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IElementTypeQueryRepo, RevitElementTypeQueryRepo>();
         services.AddTransient<IElementTypeCommandRepo, RevitElementTypeCommandRepo>();
         services.AddTransient<IWallCommandRepo, RevitWallCommandRepo>();
+        services.AddTransient<IProjectLocationCommandRepo, RevitProjectLocationCommandRepo>();
+        services.AddTransient<IProjectLocationQueryRepo, RevitProjectLocationQueryRepo>();
         services.AddTransient<IGenericModelCommandRepo, RevitGenericModelCommandRepo>();
+        services.AddTransient<IPipeCommandRepo, RevitPipeMepCommandRepo>();
+        services.AddTransient<IPipeCommandRepo, RevitPipeGenericModelCommandRepo>();
+        services.AddTransient<IPipeCommandRepo, RevitPipeSegmentCommandRepo>();
         services.AddTransient<IBeamCommandRepo, RevitBeamCommandRepo>();
         services.AddTransient<IColumnCommandRepo, RevitColumnCommandRepo>();
         services.AddTransient<ISlabCommandRepo, RevitSlabCommandRepo>();
+        services.AddTransient<IFoundationCommandRepo, RevitFoundationCommandRepo>();
+        services.AddTransient<IAirValveVoidCommandRepo, RevitAirValveVoidCommandRepo>();
         services.AddTransient<IOpeningCommandRepo, RevitOpeningCommandRepo>();
         services.AddTransient<IStairCommandRepo, RevitStairCommandRepo>();
         services.AddTransient<IDirectShapeCommandRepo, RevitDirectShapeCommandRepo>();
         services.AddTransient<IViewCommandRepo, RevitViewCommandRepo>();
         services.AddTransient<ISetParameterRepo, RevitSetParameterRepo>();
         services.AddTransient<ISharedParameterRepository, RevitSharedParameterRepository>();
+        services.AddTransient<IPipeAlignmentCommandRepo, RevitPipeAlignmentCommandRepo>();
+        services.AddTransient<IPipeAlignmentQueryRepo, RevitPipeAlignmentQueryRepo>();
+        services.AddTransient<IShapefileReader, ShapefileReader>();
+        services.AddTransient<IAlignmentSourceReader, ShapefileReader>();
+        services.AddTransient<IAlignmentSourceReader, DxfAlignmentReader>();
+        services.AddTransient<IAlignmentSourceReader, DwgAlignmentReader>();
+        services.AddTransient<IAlignmentSourceReader, ExcelAlignmentReader>();
+        services.AddTransient<IExcelAlignmentSourceReader, ExcelAlignmentReader>();
+        services.AddTransient<IAlignmentStraightPlacementRepo, RevitAlignmentStraightPlacementRepo>();
+        services.AddTransient<IAlignmentPipePlacementRepo, RevitAlignmentPipePlacementRepo>();
+        services.AddTransient<IBendSettingsRepo, RevitBendSettingsRepo>();
+        services.AddSingleton<IBendSettingsFileStore, JsonFileBendSettingsFileStore>();
+        services.AddTransient<IAdaptiveBendPlacementRepo, RevitAdaptiveBendPlacementRepo>();
         services.AddTransient<IGenericModelRepository, RevitGenericModelRepository>();
-        services.AddTransient<IIntersectingElementFinder, RevitIntersectingElementFinder>();
         services.AddTransient<IExteriorWallClassifierRepo, RevitExteriorWallClassifierRepo>();
+        services.AddTransient<IValveRoomOutlinePickRepo, RevitValveRoomOutlinePickRepo>();
         #endregion
 
-        #region Quantity 관련
-        // IQuantityExtractor 경로 (Rule Engine 미적용 카테고리)
-        services.AddTransient<IQuantityExtractor, RevitGenericModelExtractor>();
-        services.AddTransient<IQuantityExtractor, RevitStairsExtractor>();
-        services.AddTransient<IQuantityExtractor, RevitRailingExtractor>();
-        services.AddTransient<IQuantityExtractor, RevitDirectShapeExtractor>();
-
-        // IElementMeasurementExtractor + Rule Engine 경로
-        services.AddTransient<IElementMeasurementExtractor, RevitWallMeasurementExtractor>();
-        services.AddTransient<IElementMeasurementExtractor, RevitColumnMeasurementExtractor>();
-        services.AddTransient<IElementMeasurementExtractor, RevitBeamMeasurementExtractor>();
-        services.AddTransient<IElementMeasurementExtractor, RevitFloorMeasurementExtractor>();
-        services.AddTransient<IElementMeasurementExtractor, RevitFoundationMeasurementExtractor>();
-        services.AddTransient<IElementMeasurementExtractor, RevitRebarMeasurementExtractor>();
-        services.AddSingleton<QuantityRuleEngine>();
-
-        services.AddTransient<IQuantityRuleRepository, RevitQuantityRuleRepo>();
-        services.AddTransient<IFaceClassifier, RevitFaceClassifier>();
-        services.AddTransient<IExcelExporter, ClosedXmlExcelWriter>();
-        services.AddTransient<IElementQuantityRepo, ElementQuantityRepo>();
-        services.AddTransient<IManualQuantityRepo, ManualQuantityRepo>();
         services.AddTransient<IExcelReader, ExcelReader>();
-        services.AddTransient<IProjectSettingsRepository, DhcfgRepo>();
-        #endregion
         #region Service 등록
         services.AddTransient<IFileDialogService, WpfFileDialogService>();
         services.AddTransient<IDialogService, RevitDialogService>();
@@ -95,6 +87,7 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddMockInfrastructureServices(this IServiceCollection services)
     {
+        services.AddSingleton<IRevitDispatcher, DirectRevitDispatcher>();
         // Mock 구현 등록 (Revit 없이 동작)
         services.AddSingleton<IGenericModelRepository, MockGenericModelRepository>();
         services.AddTransient<ITransactionContext, MockTransactionContext>();
@@ -104,23 +97,37 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ILevelCommandRepo, MockLevelCommandRepo>();
         services.AddTransient<IElementTypeQueryRepo, MockElementTypeQueryRepo>();
         services.AddTransient<IElementTypeCommandRepo, MockElementTypeCommandRepo>();
+        services.AddTransient<IProjectLocationQueryRepo, MockProjectLocationQueryRepo>();
         services.AddTransient<IWallCommandRepo, MockWallCommandRepo>();
         services.AddTransient<IGenericModelCommandRepo, MockGenericModelCommandRepo>();
         services.AddTransient<IBeamCommandRepo, MockBeamCommandRepo>();
         services.AddTransient<ISlabCommandRepo, MockSlabCommandRepo>();
+        services.AddTransient<IFoundationCommandRepo, MockFoundationCommandRepo>();
+        services.AddTransient<IAirValveVoidCommandRepo, MockAirValveVoidCommandRepo>();
         services.AddTransient<IOpeningCommandRepo, MockOpeningCommandRepo>();
         services.AddTransient<IDirectShapeCommandRepo, MockDirectShapeCommandRepo>();
         services.AddTransient<IViewCommandRepo, MockViewCommandRepo>();
 
         services.AddTransient<ISetParameterRepo, MockSetParameterRepo>();
         services.AddTransient<ISharedParameterRepository, MockSharedParameterRepository>();
+        services.AddTransient<IShapefileReader, ShapefileReader>();
+        services.AddTransient<IAlignmentSourceReader, ShapefileReader>();
+        services.AddTransient<IAlignmentSourceReader, DxfAlignmentReader>();
+        services.AddTransient<IAlignmentSourceReader, DwgAlignmentReader>();
+        services.AddTransient<IAlignmentSourceReader, ExcelAlignmentReader>();
+        services.AddTransient<IExcelAlignmentSourceReader, ExcelAlignmentReader>();
+        services.AddTransient<IAlignmentStraightPlacementRepo, MockAlignmentStraightPlacementRepo>();
+        services.AddTransient<IAlignmentPipePlacementRepo, MockAlignmentPipePlacementRepo>();
+        services.AddTransient<IAlignmentSourceReader, DxfAlignmentReader>();
+        services.AddTransient<IAlignmentStraightPlacementRepo, RevitAlignmentStraightPlacementRepo>();
+        services.AddTransient<IAlignmentPipePlacementRepo, RevitAlignmentPipePlacementRepo>();
+        // TODO: Mock 블록에 Revit Repo가 덮어쓰기 등록됨 — 별도 확인 필요
+        services.AddTransient<IBendSettingsRepo, MockBendSettingsRepo>();
+        services.AddSingleton<IBendSettingsFileStore, JsonFileBendSettingsFileStore>();
+        services.AddTransient<IAdaptiveBendPlacementRepo, MockAdaptiveBendPlacementRepo>();
         #endregion
 
-        #region Quantity 관련
-        services.AddTransient<IQuantityExtractor, MockWallExtractor>();
-        services.AddTransient<IExcelExporter, ClosedXmlExcelWriter>();
         services.AddTransient<IExcelReader, ExcelReader>();
-        #endregion
 
 
         #region Service 등록

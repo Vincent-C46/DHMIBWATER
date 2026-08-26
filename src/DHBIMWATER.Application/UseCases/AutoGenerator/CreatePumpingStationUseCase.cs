@@ -22,6 +22,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
         private readonly ISetParameterRepo _setParameterRepo;
         private readonly IGenericModelCommandRepo _genericModelCmdRepo;
         private readonly IStairCommandRepo _stairCommandRepo;
+        private readonly IElementTypeCommandRepo _elementTypeCmdRepo;
         private readonly IExcelReader _excelReader;
         private readonly ClassifyExteriorWallsUseCase _classifyWallsUseCase;
         #endregion
@@ -44,7 +45,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                                            IViewCommandRepo viewCommandRepo,
                                            ISetParameterRepo setParameterRepo,
                                            IGenericModelCommandRepo genericModelCmdRepo,
-                                           IStairCommandRepo stairCommandRepo,
+                                           IStairCommandRepo stairCommandRepo, IElementTypeCommandRepo elementTypeCmdRepo,
                                            IExcelReader excelReader,
                                            ClassifyExteriorWallsUseCase classifyWallsUseCase)
         {
@@ -61,6 +62,7 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
             _setParameterRepo = setParameterRepo;
             _genericModelCmdRepo = genericModelCmdRepo;
             _stairCommandRepo = stairCommandRepo;
+            _elementTypeCmdRepo = elementTypeCmdRepo;
             _excelReader = excelReader;
             _classifyWallsUseCase = classifyWallsUseCase;
 
@@ -91,7 +93,6 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                     var defs = GetPumpSharedParameterDefinitions();
                     _sharedParameterRepo.EnsureParameters(defs);
                     #endregion
-
                     #region 1. 레벨 생성
                     var existingLevels = _levelQueryRepo.GetExistingLevelNames();
                     var existingEngineeringPlanNames = _levelQueryRepo.GetExistingPlanNames();
@@ -100,7 +101,8 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                     // Level 생성
                     foreach (var lvl in PumpingStationGeometryCalculator.CalculateLevels(dto))
                     {
-                        var existLevel = existingLevels.FirstOrDefault(s => s.Contains(lvl.Name));
+                        var existLevel = existingLevels.FirstOrDefault(s =>
+                            s.Equals(lvl.Name, StringComparison.OrdinalIgnoreCase));
                         long levelId;
 
                         if (existLevel != null)
@@ -123,36 +125,48 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                         }
                     }
                     #endregion
-
                     #region 2. 슬래브 생성
-                    foreach (var slabDef in PumpingStationGeometryCalculator.CalculateSlabs(dto))
-                        _slabCmdRepo.CreateSlab(slabDef);
+                    var slabDefs = PumpingStationGeometryCalculator.CalculateSlabs(dto).ToList();
+                    var slabLevels = _levelQueryRepo.GetLevelIds(slabDefs.Select(s => s.LevelName));
+                    var slabMaterial = _elementTypeCmdRepo.FindOrCreateConcreteMaterial(dto.Materials.Slab);
+                    var slabTypes = slabDefs.Select(s => s.Thickness).Distinct().ToDictionary(t => t, t => _elementTypeCmdRepo.FindOrCreateSlabType(new Core.Structures.FloorTypeSpec(t, $"일반 - {t}mm", dto.Materials.Slab), slabMaterial));
+                    foreach (var slabDef in slabDefs)
+                        _slabCmdRepo.CreateSlab(slabDef, slabLevels[slabDef.LevelName], slabTypes[slabDef.Thickness]);
 
-                    // 기초 다이렉트쉐이프
+                    // 기초 다이렉트쉐이프 (F2=기초버림슬래브는 별도 재료 적용)
+                    // CreateDirectShapes는 ElementCode 단위로 하나의 DirectShape로 합치므로,
+                    // 진입부 추가 버림 조각(Part="") 등 F2 코드가 붙은 모든 정의를 같은 호출로 묶어야 한다.
                     var dsDefs = PumpingStationGeometryCalculator.CalculateSolids(dto);
-                    var ids = _dsCmdRepo.CreateDirectShapes(dsDefs);
+                    var leanConcreteDefs = dsDefs.Where(s => s.ElementCode == "F2").ToList();
+                    var foundationDefs = dsDefs.Where(s => s.ElementCode != "F2").ToList();
+                    var ids = _dsCmdRepo.CreateDirectShapes(foundationDefs, dto.Materials.Foundation);
+                    if (leanConcreteDefs.Count > 0)
+                        _dsCmdRepo.CreateDirectShapes(leanConcreteDefs, dto.Materials.LeanConcrete);
                     #endregion
-
                     #region 3. 벽체 생성
-                    foreach (var linearWallDef in PumpingStationGeometryCalculator.CalculateLinearWalls(dto))
-                        _wallCmdRepo.CreateLinearWall(linearWallDef);
-                    foreach (var profileWallDef in PumpingStationGeometryCalculator.CalculateProfileWalls(dto))
-                        _wallCmdRepo.CreateProfileWall(profileWallDef);
+                    var linearWallDefs = PumpingStationGeometryCalculator.CalculateLinearWalls(dto).ToList();
+                    var profileWallDefs = PumpingStationGeometryCalculator.CalculateProfileWalls(dto).ToList();
+                    var wallLevelIds = _levelQueryRepo.GetLevelIds(linearWallDefs.Select(w => w.LevelName).Concat(profileWallDefs.Select(w => w.LevelName)));
+                    var wallMaterialId = _elementTypeCmdRepo.FindOrCreateConcreteMaterial(dto.Materials.Wall);
+                    var wallTypeIds = linearWallDefs.Select(w => w.Thickness).Concat(profileWallDefs.Select(w => w.Thickness)).Distinct().ToDictionary(
+                        thickness => thickness, thickness => _elementTypeCmdRepo.FindOrCreateWallType(new Core.Structures.WallTypeSpec(thickness, $"일반 - {thickness}mm", dto.Materials.Wall), wallMaterialId));
+                    foreach (var linearWallDef in linearWallDefs)
+                        _wallCmdRepo.CreateLinearWall(linearWallDef, wallLevelIds[linearWallDef.LevelName], wallTypeIds[linearWallDef.Thickness]);
+                    foreach (var profileWallDef in profileWallDefs)
+                        _wallCmdRepo.CreateProfileWall(profileWallDef, wallLevelIds[profileWallDef.LevelName], wallTypeIds[profileWallDef.Thickness]);
 
                     var hull = _classifyWallsUseCase.Execute();
                     var hullStr = string.Join("\n", hull.Select((p, i) => $"[{i}] X={p.X:F0}  Y={p.Y:F0}"));
                     //_dialogService.Info("DEBUG - Hull 꼭짓점 (mm)", hullStr);
                     #endregion
-
                     #region 4. 보 생성
-                    foreach (var beamDef in PumpingStationGeometryCalculator.CalculateBeams(dto))
-                        _beamCmdRepo.CreateBeam(beamDef);
+                    var beamDefs = PumpingStationGeometryCalculator.CalculateBeams(dto).ToList();
+                    var beamLevels = _levelQueryRepo.GetLevelIds(beamDefs.Select(b => b.LevelName));
+                    var beamTypes = beamDefs.GroupBy(b => b.Part == "HAUNCH" ? "HAUNCH" : b.TypeName ?? $"{b.Width} x {b.Height}").ToDictionary(g => g.Key, g => g.Key == "HAUNCH" ? _elementTypeCmdRepo.FindHaunchBeamSymbol() : !string.IsNullOrEmpty(g.First().TypeName) ? _elementTypeCmdRepo.FindBeamSymbol(g.First().TypeName) : _elementTypeCmdRepo.FindOrCreateBeamType(new Core.Structures.BeamTypeSpec(g.First().Width, g.First().Height, g.Key, dto.Materials.Girder)));
+                    foreach (var beamDef in beamDefs)
+                        _beamCmdRepo.CreateBeam(beamDef, beamLevels[beamDef.LevelName], beamTypes[beamDef.Part == "HAUNCH" ? "HAUNCH" : beamDef.TypeName ?? $"{beamDef.Width} x {beamDef.Height}"]);
                     #endregion
-
-                    #region 5. 계단 생성
-                    #endregion
-
-                    #region 6. 오프닝 배치
+                    #region 5. 오프닝 배치
                     // 슬래브 오프닝 (사각형)
                     foreach (var openingDef in PumpingStationGeometryCalculator.CalculateRectangularSlabOpenings(dto))
                         _openingCmdRepo.CreateSlabOpening(openingDef);
@@ -166,17 +180,17 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                     foreach (var openingDef in PumpingStationGeometryCalculator.CalculateCircularWallOpenings(dto))
                         _openingCmdRepo.CreateWallOpening(openingDef);
                     #endregion
-
-                    #region 7. 펌프받침 배치 (FamilyInstance)
-                    foreach (var def in PumpingStationGeometryCalculator.CalculateGenericModels(dto))
-                        _genericModelCmdRepo.PlaceInstance(def);
+                    #region 6. 펌프받침 배치 (FamilyInstance)
+                    var genericDefs = PumpingStationGeometryCalculator.CalculateGenericModels(dto).ToList();
+                    var genericLevels = _levelQueryRepo.GetLevelIds(genericDefs.Select(g => g.LevelName));
+                    var genericSymbols = genericDefs.Select(g => g.SymbolName).Distinct().ToDictionary(name => name, _elementTypeCmdRepo.FindGenericModelSymbol);
+                    foreach (var def in genericDefs)
+                        _genericModelCmdRepo.PlaceInstance(def, genericLevels[def.LevelName], genericSymbols[def.SymbolName]);
                     #endregion
-
-                    #region 8. 결합
+                    #region 7. 결합
                     // 보 작성 메서드 내부에서 상부 슬래브와 결합 (임시 조치)
                     #endregion
-
-                    #region 9. 뷰 작성                    
+                    #region 8. 뷰 작성                    
                     var existingSectionViewNames = _levelQueryRepo.GetExistingSectionNames();
                     var sectionViewDefs = PumpingStationGeometryCalculator.CalculateSectionViews(dto);
 
@@ -198,14 +212,11 @@ namespace DHBIMWATER.Application.UseCases.AutoGenerator
                         _levelCmdRepo.Maximize3dExtents(levelId);
                     }
                     #endregion
-
-                    #region 10. 타입 설명 추가
+                    #region 9. 타입 설명 추가
                     _setParameterRepo.SetTypeParameter(dto);
                     #endregion
-
                     // 트랜잭션 커밋
                     _tx.Commit();
-
                     _dialogService.Info("Success", "펌프장 작성 완료");
                 }
                 catch (Exception ex)

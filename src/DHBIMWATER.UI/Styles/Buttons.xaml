@@ -37,6 +37,11 @@
             </Setter.Value>
         </Setter>
     </Style>
+    <!-- [파일 추가 ▾] 처럼 주버튼 옆에 붙는 좁은 드롭다운 버튼. 템플릿은 PrimaryButtonStyle을 그대로 쓰고 폭만 줄인다. -->
+    <Style x:Key="PrimaryDropdownButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryButtonStyle}">
+        <Setter Property="Padding" Value="8,8"/>
+    </Style>
+
     <Style x:Key="CancelButtonStyle" TargetType="Button">
         <Setter Property="Background" Value="{StaticResource Brush.Gray.300}"/>
         <Setter Property="Foreground" Value="Black"/>

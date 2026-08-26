@@ -245,7 +245,8 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
         private static (StairsType StairsType, bool Created) GetOrCreateConfiguredStairsType(Document doc, StairsType sourceType, StairsDefinition stairsDefinition)
         {
             double runWidth = stairsDefinition.Runs.FirstOrDefault()?.Width ?? 0;   // 폭은 Run별 값 → 첫 Run 폭을 타입 최소 진행 폭으로 사용
-            string typeName = $"{sourceType.Name}_DHBIMWATER_R{stairsDefinition.MaxRiserHeight:0}_T{stairsDefinition.TreadDepth:0}_W{runWidth:0}";
+            string materialSuffix = stairsDefinition.Concrete is null ? string.Empty : $"_C{stairsDefinition.Concrete.MaterialName}";
+            string typeName = $"{sourceType.Name}_DHBIMWATER_R{stairsDefinition.MaxRiserHeight:0}_T{stairsDefinition.TreadDepth:0}_W{runWidth:0}{materialSuffix}";
             StairsType? configuredType = new FilteredElementCollector(doc)
                 .OfClass(typeof(StairsType))
                 .Cast<StairsType>()
@@ -277,12 +278,44 @@ namespace DHBIMWATER.Infrastructure.Repositories.Revit.Modeling
                     configuredType.get_Parameter(BuiltInParameter.STAIRSTYPE_MINIMUM_RUN_WIDTH)
                         ?.Set(UC.MmToFt(runWidth));
                 }
+
+                if (stairsDefinition.Concrete is not null)
+                {
+                    var materialId = FindOrCreateConcreteMaterial(doc, stairsDefinition.Concrete);
+                    if (materialId != ElementId.InvalidElementId)
+                    {
+                        configuredType.get_Parameter(BuiltInParameter.STAIRS_ATTR_TREAD_MATERIAL)?.Set(materialId);
+                        configuredType.get_Parameter(BuiltInParameter.STAIRS_ATTR_RISER_MATERIAL)?.Set(materialId);
+                        configuredType.get_Parameter(BuiltInParameter.STAIRS_ATTR_STRINGER_MATERIAL)?.Set(materialId);
+                    }
+                }
                 doc.Regenerate();
 
                 typeTx.Commit();
             }
 
             return (configuredType, created);
+        }
+
+        private static ElementId FindOrCreateConcreteMaterial(Document doc, ConcreteSpec concrete)
+        {
+            var existing = new FilteredElementCollector(doc)
+                .OfClass(typeof(Material))
+                .Cast<Material>()
+                .FirstOrDefault(m => m.Name.Equals(concrete.MaterialName, StringComparison.OrdinalIgnoreCase));
+            if (existing != null) return existing.Id;
+
+            var source = new FilteredElementCollector(doc)
+                .OfClass(typeof(Material))
+                .Cast<Material>()
+                .FirstOrDefault(m => m.Name.Contains("콘크리트") || m.Name.Contains("concrete", StringComparison.OrdinalIgnoreCase));
+            if (source == null) return ElementId.InvalidElementId;
+
+            var created = source.Duplicate(concrete.MaterialName) as Material;
+            if (created == null) return ElementId.InvalidElementId;
+            var strength = UnitUtils.ConvertToInternalUnits(concrete.CompressiveStrength, UnitTypeId.Megapascals);
+            created.get_Parameter(BuiltInParameter.PHY_MATERIAL_PARAM_CONCRETE_COMPRESSION)?.Set(strength);
+            return created.Id;
         }
 
         private static void WarmUpNewStairsType(

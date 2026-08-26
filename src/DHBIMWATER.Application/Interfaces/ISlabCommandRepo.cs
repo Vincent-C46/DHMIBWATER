@@ -10,6 +10,6 @@ namespace DHBIMWATER.Application.Interfaces
 {
     public interface ISlabCommandRepo
     {
-        int CreateSlab (SlabDefinition slabDef);
+        int CreateSlab (SlabDefinition slabDef, long levelId, int slabTypeId);
     }
 }

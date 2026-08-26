@@ -18,7 +18,7 @@ namespace DHBIMWATER.Infrastructure.Repositories.Mock
             return 0;
         }
 
-        public IReadOnlyList<int> CreateDirectShapes(IReadOnlyList<SolidExtrusionDefinition> solidExtrusionDefs)
+        public IReadOnlyList<int> CreateDirectShapes(IReadOnlyList<SolidExtrusionDefinition> solidExtrusionDefs, DHBIMWATER.Core.Structures.ConcreteSpec? concrete = null)
         {
             var mockDialogService = new MockDialogService();
             mockDialogService.Info("DirectShaep Creation", $"다이렉트 쉐이프 작성완료");
